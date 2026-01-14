@@ -1,5 +1,4 @@
-# tcenteros
-All-in-one Training Center Operating System (SaaS)
+
 # tcenteros
 
 tcenteros is a **Training Center Operating System** designed for fitness centers,
