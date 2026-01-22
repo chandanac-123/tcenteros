@@ -4,4 +4,4 @@ python-dotenv
 sqlalchemy>=2.0
 asyncpg
 pydantic-settings
-
+alembic

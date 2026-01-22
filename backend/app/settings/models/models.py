@@ -1,12 +1,12 @@
 from sqlalchemy import Column, String, Text, ForeignKey, Enum, Boolean, Integer, Numeric
-from app.core.models import AuditMixin
-from app.core.models import StatusEnum
+from app.core.models.base import AuditMixin, Base
+from app.core.models.models import StatusEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, declarative_base
 import uuid
 import enum
 
-Base = declarative_base()
+
 
 class AddressType(enum.Enum):
     home = "home"
@@ -20,6 +20,14 @@ class TaxType(enum.Enum):
     igst = "igst"
     vat = "vat"
     none = "none"
+
+class TaxScope(enum.Enum):
+    center_subscription = "center_subscription"
+    membership = "membership"
+    networking = "networking"
+    product = "product"
+    service = "service"
+    platform_fee = "platform_fee"
 
 class Address(Base, AuditMixin):
     __tablename__ = "address"
@@ -51,11 +59,22 @@ class TaxCategory(Base, AuditMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
-    code = Column(String, unique=True, nullable=False)
     tax_type = Column(Enum(TaxType), default=TaxType.none, nullable=False)
     tax_percentage = Column(Numeric(5, 2), default=0.0)
-    description = Column(Text)
+    tax_scope = Column(
+        Enum(TaxScope),
+        nullable=False,
+        index=True,
+        comment="Where this tax applies: subscription, membership, networking"
+    )
     is_active = Column(Boolean, default=True)
+
+    #relationship
+    subscriptions = relationship(
+        "CenterFeatureSubscription",
+        back_populates="tax_category"
+    )
+
 
 # ------------------------
 # Designations

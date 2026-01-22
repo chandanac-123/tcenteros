@@ -2,8 +2,8 @@ from sqlalchemy import (
     Column, Enum, Numeric, ForeignKey, String
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, relationship
-from app.core.models import AuditMixin
+from sqlalchemy.orm import relationship
+from app.core.models.base import AuditMixin, Base
 import uuid
 import enum
 
@@ -52,7 +52,7 @@ class PaymentOrderStatus(enum.Enum):
     expired = "expired"
 
 
-Base = declarative_base()
+
 
 class PaymentOrder(Base, AuditMixin):
     __tablename__ = "payment_orders"
@@ -67,7 +67,7 @@ class PaymentOrder(Base, AuditMixin):
     payer_user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("shared.users.id"),
-        nullable=False
+        nullable=False, index=True
     )
 
     payer_type = Column(
@@ -83,12 +83,12 @@ class PaymentOrder(Base, AuditMixin):
     center_id = Column(
         UUID(as_uuid=True),
         ForeignKey("center.centers.id"),
-        nullable=True
+        nullable=True, index=True
     )
 
     order_type = Column(
         Enum(OrderType),
-        nullable=False
+        nullable=False, index=True
     )
 
     reference_schema = Column(
@@ -125,11 +125,14 @@ class PaymentOrder(Base, AuditMixin):
     status = Column(
         Enum(PaymentOrderStatus),
         default=PaymentOrderStatus.pending,
-        nullable=False
+        nullable=False, index=True
     )
 
     # ------------------------
     # Relationships
     # ------------------------
-    payer = relationship("User")
-    center = relationship("Center", backref="payment_orders")
+    payer = relationship("User", back_populates="payment_orders")
+    center = relationship("Center", back_populates="payment_orders")
+    feature_subscriptions = relationship("CenterFeatureSubscription", back_populates="payment_order")
+
+

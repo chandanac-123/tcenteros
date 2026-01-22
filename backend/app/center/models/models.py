@@ -1,14 +1,12 @@
 from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, JSON, Integer
-from app.core.models import AuditMixin
+from app.core.models.base import AuditMixin, Base
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime
+from sqlalchemy.orm import  relationship
 import uuid
 import enum
 
 
 
-Base = declarative_base()
 
 # ------------------------
 # Enums
@@ -32,8 +30,7 @@ class Center(Base, AuditMixin):
     __table_args__ = {"schema": "center"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    center_name = Column(String, nullable=False)
-    center_code = Column(String, unique=True, nullable=True)
+    center_name = Column(String, nullable=False, index=True)
     
     # Foreign keys to settings schema
     center_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.center_categories.id"), nullable=True)
@@ -42,8 +39,8 @@ class Center(Base, AuditMixin):
     website_url = Column(String)
     capacity = Column(Numeric)
     
-    approval_status = Column(Enum(ApprovalStatus), default=ApprovalStatus.pending, nullable=True)
-    center_status = Column(Enum(CenterStatus), default=CenterStatus.active, nullable=False)
+    approval_status = Column(Enum(ApprovalStatus), default=ApprovalStatus.pending, nullable=True, index=True)
+    center_status = Column(Enum(CenterStatus), default=CenterStatus.active, nullable=False, index=True)
     
     network_enabled = Column(Boolean, default=False)
     network_joined_date = Column(DateTime, nullable=True)
@@ -57,7 +54,7 @@ class Center(Base, AuditMixin):
     trainer_count = Column(Integer, default=0)
 
     currently_using_digital_tool = Column(String)
-    marketing_platform = Column(String)
+    marketing_platform = Column(JSON)
 
     contact_person = Column(String)
     center_email = Column(String)
@@ -70,3 +67,5 @@ class Center(Base, AuditMixin):
     # Relationships (optional, for easy ORM access)
     category = relationship("CenterCategory", back_populates="centers", foreign_keys=[center_category_id])
     address = relationship("Address", back_populates="centers", foreign_keys=[address_id])
+    admins = relationship("CenterAdmin", back_populates="center")
+    payment_orders = relationship("PaymentOrder", back_populates="center")

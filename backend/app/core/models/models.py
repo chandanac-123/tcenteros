@@ -1,24 +1,14 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, JSON, Text, DateTime,Enum
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.dialects.postgresql import UUID
+from app.core.models.base import Base
 import uuid
 import enum
 from decimal import Decimal
 from datetime import datetime
+from app.core.models.base import AuditMixin
 
 
-Base = declarative_base()
-
-# ----------------------
-# Common Mixins
-# ----------------------
-
-
-class AuditMixin:
-    created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("shared.users.id"), nullable=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    updated_by = Column(UUID(as_uuid=True), ForeignKey("shared.users.id"), nullable=True)
 
 
 
@@ -48,14 +38,41 @@ class User(Base, AuditMixin):
     __table_args__ = {"schema": "shared"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String, unique=True, nullable=False)
-    username = Column(String)
-    mobile = Column(String)
-    profile_photo = Column(String)
-    gender = Column(Enum(GenderEnum))
+
+    email = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String, nullable=True)
+    mobile = Column(String, nullable=True)
+    profile_photo = Column(String, nullable=True)
+    gender = Column(Enum(GenderEnum, name="gender_enum"), nullable=True)
+
     password_hash = Column(String, nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.member)
-    status = Column(Enum(StatusEnum), default=StatusEnum.active)
+
+    role = Column(
+        Enum(UserRole, name="user_role_enum"),
+        nullable=False,
+        index=True
+    )
+
+    status = Column(
+        Enum(StatusEnum, name="status_enum"),
+        nullable=False,
+        default=StatusEnum.active,
+        index=True
+    )
+
+    __mapper_args__ = {
+        "polymorphic_on": role,
+        "polymorphic_identity": UserRole.member,
+    }
+
+    # Relationships
+    payment_orders = relationship(
+        "PaymentOrder",
+        back_populates="payer",
+        cascade="all, delete-orphan"
+    )
+
+
 
 
 class SKU(Base, AuditMixin):
@@ -71,6 +88,4 @@ class SKU(Base, AuditMixin):
     unit_of_measure = Column(String)
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
 
-    # Relationship to SKUCategory
     category = relationship("SKUCategory", back_populates="skus")
-

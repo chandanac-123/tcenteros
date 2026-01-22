@@ -1,14 +1,13 @@
-from sqlalchemy import Column, String, Numeric, Enum, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, String, Numeric, Enum, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
-from app.core.models import AuditMixin
-from app.core.models import StatusEnum
+from app.core.models.base import AuditMixin, Base
+from app.core.models.models import StatusEnum
 from sqlalchemy.orm import relationship 
 import enum
 import uuid
 
 
-Base = declarative_base()
+
 
 class PricingType(enum.Enum):
     monthly = "monthly"
@@ -22,8 +21,8 @@ class PlatformFeature(Base, AuditMixin):
     __table_args__ = {"schema": "platform"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    feature_code = Column(String, unique=True, nullable=False)
     feature_name = Column(String, nullable=False)
+    description = Column(Text)
     base_price = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum(StatusEnum), default=StatusEnum.active, nullable=False)
 
@@ -38,20 +37,20 @@ class CenterFeatureSubscription(Base, AuditMixin):
     center_id = Column(
         UUID(as_uuid=True),
         ForeignKey("center.centers.id"),
-        nullable=False
+        nullable=False, index=True
     )
 
     feature_id = Column(
         UUID(as_uuid=True),
         ForeignKey("platform.platform_features.id"),
-        nullable=False
+        nullable=False, index=True
     )
 
     #ADD THIS FIELD
     payment_order_id = Column(
         UUID(as_uuid=True),
         ForeignKey("billing.payment_orders.payment_order_id"),
-        nullable=False
+        nullable=False, index=True
     )
 
     pricing_type = Column(
@@ -74,14 +73,18 @@ class CenterFeatureSubscription(Base, AuditMixin):
     status = Column(
         Enum(StatusEnum),
         default=StatusEnum.active,
-        nullable=False
+        nullable=False, index=True
     )
 
     # Relationships
     center = relationship("Center", backref="feature_subscriptions")
     feature = relationship("PlatformFeature")
-    payment_order = relationship("PaymentOrder")
-    tax_category = relationship("TaxCategory")
+    tax_category = relationship(
+    "TaxCategory",
+    back_populates="subscriptions"
+    )
+    payment_order = relationship("PaymentOrder", back_populates="feature_subscriptions")
+
 
 
 
