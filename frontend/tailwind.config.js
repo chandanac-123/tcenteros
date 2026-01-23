@@ -19,7 +19,9 @@ export default {
         primarybg: '#FFFFFF4D',
         secondarybg: '#F7EDFF',
         textgrey:'#848586',
-        bordergrey:'#DBDBDB'
+        bordergrey:'#DBDBDB',
+        primarybglight:'#0062D224',
+        greylight:'#3A3A3A24'
       }
     }
   },
