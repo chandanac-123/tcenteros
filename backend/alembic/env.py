@@ -22,7 +22,7 @@ from app.core.models.base import Base
 import app.auth.models
 import app.core.models
 import app.center.models
-import app.platform.models
+import app.platforms.models
 import app.billing.models
 import app.settings.models  
 

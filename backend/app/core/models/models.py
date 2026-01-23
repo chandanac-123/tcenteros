@@ -69,8 +69,14 @@ class User(Base, AuditMixin):
     payment_orders = relationship(
         "PaymentOrder",
         back_populates="payer",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        foreign_keys="PaymentOrder.payer_user_id"
     )
+try:
+    from app.billing.models.models import PaymentOrder
+except ImportError:
+    PaymentOrder = None
 
 
 
