@@ -21,7 +21,8 @@ export default {
         textgrey:'#848586',
         bordergrey:'#DBDBDB',
         primarybglight:'#0062D224',
-        greylight:'#3A3A3A24'
+        greylight:'#3A3A3A24',
+        bordergreylight:'#D4D4D4'
       }
     }
   },

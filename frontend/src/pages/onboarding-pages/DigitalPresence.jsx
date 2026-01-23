@@ -54,10 +54,6 @@ const DegitalPresence = () => {
     }
   ]
 
-  const fitnessTypes = [
-    { id: 'in-person', label: 'In-Person', image: inperson },
-    { id: 'hybrid', label: 'Hybrid', image: hybrid }
-  ]
 
   return (
     <SecondaryLayout>
@@ -86,7 +82,7 @@ const DegitalPresence = () => {
       </div>
 
       <div className='flex w-full px-4 sm:px-10 mt-10 justify-center'>
-        <div className='flex flex-col gap-4 px-6 py-6 shadow-xl rounded-lg w-full sm:w-2/3 lg:w-1/3'>
+        <div className='flex flex-col gap-4 px-6 py-6 shadow-2xl rounded-lg w-full sm:w-2/3 lg:w-1/3'>
           <span className='text-center font-medium'>
             Do you already use any digital tools for your center?
           </span>
@@ -101,7 +97,7 @@ const DegitalPresence = () => {
                 key={tool.id}
                 onClick={() => toggleTool(tool.id)}
                 className={`flex items-center border-2 rounded-lg px-4 py-3 cursor-pointer transition
-        ${isSelected ? 'border-primary bg-primary/5' : 'border-grey'}
+        ${isSelected ? 'border-primary bg-primary/5' : 'border-bordergreylight'}
       `}
               >
                 <img
@@ -116,7 +112,7 @@ const DegitalPresence = () => {
                   type='checkbox'
                   checked={isSelected}
                   readOnly
-                  className='w-5 h-5'
+                  className='w-4 h-4'
                 />
               </label>
             )

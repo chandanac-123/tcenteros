@@ -39,13 +39,14 @@ const buttonVariants = cva(
 
 const Button = React.forwardRef(
   (
-    { className, variant, size, leftIcon, rightIcon, children, ...props },
+    { className, variant, size, leftIcon, rightIcon, children, onClick, ...props },
     ref
   ) => {
     return (
       <button
         ref={ref}
         className={cn(buttonVariants({ variant, size, className }))}
+        onClick={onClick}
         {...props}
       >
         {leftIcon && <img src={leftIcon} className='flex items-center w-8' />}
