@@ -1,48 +1,38 @@
 import { useState } from 'react'
-import HexButton from '@pages/components/ui/hexbutton'
+import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import OnboardHeader from './components/OnboardHeader'
+import OnboardProgress from './components/OnboardProgress'
+import HexOptionGroup from './components/HexOptionGroup'
+import { memberOptions, trainerOptions } from '@constants/centerSizeOption'
 
 const CenterSize = () => {
   const [members, setMembers] = useState('50-150')
   const [trainers, setTrainers] = useState('3-5')
 
   return (
-    <div className='space-y-8'>
-      {/* Members */}
-      <div className='text-center space-y-4'>
-        <p className='font-medium'>
-          How many active members do you currently have?
-        </p>
+    <SecondaryLayout>
+      <OnboardHeader />
 
-        <div className='flex gap-4 justify-center flex-wrap'>
-          {['1-50', '50-150', '150-500', '500+'].map(item => (
-            <HexButton
-              key={item}
-              label={item}
-              active={members === item}
-              onClick={() => setMembers(item)}
-            />
-          ))}
-        </div>
-      </div>
+      <OnboardProgress
+        step={1}
+        total={5}
+        value={60}
+        title='Do you already use any digital tools for your center?'
+      />
+      <HexOptionGroup
+        title='How many active members do you currently have?'
+        options={memberOptions}
+        value={members}
+        onChange={setMembers}
+      />
 
-      {/* Trainers */}
-      <div className='text-center space-y-4'>
-        <p className='font-medium'>
-          How many trainers or instructors work with you?
-        </p>
-
-        <div className='flex gap-4 justify-center flex-wrap'>
-          {['1-2', '3-5', '6-10', '10+'].map(item => (
-            <HexButton
-              key={item}
-              label={item}
-              active={trainers === item}
-              onClick={() => setTrainers(item)}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+      <HexOptionGroup
+        title='How many trainers or instructors work with you?'
+        options={trainerOptions}
+        value={trainers}
+        onChange={setTrainers}
+      />
+    </SecondaryLayout>
   )
 }
 
