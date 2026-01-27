@@ -1,12 +1,12 @@
-from sqlalchemy.ext.asyncio import AssyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.settings.models.models import CenterCategory
-from app.s3.service  import upload_file, get_file_url
+from app.s3.service import upload_file, get_file_url
 
 
 
 
 async def create_center_category_superadmin(
-        db: AssyncSession,
+        db: AsyncSession,
         name:str,
         image_file:None,
 
