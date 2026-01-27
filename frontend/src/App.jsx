@@ -14,6 +14,7 @@ import SellableItem from '@pages/onboarding-pages/management/SellableItem'
 import SlotAndCapacity from '@pages/onboarding-pages/management/SlotAndCapacity'
 import TrainerAndStaff from '@pages/onboarding-pages/management/TrainerAndStaff'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
+import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
       <Route path='/center-size-scale' element={<CenterSize />} />
       <Route path='/digital-presence' element={<DegitalPresence />} />
       <Route path='/smart-recommandation' element={<SmartRecommandation/>}/>
+      <Route path='/marketing-support' element={<MarketingSupport/>}/>
 
       {/* Management Onboarding */}
       <Route path='/management' element={<CenterManagement />} />
