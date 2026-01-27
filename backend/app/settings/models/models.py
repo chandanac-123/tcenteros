@@ -49,6 +49,11 @@ class Address(Base, AuditMixin):
 
     # Relationship to centers (one-to-many)
     centers = relationship("Center", back_populates="address")
+    center_admins = relationship(
+    "CenterAdmin",
+    back_populates="address",
+    foreign_keys="CenterAdmin.address_id"
+)
 
 # ------------------------
 # Tax Categories

@@ -67,5 +67,8 @@ class Center(Base, AuditMixin):
     # Relationships (optional, for easy ORM access)
     category = relationship("CenterCategory", back_populates="centers", foreign_keys=[center_category_id])
     address = relationship("Address", back_populates="centers", foreign_keys=[address_id])
-    admins = relationship("CenterAdmin", back_populates="center")
+    admins = relationship(
+    "CenterAdmin",
+    back_populates="center",
+    foreign_keys="CenterAdmin.center_id")
     payment_orders = relationship("PaymentOrder", back_populates="center")

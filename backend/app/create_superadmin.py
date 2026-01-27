@@ -1,11 +1,12 @@
 import asyncio
 from sqlalchemy import select
 
+import app.core.models
 from app.core.database import AsyncSessionLocal
 from app.core.security import get_password_hash
 from app.core.models.models import User, UserRole, StatusEnum
 from app.core.config import settings
-import app.billing.models.models 
+
 
 
 async def create_superadmin():

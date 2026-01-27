@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from app.core.models.base import AuditMixin, Base
 import uuid
 import enum
-from app.center.models.models import Center
+
 
 class PayerType(enum.Enum):
     user = "user"
@@ -133,7 +133,7 @@ class PaymentOrder(Base, AuditMixin):
     # Relationships
     # ------------------------
     payer = relationship("User", back_populates="payment_orders", foreign_keys=[payer_user_id])
-    center = relationship("Center", back_populates="payment_orders", )
+    center = relationship("Center", back_populates="payment_orders", foreign_keys=[center_id])
     feature_subscriptions = relationship("CenterFeatureSubscription", back_populates="payment_order")
 
 

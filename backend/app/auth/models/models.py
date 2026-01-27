@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.models.models import User
+from app.core.models.base import Base
 from app.core.models.models import UserRole
 
 
@@ -38,5 +39,13 @@ class CenterAdmin(User):
     }
 
     # Relationships
-    center = relationship("Center", back_populates="admins")
-    address = relationship("Address", back_populates="center_admins")
+    center = relationship(
+    "Center",
+    back_populates="admins",
+    foreign_keys=[center_id]
+)
+    address = relationship(
+    "Address",
+    back_populates="center_admins",
+    foreign_keys=[address_id]
+)
