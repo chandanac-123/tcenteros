@@ -17,6 +17,7 @@ import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
 import ContactDetails from '@pages/onboarding-pages/ContactDetails'
 import PricingPage from '@pages/onboarding-pages/PricingPage'
+import InvoiceSummary from '@pages/onboarding-pages/InvoiceSummary'
 
 const App = () => {
   return (
@@ -31,6 +32,7 @@ const App = () => {
       <Route path='/marketing-support' element={<MarketingSupport/>}/>
       <Route path='/contact-details' element={<ContactDetails/>}/>
       <Route path='/pricing-page' element={<PricingPage/>}/>
+      <Route path='/invoice-summary' element={<InvoiceSummary/>}/>
 
       {/* Management Onboarding */}
       <Route path='/management' element={<CenterManagement />} />
