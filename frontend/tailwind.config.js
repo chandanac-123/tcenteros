@@ -10,7 +10,8 @@ export default {
       },
       backgroundImage: {
         'primary-bg': "url('/src/assets/images/landingprimary.svg')",
-        'secondary-bg': "url('/src/assets/images/landingsecondary.svg')"
+        'secondary-bg': "url('/src/assets/images/landingsecondary.svg')",
+        'smart-bg':"url('/src/assets/images/smart-bg-image.svg')"
       },
       colors: {
         primary: '#1452D4',
@@ -22,7 +23,9 @@ export default {
         bordergrey:'#DBDBDB',
         primarybglight:'#0062D224',
         greylight:'#3A3A3A24',
-        bordergreylight:'#D4D4D4'
+        bordergreylight:'#D4D4D4',
+        textblack:'#000000',
+        secondary_light:"#8B24E21F"
       }
     }
   },
