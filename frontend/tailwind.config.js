@@ -25,7 +25,8 @@ export default {
         greylight:'#3A3A3A24',
         bordergreylight:'#D4D4D4',
         textblack:'#000000',
-        secondary_light:"#8B24E21F"
+        secondary_light:"#8B24E21F",
+        pricing_text:"#808080"
       }
     }
   },

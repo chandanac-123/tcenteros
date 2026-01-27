@@ -15,6 +15,8 @@ import SlotAndCapacity from '@pages/onboarding-pages/management/SlotAndCapacity'
 import TrainerAndStaff from '@pages/onboarding-pages/management/TrainerAndStaff'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
+import ContactDetails from '@pages/onboarding-pages/ContactDetails'
+import PricingPage from '@pages/onboarding-pages/PricingPage'
 
 const App = () => {
   return (
@@ -27,6 +29,8 @@ const App = () => {
       <Route path='/digital-presence' element={<DegitalPresence />} />
       <Route path='/smart-recommandation' element={<SmartRecommandation/>}/>
       <Route path='/marketing-support' element={<MarketingSupport/>}/>
+      <Route path='/contact-details' element={<ContactDetails/>}/>
+      <Route path='/pricing-page' element={<PricingPage/>}/>
 
       {/* Management Onboarding */}
       <Route path='/management' element={<CenterManagement />} />
