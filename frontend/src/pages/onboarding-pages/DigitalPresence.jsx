@@ -8,22 +8,27 @@ import OnboardProgress from './components/OnboardProgress'
 import ToolOption from './components/ToolOption'
 import { digitalTools } from '@constants/digitalTools'
 import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const DegitalPresence = () => {
   const navigate = useNavigate()
-  const [selectedTools, setSelectedTools] = useState(['website'])
-  const [noneSelected, setNoneSelected] = useState(false)
+  let { digitalToolsSelected, setDigitalToolsSelected } = useOnboardingStore()
+  const noneSelected = digitalToolsSelected.length === 0
 
   const toggleTool = toolId => {
-    setNoneSelected(false)
-    setSelectedTools(prev =>
-      prev.includes(toolId) ? prev.filter(t => t !== toolId) : [...prev, toolId]
+    // Always get the latest value from the store
+    const current = Array.isArray(digitalToolsSelected)
+      ? digitalToolsSelected
+      : []
+    setDigitalToolsSelected(
+      current.includes(toolId)
+        ? current.filter(t => t !== toolId)
+        : [...current, toolId]
     )
   }
 
   const selectNone = () => {
-    setSelectedTools([])
-    setNoneSelected(true)
+    setDigitalToolsSelected([])
   }
 
   return (
@@ -40,7 +45,7 @@ const DegitalPresence = () => {
             <ToolOption
               key={tool.id}
               tool={tool}
-              selected={selectedTools.includes(tool.id)}
+              selected={digitalToolsSelected.includes(tool.id)}
               onToggle={toggleTool}
             />
           ))}
@@ -65,8 +70,12 @@ const DegitalPresence = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/center-size-scale')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/center-size-scale')}
+        >
           Back
         </Button>
         <Button

@@ -35,6 +35,8 @@ export const useOnboardingStore = create(
       setTrainerCount: value => set({ trainerCount: value }),
       digitalToolsSelected: ['website'],
       setDigitalToolsSelected: value => set({ digitalToolsSelected: value }),
+      marketingSupportType: 'metacampaign',
+      setMarketingSupportType: value => set({ marketingSupportType: value })
     }),
     {
       name: 'onboarding-storage'

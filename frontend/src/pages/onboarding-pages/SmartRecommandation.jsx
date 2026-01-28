@@ -6,9 +6,30 @@ import best_fit_img from '@assets/images/bestfit-img.svg'
 import tick from '@assets/formicons/secondary-tick.svg'
 import SmartLayout from '@common/onboardlayouts/SmartLayout'
 import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const SmartRecommandation = () => {
   const navigate = useNavigate()
+  const { centerTools } = useOnboardingStore()
+  console.log('centerTools: ', centerTools)
+  const store = useOnboardingStore()
+  console.log('store: ', store)
+
+  const details = [
+    { label: 'Center type', value: store.typeSelection },
+    { label: 'Class Mode', value: store.classMode },
+    { label: 'Class Size', value: store.memberCount },
+    { label: 'Trainers', value: store.trainerCount },
+    { label: 'Attendance', value: store.attendanceType },
+    {
+      label: 'Management',
+      value: store.centerTools
+        ? Object.keys(store.centerTools)
+            .filter(k => store.centerTools[k])
+            .join(', ')
+        : ''
+    }
+  ]
 
   return (
     <SmartLayout>
@@ -50,17 +71,30 @@ const SmartRecommandation = () => {
 
             {/* Details */}
             <div className='flex flex-col gap-6 text-sm'>
-              {[
-                'Center type',
-                'Class Mode',
-                'Class Size',
-                'Trainers',
-                'Attendance',
-                'Management'
-              ].map(label => (
+              {details.map(({ label, value }) => (
                 <div key={label} className='flex gap-2'>
                   <span className='text-textgrey min-w-[110px]'>{label} :</span>
-                  <span className='text-textblack font-normal font-roboto'>Dance studio</span>
+                  <span className='text-textblack font-normal font-roboto'>
+                    {(() => {
+                      if (!value) return ''
+                      const str = value.toString()
+                      if (label === 'Management') {
+                        return str
+                          .split(',')
+                          .map(item => item.trim())
+                          .filter(Boolean)
+                          .map(
+                            item =>
+                              item.charAt(0).toUpperCase() +
+                              item.slice(1).toLowerCase()
+                          )
+                          .join(', ')
+                      }
+                      return (
+                        str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+                      )
+                    })()}
+                  </span>
                 </div>
               ))}
 
@@ -76,13 +110,20 @@ const SmartRecommandation = () => {
 
       {/* Footer Buttons */}
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-         onClick={() => navigate('/management')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/management')}
+        >
           Back
         </Button>
 
-        <Button variant='outline_primary' rightIcon={rightcolorarrow} 
-        onClick={() => navigate('/marketing-support')}>
+        <Button
+          variant='outline_primary'
+          rightIcon={rightcolorarrow}
+          onClick={() => navigate('/marketing-support')}
+        >
           Continue
         </Button>
       </div>

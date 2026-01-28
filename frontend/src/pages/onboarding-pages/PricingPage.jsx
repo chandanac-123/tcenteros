@@ -20,63 +20,64 @@ const PricingPage = () => {
         </div>
 
         <div className='flex flex-col items-center justify-center'>
-          {/* Title */}
-
           {/* Pricing Card */}
-          <div className='bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl p-8 w-full max-w-md'>
-            {/* Subtitle */}
-            <p className='text-center text-sm text-gray-500 mb-3'>
-              Recommended package White-Label Offline + Live Classes
-            </p>
+          <div className='bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto overflow-hidden'>
+            {/* CONTENT WITH PADDING */}
+            <div className='py-6 px-20'>
+              {/* Subtitle */}
+              <p className='text-center text-sm text-gray-500 mb-3'>
+                Recommended package White-Label Offline + Live Classes
+              </p>
 
-            {/* Price */}
-            <div className='text-center mb-4'>
-              <span className='text-3xl font-bold text-purple-600'>
-                ₹24,900.00
-              </span>
-              <span className='text-base font-medium text-purple-600'>
-                {' '}
-                / year
-              </span>
-              <span className='ml-2 text-sm text-gray-400 line-through'>
-                ₹42,999.00
-              </span>
+              {/* Price */}
+              <div className='text-center mb-4'>
+                <span className='text-3xl font-bold text-purple-600'>
+                  ₹24,900.00
+                </span>
+                <span className='text-base font-medium text-purple-600'>
+                  {' '}
+                  / year
+                </span>
+                <span className='ml-2 text-sm text-gray-400 line-through'>
+                  ₹42,999.00
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div className='border-b border-gray-200 my-4' />
+
+              {/* Includes */}
+              <h3 className='text-sm font-semibold text-center mb-4'>
+                What’s included
+              </h3>
+
+              <ul className='space-y-3 mb-6'>
+                {[
+                  'Branded Mobile App (iOS & Android)',
+                  'Admin Dashboard CRM',
+                  'Attendance Tracking (QR & Manual)',
+                  'Center report insight',
+                  'Payment Gateway integration',
+                  '1-Year Support'
+                ].map(item => (
+                  <li
+                    key={item}
+                    className='flex items-center gap-3 text-sm text-gray-600'
+                  >
+                    <img src={check} alt='check' className='w-4 h-4' />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              {/* Total */}
+              <div className='text-center text-lg font-semibold text-purple-600'>
+                Total 1-year Cost : ₹34,998.00
+              </div>
             </div>
 
-            {/* Divider */}
-            <div className='border-b border-gray-200 my-4' />
-
-            {/* Includes */}
-            <h3 className='text-sm font-semibold text-center mb-4'>
-              What’s included
-            </h3>
-
-            <ul className='space-y-3 mb-6'>
-              {[
-                'Branded Mobile App (iOS & Android)',
-                'Admin Dashboard CRM',
-                'Attendance Tracking (QR & Manual)',
-                'Center report insight',
-                'Payment Gateway integration',
-                '1-Year Support'
-              ].map(item => (
-                <li
-                  key={item}
-                  className='flex items-center gap-3 text-sm text-gray-600'
-                >
-                  <img src={check} alt='check' className='w-5 h-5' />
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            {/* Total */}
-            <div className='text-center text-lg font-semibold text-purple-600 mb-6'>
-              Total 1-year Cost : ₹34,998.00
-            </div>
-
-            {/* Buttons */}
-            <div className='flex gap-3'>
+            {/* BUTTONS (NO px-20 / py-6) */}
+            <div className='px-6 py-4 border-t border-gray-200 flex gap-3'>
               <Button
                 variant='button_outlined'
                 className='w-1/2'
@@ -96,6 +97,7 @@ const PricingPage = () => {
             </div>
           </div>
         </div>
+
         {/* Back Button */}
         <div className='mt-6'>
           <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>

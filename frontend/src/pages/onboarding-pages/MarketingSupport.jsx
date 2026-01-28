@@ -5,16 +5,16 @@ import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import SelectionWithoutCheckbox from './components/SelectionWithoutCheckbox'
 import { marketingSupport } from '@constants/marketingSupport'
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const MarketingSupport = () => {
   const navigate = useNavigate()
 
-  const [selectedType, setSelectedType] = useState('metacampaign')
+ const { marketingSupportType, setMarketingSupportType } = useOnboardingStore()
 
   const handleSelect = id => {
-    setSelectedType(id) // auto-deselects "none"
+    setMarketingSupportType(id)
   }
 
   return (
@@ -44,7 +44,7 @@ const MarketingSupport = () => {
             <SelectionWithoutCheckbox
               key={item.id}
               item={item}
-              selected={selectedType === item.id}
+              selected={marketingSupportType === item.id}
               onSelect={() => handleSelect(item.id)}
             />
           ))}
@@ -54,7 +54,7 @@ const MarketingSupport = () => {
             className={`
               flex items-center gap-4 border-2 rounded-lg px-4 py-3 cursor-pointer transition
               ${
-                selectedType === 'none'
+                marketingSupportType === 'none'
                   ? 'border-primary bg-primary/5'
                   : 'border-bordergreylight'
               }
@@ -63,7 +63,7 @@ const MarketingSupport = () => {
             <input
               type='radio'
               name='marketing-support'
-              checked={selectedType === 'none'}
+              checked={marketingSupportType === 'none'}
               onChange={() => handleSelect('none')}
               className='w-5 h-5 accent-primary'
             />
@@ -82,7 +82,7 @@ const MarketingSupport = () => {
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
-          disabled={!selectedType}
+          disabled={!marketingSupportType}
           onClick={() => navigate('/contact-details')}
         >
           Boost Membership
