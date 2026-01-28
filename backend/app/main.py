@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.auth.api.routes import router as auth_router
 from app.settings.api.routes import router as settings_router
+from app.core.api.routes import router as core_router
 
 app = FastAPI(
     title="My FastAPI Project",
@@ -21,4 +22,5 @@ def health_check():
 
 # Additional routes and logic can be added here
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+app.include_router(core_router, prefix="/api/auth", tags=["core"]),
 app.include_router(settings_router, prefix="/api/settings/superadmin", tags=["Settings"])
