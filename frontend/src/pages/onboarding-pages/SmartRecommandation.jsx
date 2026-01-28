@@ -4,7 +4,7 @@ import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import best_fit_img from '@assets/images/bestfit-img.svg'
 import tick from '@assets/formicons/secondary-tick.svg'
-import SmartLayout from '@components/onboardlayouts/SmartLayout'
+import SmartLayout from '@common/onboardlayouts/SmartLayout'
 
 const SmartRecommandation = () => {
   return (
@@ -23,7 +23,7 @@ const SmartRecommandation = () => {
 
       {/* Center Card */}
       <div className='flex justify-center px-4 sm:px-10'>
-        <div className='w-full max-w-2xl bg-white shadow-2xl rounded-xl p-6 sm:p-8 flex flex-col gap-6'>
+        <div className='w-full max-w-2xl bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl p-6 sm:p-8 flex flex-col gap-6'>
           {/* Card Header */}
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-around gap-3'>
             <span className='bg-secondary text-white font-medium py-2 px-4 rounded-lg w-fit'>

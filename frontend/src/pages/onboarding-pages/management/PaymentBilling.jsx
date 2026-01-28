@@ -1,4 +1,4 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import { Slider } from '@pages/components/ui/slider'
 import { useOnboardingStore } from '@store/onboardingStore'
@@ -44,7 +44,7 @@ const PaymentBilling = () => {
         </div>
       </div>
       <div className='flex w-full px-4 sm:px-10 mt-5 justify-center items-center'>
-        <div className='flex flex-col gap-4 px-6 py-6 shadow-2xl rounded-lg w-full sm:w-2/3 lg:w-1/3'>
+        <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-full sm:w-2/3 lg:w-1/3'>
           <span className='text-start font-semibold text-xl text-secondary justify-start flex'>
             4.Payments & Billing
           </span>

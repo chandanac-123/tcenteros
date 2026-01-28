@@ -1,4 +1,4 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import backarrow from '@assets/images/backarrow.svg'
 import check from '@assets/formicons/check.svg'
@@ -21,7 +21,7 @@ const PricingPage = () => {
         {/* Title */}
 
         {/* Pricing Card */}
-        <div className='bg-white rounded-2xl shadow-xl p-8 w-full max-w-md'>
+        <div className='bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl p-8 w-full max-w-md'>
           {/* Subtitle */}
           <p className='text-center text-sm text-gray-500 mb-3'>
             Recommended package White-Label Offline + Live Classes

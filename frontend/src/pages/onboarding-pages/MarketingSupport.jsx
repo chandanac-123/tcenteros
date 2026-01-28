@@ -1,4 +1,4 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
 import backarrow from '@assets/images/backarrow.svg'
@@ -35,7 +35,7 @@ const MarketingSupport = () => {
 
       {/* Options */}
       <div className='flex justify-center px-4 sm:px-10 mt-10'>
-        <div className='flex flex-col gap-4 px-6 py-6 shadow-2xl rounded-lg w-full  lg:w-1/3'>
+        <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-full  lg:w-1/3'>
           {/* Card Options */}
           {marketingSupport.map(item => (
             <SelectionWithoutCheckbox

@@ -1,4 +1,4 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
@@ -9,7 +9,7 @@ const InvoiceSummary = () => {
       <OnboardHeader />
 
       <div className='flex justify-center px-4 sm:px-10'>
-        <div className='bg-white rounded-2xl shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] p-8 w-full max-w-lg  '>
+        <div className='bg-white rounded-3xl shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] p-8 w-full max-w-lg  '>
           {/* Header */}
           <h2 className='text-xl font-semibold text-center mb-6'>
             Billing Summary

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
 import HexOptionGroup from './components/HexOptionGroup'

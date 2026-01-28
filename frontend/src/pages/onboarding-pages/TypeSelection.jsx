@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
 import OnboardHeader from './components/OnboardHeader'

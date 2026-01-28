@@ -2,7 +2,7 @@ import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import backarrow from '@assets/images/backarrow.svg'
 import { reportsAndInsight } from '@constants/reportAndInsight'
 import { useEffect } from 'react'
@@ -31,7 +31,7 @@ const ReportAndInsight = () => {
       <OnboardProgress step={3} total={5} value={60} />
 
       <div className='flex justify-center px-4 sm:px-10 mt-5'>
-        <div className='flex flex-col gap-4 px-6 py-6 shadow-2xl rounded-lg w-auto'>
+        <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto'>
           <h2 className='font-semibold text-xl text-secondary'>
             7. Reports & Insights
           </h2>

@@ -1,4 +1,4 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
@@ -32,11 +32,13 @@ const DegitalPresence = () => {
         step={1}
         total={5}
         value={80}
-        title='Do you already use any digital tools for your center?'
+        title=''
       />
 
-      <div className='flex justify-center px-4 sm:px-10 mt-10'>
-        <div className='flex flex-col gap-4 px-6 py-6 shadow-2xl rounded-lg w-full sm:w-2/3 lg:w-1/3'>
+      <div className='flex justify-center px-4 sm:px-10'>
+        <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-full sm:w-2/3 lg:w-1/3'>
+        <span>Do you already use any digital tools for your center?</span>
+
           {digitalTools.map(tool => (
             <ToolOption
               key={tool.id}
