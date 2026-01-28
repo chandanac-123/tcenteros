@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
@@ -8,11 +7,11 @@ import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
 import backarrow from '@assets/images/backarrow.svg'
 import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const CenterSize = () => {
   const navigate = useNavigate()
-  const [members, setMembers] = useState('50-150')
-  const [trainers, setTrainers] = useState('3-5')
+  const { memberCount, setMemberCount, trainerCount, setTrainerCount } = useOnboardingStore()
 
   return (
     <SecondaryLayout>
@@ -34,15 +33,15 @@ const CenterSize = () => {
           <HexOptionGroup
             title='How many active members do you currently have?'
             options={memberOptions}
-            value={members}
-            onChange={setMembers}
+            value={memberCount}
+            onChange={setMemberCount}
           />
 
           <HexOptionGroup
             title='How many trainers or instructors work with you?'
             options={trainerOptions}
-            value={trainers}
-            onChange={setTrainers}
+            value={trainerCount}
+            onChange={setTrainerCount}
           />
         </div>
       </div>

@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 const MarketingSupport = () => {
   const navigate = useNavigate()
 
-  const [selectedType, setSelectedType] = useState(null)
+  const [selectedType, setSelectedType] = useState('metacampaign')
 
   const handleSelect = id => {
     setSelectedType(id) // auto-deselects "none"

@@ -6,12 +6,6 @@ export const useOnboardingStore = create(
   persist(
     set => ({
       centerTools: {},
-      attendanceType: 'manual',
-      sellableItem: 'merchandise',
-      slotControl: null, // 'yes' or 'no'
-      payment_Billing: null, // 'yes' or 'no'
-      reportAndInsight: 'basic-report',
-      trainerAndStaff: null, // 'yes' or 'no'
       setTool: (toolId, value) =>
         set(state => ({
           centerTools: {
@@ -19,12 +13,28 @@ export const useOnboardingStore = create(
             [toolId]: value
           }
         })),
+      attendanceType: 'manual',
       setAttendanceType: type => set({ attendanceType: type }),
+      sellableItem: 'merchandise',
       setSellableItem: type => set({ sellableItem: type }),
+      slotControl: null, // 'yes' or 'no'
       setSlotControl: value => set({ slotControl: value }),
+      payment_Billing: null, // 'yes' or 'no'
       setPaymentBilling: value => set({ payment_Billing: value }),
+      reportAndInsight: 'basic-report',
       setReportAndInsight: value => set({ reportAndInsight: value }),
-      setTrainerAndStaff: value => set({ trainerAndStaff: value })
+      trainerAndStaff: null, // 'yes' or 'no'
+      setTrainerAndStaff: value => set({ trainerAndStaff: value }),
+      typeSelection: 'dance',
+      setTypeSelection: value => set({ typeSelection: value }),
+      classMode: 'in-person',
+      setClassMode: value => set({ classMode: value }),
+      memberCount: '50-150',
+      setMemberCount: value => set({ memberCount: value }),
+      trainerCount: '3-5',
+      setTrainerCount: value => set({ trainerCount: value }),
+      digitalToolsSelected: ['website'],
+      setDigitalToolsSelected: value => set({ digitalToolsSelected: value }),
     }),
     {
       name: 'onboarding-storage'

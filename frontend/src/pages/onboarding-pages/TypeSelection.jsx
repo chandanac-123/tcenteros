@@ -1,4 +1,5 @@
-import { useState } from 'react'
+// import { useState } from 'react'
+import { useOnboardingStore } from '@store/onboardingStore'
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
@@ -10,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 
 const TypeSelection = () => {
   const navigate = useNavigate()
-  const [selectedType, setSelectedType] = useState('dance')
+  const { typeSelection, setTypeSelection } = useOnboardingStore()
 
   return (
     <SecondaryLayout>
@@ -29,8 +30,8 @@ const TypeSelection = () => {
           <SelectionCard
             key={item.id}
             item={item}
-            selected={selectedType === item.id}
-            onSelect={setSelectedType}
+            selected={typeSelection === item.id}
+            onSelect={setTypeSelection}
           />
         ))}
       </div>
@@ -39,7 +40,7 @@ const TypeSelection = () => {
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
-          onClick={()=>navigate('/class-mode')}
+          onClick={() => navigate('/class-mode')}
         >
           Next
         </Button>

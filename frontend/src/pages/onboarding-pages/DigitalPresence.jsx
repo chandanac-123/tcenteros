@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 
 const DegitalPresence = () => {
   const navigate = useNavigate()
-  const [selectedTools, setSelectedTools] = useState([])
+  const [selectedTools, setSelectedTools] = useState(['website'])
   const [noneSelected, setNoneSelected] = useState(false)
 
   const toggleTool = toolId => {

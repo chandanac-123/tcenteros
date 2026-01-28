@@ -6,12 +6,12 @@ import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
 import SelectionCard from './components/SelectionCard'
 import { classModes } from '@constants/classMode'
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const ClassSelectionMode = () => {
   const navigate = useNavigate()
-  const [selectedMode, setSelectedMode] = useState('in-person')
+  const { classMode, setClassMode } = useOnboardingStore()
 
   return (
     <SecondaryLayout>
@@ -30,15 +30,19 @@ const ClassSelectionMode = () => {
           <SelectionCard
             key={item.id}
             item={item}
-            selected={selectedMode === item.id}
-            onSelect={setSelectedMode}
+            selected={classMode === item.id}
+            onSelect={setClassMode}
           />
         ))}
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/type-selection')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/type-selection')}
+        >
           Back
         </Button>
         <Button
