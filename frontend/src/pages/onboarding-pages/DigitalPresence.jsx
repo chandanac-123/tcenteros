@@ -35,7 +35,7 @@ const DegitalPresence = () => {
     <SecondaryLayout>
       <OnboardHeader />
 
-      <OnboardProgress step={1} total={5} value={80} title='' />
+      <OnboardProgress step={4} total={5} value={64} title='' />
 
       <div className='flex justify-center px-4 sm:px-10'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-full sm:w-2/3 lg:w-1/3'>

@@ -26,8 +26,7 @@ const SellableItem = () => {
   return (
     <SecondaryLayout>
       <OnboardHeader />
-
-      <OnboardProgress step={3} total={5} value={60} />
+      <OnboardProgress step={3} total={5} value={80} />
 
       <div className='flex justify-center px-4 sm:px-10 mt-5'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto'>

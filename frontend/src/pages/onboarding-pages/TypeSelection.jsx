@@ -19,10 +19,9 @@ const TypeSelection = () => {
 
       <OnboardProgress
         step={1}
-        total={5}
-        value={20}
+        value={16}
         title='What kind of fitness center do you own?'
-        description='Choose the type of fitness business you own so we can recommend the best package.'
+        description='Choose the class mode you prefer so we can recommend the best package for your needs.'
       />
 
       <div className='flex gap-4 px-4 sm:px-10 mt-10 flex-wrap lg:flex-nowrap justify-center lg:justify-between'>

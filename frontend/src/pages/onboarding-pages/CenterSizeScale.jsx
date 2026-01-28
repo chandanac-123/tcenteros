@@ -11,22 +11,19 @@ import { useOnboardingStore } from '@store/onboardingStore'
 
 const CenterSize = () => {
   const navigate = useNavigate()
-  const { memberCount, setMemberCount, trainerCount, setTrainerCount } = useOnboardingStore()
+  const { memberCount, setMemberCount, trainerCount, setTrainerCount } =
+    useOnboardingStore()
 
   return (
     <SecondaryLayout>
       <OnboardHeader />
 
-      <OnboardProgress step={3} total={5} value={60} />
-
-      <div className='px-4 sm:px-10'>
-        <div className='flex flex-col gap-1 mb-6'>
-          <span className='text-base font-normal text-black'>
-            This helps us size your system correctly so it stays fast and
-            reliable as you grow.
-          </span>
-        </div>
-      </div>
+      <OnboardProgress
+        step={3}
+        value={48}
+        description='This helps us size your system correctly so it stays fast and
+            reliable as you grow.'
+      />
 
       <div className='flex items-center justify-center'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto'>
@@ -47,8 +44,12 @@ const CenterSize = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/class-mode')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/class-mode')}
+        >
           Back
         </Button>
 

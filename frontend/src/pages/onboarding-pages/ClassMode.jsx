@@ -19,10 +19,9 @@ const ClassSelectionMode = () => {
 
       <OnboardProgress
         step={2}
-        total={5}
-        value={40}
+        value={32}
         title='How do you conduct your classes?'
-        description='Choose the mode that best describes how your classes are delivered.'
+        description='Choose the class mode you prefer so we can recommend the best package for your needs.'
       />
 
       <div className='flex gap-6 px-4 sm:px-10 mt-10 justify-center'>
