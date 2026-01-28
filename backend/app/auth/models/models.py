@@ -6,6 +6,15 @@ from app.core.models.base import Base
 from app.core.models.models import UserRole
 
 
+
+class SuperAdmin(User):
+    __tablename__ = "superadmins"
+    __table_args__ = {"schema": "auth"}
+    id = Column(UUID(as_uuid=True), ForeignKey("shared.users.id", ondelete="CASCADE"), primary_key=True)
+    __mapper_args__ = {
+        "polymorphic_identity": "superadmin",
+    }
+
 class CenterAdmin(User):
     __tablename__ = "center_admins"
     __table_args__ = {"schema": "auth"}

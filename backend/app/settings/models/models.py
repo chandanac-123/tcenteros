@@ -107,6 +107,7 @@ class CenterCategory(Base, AuditMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
     code = Column(String, unique=True, nullable=False)
+    image_url = Column(String, nullable=True)  
     parent_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.center_categories.id"), nullable=True)
     description = Column(Text)
     display_order = Column(Integer, default=0)

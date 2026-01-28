@@ -20,6 +20,8 @@ def root():
 def health_check():
     return {"status": "ok"}
 
+
+
 # Additional routes and logic can be added here
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(core_router, prefix="/api/auth", tags=["core"]),

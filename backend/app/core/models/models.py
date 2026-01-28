@@ -48,9 +48,9 @@ class User(Base, AuditMixin):
     password_hash = Column(String, nullable=False)
 
     role = Column(
-        Enum(UserRole, name="user_role_enum"),
-        nullable=False,
-        index=True
+    String,
+    nullable=False,
+    index=True
     )
 
     status = Column(

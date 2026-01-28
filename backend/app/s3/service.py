@@ -6,20 +6,20 @@ BUCKET = os.getenv("AWS_S3_BUCKET")
 KMS_KEY = os.getenv("AWS_KMS_KEY_ID")
 
 
-def upload_file(file):
-    key = f"uploads/{uuid.uuid4()}_{file.filename}"
+import io
 
+def upload_file(file_bytes, key, content_type="image/jpeg"):
+    file_obj = io.BytesIO(file_bytes)
     s3.upload_fileobj(
-        file.file,
+        file_obj,
         BUCKET,
         key,
         ExtraArgs={
             "ServerSideEncryption": "aws:kms",
             "SSEKMSKeyId": KMS_KEY,
-            "ContentType": file.content_type,
+            "ContentType": content_type,
         },
     )
-
     return key
 
 
