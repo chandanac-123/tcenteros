@@ -35,7 +35,7 @@ class CenterAdmin(User):
     is_approved = Column(Boolean, default=False, nullable=False)
 
     __mapper_args__ = {
-        "polymorphic_identity": UserRole.centeradmin,
+        "polymorphic_identity": "centeradmin",
     }
 
     # Relationships

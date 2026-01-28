@@ -62,7 +62,7 @@ class User(Base, AuditMixin):
 
     __mapper_args__ = {
         "polymorphic_on": role,
-        "polymorphic_identity": UserRole.member,
+        "polymorphic_identity": "member",
     }
 
     # Relationships
