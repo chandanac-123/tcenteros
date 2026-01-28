@@ -79,7 +79,7 @@ const PricingPage = () => {
               Request a Demo
             </Button>
 
-            <Button variant='button_filled' className='w-1/2'>
+            <Button variant='button_filled' size='sm' className='w-1/2'>
               Buy now
             </Button>
           </div>

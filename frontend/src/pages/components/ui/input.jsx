@@ -1,19 +1,43 @@
 import * as React from "react"
-
 import { cn } from "@pages/lib/utils"
 
-const Input = React.forwardRef(({ className, type, ...props }, ref) => {
+const Input = React.forwardRef(({ className, type, icon, label, ...props }, ref) => {
   return (
-    <input
-      type={type}
-      className={cn(
-        "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        className
+    <div>
+      {label && (
+        <label className="block mb-1 text-sm font-medium text-textblack">
+          {label}
+        </label>
       )}
-      ref={ref}
-      {...props} />
+      {icon ? (
+        <div className="flex items-center relative rounded-lg border border-bordergreylight">
+          <span className="absolute left-3 flex items-center text-gray-400">
+            {icon}
+          </span>
+          <input
+            type={type}
+            className={cn(
+              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10",
+              className
+            )}
+            ref={ref}
+            {...props}
+          />
+        </div>
+      ) : (
+        <input
+          type={type}
+          className={cn(
+            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+      )}
+    </div>
   );
-})
+});
 Input.displayName = "Input"
 
 export { Input }
