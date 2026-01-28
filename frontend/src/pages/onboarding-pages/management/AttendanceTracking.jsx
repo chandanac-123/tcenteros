@@ -9,12 +9,20 @@ import OnboardHeader from '../components/OnboardHeader'
 import YesNoQuestion from '../components/YesNouestion'
 import SelectionCardTick from '../components/SelectionCardTick'
 import { attendanceTrackingType } from '@constants/attendanceTrack'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const AttendanceTracking = () => {
   const navigate = useNavigate()
-  const { setTool } = useOnboardingStore()
-  const [selectedType, setSelectedType] = useState('manual')
+ const { setTool, attendanceType, setAttendanceType } = useOnboardingStore()
+
+  useEffect(() => {
+    // Update CenterManagement attendance checkbox whenever selection changes
+    if (attendanceType === 'no-tracking') {
+      setTool('attendance', false)
+    } else {
+      setTool('attendance', true)
+    }
+  }, [attendanceType, setTool])
 
   return (
     <SecondaryLayout>
@@ -42,8 +50,8 @@ const AttendanceTracking = () => {
               <SelectionCardTick
                 key={item.id}
                 item={item}
-                selected={selectedType === item.id}
-                onSelect={setSelectedType}
+                selected={attendanceType === item.id}
+                onSelect={setAttendanceType}
               />
             ))}
           </div>
@@ -51,7 +59,12 @@ const AttendanceTracking = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button

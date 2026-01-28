@@ -1,15 +1,27 @@
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
-import { sellableItem } from '@constants/sellableItem'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SelectionCardTick from '../components/SelectionCardTick'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
 import backarrow from '@assets/images/backarrow.svg'
+import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
+import { sellableItems } from '@constants/sellableItem'
 
 const SellableItem = () => {
-  const [selectedType, setSelectedType] = useState('merchandise')
+  const navigate = useNavigate()
+  const { setTool, sellableItem, setSellableItem } = useOnboardingStore()
+
+  useEffect(() => {
+    // Update CenterManagement attendance checkbox whenever selection changes
+    if (sellableItem === 'nothing-to-sell') {
+      setTool('sellable_items', false)
+    } else {
+      setTool('sellable_items', true)
+    }
+  }, [sellableItem, setTool])
 
   return (
     <SecondaryLayout>
@@ -28,16 +40,17 @@ const SellableItem = () => {
           </p>
 
           <p className='font-medium text-sm text-secondary'>
-           Manage stock, avoid shortages, and connect item sales directly to billing — no spreadsheets needed
+            Manage stock, avoid shortages, and connect item sales directly to
+            billing — no spreadsheets needed
           </p>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center'>
-            {sellableItem.map(item => (
+            {sellableItems.map(item => (
               <SelectionCardTick
                 key={item.id}
                 item={item}
-                selected={selectedType === item.id}
-                onSelect={setSelectedType}
+                selected={sellableItem === item.id}
+                onSelect={setSellableItem}
               />
             ))}
           </div>
@@ -45,7 +58,12 @@ const SellableItem = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button

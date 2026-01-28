@@ -7,14 +7,16 @@ import logo from '@assets/images/logo.svg'
 import moveicon from '@assets/images/moveicon.svg'
 import backarrow from '@assets/images/backarrow.svg'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
+import RadioGroup from '@common/RadioGroup'
+
 const TrainerAndStaff = () => {
   const navigate = useNavigate()
-  const { setTool } = useOnboardingStore()
+  const { setTool, trainerAndStaff, setTrainerAndStaff } = useOnboardingStore()
 
   const handleAnswer = value => {
+    setTrainerAndStaff(value)
     setTool('staffmanagement', value === 'yes')
   }
-
   return (
     <SecondaryLayout>
       {/* Header */}
@@ -52,33 +54,24 @@ const TrainerAndStaff = () => {
           <span className='text-start font-medium text-sm text-secondary justify-start flex'>
             Do you want to manage trainers and staff schedules in one system?
           </span>
-          <div className='flex flex-col gap-3 mt-2'>
-            <label className='flex items-center gap-3 cursor-pointer'>
-              <input
-                type='radio'
-                name='member_management'
-                value='yes'
-                onChange={() => handleAnswer('yes')}
-                className='w-4 h-4 accent-secondary'
-              />
-              <span className='text-sm'>Yes</span>
-            </label>
-
-            <label className='flex items-center gap-3 cursor-pointer'>
-              <input
-                type='radio'
-                name='member_management'
-                value='no'
-                onChange={() => handleAnswer('no')}
-                className='w-4 h-4 accent-secondary'
-              />
-              <span className='text-sm'>No, I manage accounts elsewhere</span>
-            </label>
-          </div>
+          <RadioGroup
+            name='paymentbilling'
+            options={[
+              { value: 'yes', label: 'Yes' },
+              { value: 'no', label: 'No, I manage accounts elsewhere' }
+            ]}
+            value={trainerAndStaff}
+            onChange={handleAnswer}
+          />
         </div>
       </div>
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button

@@ -7,14 +7,17 @@ import logo from '@assets/images/logo.svg'
 import moveicon from '@assets/images/moveicon.svg'
 import backarrow from '@assets/images/backarrow.svg'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
+import RadioGroup from '@common/RadioGroup'
 
 const PaymentBilling = () => {
   const navigate = useNavigate()
-  const { setTool } = useOnboardingStore()
+  const { setTool, payment_Billing, setPaymentBilling } = useOnboardingStore()
 
   const handleAnswer = value => {
+    setPaymentBilling(value)
     setTool('billing', value === 'yes')
   }
+
   return (
     <SecondaryLayout>
       {/* Header */}
@@ -53,35 +56,24 @@ const PaymentBilling = () => {
             Track membership fees, renewals, item sales, refunds, discounts, and
             expenses — so you never miss a single transaction.
           </span>
-          <div className='flex flex-col gap-3 mt-2'>
-            <label className='flex items-center gap-3 cursor-pointer'>
-              <input
-                type='radio'
-                name='member_management'
-                value='yes'
-                onChange={() => handleAnswer('yes')}
-                className='w-4 h-4 accent-secondary'
-              />
-              <span className='text-sm'>
-               Yes, track everything
-              </span>
-            </label>
-
-            <label className='flex items-center gap-3 cursor-pointer'>
-              <input
-                type='radio'
-                name='member_management'
-                value='no'
-                onChange={() => handleAnswer('no')}
-                className='w-4 h-4 accent-secondary'
-              />
-              <span className='text-sm'>No, I manage accounts elsewhere</span>
-            </label>
-          </div>
+           <RadioGroup
+                      name="paymentbilling"
+                      options={[
+                        { value: 'yes', label: 'Yes, track everything' },
+                        { value: 'no', label: 'No, I manage accounts elsewhere' }
+                      ]}
+                      value={payment_Billing}
+                      onChange={handleAnswer}
+                    />
         </div>
       </div>
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button

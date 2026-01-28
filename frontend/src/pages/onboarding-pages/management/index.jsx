@@ -12,6 +12,7 @@ import { managementTools } from '@constants/managementTool'
 const CenterManagement = () => {
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
+  console.log('centerTools: ', centerTools);
 
   return (
      <SecondaryLayout>

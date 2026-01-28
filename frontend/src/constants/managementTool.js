@@ -4,6 +4,6 @@ export const managementTools = [
   { id: 'attendance', label: 'Attendance Tracking', route: '/attendance-tracking' },
   { id: 'billing', label: 'Payment & Billing', route: '/payment-billing' },
   { id: 'staffmanagement', label: 'Staff Management', route: '/trainer-and-staff' },
-  { id: 'sellableitems', label: 'Sellable Items', route: '/sellable-item' },
+  { id: 'sellable_items', label: 'Sellable Items', route: '/sellable-item' },
   { id: 'reports', label: 'Report & Insight', route: '/report-and-insight' },
 ]

@@ -88,7 +88,7 @@ const selectedValue =
           variant='outline_secondary'
           size='sm'
           leftIcon={backarrow}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/digital-presence')}
         >
           Back
         </Button>

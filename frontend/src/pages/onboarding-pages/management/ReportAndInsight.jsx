@@ -4,12 +4,26 @@ import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
 import backarrow from '@assets/images/backarrow.svg'
-import { reportAndInsight } from '@constants/reportAndInsight'
-import { useState } from 'react'
+import { reportsAndInsight } from '@constants/reportAndInsight'
+import { useEffect } from 'react'
 import ReportSelectionCard from '../components/ReportSelectionCard'
+import { useOnboardingStore } from '@store/onboardingStore'
+import { useNavigate } from 'react-router-dom'
 
 const ReportAndInsight = () => {
-  const [selectedType, setSelectedType] = useState('basic-report')
+  const navigate = useNavigate()
+  const { setTool, reportAndInsight, setReportAndInsight } =
+    useOnboardingStore()
+
+  useEffect(() => {
+    if (
+      reportAndInsight === 'basic-report' ||
+      reportAndInsight === 'detail-report'
+    ) {
+      setTool('reports', true)
+    }
+  }, [reportAndInsight, setTool])
+
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -33,12 +47,12 @@ const ReportAndInsight = () => {
           </p>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-1 justify-items-center'>
-            {reportAndInsight.map(item => (
+            {reportsAndInsight.map(item => (
               <ReportSelectionCard
                 key={item.id}
                 item={item}
-                selected={selectedType === item.id}
-                onSelect={setSelectedType}
+                selected={reportAndInsight === item.id}
+                onSelect={setReportAndInsight}
               />
             ))}
           </div>
@@ -46,7 +60,12 @@ const ReportAndInsight = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button
