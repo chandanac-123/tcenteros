@@ -5,8 +5,11 @@ import OnboardHeader from './components/OnboardHeader'
 import best_fit_img from '@assets/images/bestfit-img.svg'
 import tick from '@assets/formicons/secondary-tick.svg'
 import SmartLayout from '@common/onboardlayouts/SmartLayout'
+import { useNavigate } from 'react-router-dom'
 
 const SmartRecommandation = () => {
+  const navigate = useNavigate()
+
   return (
     <SmartLayout>
       <OnboardHeader />
@@ -73,11 +76,13 @@ const SmartRecommandation = () => {
 
       {/* Footer Buttons */}
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
+         onClick={() => navigate('/management')}>
           Back
         </Button>
 
-        <Button variant='outline_primary' rightIcon={rightcolorarrow}>
+        <Button variant='outline_primary' rightIcon={rightcolorarrow} 
+        onClick={() => navigate('/marketing-support')}>
           Continue
         </Button>
       </div>

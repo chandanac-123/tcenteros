@@ -6,8 +6,11 @@ import OnboardHeader from './components/OnboardHeader'
 import SelectionWithoutCheckbox from './components/SelectionWithoutCheckbox'
 import { marketingSupport } from '@constants/marketingSupport'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const MarketingSupport = () => {
+  const navigate = useNavigate()
+
   const [selectedType, setSelectedType] = useState(null)
 
   const handleSelect = id => {
@@ -71,7 +74,8 @@ const MarketingSupport = () => {
 
       {/* Footer */}
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
+        onClick={() => navigate('/smart-recommandation')}>
           Back
         </Button>
 
@@ -79,6 +83,7 @@ const MarketingSupport = () => {
           variant='outline_primary'
           rightIcon={rightcolorarrow}
           disabled={!selectedType}
+          onClick={() => navigate('/contact-details')}
         >
           Boost Membership
         </Button>

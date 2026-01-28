@@ -2,8 +2,10 @@ import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
 import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
+import { useNavigate } from 'react-router-dom'
 
 const InvoiceSummary = () => {
+  const navigate = useNavigate()
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -117,6 +119,7 @@ const InvoiceSummary = () => {
               variant='button_outlined'
               className='w-1/2'
               size="sm"
+              onClick={() => navigate('/pricing-page')}
             >
               Back
             </Button>

@@ -7,8 +7,10 @@ import OnboardProgress from './components/OnboardProgress'
 import SelectionCard from './components/SelectionCard'
 import { classModes } from '@constants/classMode'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const ClassSelectionMode = () => {
+  const navigate = useNavigate()
   const [selectedMode, setSelectedMode] = useState('in-person')
 
   return (
@@ -16,7 +18,7 @@ const ClassSelectionMode = () => {
       <OnboardHeader />
 
       <OnboardProgress
-        step={1}
+        step={2}
         total={5}
         value={40}
         title='How do you conduct your classes?'
@@ -35,10 +37,15 @@ const ClassSelectionMode = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
+        onClick={() => navigate('/type-selection')}>
           Back
         </Button>
-        <Button variant='outline_primary' rightIcon={rightcolorarrow}>
+        <Button
+          variant='outline_primary'
+          rightIcon={rightcolorarrow}
+          onClick={() => navigate('/center-size-scale')}
+        >
           Next
         </Button>
       </div>

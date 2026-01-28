@@ -5,9 +5,11 @@ import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
-import { Mail, User, Phone, Building2, MapPin, Users } from 'lucide-react'
+import { Mail, User, Phone, MapPin, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const ContactDetails = () => {
+  const navigate = useNavigate()
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -61,7 +63,9 @@ const ContactDetails = () => {
           </div>
           {/* Right Part */}
           <div className='w-full md:w-1/2 gap-4 flex flex-col justify-center items-center text-center'>
-            <span className='text-3xl font-semibold  text-secondary'>Almost there!</span>
+            <span className='text-3xl font-semibold  text-secondary'>
+              Almost there!
+            </span>
             <span className='text-base'>
               To unlock your custom pricing and send a copy of this
               recommendation to your inbox, just let us know where to reach you.
@@ -71,10 +75,15 @@ const ContactDetails = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
+        onClick={() => navigate('/marketing-support')}>
           Back
         </Button>
-        <Button variant='outline_primary' rightIcon={rightcolorarrow}>
+        <Button
+          variant='outline_primary'
+          rightIcon={rightcolorarrow}
+          onClick={() => navigate('/pricing-page')}
+        >
           View My Pricing
         </Button>
       </div>

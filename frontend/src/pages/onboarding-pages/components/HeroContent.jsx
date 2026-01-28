@@ -1,7 +1,9 @@
 import { Button } from '@pages/components/ui/button'
 import nextarrow from '@assets/images/nextarrow.svg'
+import { useNavigate } from 'react-router-dom'
 
 const HeroContent = () => {
+  const navigate = useNavigate()
   return (
     <div className='w-full md:w-1/2 flex flex-col gap-12 pt-6 pb-16 relative'>
       {/* Text */}
@@ -24,7 +26,12 @@ const HeroContent = () => {
           <span className='text-secondary font-bold text-4xl'> 2</span> minutes.
         </h2>
 
-        <Button variant='default' size='landing' rightIcon={nextarrow}>
+        <Button
+          variant='default'
+          size='landing'
+          rightIcon={nextarrow}
+          onClick={() => navigate('/type-selection')}
+        >
           Start
         </Button>
       </div>

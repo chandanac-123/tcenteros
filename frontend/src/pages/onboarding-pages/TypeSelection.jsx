@@ -6,8 +6,10 @@ import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
 import { fitnessTypes } from '../../constants/fitnessType'
 import SelectionCard from './components/SelectionCard'
+import { useNavigate } from 'react-router-dom'
 
 const TypeSelection = () => {
+  const navigate = useNavigate()
   const [selectedType, setSelectedType] = useState('dance')
 
   return (
@@ -37,6 +39,7 @@ const TypeSelection = () => {
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
+          onClick={()=>navigate('/class-mode')}
         >
           Next
         </Button>
