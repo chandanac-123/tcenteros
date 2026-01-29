@@ -53,3 +53,13 @@ def get_current_user(
         "user_id": user_id,
         "role": role,
     }
+
+
+
+def superadmin_required(user=Depends(get_current_user)):
+    if not user or user.get("role") != "superadmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin privileges required"
+        )
+    return user

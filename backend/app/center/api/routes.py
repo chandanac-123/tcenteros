@@ -1,7 +1,10 @@
 # app/center/api/routes.py
-from fastapi import APIRouter, HTTPException, Depends, Query
+import email
+from sqlite3 import IntegrityError
+from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from typing import List, Optional
 import uuid
+from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.center.models.models import CenterOnboardingTemp, Center
@@ -14,6 +17,9 @@ from app.center.schema.schema import *
 from datetime import datetime
 from sqlalchemy.future import select
 from app.core.database import get_async_session
+from uuid import uuid4
+from app.core.dependencies import get_db
+from app.core.security import get_password_hash
 
 router = APIRouter()
 
@@ -23,21 +29,102 @@ async def create_onboarding_temp(
     data: CenterOnboardingTempCreate,
     db: AsyncSession = Depends(get_async_session)
 ):
-    temp = CenterOnboardingTemp(**data.dict())
+    # Convert UUIDs to strings for JSON storage
+    feature_ids = [str(fid) for fid in data.platform_feature_ids]
+
+    # Sum the base price of each selected feature
+    total_base = 0.0
+    for feature_id in data.platform_feature_ids:
+        feature = await db.get(PlatformFeature, feature_id)
+        if not feature:
+            raise HTTPException(404, f"Feature {feature_id} not found")
+        total_base += float(feature.base_price)
+
+    temp = CenterOnboardingTemp(
+        center_name=data.center_name,
+        contact_person=data.contact_person,
+        center_email=data.center_email,
+        center_phone=data.center_phone,
+        city=data.city,
+        center_category_id=data.center_category_id,
+        kind_of_center=data.kind_of_center,
+        members_count=data.members_count,
+        trainer_count=data.trainer_count,
+        currently_using_digital_tool=data.currently_using_digital_tool,
+        marketing_platform=data.marketing_platform,
+        platform_feature_ids=feature_ids,  # store as list of strings
+        is_terms_and_conditions=data.is_terms_and_conditions,
+        calculated_amount=total_base
+    )
     db.add(temp)
     await db.commit()
     await db.refresh(temp)
     return temp
 
-# 4. GET /center/onboarding/calculate
-@router.get("/onboarding/calculate", response_model=GSTCalculationResponse)
-async def calculate_gst(
-    selected_features: List[UUID] = Query(..., description="List of feature UUIDs"),
-    onboarding_id: Optional[UUID] = Query(None, description="Onboarding temp UUID"),
+@router.get("/onboarding/temp/{onboarding_id}", response_model=CenterOnboardingTempDetailedOut)
+async def get_onboarding_temp_by_id(
+    onboarding_id: UUID,
     db: AsyncSession = Depends(get_async_session)
 ):
+    temp = await db.get(CenterOnboardingTemp, onboarding_id)
+    if not temp:
+        raise HTTPException(404, detail="Onboarding temp not found")
+
+    # Fetch center category info
+    category = await db.get(CenterCategory, temp.center_category_id)
+    category_info = None
+    if category:
+        category_info = {
+            "id": category.id,
+            "name": category.name
+        }
+
+    # Fetch platform features info
+    feature_ids = temp.platform_feature_ids or []
+    features = []
+    for fid in feature_ids:
+        feature = await db.get(PlatformFeature, fid)
+        if feature:
+            features.append({
+                "id": feature.id,
+                "feature_name": feature.feature_name,
+                "description": feature.description
+            })
+
+    return {
+        "id": temp.id,
+        "center_name": temp.center_name,
+        "contact_person": temp.contact_person,
+        "center_email": temp.center_email,
+        "center_phone": temp.center_phone,
+        "city": temp.city,
+        "center_category": category_info,
+        "kind_of_center": temp.kind_of_center,
+        "members_count": temp.members_count,
+        "trainer_count": temp.trainer_count,
+        "currently_using_digital_tool": temp.currently_using_digital_tool,
+        "marketing_platform": temp.marketing_platform,
+        "platform_features": features,
+        "is_terms_and_conditions": temp.is_terms_and_conditions,
+        "calculated_amount": float(temp.calculated_amount)
+    }
+
+
+@router.get("/onboarding/calculate", response_model=GSTCalculationResponse)
+async def calculate_gst(
+    onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
+    db: AsyncSession = Depends(get_async_session)
+):
+    temp = await db.get(CenterOnboardingTemp, onboarding_id)
+    if not temp:
+        raise HTTPException(404, "Onboarding temp not found")
+
+    feature_ids = temp.platform_feature_ids or []
+    if not isinstance(feature_ids, list):
+        raise HTTPException(400, "platform_feature_ids must be a list of UUIDs")
+
     total_base = 0.0
-    for feature_id in selected_features:
+    for feature_id in feature_ids:
         feature = await db.get(PlatformFeature, feature_id)
         if not feature:
             raise HTTPException(404, f"Feature {feature_id} not found")
@@ -50,100 +137,245 @@ async def calculate_gst(
     )
     tax = tax.scalar_one_or_none()
     total_tax = 0.0
+    tax_info = None
     if tax:
         total_tax = total_base * float(tax.tax_percentage) / 100
+        tax_info = {
+            "id": str(tax.id),
+            "name": tax.name,
+            "tax_type": tax.tax_type.value,
+            "tax_percentage": float(tax.tax_percentage),
+            "tax_scope": tax.tax_scope.value
+        }
 
-    # Update calculated_amount in CenterOnboardingTemp if onboarding_id is provided
-    if onboarding_id:
-        temp = await db.get(CenterOnboardingTemp, onboarding_id)
-        if temp:
-            temp.calculated_amount = total_base
-            await db.commit()
-            await db.refresh(temp)
+    # Store the final amount (base + tax) in calculated_amount
+    temp.calculated_amount = total_base + total_tax
+    await db.commit()
+    await db.refresh(temp)
 
     return GSTCalculationResponse(
+        center_name=temp.center_name,
+        center_phone=temp.center_phone,
+        city=temp.city,
         total_base_price=total_base,
         total_tax=total_tax,
-        total_amount=total_base + total_tax
+        total_amount=total_base + total_tax,
+        tax=tax_info
     )
 
-# 5. POST /billing/payment-order
-@router.post("/billing/payment-order", response_model=PaymentOrderOut)
-async def create_payment_order(
-    data: PaymentOrderCreate,
-    db: AsyncSession = Depends(get_async_session)
+# 5. POST /billing/onboarding/finalize
+@router.post('/billing/onboarding/finalize/{onboarding_id}', response_model=OnboardingFinalizeResponse)
+async def finalize_onboarding(
+    onboarding_id: UUID = Path(..., description="Onboarding temp UUID"),
+    payload: FinalizeOnboardingRequest = ...,
+    db: AsyncSession = Depends(get_db)
 ):
-    # You may want to check onboarding temp exists and amount matches calculation
-    payment = PaymentOrder(
-        payment_order_id=uuid.uuid4(),
-        amount=data.amount,
-        status="pending"
-    )
-    db.add(payment)
-    await db.commit()
-    await db.refresh(payment)
-    return PaymentOrderOut(
-        payment_order_id=payment.payment_order_id,
-        status=payment.status,
-        amount=float(payment.amount)
-    )
+    try:
+        # 1. Fetch onboarding temp data
+        onboarding_temp = await db.get(CenterOnboardingTemp, onboarding_id)
+        if not onboarding_temp:
+            raise HTTPException(status_code=404, detail="Onboarding data not found")
+        if not onboarding_temp.center_email:
+            raise HTTPException(status_code=400, detail="Center email is required to create a user.")
+
+        # 2. Create or fetch user (payer)
+        user_stmt = select(User).where(User.email == onboarding_temp.center_email)
+        result = await db.execute(user_stmt)
+        user = result.scalar_one_or_none()
+        if not user:
+            user = User(
+                id=uuid4(),
+                email=onboarding_temp.center_email,
+                password_hash=get_password_hash("defaultpassword123"),
+                role="centeradmin",
+                status=StatusEnum.active,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(user)
+            await db.flush()
+
+        # 3. Create Address (no center_id)
+        address = Address(
+            id=uuid4(),
+            address_line_1=payload.address_line_1,
+            address_line_2=payload.address_line_2,
+            city=onboarding_temp.city,
+            state=getattr(onboarding_temp, "state", None),
+            country=getattr(onboarding_temp, "country", None),
+            postal_code=getattr(onboarding_temp, "postal_code", None),
+            created_by=user.id,
+            updated_by=user.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(address)
+        await db.flush()
+
+        # 4. Create Center and assign address_id
+        center = Center(
+            id=uuid4(),
+            center_name=onboarding_temp.center_name,
+            center_category_id=onboarding_temp.center_category_id,
+            address_id=address.id,
+            gst_number=payload.gst_number,
+            created_by=user.id,
+            updated_by=user.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(center)
+        await db.flush()
+
+        # 5. Create CenterAdmin only if not exists, use merge to avoid identity conflict
+        admin_stmt = select(CenterAdmin).where(CenterAdmin.id == user.id)
+        result = await db.execute(admin_stmt)
+        center_admin = result.scalar_one_or_none()
+        if not center_admin:
+            center_admin = CenterAdmin(
+                id=user.id,
+                full_name=onboarding_temp.contact_person or "Center Admin",
+                center_id=center.id,
+                address_id=address.id,
+                created_by=user.id,
+                updated_by=user.id,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.merge(center_admin)
+            await db.flush()
+
+        # 6. Create PaymentOrder FIRST
+        payment_order = PaymentOrder(
+                payment_order_id=uuid4(),
+                center_id=center.id,
+                payer_user_id=user.id,
+                payer_type="center_admin",      # <-- set this to a valid value
+                payee_type="platform",         # <-- set this to a valid value
+                order_type="center_subscription",  # <-- set this to a valid value
+                reference_schema="center_feature",     # <-- set this if required
+                reference_id=center.id,        # <-- set this if required
+                subtotal_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+                tax_amount=getattr(onboarding_temp, "tax_amount", 0.0),
+                total_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+                currency="INR",
+                status="paid",                 # <-- use the correct lowercase value if your enum expects it
+                created_by=user.id,
+                updated_by=user.id,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+        db.add(payment_order)
+        await db.flush()
+
+        # 7. Now create CenterFeatureSubscriptions with payment_order_id
+        feature_subscriptions = []
+        # Remove duplicates if any, but preserve order
+        from collections import OrderedDict
+        feature_ids = list(OrderedDict.fromkeys(onboarding_temp.platform_feature_ids))
+        for feature_id in feature_ids:
+            feature = await db.get(PlatformFeature, feature_id)
+            if not feature:
+                raise HTTPException(status_code=404, detail=f"Feature {feature_id} not found")
+            start_date = datetime.utcnow()
+            end_date = start_date + relativedelta(years=1)
+            subscription = CenterFeatureSubscription(
+                id=uuid4(),
+                center_id=center.id,
+                feature_id=feature_id,
+                payment_order_id=payment_order.payment_order_id,
+                pricing_type="yearly",
+                unit_price=feature.base_price,
+                status=StatusEnum.active,
+                start_date=start_date,
+                end_date=end_date,
+                created_by=user.id,
+                updated_by=user.id,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(subscription)
+            feature_subscriptions.append(subscription)
+        await db.flush()
+
+        # 8. Commit transaction
+        await db.commit()
+
+        # 9. Prepare response
+        response = OnboardingFinalizeResponse(
+            center=CenterInfo.from_orm(center),
+            center_admin=CenterAdminInfo.from_orm(center_admin),
+            payment=PaymentOrderInfo.from_orm(payment_order),
+            feature_subscriptions=[
+                FeatureSubscriptionInfo.from_orm(fs) for fs in feature_subscriptions
+            ],
+        )
+        return response
+
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Integrity error: {str(e.orig)}")
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 # 6. POST /center/onboarding/finalize
-@router.post("/onboarding/finalize")
-async def finalize_onboarding(
-    req: FinalizeOnboardingRequest,
-    db: AsyncSession = Depends(get_async_session)
-):
-    temp = await db.get(CenterOnboardingTemp, req.onboarding_id)
-    if not temp:
-        raise HTTPException(404, "Onboarding temp not found")
-    payment = await db.get(PaymentOrder, req.payment_order_id)
-    if not payment or payment.status != "success":
-        raise HTTPException(400, "Payment not successful")
-    # 1. Create Address
-    address = Address(city=temp.city)
-    db.add(address)
-    await db.flush()
-    # 2. Create Center
-    center = Center(
-        center_name=temp.center_name,
-        center_category_id=temp.center_category_id,
-        address_id=address.id,
-        approval_status="approved",
-        center_status="active"
-    )
-    db.add(center)
-    await db.flush()
-    # 3. Create CenterAdmin (and User if needed)
-    user = await db.execute(select(User).where(User.email == temp.admin_email))
-    user = user.scalar_one_or_none()
-    if not user:
-        user = User(email=temp.admin_email, full_name=temp.admin_name, role="center_admin")
-        db.add(user)
-        await db.flush()
-    admin = CenterAdmin(user_id=user.id, center_id=center.id)
-    db.add(admin)
-    # 4. Create CenterFeatureSubscription for each feature
-    for feature_id in temp.selected_features:
-        feature = await db.get(PlatformFeature, feature_id)
-        tax = await db.execute(
-            select(TaxCategory)
-            .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
-            .limit(1)
-        )
-        tax = tax.scalar_one_or_none()
-        sub = CenterFeatureSubscription(
-            center_id=center.id,
-            feature_id=feature_id,
-            payment_order_id=payment.payment_order_id,
-            pricing_type="yearly",
-            unit_price=feature.base_price,
-            tax_category_id=tax.id if tax else None,
-            start_date=datetime.utcnow(),
-            status=StatusEnum.active
-        )
-        db.add(sub)
-    await db.commit()
-    await db.delete(temp)
-    await db.commit()
-    return {"detail": "Onboarding finalized and center created."}
+# @router.post("/onboarding/finalize")
+# async def finalize_onboarding(
+#     req: FinalizeOnboardingRequest,
+#     db: AsyncSession = Depends(get_async_session)
+# ):
+#     temp = await db.get(CenterOnboardingTemp, req.onboarding_id)
+#     if not temp:
+#         raise HTTPException(404, "Onboarding temp not found")
+#     payment = await db.get(PaymentOrder, req.payment_order_id)
+#     if not payment or payment.status != "success":
+#         raise HTTPException(400, "Payment not successful")
+#     # 1. Create Address
+#     address = Address(city=temp.city)
+#     db.add(address)
+#     await db.flush()
+#     # 2. Create Center
+#     center = Center(
+#         center_name=temp.center_name,
+#         center_category_id=temp.center_category_id,
+#         address_id=address.id,
+#         approval_status="approved",
+#         center_status="active"
+#     )
+#     db.add(center)
+#     await db.flush()
+#     # 3. Create CenterAdmin (and User if needed)
+#     user = await db.execute(select(User).where(User.email == temp.admin_email))
+#     user = user.scalar_one_or_none()
+#     if not user:
+#         user = User(email=temp.admin_email, full_name=temp.admin_name, role="center_admin")
+#         db.add(user)
+#         await db.flush()
+#     admin = CenterAdmin(user_id=user.id, center_id=center.id)
+#     db.add(admin)
+#     # 4. Create CenterFeatureSubscription for each feature
+#     for feature_id in temp.selected_features:
+#         feature = await db.get(PlatformFeature, feature_id)
+#         tax = await db.execute(
+#             select(TaxCategory)
+#             .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
+#             .limit(1)
+#         )
+#         tax = tax.scalar_one_or_none()
+#         sub = CenterFeatureSubscription(
+#             center_id=center.id,
+#             feature_id=feature_id,
+#             payment_order_id=payment.payment_order_id,
+#             pricing_type="yearly",
+#             unit_price=feature.base_price,
+#             tax_category_id=tax.id if tax else None,
+#             start_date=datetime.utcnow(),
+#             status=StatusEnum.active
+#         )
+#         db.add(sub)
+#     await db.commit()
+#     await db.delete(temp)
+#     await db.commit()
+#     return {"detail": "Onboarding finalized and center created."}

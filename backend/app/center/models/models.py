@@ -59,7 +59,7 @@ class Center(Base, AuditMixin):
     contact_person = Column(String)
     center_email = Column(String)
     center_phone = Column(String)
-
+    gst_number = Column(String, nullable=True)
     live_class_enable = Column(Boolean, default=False)
 
 
@@ -93,5 +93,5 @@ class CenterOnboardingTemp(Base, AuditMixin):
     platform_feature_ids = Column(JSON, nullable=False)  # list of feature UUIDs
     is_terms_and_conditions = Column(Boolean, default=False)
     calculated_amount = Column(Numeric(10, 2), nullable=False)
-    created_by = Column(UUID(as_uuid=True), nullable=False)
+
 
