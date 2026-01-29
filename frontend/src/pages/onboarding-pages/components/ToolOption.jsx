@@ -1,7 +1,9 @@
 const ToolOption = ({ tool, selected, onToggle }) => {
+  const inputId = `tool-checkbox-${tool.id}`
+  
   return (
     <label
-      onClick={() => onToggle(tool.id)}
+      htmlFor={inputId}
       className={`
         flex items-center border-2 rounded-lg px-4 py-3 cursor-pointer transition
         ${selected ? 'border-primary bg-primary/5' : 'border-bordergreylight'}
@@ -16,9 +18,10 @@ const ToolOption = ({ tool, selected, onToggle }) => {
       <span className='flex-1'>{tool.label}</span>
 
       <input
+        id={inputId}
         type='checkbox'
         checked={selected}
-        readOnly
+        onChange={() => onToggle(tool.id)}
         className='w-4 h-4'
       />
     </label>
