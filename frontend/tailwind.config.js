@@ -11,7 +11,8 @@ export default {
       backgroundImage: {
         'primary-bg': "url('/src/assets/images/landingprimary.svg')",
         'secondary-bg': "url('/src/assets/images/landingsecondary.svg')",
-        'smart-bg':"url('/src/assets/images/smart-bg-image.svg')"
+        'smart-bg':"url('/src/assets/images/smart-bg-image.svg')",
+        'img-bg':"url('/src/assets/images/bgimage.svg')",
       },
       colors: {
         primary: '#1452D4',
