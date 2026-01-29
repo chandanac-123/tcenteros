@@ -53,7 +53,7 @@ class Center(Base, AuditMixin):
     members_count = Column(Integer, default=0)
     trainer_count = Column(Integer, default=0)
 
-    currently_using_digital_tool = Column(String)
+    currently_using_digital_tool = Column(JSON, nullable=True)
     marketing_platform = Column(JSON)
 
     contact_person = Column(String)
@@ -88,7 +88,7 @@ class CenterOnboardingTemp(Base, AuditMixin):
     kind_of_center = Column(JSON, nullable=True)
     members_count = Column(Integer, default=0)
     trainer_count = Column(Integer, default=0)
-    currently_using_digital_tool = Column(String, nullable=True)
+    currently_using_digital_tool = Column(JSON, nullable=True)
     marketing_platform = Column(JSON, nullable=True)
     platform_feature_ids = Column(JSON, nullable=False)  # list of feature UUIDs
     is_terms_and_conditions = Column(Boolean, default=False)
