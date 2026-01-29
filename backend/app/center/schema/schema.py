@@ -1,7 +1,7 @@
 # app/center/schema/onboarding.py
 
 from pydantic import BaseModel, EmailStr, UUID4, Field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 
 class CenterOnboardingTempCreate(BaseModel):
     center_name: str
@@ -13,8 +13,8 @@ class CenterOnboardingTempCreate(BaseModel):
     kind_of_center: Optional[Any] = None  # JSON field, can be list/dict
     members_count: int = 0
     trainer_count: int = 0
-    currently_using_digital_tool: Optional[Any] = None
-    marketing_platform: Optional[Any] = None  # JSON field, can be list/dict
+    currently_using_digital_tool: Optional[Union[dict, list]] = None  # <-- JSON
+    marketing_platform: Optional[Union[dict, list]] = None  # <-- JSON
     platform_feature_ids: List[UUID4]
     is_terms_and_conditions: bool = False
 
