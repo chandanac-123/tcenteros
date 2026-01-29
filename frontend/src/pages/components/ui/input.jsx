@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@pages/lib/utils"
 
-const Input = React.forwardRef(({ className, type, icon, label, ...props }, ref) => {
+const Input = React.forwardRef(({ className, type, icon, label, error, ...props }, ref) => {
   return (
     <div>
       {label && (
@@ -34,6 +34,9 @@ const Input = React.forwardRef(({ className, type, icon, label, ...props }, ref)
           ref={ref}
           {...props}
         />
+      )}
+      {error && (
+        <div className="text-xs text-red-500">{error}</div>
       )}
     </div>
   );

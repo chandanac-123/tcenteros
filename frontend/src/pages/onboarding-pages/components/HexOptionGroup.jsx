@@ -15,8 +15,8 @@ const HexOptionGroup = ({
           <HexButton
             key={option}
             label={option}
-            active={value === option}
-            onClick={() => onChange(option)}
+            active={value === option?.split('-')[1]}
+            onClick={() => onChange(option?.split('-')[1])}
           />
         ))}
       </div>

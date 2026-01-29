@@ -7,9 +7,49 @@ import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
 import { Mail, User, Phone, MapPin, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useFormik } from 'formik'
+import { onboardingValidationSchema } from '@utils/validations'
 
 const ContactDetails = () => {
   const navigate = useNavigate()
+
+  const initialValue = {
+    center_name: '',
+    contact_person: '',
+    center_email: '',
+    center_phone: '',
+    city: '',
+    is_terms_and_conditions: false
+  }
+
+  const formik = useFormik({
+    initialValues: initialValue,
+    enableReinitialize: true,
+    validationSchema: onboardingValidationSchema,
+    onSubmit: async values => {
+      const details = {
+        ...values,
+        center_category_id: 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
+        kind_of_center: 'Hybrid',
+        members_count: 50,
+        trainer_count: 5,
+        currently_using_digital_tool: 'Excel',
+        marketing_platform: 'Meta',
+        platform_feature_ids: [
+          'c8bbe5a2-88b3-4399-94fc-c5f1a140bc8f',
+          '72e8352a-51fb-4a2a-b8e3-edc75021f371',
+          '869a7b1c-4298-4418-8174-bbc06a3d0e66'
+        ]
+      }
+      try {
+        await bannerUpdate(details)
+        handleUpdate()
+      } catch (error) {
+        console.log('error: ', error)
+      }
+    }
+  })
+
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -20,41 +60,81 @@ const ContactDetails = () => {
         <div className='flex flex-row gap-16'>
           {/* Left Part */}
           <div className='w-full md:w-1/2'>
-            <form className='space-y-4'>
+            <form
+              id='contact-details-form'
+              className='space-y-3'
+              onSubmit={formik.handleSubmit}
+            >
               <Input
                 label='Center Name'
+                name='center_name'
                 placeholder='Center Name'
                 className='border-0 focus:ring-0'
                 icon={<Users className='w-5 h-5 text-primary mr-2' />}
+                value={formik.values.center_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.center_name && formik.errors.center_name}
               />
               <Input
                 label='Contact Person'
+                name='contact_person'
                 placeholder='Contact Person'
                 className='border-0 focus:ring-0'
                 icon={<User className='w-5 h-5 text-primary mr-2' />}
+                value={formik.values.contact_person}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.contact_person && formik.errors.contact_person
+                }
               />
               <Input
                 label='Email*'
+                name='center_email'
                 placeholder='Email'
                 type='email'
                 className='border-0 focus:ring-0'
                 icon={<Mail className='w-5 h-5 text-primary mr-2' />}
+                value={formik.values.center_email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.center_email && formik.errors.center_email
+                }
               />
               <Input
                 label='Phone*'
+                name='center_phone'
                 placeholder='Phone'
                 type='tel'
                 className='border-0 focus:ring-0'
                 icon={<Phone className='w-5 h-5 text-primary mr-2' />}
+                value={formik.values.center_phone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.center_phone && formik.errors.center_phone
+                }
               />
               <Input
                 label='City'
+                name='city'
                 placeholder='City'
                 className='border-0 focus:ring-0'
                 icon={<MapPin className='w-5 h-5 text-primary mr-2' />}
+                value={formik.values.city}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.city && formik.errors.city}
               />
               <div className='flex items-center space-x-2'>
-                <Checkbox id='agree' />
+                <Checkbox
+                  id='agree'
+                  name='is_terms_and_conditions'
+                  checked={formik.values.is_terms_and_conditions}
+                  onChange={formik.handleChange}
+                />
                 <label htmlFor='agree' className='text-sm'>
                   I agree to be contacted for onboarding and support.
                 </label>
@@ -75,14 +155,20 @@ const ContactDetails = () => {
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/marketing-support')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/marketing-support')}
+        >
           Back
         </Button>
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/pricing-page')}
+          // type='submit'
+          // form='contact-details-form'
         >
           View My Pricing
         </Button>
