@@ -8,7 +8,6 @@ import { Checkbox } from '@pages/components/ui/checkbox'
 import { Mail, User, Phone, MapPin, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
-import { onboardingValidationSchema } from '@utils/validations'
 import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 
@@ -16,6 +15,7 @@ const ContactDetails = () => {
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
+  console.log('store: ', store)
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -31,11 +31,20 @@ const ContactDetails = () => {
     center_phone: store.center_phone || '',
     city: store.city || '',
     is_terms_and_conditions: store.is_terms_and_conditions || false,
-    center_category_id:
-      store.center_category_id || 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
+    center_category_id: store.center_category_id || '',
     kind_of_center: store.kind_of_center || 'Hybrid',
-    members_count: store.memberCount || 50,
-    trainer_count: store.trainerCount || 5,
+    members_count:
+      store.memberCount === '500+'
+        ? 525
+        : store.memberCount?.split('-')[1]
+        ? parseInt(store.memberCount.split('-')[1], 10)
+        : 50,
+    trainer_count:
+      store.trainerCount === '10+'
+        ? 21
+        : store.trainerCount?.split('-')[1]
+        ? parseInt(store.trainerCount.split('-')[1], 10)
+        : 5,
     currently_using_digital_tool: store.digitalToolsSelected || [],
     marketing_platform: store.marketingSupportType
       ? [store.marketingSupportType]
