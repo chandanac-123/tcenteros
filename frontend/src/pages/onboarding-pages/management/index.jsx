@@ -8,11 +8,13 @@ import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import ManagementToolRow from '../components/ManagementToolRow'
 import { managementTools } from '@constants/managementTool'
+import { useAllPlatformsQuery } from '@api-queries/on-boarding/Query'
 
 const CenterManagement = () => {
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
-  console.log('centerTools: ', centerTools)
+   const { data: platforms, isFetching: platformsFetch } = useAllPlatformsQuery();
+  console.log('platforms: ', platforms);
 
   return (
     <SecondaryLayout>

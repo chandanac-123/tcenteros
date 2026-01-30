@@ -9,9 +9,11 @@ import { Mail, User, Phone, MapPin, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { onboardingValidationSchema } from '@utils/validations'
+import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 
 const ContactDetails = () => {
   const navigate = useNavigate()
+  const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
 
   const initialValue = {
     center_name: '',
@@ -42,7 +44,7 @@ const ContactDetails = () => {
         ]
       }
       try {
-        await bannerUpdate(details)
+        await create(details)
         handleUpdate()
       } catch (error) {
         console.log('error: ', error)

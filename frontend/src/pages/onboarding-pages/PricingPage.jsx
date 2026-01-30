@@ -4,9 +4,11 @@ import backarrow from '@assets/images/backarrow.svg'
 import check from '@assets/formicons/check.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
+import { usePricingPageQuery } from '@api-queries/on-boarding/Query'
 
 const PricingPage = () => {
   const navigate = useNavigate()
+  const { data, isFetching } = usePricingPageQuery()
 
   return (
     <SecondaryLayout>

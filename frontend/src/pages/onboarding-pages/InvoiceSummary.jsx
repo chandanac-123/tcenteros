@@ -3,9 +3,13 @@ import { Button } from '@pages/components/ui/button'
 import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
+import { useCalculateGstQuery, useFinalizeOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
+  const { data, isFetching } = useCalculateGstQuery()
+  const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation()
+
   return (
     <SecondaryLayout>
       <OnboardHeader />
