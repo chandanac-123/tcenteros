@@ -108,9 +108,11 @@ class Member(User):
         nullable=True
     )
     date_of_birth = Column(Date)
+    blood_group = Column(String)
     blocked_reason = Column(String)
     network_eligible = Column(Boolean, default=True, nullable=False)
     last_login_device = Column(String)
+    time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
 
     home_center = relationship("Center", foreign_keys=[home_center_id])
 

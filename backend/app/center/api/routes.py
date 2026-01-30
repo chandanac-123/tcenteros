@@ -4,10 +4,11 @@ from sqlite3 import IntegrityError
 from fastapi import APIRouter, HTTPException, Depends, Query, Path
 from typing import List, Optional
 import uuid
+import traceback
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from app.center.models.models import CenterOnboardingTemp, Center
+from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot
 from app.settings.models.models import CenterCategory, Address, TaxCategory
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription
 from app.billing.models.models import PaymentOrder
@@ -18,7 +19,7 @@ from datetime import datetime
 from sqlalchemy.future import select
 from app.core.database import get_async_session
 from uuid import uuid4
-from app.core.dependencies import get_db
+from app.core.dependencies import centeradmin_required, get_db
 from app.core.security import get_password_hash
 
 router = APIRouter()
@@ -164,6 +165,7 @@ async def calculate_gst(
     )
 
 # 5. POST /billing/onboarding/finalize
+# 5. POST /billing/onboarding/finalize
 @router.post('/billing/onboarding/finalize/{onboarding_id}', response_model=OnboardingFinalizeResponse)
 async def finalize_onboarding(
     onboarding_id: UUID = Path(..., description="Onboarding temp UUID"),
@@ -178,22 +180,12 @@ async def finalize_onboarding(
         if not onboarding_temp.center_email:
             raise HTTPException(status_code=400, detail="Center email is required to create a user.")
 
-        # 2. Create or fetch user (payer)
+        # 2. Check if user already exists
         user_stmt = select(User).where(User.email == onboarding_temp.center_email)
         result = await db.execute(user_stmt)
         user = result.scalar_one_or_none()
-        if not user:
-            user = User(
-                id=uuid4(),
-                email=onboarding_temp.center_email,
-                password_hash=get_password_hash("defaultpassword123"),
-                role="centeradmin",
-                status=StatusEnum.active,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
-            db.add(user)
-            await db.flush()
+        if user:
+            raise HTTPException(status_code=400, detail="A user with this email already exists.")
 
         # 3. Create Address (no center_id)
         address = Address(
@@ -204,8 +196,8 @@ async def finalize_onboarding(
             state=getattr(onboarding_temp, "state", None),
             country=getattr(onboarding_temp, "country", None),
             postal_code=getattr(onboarding_temp, "postal_code", None),
-            created_by=user.id,
-            updated_by=user.id,
+            created_by=None,  # Will set after CenterAdmin is created
+            updated_by=None,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -229,58 +221,66 @@ async def finalize_onboarding(
             contact_person=onboarding_temp.contact_person,
             approval_status="approved",
             center_status="active",
-            created_by=user.id,
-            updated_by=user.id,
+            created_by=None,  # Will set after CenterAdmin is created
+            updated_by=None,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
         db.add(center)
         await db.flush()
 
-        # 5. Create CenterAdmin only if not exists, use merge to avoid identity conflict
-        admin_stmt = select(CenterAdmin).where(CenterAdmin.id == user.id)
-        result = await db.execute(admin_stmt)
-        center_admin = result.scalar_one_or_none()
-        if not center_admin:
-            center_admin = CenterAdmin(
-                id=user.id,
-                full_name=onboarding_temp.contact_person or "Center Admin",
-                center_id=center.id,
-                address_id=address.id,
-                created_by=user.id,
-                updated_by=user.id,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
-            db.merge(center_admin)
-            await db.flush()
+        # 5. Create CenterAdmin (this will also create the User row)
+        center_admin = CenterAdmin(
+            id=uuid4(),
+            email=onboarding_temp.center_email,
+            password_hash=get_password_hash("defaultpassword123"),
+            role="centeradmin",
+            status=StatusEnum.active,
+            full_name=onboarding_temp.contact_person or "Center Admin",
+            center_id=center.id,
+            address_id=address.id,
+            created_by=None,  # Will set after flush
+            updated_by=None,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(center_admin)
+        await db.flush()
 
-        # 6. Create PaymentOrder FIRST
+        # Now update created_by/updated_by fields with center_admin.id
+        address.created_by = center_admin.id
+        address.updated_by = center_admin.id
+        center.created_by = center_admin.id
+        center.updated_by = center_admin.id
+        center_admin.created_by = center_admin.id
+        center_admin.updated_by = center_admin.id
+        await db.flush()
+
+        # 6. Create PaymentOrder
         payment_order = PaymentOrder(
-                payment_order_id=uuid4(),
-                center_id=center.id,
-                payer_user_id=user.id,
-                payer_type="center_admin",      # <-- set this to a valid value
-                payee_type="platform",         # <-- set this to a valid value
-                order_type="center_subscription",  # <-- set this to a valid value
-                reference_schema="center_feature",     # <-- set this if required
-                reference_id=center.id,        # <-- set this if required
-                subtotal_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
-                tax_amount=getattr(onboarding_temp, "tax_amount", 0.0),
-                total_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
-                currency="INR",
-                status="paid",                 # <-- use the correct lowercase value if your enum expects it
-                created_by=user.id,
-                updated_by=user.id,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
+            payment_order_id=uuid4(),
+            center_id=center.id,
+            payer_user_id=center_admin.id,
+            payer_type="center_admin",
+            payee_type="platform",
+            order_type="center_subscription",
+            reference_schema="center_feature",
+            reference_id=center.id,
+            subtotal_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+            tax_amount=getattr(onboarding_temp, "tax_amount", 0.0),
+            total_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+            currency="INR",
+            status="paid",
+            created_by=center_admin.id,
+            updated_by=center_admin.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
         db.add(payment_order)
         await db.flush()
 
         # 7. Now create CenterFeatureSubscriptions with payment_order_id
         feature_subscriptions = []
-        # Remove duplicates if any, but preserve order
         from collections import OrderedDict
         feature_ids = list(OrderedDict.fromkeys(onboarding_temp.platform_feature_ids))
         for feature_id in feature_ids:
@@ -299,8 +299,8 @@ async def finalize_onboarding(
                 status=StatusEnum.active,
                 start_date=start_date,
                 end_date=end_date,
-                created_by=user.id,
-                updated_by=user.id,
+                created_by=center_admin.id,
+                updated_by=center_admin.id,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
@@ -326,6 +326,7 @@ async def finalize_onboarding(
         await db.rollback()
         raise HTTPException(status_code=400, detail=f"Integrity error: {str(e.orig)}")
     except Exception as e:
+        traceback.print_exc()
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -389,3 +390,29 @@ async def finalize_onboarding(
 #     await db.delete(temp)
 #     await db.commit()
 #     return {"detail": "Onboarding finalized and center created."}
+
+
+
+@router.post("/center/time-slots", status_code=201)
+async def create_center_time_slot(
+    payload: CenterTimeSlotCreate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    slot = CenterTimeSlot(
+        center_id=center_id,
+        start_time=payload.start_time,
+        end_time=payload.end_time,
+        slot_capacity=payload.slot_capacity,
+        created_by=current_user["user_id"],
+        updated_by=current_user["user_id"],
+    )
+    db.add(slot)
+    await db.commit()
+    await db.refresh(slot)
+    return slot

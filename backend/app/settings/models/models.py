@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, ForeignKey, Enum, Boolean, Integer, Numeric
+from sqlalchemy import Column, String, Text, ForeignKey, Enum, Boolean, Integer, Numeric, Time, ARRAY, Date
 from app.core.models.base import AuditMixin, Base
 from app.core.models.models import StatusEnum
 from sqlalchemy.dialects.postgresql import UUID
@@ -7,6 +7,14 @@ import uuid
 import enum
 
 
+class WeekDayEnum(enum.Enum):
+    monday = "Monday"
+    tuesday = "Tuesday"
+    wednesday = "Wednesday"
+    thursday = "Thursday"
+    friday = "Friday"
+    saturday = "Saturday"
+    sunday = "Sunday"
 
 class AddressType(enum.Enum):
     home = "home"
@@ -132,3 +140,64 @@ class SKUCategory(Base, AuditMixin):
     skus = relationship("SKU", back_populates="category")
 
 
+
+
+class CenterOperationalSetting(Base, AuditMixin):
+    __tablename__ = "center_operational_settings"
+    __table_args__ = {"schema": "settings"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    center_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("center.centers.id", ondelete="CASCADE"),
+        nullable=False,
+      
+    )
+
+    opening_time = Column(Time, nullable=False)
+    closing_time = Column(Time, nullable=False)
+
+    # ✅ Multiple weekly off days (Sat, Sun, etc.)
+    week_off_days = Column(
+        ARRAY(Enum(WeekDayEnum, name="week_day_enum")),
+        nullable=False,
+        default=[]
+    )
+
+    center = relationship(
+        "Center",
+        back_populates="operational_settings"
+    )
+
+
+class CenterHoliday(Base, AuditMixin):
+    __tablename__ = "center_holidays"
+    __table_args__ = {"schema": "settings"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    center_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("center.centers.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    holiday_name = Column(String(100), nullable=False)
+
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+
+    # ✅ Auto-calculated in backend
+    total_days = Column(Integer, nullable=False)
+
+    # ✅ Stores all weekdays in the date range
+    week_days = Column(
+        ARRAY(Enum(WeekDayEnum, name="holiday_week_day_enum")),
+        nullable=False
+    )
+
+    center = relationship(
+        "Center",
+        back_populates="holidays"
+    )

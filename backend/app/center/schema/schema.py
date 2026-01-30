@@ -140,3 +140,10 @@ class OnboardingFinalizeResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# 9. Center Time Slot Schemas
+class CenterTimeSlotCreate(BaseModel):
+    start_time: str  # e.g., "09:00"
+    end_time: str    # e.g., "17:00"
+    slot_capacity: int

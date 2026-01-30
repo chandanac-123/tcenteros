@@ -63,3 +63,11 @@ def superadmin_required(user=Depends(get_current_user)):
             detail="Superadmin privileges required"
         )
     return user
+
+def centeradmin_required(user=Depends(get_current_user)):
+    if not user or user.get("role") != "centeradmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Centeradmin privileges required"
+        )
+    return user

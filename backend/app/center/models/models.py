@@ -72,6 +72,9 @@ class Center(Base, AuditMixin):
     back_populates="center",
     foreign_keys="CenterAdmin.center_id")
     payment_orders = relationship("PaymentOrder", back_populates="center")
+    time_slots = relationship("CenterTimeSlot", back_populates="center")
+    operational_settings = relationship("CenterOperationalSetting", back_populates="center", uselist=False)
+    holidays = relationship("CenterHoliday", back_populates="center")
 
 
 class CenterOnboardingTemp(Base, AuditMixin):
@@ -97,3 +100,15 @@ class CenterOnboardingTemp(Base, AuditMixin):
 
 
 
+class CenterTimeSlot(Base, AuditMixin):
+    __tablename__ = "center_time_slots"
+    __table_args__ = {"schema": "center"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
+    start_time = Column(String, nullable=False)   # e.g., "09:00"
+    end_time = Column(String, nullable=False)     # e.g., "17:00"
+    slot_capacity = Column(Integer, nullable=False)
+
+    # Relationships
+    center = relationship("Center", back_populates="time_slots", foreign_keys=[center_id])
