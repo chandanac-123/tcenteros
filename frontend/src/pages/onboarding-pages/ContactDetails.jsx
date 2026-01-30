@@ -10,42 +10,41 @@ import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { onboardingValidationSchema } from '@utils/validations'
 import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const ContactDetails = () => {
+
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
+  const store = useOnboardingStore()
 
-  const initialValue = {
-    center_name: '',
-    contact_person: '',
-    center_email: '',
-    center_phone: '',
-    city: '',
-    is_terms_and_conditions: false
+  // Map all relevant store values to initialValues
+  const initialValues = {
+    center_name: store.center_name || '',
+    contact_person: store.contact_person || '',
+    center_email: store.center_email || '',
+    center_phone: store.center_phone || '',
+    city: store.city || '',
+    is_terms_and_conditions: store.is_terms_and_conditions || false,
+    center_category_id: store.center_category_id || 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
+    kind_of_center: store.kind_of_center || 'Hybrid',
+    members_count: store.memberCount || 50,
+    trainer_count: store.trainerCount || 5,
+    currently_using_digital_tool: store.digitalToolsSelected || [],
+    marketing_platform: store.marketingSupportType ? [store.marketingSupportType] : [],
+    platform_feature_ids: store.centerTools
+      ? Object.keys(store.centerTools).filter(key => store.centerTools[key])
+      : [],
   }
 
   const formik = useFormik({
-    initialValues: initialValue,
+    initialValues,
     enableReinitialize: true,
-    validationSchema: onboardingValidationSchema,
+    // validationSchema: onboardingValidationSchema,
     onSubmit: async values => {
-      const details = {
-        ...values,
-        center_category_id: 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
-        kind_of_center: 'Hybrid',
-        members_count: 50,
-        trainer_count: 5,
-        currently_using_digital_tool: 'Excel',
-        marketing_platform: 'Meta',
-        platform_feature_ids: [
-          'c8bbe5a2-88b3-4399-94fc-c5f1a140bc8f',
-          '72e8352a-51fb-4a2a-b8e3-edc75021f371',
-          '869a7b1c-4298-4418-8174-bbc06a3d0e66'
-        ]
-      }
       try {
-        await create(details)
-        handleUpdate()
+        await create(values)
+        // handleUpdate() // Uncomment if you have a post-submit handler
       } catch (error) {
         console.log('error: ', error)
       }
@@ -168,9 +167,9 @@ const ContactDetails = () => {
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
-          onClick={() => navigate('/pricing-page')}
-          // type='submit'
-          // form='contact-details-form'
+          // onClick={() => navigate('/pricing-page')}
+          type='submit'
+          form='contact-details-form'
         >
           View My Pricing
         </Button>
