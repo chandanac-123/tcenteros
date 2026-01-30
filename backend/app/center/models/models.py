@@ -95,3 +95,5 @@ class CenterOnboardingTemp(Base, AuditMixin):
     calculated_amount = Column(Numeric(10, 2), nullable=False)
 
 
+
+
