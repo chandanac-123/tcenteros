@@ -47,8 +47,8 @@ class CenterOnboardingTempDetailedOut(BaseModel):
     kind_of_center: Optional[Any] = None
     members_count: int
     trainer_count: int
-    currently_using_digital_tool: Optional[str] = None
-    marketing_platform: Optional[Any] = None
+    currently_using_digital_tool: Optional[Union[dict, list]] = None
+    marketing_platform: Optional[Union[dict, list]] = None
     platform_features: List[PlatformFeatureInfo]
     is_terms_and_conditions: bool
     calculated_amount: float
