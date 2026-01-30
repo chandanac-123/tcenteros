@@ -10,12 +10,24 @@ import OnboardHeader from '../components/OnboardHeader'
 
 const TrainerAndStaff = () => {
   const navigate = useNavigate()
-  const { setTool, trainerAndStaff, setTrainerAndStaff } = useOnboardingStore()
+
+    const { centerTools,setTool } = useOnboardingStore()
+  const toolState = centerTools['staffmanagement']
+  const selectedValue =
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
 
   const handleAnswer = value => {
-    setTrainerAndStaff(value)
-    setTool('staffmanagement', value === 'yes')
+    setTool(
+      'staffmanagement',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
   }
+
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -35,11 +47,11 @@ const TrainerAndStaff = () => {
           <RadioGroup
             name='paymentbilling'
             options={[
-              { value: 'yes', label: 'Yes' },
-              { value: 'no', label: 'No, I manage accounts elsewhere' }
+              { value: true, label: 'Yes' },
+              { value: false, label: 'No, I manage accounts elsewhere' }
             ]}
-            value={trainerAndStaff}
-            onChange={handleAnswer}
+            value={selectedValue}
+            onChange={val => handleAnswer(val ? 'yes' : 'no')}
           />
         </div>
       </div>

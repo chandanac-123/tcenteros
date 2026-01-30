@@ -7,14 +7,32 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import ManagementToolRow from '../components/ManagementToolRow'
-import { managementTools } from '@constants/managementTool'
 import { useAllPlatformsQuery } from '@api-queries/on-boarding/Query'
+import { useEffect } from 'react'
+import { featureNameToStoreKey } from '@constants/managementTool'
 
 const CenterManagement = () => {
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
-   const { data: platforms, isFetching: platformsFetch } = useAllPlatformsQuery();
-  console.log('platforms: ', platforms);
+  const store = useOnboardingStore()
+  console.log('store: ', store)
+  const { data: platforms, isFetching: platformsFetch } = useAllPlatformsQuery()
+
+  const { setFeatureIdMap } = useOnboardingStore()
+
+useEffect(() => {
+  if (!platforms) return
+
+  const map = {}
+  platforms.forEach(tool => {
+    const key = featureNameToStoreKey[tool.feature_name]
+    if (key) {
+      map[key] = tool.id
+    }
+  })
+
+  setFeatureIdMap(map)
+}, [platforms])
 
   return (
     <SecondaryLayout>
@@ -33,21 +51,33 @@ const CenterManagement = () => {
             and use the network efficiently.
           </p>
 
-          {managementTools.map(tool => (
-            <ManagementToolRow
-              key={tool.id}
-              tool={tool}
-              checked={centerTools[tool.id] === true}
-              onToggle={setTool}
-              onNavigate={navigate}
-            />
-          ))}
+          {/* Map API id to store key for checked state */}
+          {platforms?.map(tool => {
+            // Map API feature_name to store key
+         
+            const storeKey = featureNameToStoreKey[tool.feature_name]
+            const toolState = centerTools?.[storeKey]
+            return (
+              <ManagementToolRow
+                key={tool.id}
+                tool={tool}
+                // checked={centerTools?.[storeKey]?.enabled === true}
+                checked={toolState?.enabled === true}
+                onToggle={(id, value) => setTool(storeKey, value, tool.id)}
+                onNavigate={navigate}
+              />
+            )
+          })}
         </div>
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/digital-presence')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/digital-presence')}
+        >
           Back
         </Button>
         <Button

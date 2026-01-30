@@ -13,10 +13,15 @@ import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 
 const ContactDetails = () => {
-
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
+
+  const enabledFeatureIds = Object.values(store?.centerTools || {})
+    .filter(tool => tool?.enabled === true)
+    .map(tool => tool.feature_id)
+
+  console.log(enabledFeatureIds, 'llllllllllllll')
 
   // Map all relevant store values to initialValues
   const initialValues = {
@@ -26,15 +31,16 @@ const ContactDetails = () => {
     center_phone: store.center_phone || '',
     city: store.city || '',
     is_terms_and_conditions: store.is_terms_and_conditions || false,
-    center_category_id: store.center_category_id || 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
+    center_category_id:
+      store.center_category_id || 'd8c6632c-fd2d-4e43-b300-99ca788bbac5',
     kind_of_center: store.kind_of_center || 'Hybrid',
     members_count: store.memberCount || 50,
     trainer_count: store.trainerCount || 5,
     currently_using_digital_tool: store.digitalToolsSelected || [],
-    marketing_platform: store.marketingSupportType ? [store.marketingSupportType] : [],
-    platform_feature_ids: store.centerTools
-      ? Object.keys(store.centerTools).filter(key => store.centerTools[key])
+    marketing_platform: store.marketingSupportType
+      ? [store.marketingSupportType]
       : [],
+    platform_feature_ids: store.centerTools ? enabledFeatureIds : []
   }
 
   const formik = useFormik({

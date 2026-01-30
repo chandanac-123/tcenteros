@@ -13,14 +13,23 @@ const MemberManagement = () => {
 
   // 🔑 READ + WRITE from Zustand
   const { centerTools, setTool } = useOnboardingStore()
+  console.log('centerTools: ', centerTools)
+
+  const toolState = centerTools['member-management']
 
   const selectedValue =
-    centerTools['member-management'] === undefined
-      ? null
-      : centerTools['member-management']
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
 
   const handleAnswer = value => {
-    setTool('member-management', value === 'yes')
+    setTool(
+      'member-management',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
   }
 
   return (

@@ -1,7 +1,6 @@
 import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
-import { useEffect, useState } from 'react'
-import SelectionCardTick from '../components/SelectionCardTick'
+import RadioGroup from '@common/RadioGroup'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
@@ -12,16 +11,25 @@ import { sellableItems } from '@constants/sellableItem'
 
 const SellableItem = () => {
   const navigate = useNavigate()
-  const { setTool, sellableItem, setSellableItem } = useOnboardingStore()
+  const { centerTools, setTool } = useOnboardingStore()
+  // Use the same id as in your API/platforms for sellable items
+  console.log('centerTools: ', centerTools)
 
-  useEffect(() => {
-    // Update CenterManagement attendance checkbox whenever selection changes
-    if (sellableItem === 'nothing-to-sell') {
-      setTool('sellable_items', false)
-    } else {
-      setTool('sellable_items', true)
-    }
-  }, [sellableItem, setTool])
+  const toolState = centerTools['sellable_items']
+  const selectedValue =
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
+
+  const handleAnswer = value => {
+    setTool(
+      'sellable_items',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
+  }
 
   return (
     <SecondaryLayout>
@@ -43,16 +51,15 @@ const SellableItem = () => {
             billing — no spreadsheets needed
           </p>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center'>
-            {sellableItems.map(item => (
-              <SelectionCardTick
-                key={item.id}
-                item={item}
-                selected={sellableItem === item.id}
-                onSelect={setSellableItem}
-              />
-            ))}
-          </div>
+          <RadioGroup
+            name='sellable_items'
+            options={[
+              { label: 'Yes', value: true },
+              { label: 'No', value: false }
+            ]}
+            value={selectedValue}
+            onChange={val => handleAnswer(val ? 'yes' : 'no')}
+          />
         </div>
       </div>
 

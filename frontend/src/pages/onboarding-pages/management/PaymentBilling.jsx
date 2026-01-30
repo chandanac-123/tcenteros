@@ -10,11 +10,22 @@ import OnboardProgress from '../components/OnboardProgress'
 
 const PaymentBilling = () => {
   const navigate = useNavigate()
-  const { setTool, payment_Billing, setPaymentBilling } = useOnboardingStore()
+  const { centerTools, setTool } = useOnboardingStore()
+
+  const toolState = centerTools['billing']
+  const selectedValue =
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
 
   const handleAnswer = value => {
-    setPaymentBilling(value)
-    setTool('billing', value === 'yes')
+    setTool(
+      'billing',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
   }
 
   return (
@@ -35,13 +46,13 @@ const PaymentBilling = () => {
             expenses — so you never miss a single transaction.
           </span>
           <RadioGroup
-            name='paymentbilling'
+            name='billing'
             options={[
-              { value: 'yes', label: 'Yes, track everything' },
-              { value: 'no', label: 'No, I manage accounts elsewhere' }
+              { value: true, label: 'Yes, track everything' },
+              { value: false, label: 'No, I manage accounts elsewhere' }
             ]}
-            value={payment_Billing}
-            onChange={handleAnswer}
+            value={selectedValue}
+            onChange={val => handleAnswer(val ? 'yes' : 'no')}
           />
         </div>
       </div>

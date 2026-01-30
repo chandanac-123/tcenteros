@@ -10,11 +10,21 @@ import OnboardProgress from '../components/OnboardProgress'
 
 const SlotAndCapacity = () => {
   const navigate = useNavigate()
-  const { setTool, slotControl, setSlotControl } = useOnboardingStore()
+  const { centerTools,setTool } = useOnboardingStore()
+  const toolState = centerTools['slot']
+  const selectedValue =
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
 
   const handleAnswer = value => {
-    setSlotControl(value)
-    setTool('slot', value === 'yes')
+    setTool(
+      'slot',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
   }
 
   return (
@@ -36,11 +46,11 @@ const SlotAndCapacity = () => {
           <RadioGroup
             name='slot_control'
             options={[
-              { value: 'yes', label: 'Yes, control slots & capacity' },
-              { value: 'no', label: 'No, members walk in freely' }
+              { value: true, label: 'Yes, control slots & capacity' },
+              { value: false, label: 'No, members walk in freely' }
             ]}
-            value={slotControl}
-            onChange={handleAnswer}
+            value={selectedValue}
+            onChange={val => handleAnswer(val ? 'yes' : 'no')}
           />
         </div>
       </div>
