@@ -27,7 +27,7 @@ async def create_feature(
     await db.refresh(feature)
     return feature
 
-@router.get("/", response_model=list[PlatformFeatureOut], dependencies=[Depends(superadmin_required)])
+@router.get("/", response_model=list[PlatformFeatureOut])
 async def list_features(db: AsyncSession = Depends(get_async_session)):
     result = await db.execute(select(PlatformFeature))
     return result.scalars().all()
