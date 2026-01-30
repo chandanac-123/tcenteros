@@ -117,3 +117,5 @@ class Member(User):
     __mapper_args__ = {
         "polymorphic_identity": "member",
     }
+
+    

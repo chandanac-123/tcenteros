@@ -4,6 +4,7 @@ from app.settings.api.routes import router as settings_router
 from app.core.api.routes import router as core_router
 from app.platforms.api.routes import router as platforms_router
 from app.center.api.routes import router as center_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="My FastAPI Project",
@@ -12,6 +13,19 @@ app = FastAPI(
     docs_url="/api/docs",        # Swagger UI
     redoc_url="/api/redoc",      # ReDoc
     openapi_url="/api/openapi.json"
+)
+
+origins = [
+    "https://tcenteros.com",
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/api/")
