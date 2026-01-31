@@ -3,12 +3,44 @@ import { Button } from '@pages/components/ui/button'
 import backarrow from '@assets/images/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
-import { useCalculateGstQuery, useFinalizeOnboardCenterMutation } from '@api-queries/on-boarding/Query'
+import {
+  useCalculateGstQuery,
+  useFinalizeOnboardCenterMutation
+} from '@api-queries/on-boarding/Query'
+import { useOnboardingStore } from '@store/onboardingStore'
+import { Input } from '@pages/components/ui/input'
+import { useFormik } from 'formik'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
-  const { data, isFetching } = useCalculateGstQuery()
-  const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation()
+  const store = useOnboardingStore()
+  console.log('store: ', store);
+  const { data, isFetching } = useCalculateGstQuery(store?.onboardId)
+  console.log('data: ', data)
+  const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
+    { id: store?.onboardId }
+  )
+
+  const initialValues = {
+    address_line_1: '',
+    address_line_2: '',
+    gst_number: ''
+  }
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      console.log('values: ', values)
+      try {
+        const response = await finalize(values)
+        setSubmitted(true)
+        formik.resetForm()
+      } catch (error) {
+        console.log('error: ', error)
+      }
+    }
+  })
 
   return (
     <SecondaryLayout>
@@ -28,51 +60,51 @@ const InvoiceSummary = () => {
             <div className='space-y-1 text-sm'>
               <div className='flex justify-between'>
                 <span className='text-gray-500'>Center Name</span>
-                <span className='font-medium'>Fitrex</span>
+                <span className='font-medium'>{data?.center_name}</span>
               </div>
 
               <div className='flex justify-between'>
                 <span className='text-gray-500'>Contact</span>
-                <span className='font-medium'>+91 9876543210</span>
+                <span className='font-medium'>{data?.center_phone}</span>
               </div>
 
               <div className='flex justify-between'>
                 <span className='text-gray-500'>City</span>
-                <span className='font-medium'>Kochi</span>
+                <span className='font-medium'>{data?.city}</span>
               </div>
             </div>
 
-            {/* Address */}
-            <div className='mt-4'>
-              <label className='text-sm font-medium'>Address</label>
-              <input
-                disabled
-                value='Plot no 04, behind DAV Public School, Katol Road, Nagpur'
-                className='mt-1 w-full rounded-lg border px-3 py-2 text-sm text-gray-600'
+            <form
+              id='invoice-details-form'
+              className='space-y-1 mt-2'
+              onSubmit={formik.handleSubmit}
+            >
+              <Input
+                label='Address'
+                name='address_line_1'
+                value={formik.values.address_line_1}
+                onChange={formik.handleChange}
               />
-            </div>
-
-            {/* Pincode */}
-            <div className='mt-3'>
-              <label className='text-sm font-medium'>Pincode</label>
-              <input
-                disabled
-                value='441501'
-                className='mt-1 w-full rounded-lg border px-3 py-2 text-sm text-gray-600'
+              <Input
+                label='Pincode'
+                name='address_line_2'
+                value={formik.values.address_line_2}
+                onChange={formik.handleChange}
               />
-            </div>
-
-            {/* GST */}
-            <div className='mt-2'>
-              <label className='text-sm font-medium'>
-                GST NO <span className='text-gray-400'>(Optional)</span>
-              </label>
-              <input
-                disabled
-                value='GST441501'
-                className='mt-1 w-full rounded-lg border px-3 py-2 text-sm text-gray-600'
+              <Input
+                label={
+                  <>
+                    GST NO:{' '}
+                    <span className='text-xs text-gray-400 font-normal'>
+                      (optional)
+                    </span>
+                  </>
+                }
+                name='gst_number'
+                value={formik.values.gst_number}
+                onChange={formik.handleChange}
               />
-            </div>
+            </form>
           </section>
 
           {/* Package Details */}
@@ -83,7 +115,11 @@ const InvoiceSummary = () => {
               <span className='text-gray-600'>
                 White-Label Offline + Live Classes package (1 year)
               </span>
-              <span className='font-medium'>₹24,900.00</span>
+              <span className='font-medium'>
+                {data?.total_base_price
+                  ? `₹${data?.total_base_price.toFixed(2)}`
+                  : '₹00.00'}
+              </span>
             </div>
           </section>
 
@@ -94,12 +130,20 @@ const InvoiceSummary = () => {
             <div className='space-y-2 text-sm'>
               <div className='flex justify-between'>
                 <span className='text-gray-600'>Base price (1 year)</span>
-                <span>₹24,900.00</span>
+                <span>
+                  {data?.total_base_price
+                    ? `₹${data?.total_base_price.toFixed(2)}`
+                    : '₹00.00'}
+                </span>
               </div>
 
               <div className='flex justify-between'>
-                <span className='text-gray-600'>GST (18%)</span>
-                <span>₹4,482.00</span>
+                <span className='text-gray-600'>
+                  GST ({data?.tax?.tax_percentage}%)
+                </span>
+                <span>
+                  {data?.total_tax ? `₹${data?.total_tax}` : '₹00.00'}
+                </span>
               </div>
             </div>
           </section>
@@ -113,7 +157,9 @@ const InvoiceSummary = () => {
               </p>
             </div>
             <p className='text-2xl font-bold text-purple-600'>
-              ₹29,382.00
+              {data?.total_amount
+                ? `₹${data?.total_amount.toFixed(2)}`
+                : '₹00.00'}
             </p>
           </div>
 
@@ -122,16 +168,18 @@ const InvoiceSummary = () => {
             <Button
               variant='button_outlined'
               className='w-1/2'
-              size="sm"
+              size='sm'
               onClick={() => navigate('/pricing-page')}
             >
               Back
             </Button>
 
             <Button
+              form='invoice-details-form'
+              type='submit'
               variant='button_filled'
               className='w-1/2'
-              size="sm"
+              size='sm'
             >
               Proceed to Checkout
             </Button>

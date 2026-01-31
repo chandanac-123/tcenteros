@@ -5,10 +5,12 @@ import check from '@assets/formicons/check.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import { usePricingPageQuery } from '@api-queries/on-boarding/Query'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const PricingPage = () => {
   const navigate = useNavigate()
-  const { data, isFetching } = usePricingPageQuery()
+  const store = useOnboardingStore()
+  const { data, isFetching } = usePricingPageQuery(store?.onboardId)
 
   return (
     <SecondaryLayout>
@@ -34,7 +36,7 @@ const PricingPage = () => {
               {/* Price */}
               <div className='text-center mb-4'>
                 <span className='text-3xl font-bold text-purple-600'>
-                  ₹24,900.00
+                  {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹34,998.00'}  
                 </span>
                 <span className='text-base font-medium text-purple-600'>
                   {' '}
@@ -74,7 +76,7 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-purple-600'>
-                Total 1-year Cost : ₹34,998.00
+                Total 1-year Cost : {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹34,998.00'}      
               </div>
             </div>
 

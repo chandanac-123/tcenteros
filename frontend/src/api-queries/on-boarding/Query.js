@@ -1,4 +1,3 @@
-
 import {
   getAllClassTypes,
   getAllPlatforms,
@@ -6,17 +5,17 @@ import {
   getPricingPage,
   calculateGst,
   finalizeOnboardCenter
-} from './Urls';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+} from './Urls'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const useAllClassTypesQuery = () => {
   return useQuery({
     queryKey: ['classtypes'],
     queryFn: getAllClassTypes,
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
-};
+    refetchOnMount: true
+  })
+}
 
 // export const useAllClassTypesQuery = (data) => {
 //     console.log('aaaaaaaaaa: ', data);
@@ -33,9 +32,9 @@ export const useAllPlatformsQuery = () => {
     queryKey: ['platforms'],
     queryFn: getAllPlatforms,
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
-};
+    refetchOnMount: true
+  })
+}
 
 // export const useCreateOnboardCenterMutation = () => {
 //   return useMutation({
@@ -44,39 +43,46 @@ export const useAllPlatformsQuery = () => {
 // };
 
 export const useCreateOnboardCenterMutation = () => {
-  const query = useQueryClient();
+  const query = useQueryClient()
   return useMutation({
-    mutationFn: (data) => createOnboardCenter(data),
-    onSuccess: async (data) => {
-      query.invalidateQueries('pricingPage');
+    mutationFn: data => createOnboardCenter(data),
+    onSuccess: async data => {
+      query.invalidateQueries('pricingPage')
     },
-    onError: (err) => {
-      return err;
+    onError: err => {
+      return err
     }
-  });
-};
+  })
+}
 
-export const usePricingPageQuery = (id) => {
+export const usePricingPageQuery = id => {
   return useQuery({
     queryKey: ['pricingPage', id],
     queryFn: () => getPricingPage(id),
     enabled: !!id,
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
-};
+    refetchOnMount: true
+  })
+}
 
-export const useCalculateGstQuery = () => {
+export const useCalculateGstQuery = id => {
   return useQuery({
-    queryKey: ['calculateGst'],
-    queryFn: calculateGst,
+    queryKey: ['calculateGst', id],
+    queryFn: () => calculateGst(id),
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
-};
+    refetchOnMount: true
+  })
+}
 
-export const useFinalizeOnboardCenterMutation = () => {
+export const useFinalizeOnboardCenterMutation = ({ details, id }) => {
+     const query = useQueryClient()
   return useMutation({
-    mutationFn: finalizeOnboardCenter,
-  });
-};
+    mutationFn: () => finalizeOnboardCenter(details, id),
+    onSuccess: async data => {
+      query.invalidateQueries('invoiceSummary')
+    },
+    onError: err => {
+      return err
+    }
+  })
+}

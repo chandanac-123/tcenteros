@@ -8,6 +8,7 @@ import { Checkbox } from '@pages/components/ui/checkbox'
 import { Mail, User, Phone, MapPin, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
+import { useState } from 'react'
 import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
@@ -16,6 +17,7 @@ const ContactDetails = () => {
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
+  const setOnboardId = useOnboardingStore(state => state.setOnboardId)
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -50,15 +52,19 @@ const ContactDetails = () => {
     platform_feature_ids: store.centerTools ? enabledFeatureIds : []
   }
 
+  const [submitted, setSubmitted] = useState(false)
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
     validationSchema: onboardingValidationSchema,
     onSubmit: async values => {
       try {
-        await create(values)
+        const response = await create(values)
+        if (response && response.id) {
+          setOnboardId(response.id)
+        }
+        setSubmitted(true)
         formik.resetForm()
-
       } catch (error) {
         console.log('error: ', error)
       }
@@ -188,15 +194,24 @@ const ContactDetails = () => {
         >
           Back
         </Button>
-        <Button
-          variant='outline_primary'
-          rightIcon={rightcolorarrow}
-          // onClick={() => navigate('/pricing-page')}
-          type='submit'
-          form='contact-details-form'
-        >
-          View My Pricing
-        </Button>
+        {!submitted ? (
+          <Button
+            variant='outline_primary'
+            rightIcon={rightcolorarrow}
+            type='submit'
+            form='contact-details-form'
+          >
+            Submit
+          </Button>
+        ) : (
+          <Button
+            variant='outline_primary'
+            rightIcon={rightcolorarrow}
+            onClick={() => navigate('/pricing-page')}
+          >
+            View My Pricing
+          </Button>
+        )}
       </div>
     </SecondaryLayout>
   )

@@ -8,6 +8,8 @@ export const useOnboardingStore = create(
       featureIdMap: {},
       setFeatureIdMap: featureMap => set({ featureIdMap: featureMap }),
       centerTools: {},
+      onboardId: null,
+      setOnboardId: id => set({ onboardId: id }),
 
       // UPDATED: store enabled + feature_id
       setTool: (toolKey, enabled, featureId) =>

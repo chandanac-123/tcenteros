@@ -45,7 +45,7 @@ export const getPricingPage = async id => {
 
 export const calculateGst = async () => {
   try {
-    const response = await gsteApiCall()
+    const response = await gsteApiCall(id)
     return response.data
   } catch (error) {
     throw error
