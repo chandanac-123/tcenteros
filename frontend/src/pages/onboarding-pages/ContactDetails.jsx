@@ -31,7 +31,7 @@ const ContactDetails = () => {
     center_phone: store.center_phone || '',
     city: store.city || '',
     is_terms_and_conditions: Boolean(store.is_terms_and_conditions) || false,
-    center_category_id:store?.typeSelection || '',
+    center_category_id:store?.typeSelectionId || '',
     kind_of_center: store.kind_of_center || 'Hybrid',
     members_count:
       store.memberCount === '500+'

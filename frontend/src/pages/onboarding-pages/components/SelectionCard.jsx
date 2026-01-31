@@ -11,6 +11,7 @@ const SelectionCard = ({ item, selected, onSelect }) => {
         ${selected ? 'scale-110 shadow-xl' : 'border-bordergrey border-dotted'}
       `}
     >
+      
       <img
         src={item?.image_url}
         alt={item?.name}

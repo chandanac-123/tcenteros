@@ -5,15 +5,23 @@ import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
-import { fitnessTypes } from '../../constants/fitnessType'
 import SelectionCard from './components/SelectionCard'
 import { useNavigate } from 'react-router-dom'
 import { useAllClassTypesQuery } from '@api-queries/on-boarding/Query'
+import { useEffect } from 'react'
 
 const TypeSelection = () => {
   const navigate = useNavigate()
-  const { typeSelection, setTypeSelection } = useOnboardingStore()
-  const { data: classTypes, isFetching: classTypesFetch } = useAllClassTypesQuery();  
+  const { typeSelectionId, setTypeSelection } = useOnboardingStore()
+  const { data: classTypes, isFetching: classTypesFetch } =
+    useAllClassTypesQuery()
+
+  // Set default selection to first item from API if not already selected
+  useEffect(() => {
+    if (classTypes && classTypes.length > 0 && !typeSelectionId) {
+      setTypeSelection(classTypes[0].id, classTypes[0].name)
+    }
+  }, [classTypes, typeSelectionId, setTypeSelection])
 
   return (
     <SecondaryLayout>
@@ -31,8 +39,8 @@ const TypeSelection = () => {
           <SelectionCard
             key={item.id}
             item={item}
-            selected={typeSelection === item.id}
-            onSelect={setTypeSelection}
+            selected={typeSelectionId === item.id}
+            onSelect={() => setTypeSelection(item.id, item.name)}
           />
         ))}
       </div>

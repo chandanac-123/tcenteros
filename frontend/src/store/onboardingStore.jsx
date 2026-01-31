@@ -47,8 +47,9 @@ export const useOnboardingStore = create(
       trainerAndStaff: null,
       setTrainerAndStaff: value => set({ trainerAndStaff: value }),
 
-      typeSelection: 'dance',
-      setTypeSelection: value => set({ typeSelection: value }),
+      typeSelectionId: '',
+      typeSelectionName: '',
+      setTypeSelection: (id, name) => set({ typeSelectionId: id, typeSelectionName: name }),
 
       classMode: 'in-person',
       setClassMode: value => set({ classMode: value }),

@@ -16,7 +16,7 @@ const SmartRecommandation = () => {
   console.log('store: ', store)
 
   const details = [
-    { label: 'Center type', value: store.typeSelection },
+    { label: 'Center type', value: store.typeSelectionName },
     { label: 'Class Mode', value: store.classMode },
     { label: 'Class Size', value: store.memberCount },
     { label: 'Trainers', value: store.trainerCount },
