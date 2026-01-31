@@ -10,18 +10,16 @@ import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
+import { onboardingValidationSchema } from '@utils/validations'
 
 const ContactDetails = () => {
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
-  console.log('store: ', store)
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
     .map(tool => tool.feature_id)
-
-  console.log(enabledFeatureIds, 'llllllllllllll')
 
   // Map all relevant store values to initialValues
   const initialValues = {
@@ -30,8 +28,8 @@ const ContactDetails = () => {
     center_email: store.center_email || '',
     center_phone: store.center_phone || '',
     city: store.city || '',
-    is_terms_and_conditions: store.is_terms_and_conditions || false,
-    center_category_id: store.center_category_id || '',
+    is_terms_and_conditions: Boolean(store.is_terms_and_conditions) || false,
+    center_category_id:store?.typeSelection || '',
     kind_of_center: store.kind_of_center || 'Hybrid',
     members_count:
       store.memberCount === '500+'
@@ -55,11 +53,12 @@ const ContactDetails = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    // validationSchema: onboardingValidationSchema,
+    validationSchema: onboardingValidationSchema,
     onSubmit: async values => {
       try {
         await create(values)
-        // handleUpdate() // Uncomment if you have a post-submit handler
+        formik.resetForm()
+
       } catch (error) {
         console.log('error: ', error)
       }
@@ -144,16 +143,26 @@ const ContactDetails = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.city && formik.errors.city}
               />
-              <div className='flex items-center space-x-2'>
-                <Checkbox
-                  id='agree'
-                  name='is_terms_and_conditions'
-                  checked={formik.values.is_terms_and_conditions}
-                  onChange={formik.handleChange}
-                />
-                <label htmlFor='agree' className='text-sm'>
-                  I agree to be contacted for onboarding and support.
-                </label>
+              <div className='flex flex-col'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='agree'
+                    name='is_terms_and_conditions'
+                    checked={formik.values.is_terms_and_conditions === true}
+                    onCheckedChange={val =>
+                      formik.setFieldValue('is_terms_and_conditions', val)
+                    }
+                    onBlur={formik.handleBlur}
+                  />
+                  <label htmlFor='agree' className='text-sm'>
+                    I agree to be contacted for onboarding and support.
+                  </label>
+                </div>
+                {formik.touched.is_terms_and_conditions && formik.errors.is_terms_and_conditions && (
+                  <span className='text-xs text-red-500 mt-1'>
+                    {formik.errors.is_terms_and_conditions}
+                  </span>
+                )}
               </div>
             </form>
           </div>
