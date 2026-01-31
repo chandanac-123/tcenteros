@@ -1,6 +1,7 @@
 from pydantic import BaseModel, UUID4, constr, condecimal, Field, EmailStr
 from datetime import date
 import uuid
+from app.auth.models.models import MemberStatusEnum
 from uuid import UUID
 
 class MembershipCreate(BaseModel):
@@ -23,9 +24,9 @@ class MembershipOut(BaseModel):
 
 
 class MemberCreate(BaseModel):
-    username: constr(min_length=1)
+    username: str
     email: EmailStr
-    password: constr(min_length=6)
+    password: str
     gender: str = None
     mobile: str = None
     profile_photo: str = None
@@ -39,3 +40,4 @@ class MemberCreate(BaseModel):
     postal_code: str
     membership_id: UUID4
     time_slot_id: UUID4 = None
+    member_status: MemberStatusEnum = MemberStatusEnum.member

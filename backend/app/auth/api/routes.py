@@ -9,10 +9,12 @@ from sqlalchemy.future import select
 from app.auth.models.models import User
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
-
-
+from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse
+from app.auth.models.models import Member
 
 router = APIRouter()
+
+otp_store = {}
 
 @router.post("/login")
 async def login():
@@ -66,6 +68,44 @@ async def centeradmin_login(
         "id": str(user.id),
         "email": user.email,
         "role": user.role,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/member/login/request-otp")
+async def request_otp(data: OTPRequest, session: AsyncSession = Depends(get_async_session)):
+    # Check if member exists
+    result = await session.execute(select(Member).where(Member.mobile == data.phone))
+    member = result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    # Always send 0000 in dev
+    otp_store[data.phone] = "0000"
+    return {"detail": "OTP sent to phone (always 0000 in dev mode)"}
+
+@router.post("/member/login/verify-otp", response_model=MemberLoginResponse)
+async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_session)):
+    phone = next((p for p, o in otp_store.items() if o == data.otp), None)
+    if not phone:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+    result = await session.execute(select(Member).where(Member.mobile == phone))
+    member = result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    otp_store.pop(phone, None)
+
+    # Generate JWT tokens
+    access_token = create_access_token(data={"sub": str(member.id), "role": "member"})
+    refresh_token = create_refresh_token(data={"sub": str(member.id), "role": "member"})
+
+    return {
+        "id": str(member.id),
+        "email": member.email,
+        "phone": member.mobile,
+        "home_center_id": str(member.home_center_id) if member.home_center_id else None,
+        "member_status": member.member_status.value,
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"

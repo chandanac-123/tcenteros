@@ -1,11 +1,20 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey, Date, Integer, Numeric
+from sqlalchemy import Column, String, Boolean, ForeignKey, Date, Integer, Numeric, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.models.models import User
 from app.core.models.base import Base
 from app.core.models.models import UserRole
+import uuid
+import enum
 
 
+
+
+class MemberStatusEnum(enum.Enum):
+    member = "member"
+    guest = "guest"
+    lead = "lead"
+    visitor = "visitor"
 
 class SuperAdmin(User):
     __tablename__ = "superadmins"
@@ -113,6 +122,7 @@ class Member(User):
     network_eligible = Column(Boolean, default=True, nullable=False)
     last_login_device = Column(String)
     time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
+    member_status = Column(Enum(MemberStatusEnum), nullable=False, default=MemberStatusEnum.member)
 
     home_center = relationship("Center", foreign_keys=[home_center_id])
 

@@ -4,9 +4,9 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership
 from app.membership.schema.schema import MembershipCreate, MemberCreate
-from app.auth.models.models import Member
+from app.auth.models.models import Member, MemberStatusEnum
 from app.core.security import get_password_hash
-from app.membership.models.models import MemberMembership
+from app.membership.models.models import MemberMembership, Membership
 from app.settings.models.models import Address
 from app.core.models.models import GenderEnum
 from datetime import datetime, date
@@ -226,6 +226,7 @@ async def create_member(
         date_of_birth=payload.date_of_birth,
         blood_group=payload.blood_group,
         time_slot_id=payload.time_slot_id,
+        member_status=MemberStatusEnum(payload.member_status) if payload.member_status else None,
         created_by=current_user["user_id"],
         updated_by=current_user["user_id"],
         created_at=datetime.utcnow(),
@@ -261,4 +262,5 @@ async def create_member(
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
         "membership_id": str(payload.membership_id),
         "address_id": str(address.id),
+        "member_status": member.member_status.value,  # <-- NEW FIELD IN RESPONSE
     }
