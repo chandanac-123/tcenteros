@@ -11,6 +11,10 @@ from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
 from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse
 from app.auth.models.models import Member
+from datetime import datetime
+from uuid import uuid4
+from app.auth.models.models import MemberStatusEnum
+from app.core.models.models import StatusEnum
 
 router = APIRouter()
 
@@ -76,12 +80,25 @@ async def centeradmin_login(
 
 @router.post("/member/login/request-otp")
 async def request_otp(data: OTPRequest, session: AsyncSession = Depends(get_async_session)):
-    # Check if member exists
     result = await session.execute(select(Member).where(Member.mobile == data.phone))
     member = result.scalar_one_or_none()
     if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
-    # Always send 0000 in dev
+        phone_str = str(data.phone)
+        new_member = Member(
+            id=uuid4(),
+            email=f"lead_{phone_str}@autogen.local",
+            username=f"lead_{phone_str}",
+            password_hash="otp_lead",  # <-- Provide a dummy non-null value
+            role="member",
+            status=StatusEnum.active,
+            mobile=phone_str,
+            member_status=MemberStatusEnum.lead,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        session.add(new_member)
+        await session.commit()
+        await session.refresh(new_member)
     otp_store[data.phone] = "0000"
     return {"detail": "OTP sent to phone (always 0000 in dev mode)"}
 
