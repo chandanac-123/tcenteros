@@ -16,38 +16,38 @@ router = APIRouter()
 
 otp_store = {}
 
-@router.post("/login")
-async def login():
-    return {"message": "login ok"}
+# @router.post("/login")
+# async def login():
+#     return {"message": "login ok"}
 
 
 
-@router.post("/upload")
-async def upload(file: UploadFile = File(...)):
-    key = upload_file(file)
-    # key = "uploads/uuid_filename with spaces.png"
+# @router.post("/upload")
+# async def upload(file: UploadFile = File(...)):
+#     key = upload_file(file)
+#     # key = "uploads/uuid_filename with spaces.png"
 
-    # remove "uploads/" prefix
-    filename = key.replace("uploads/", "", 1)
+#     # remove "uploads/" prefix
+#     filename = key.replace("uploads/", "", 1)
 
-    # URL-encode ONLY the filename
-    encoded_filename = urllib.parse.quote(filename)
+#     # URL-encode ONLY the filename
+#     encoded_filename = urllib.parse.quote(filename)
 
-    return {
-        "message": "Uploaded",
-        "key": encoded_filename
-    }
+#     return {
+#         "message": "Uploaded",
+#         "key": encoded_filename
+#     }
 
-@router.get("/{key:path}")
-def get_file(key: str):
-    url = get_file_url(key)
-    return {"url": url}
+# @router.get("/{key:path}")
+# def get_file(key: str):
+#     url = get_file_url(key)
+#     return {"url": url}
 
 
-@router.delete("/{key}")
-def delete(key: str):
-    delete_file(key)
-    return {"message": "Deleted"}
+# @router.delete("/{key}")
+# def delete(key: str):
+#     delete_file(key)
+#     return {"message": "Deleted"}
 
 
 @router.post("/centeradmin/login", response_model=CenterAdminLoginResponse)
@@ -110,3 +110,4 @@ async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
+

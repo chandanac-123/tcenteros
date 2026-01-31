@@ -12,11 +12,13 @@ from app.core.models.models import GenderEnum
 from datetime import datetime, date
 from app.core.database import get_async_session
 from app.auth.models.models import CenterAdmin
-from app.core.dependencies import centeradmin_required, get_current_user
+from app.core.dependencies import centeradmin_required, get_current_user, member_required
 from app.s3.service import upload_file, get_file_url
 from uuid import uuid4
 from sqlalchemy import select
 from app.membership.schema.schema import MembershipOut
+from sqlalchemy.orm import selectinload
+
 
 router = APIRouter()
 
@@ -263,4 +265,25 @@ async def create_member(
         "membership_id": str(payload.membership_id),
         "address_id": str(address.id),
         "member_status": member.member_status.value,  # <-- NEW FIELD IN RESPONSE
+    }
+
+
+@router.get("/member/membership")
+async def get_member_membership(
+    current_member=Depends(member_required),
+    session: AsyncSession = Depends(get_async_session)
+):
+    result = await session.execute(
+        select(MemberMembership)
+        .options(selectinload(MemberMembership.membership))
+        .where(MemberMembership.member_id == current_member["user_id"])
+    )
+    member_membership = result.scalar_one_or_none()
+    if not member_membership:
+        return {"detail": "No membership found for this member."}
+    return {
+        "membership_id": str(member_membership.membership_id),
+        "start_date": member_membership.start_date,
+        "end_date": member_membership.end_date,
+        # Add more fields as needed
     }
