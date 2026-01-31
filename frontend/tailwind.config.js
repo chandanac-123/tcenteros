@@ -15,8 +15,8 @@ export default {
         'img-bg':"url('/src/assets/images/bgimage.svg')",
       },
       colors: {
-        primary: '#1452D4',
-        secondary: '#8B24E2',
+        primary: 'rgb(var(--primary))',
+        secondary: 'rgb(var(--secondary))',
         grey: '#3A3A3A',
         primarybg: '#FFFFFF4D',
         secondarybg: '#F7EDFF',
