@@ -74,15 +74,15 @@ export const useCalculateGstQuery = id => {
   })
 }
 
-export const useFinalizeOnboardCenterMutation = ({ details, id }) => {
-     const query = useQueryClient()
+export const useFinalizeOnboardCenterMutation = (id) => {
+  const query = useQueryClient();
   return useMutation({
-    mutationFn: () => finalizeOnboardCenter(details, id),
+    mutationFn: (details) => finalizeOnboardCenter(details, id),
     onSuccess: async data => {
-      query.invalidateQueries('invoiceSummary')
+      query.invalidateQueries('invoiceSummary');
     },
     onError: err => {
-      return err
+      return err;
     }
-  })
-}
+  });
+};

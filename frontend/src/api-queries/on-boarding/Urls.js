@@ -43,7 +43,7 @@ export const getPricingPage = async id => {
   }
 }
 
-export const calculateGst = async () => {
+export const calculateGst = async (id) => {
   try {
     const response = await gsteApiCall(id)
     return response.data
@@ -54,9 +54,9 @@ export const calculateGst = async () => {
 
 export const finalizeOnboardCenter = async (details, id) => {
   try {
-    const response = await onboardFinalizeApiCall({ details, id })
-    return response.data
+    const response = await onboardFinalizeApiCall(details, id);
+    return response.data;
   } catch (error) {
-    throw error
+    throw error;
   }
-}
+};
