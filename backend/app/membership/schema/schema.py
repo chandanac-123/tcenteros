@@ -1,12 +1,25 @@
 from pydantic import BaseModel, UUID4, constr, condecimal, Field, EmailStr
 from datetime import date
+import uuid
+from uuid import UUID
 
 class MembershipCreate(BaseModel):
-    membership_name: constr(min_length=1)
-    membership_code: constr(min_length=1)
+    membership_name: str
+    membership_code: str
     description: str = ""
     duration: str
-    default_price: condecimal(max_digits=10, decimal_places=2)
+    default_price: float
+
+
+class MembershipOut(BaseModel):
+    membership_id: UUID
+    center_id: UUID
+    membership_name: str
+    membership_code: str
+    description: str
+    duration: str
+    default_price: float
+    status: str
 
 
 class MemberCreate(BaseModel):

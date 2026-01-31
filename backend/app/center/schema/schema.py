@@ -144,6 +144,21 @@ class OnboardingFinalizeResponse(BaseModel):
 
 # 9. Center Time Slot Schemas
 class CenterTimeSlotCreate(BaseModel):
-    start_time: str  # e.g., "09:00"
-    end_time: str    # e.g., "17:00"
+    start_time: str
+    end_time: str
     slot_capacity: int
+
+class CenterTimeSlotUpdate(BaseModel):
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    slot_capacity: Optional[int] = None
+
+class CenterTimeSlotOut(BaseModel):
+    id: UUID4
+    center_id: UUID4
+    start_time: str
+    end_time: str
+    slot_capacity: int
+
+    class Config:
+        orm_mode = True

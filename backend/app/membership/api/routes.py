@@ -1,5 +1,6 @@
 from app.core.models.models import StatusEnum, User
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Query
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership
 from app.membership.schema.schema import MembershipCreate, MemberCreate
@@ -15,18 +16,14 @@ from app.core.dependencies import centeradmin_required, get_current_user
 from app.s3.service import upload_file, get_file_url
 from uuid import uuid4
 from sqlalchemy import select
+from app.membership.schema.schema import MembershipOut
 
 router = APIRouter()
 
 #create membership plan
-@router.post("/memberships-plans", status_code=201)
+@router.post("/memberships-plans", response_model=MembershipOut, status_code=201)
 async def create_membership_plan(
-    membership_name: str = Form(...),
-    membership_code: str = Form(...),
-    description: str = Form(""),
-    duration: str = Form(...),
-    default_price: float = Form(...),
-    image: UploadFile = File(...),
+    payload: MembershipCreate,
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
@@ -35,28 +32,23 @@ async def create_membership_plan(
     if not user or user.role != "centeradmin":
         raise HTTPException(status_code=403, detail="Not a center admin")
 
-    # 2. Get centeradmin record for center_id
-    center_admin = await db.get(CenterAdmin, user.id)
-    if not center_admin or not center_admin.center_id:
+    # 2. Get center_id directly from CenterAdmin table
+    result = await db.execute(
+        select(CenterAdmin.center_id).where(CenterAdmin.id == user.id)
+    )
+    center_id = result.scalar_one_or_none()
+    if not center_id:
         raise HTTPException(status_code=403, detail="CenterAdmin record not found or no center assigned")
-    center_id = center_admin.center_id
 
-    # 3. Upload image to S3
-    file_bytes = await image.read()
-    file_ext = image.filename.split('.')[-1]
-    s3_key = f"memberships/{uuid4()}.{file_ext}"
-    upload_file(file_bytes, s3_key, content_type=image.content_type)
-    image_url = get_file_url(s3_key)
-
-    # 4. Create the membership (image not stored in DB)
+    # 3. Create the membership
     membership = Membership(
         membership_id=uuid4(),
         center_id=center_id,
-        membership_name=membership_name,
-        membership_code=membership_code,
-        description=description,
-        duration=duration,
-        default_price=default_price,
+        membership_name=payload.membership_name,
+        membership_code=payload.membership_code,
+        description=payload.description,
+        duration=payload.duration,
+        default_price=payload.default_price,
         status=StatusEnum.active,
         created_by=user.id,
         updated_by=user.id,
@@ -65,21 +57,20 @@ async def create_membership_plan(
     await db.commit()
     await db.refresh(membership)
 
-    # 5. Return membership data + image URL
-    return {
-        "membership_id": str(membership.membership_id),
-        "center_id": str(center_id),
-        "membership_name": membership.membership_name,
-        "membership_code": membership.membership_code,
-        "description": membership.description,
-        "duration": membership.duration,
-        "default_price": float(membership.default_price),
-        "status": membership.status.value,
-        "image_url": image_url
-    }
+    # 4. Return membership data
+    return MembershipOut(
+        membership_id=membership.membership_id,
+        center_id=membership.center_id,
+        membership_name=membership.membership_name,
+        membership_code=membership.membership_code,
+        description=membership.description,
+        duration=membership.duration,
+        default_price=float(membership.default_price),
+        status=membership.status.value,
+    )
 
-#List Membership Plans (superadmin, centeradmin, member)
-@router.get("/memberships-plans")
+# #List Membership Plans (superadmin, centeradmin, member)
+@router.get("/memberships-plans", response_model=List[MembershipOut])
 async def list_membership_plans(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
@@ -88,21 +79,21 @@ async def list_membership_plans(
     result = await db.execute(select(Membership))
     memberships = result.scalars().all()
     return [
-        {
-            "membership_id": str(m.membership_id),
-            "center_id": str(m.center_id),
-            "membership_name": m.membership_name,
-            "membership_code": m.membership_code,
-            "description": m.description,
-            "duration": m.duration,
-            "default_price": float(m.default_price),
-            "status": m.status.value,
-        }
+        MembershipOut(
+            membership_id=m.membership_id,
+            center_id=m.center_id,
+            membership_name=m.membership_name,
+            membership_code=m.membership_code,
+            description=m.description,
+            duration=m.duration,
+            default_price=float(m.default_price),
+            status=m.status.value,
+        )
         for m in memberships
     ]
 
-#Get Membership Plan by ID (superadmin, centeradmin, member)
-@router.get("/memberships-plans/{membership_id}")
+# # #Get Membership Plan by ID (superadmin, centeradmin, member)
+@router.get("/memberships-plans/{membership_id}", response_model=MembershipOut)
 async def get_membership_plan(
     membership_id: str,
     db: AsyncSession = Depends(get_async_session),
@@ -111,19 +102,19 @@ async def get_membership_plan(
     membership = await db.get(Membership, membership_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
-    return {
-        "membership_id": str(membership.membership_id),
-        "center_id": str(membership.center_id),
-        "membership_name": membership.membership_name,
-        "membership_code": membership.membership_code,
-        "description": membership.description,
-        "duration": membership.duration,
-        "default_price": float(membership.default_price),
-        "status": membership.status.value,
-    }
+    return MembershipOut(
+        membership_id=membership.membership_id,
+        center_id=membership.center_id,
+        membership_name=membership.membership_name,
+        membership_code=membership.membership_code,
+        description=membership.description,
+        duration=membership.duration,
+        default_price=float(membership.default_price),
+        status=membership.status.value,
+    )
 
 
-#Update Membership Plan (centeradmin only)
+# # #Update Membership Plan (centeradmin only)
 @router.put("/memberships-plans/{membership_id}")
 async def update_membership_plan(
     membership_id: str,
@@ -134,7 +125,6 @@ async def update_membership_plan(
     membership = await db.get(Membership, membership_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
-    # Only allow update if centeradmin owns the plan
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if membership.center_id != center_admin.center_id:
         raise HTTPException(status_code=403, detail="Not allowed to update this plan")
@@ -147,7 +137,7 @@ async def update_membership_plan(
     return {"detail": "Membership plan updated"}
 
 
-#Delete Membership Plan (centeradmin only)
+# # #Delete Membership Plan (centeradmin only)
 @router.delete("/memberships-plans/{membership_id}")
 async def delete_membership_plan(
     membership_id: str,
@@ -165,11 +155,11 @@ async def delete_membership_plan(
     return {"detail": "Membership plan deleted"}
 
 
-#Activate/Inactivate Membership Plan (centeradmin only)
+# #Activate/Inactivate Membership Plan (centeradmin only)
 @router.patch("/memberships-plans/{membership_id}/status")
 async def set_membership_plan_status(
     membership_id: str,
-    status: str = Query(..., regex="^(active|inactive)$"),
+    status: str = Query(..., pattern="^(active|inactive)$"),
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
@@ -185,7 +175,6 @@ async def set_membership_plan_status(
     await db.commit()
     await db.refresh(membership)
     return {"detail": f"Membership plan status set to {status}"}
-
 
 
 

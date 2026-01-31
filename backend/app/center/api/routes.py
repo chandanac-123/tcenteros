@@ -19,7 +19,7 @@ from datetime import datetime
 from sqlalchemy.future import select
 from app.core.database import get_async_session
 from uuid import uuid4
-from app.core.dependencies import centeradmin_required, get_db
+from app.core.dependencies import centeradmin_required, get_db, get_current_user
 from app.core.security import get_password_hash
 
 router = APIRouter()
@@ -393,7 +393,8 @@ async def finalize_onboarding(
 
 
 
-@router.post("/center/time-slots", status_code=201)
+# Create time slot (centeradmin only)
+@router.post("/center/time-slots", response_model=CenterTimeSlotOut, status_code=201)
 async def create_center_time_slot(
     payload: CenterTimeSlotCreate,
     db: AsyncSession = Depends(get_async_session),
@@ -416,3 +417,66 @@ async def create_center_time_slot(
     await db.commit()
     await db.refresh(slot)
     return slot
+
+# List all time slots for current center (all roles)
+@router.get("/center/time-slots", response_model=List[CenterTimeSlotOut])
+async def list_center_time_slots(
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    center_id = center_admin.center_id if center_admin else None
+    result = await db.execute(select(CenterTimeSlot).where(CenterTimeSlot.center_id == center_id))
+    slots = result.scalars().all()
+    return slots
+
+# Get time slot by ID (all roles)
+@router.get("/center/time-slots/{slot_id}", response_model=CenterTimeSlotOut)
+async def get_center_time_slot(
+    slot_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    slot = await db.get(CenterTimeSlot, slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Time slot not found")
+    return slot
+
+# Update time slot (centeradmin only)
+@router.put("/center/time-slots/{slot_id}", response_model=CenterTimeSlotOut)
+async def update_center_time_slot(
+    slot_id: str,
+    payload: CenterTimeSlotUpdate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    slot = await db.get(CenterTimeSlot, slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Time slot not found")
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if slot.center_id != center_admin.center_id:
+        raise HTTPException(status_code=403, detail="Not allowed to update this time slot")
+    for field, value in payload.dict(exclude_unset=True).items():
+        setattr(slot, field, value)
+    slot.updated_by = current_user["user_id"]
+    slot.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(slot)
+    return slot
+
+# Delete time slot (centeradmin only)
+@router.delete("/center/time-slots/{slot_id}")
+async def delete_center_time_slot(
+    slot_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    slot = await db.get(CenterTimeSlot, slot_id)
+    if not slot:
+        raise HTTPException(status_code=404, detail="Time slot not found")
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if slot.center_id != center_admin.center_id:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this time slot")
+    await db.delete(slot)
+    await db.commit()
+    return {"detail": "Time slot deleted"}
