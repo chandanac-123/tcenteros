@@ -102,6 +102,7 @@ class Employee(User):
         "polymorphic_identity": "employee",
     }
 
+
 class Member(User):
     __tablename__ = "members"
     __table_args__ = {"schema": "auth"}

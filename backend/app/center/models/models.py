@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, JSON, Integer
+from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, JSON, Integer, Date
 from app.core.models.base import AuditMixin, Base
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import  relationship
@@ -21,6 +21,15 @@ class CenterStatus(enum.Enum):
     inactive = "inactive"
     suspended = "suspended"
     closed = "closed"
+
+class TimeSlotChangeType(enum.Enum):
+    permanent = "permanent"
+    temporary = "temporary"
+
+class TimeSlotChangeStatus(enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
 
 # ------------------------
 # Center Model
@@ -113,3 +122,24 @@ class CenterTimeSlot(Base, AuditMixin):
 
     # Relationships
     center = relationship("Center", back_populates="time_slots", foreign_keys=[center_id])
+
+
+
+class TimeSlotChangeRequest(Base, AuditMixin):
+    __tablename__ = "time_slot_change_requests"
+    __table_args__ = {"schema": "membership"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    member_id = Column(UUID(as_uuid=True), ForeignKey("auth.members.id"), nullable=False)
+    old_time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
+    new_time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
+    change_type = Column(Enum(TimeSlotChangeType), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)
+    reason = Column(String, nullable=True)
+    status = Column(Enum(TimeSlotChangeStatus), default=TimeSlotChangeStatus.pending, nullable=False)
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("auth.center_admins.id"), nullable=True)
+
+    member = relationship("Member")
+    old_time_slot = relationship("CenterTimeSlot", foreign_keys=[old_time_slot_id])
+    new_time_slot = relationship("CenterTimeSlot", foreign_keys=[new_time_slot_id])

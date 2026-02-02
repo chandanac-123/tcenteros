@@ -15,12 +15,11 @@ from app.auth.models.models import CenterAdmin
 from app.core.dependencies import centeradmin_required, get_current_user, member_required
 from app.s3.service import upload_file, get_file_url
 from uuid import uuid4
-from sqlalchemy import select
-from app.membership.schema.schema import MembershipOut
+from sqlalchemy import select, func
+from app.membership.schema.schema import MembershipOut, TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
-from app.center.models.models import CenterTimeSlot
-
+from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest, TimeSlotChangeStatus
 router = APIRouter()
 
 #create membership plan
@@ -351,3 +350,84 @@ async def get_member_membership(
         "time_slot_id": str(time_slot_id) if time_slot_id else None,
         "time_slot_details": time_slot_details
     }
+
+
+#List All Time Slots with Status
+@router.get("/center/time-slots")
+async def list_time_slots(center_id: str, session: AsyncSession = Depends(get_async_session)):
+    # Get all time slots for the center
+    slots_result = await session.execute(
+        select(CenterTimeSlot).where(CenterTimeSlot.center_id == center_id)
+    )
+    slots = slots_result.scalars().all()
+
+    # Get member count per slot
+    slot_ids = [slot.id for slot in slots]
+    member_counts = {}
+    if slot_ids:
+        count_result = await session.execute(
+            select(MemberMembership.time_slot_id, func.count(MemberMembership.id))
+            .where(MemberMembership.time_slot_id.in_(slot_ids))
+            .group_by(MemberMembership.time_slot_id)
+        )
+        member_counts = dict(count_result.all())
+
+    slot_list = []
+    for slot in slots:
+        count = member_counts.get(slot.id, 0)
+        available = count < slot.slot_capacity
+        slot_list.append({
+            "id": str(slot.id),
+            "start_time": slot.start_time,
+            "end_time": slot.end_time,
+            "slot_capacity": slot.slot_capacity,
+            "current_count": count,
+            "status": "available" if available else "not available"
+        })
+    return slot_list
+
+#Time Slot Change Request
+@router.post("/member/time-slot-change-request")
+async def request_time_slot_change(
+    payload: TimeSlotChangeRequestIn,
+    current_member=Depends(member_required),
+    session: AsyncSession = Depends(get_async_session)
+):
+    # Get member's current time slot
+    member_result = await session.execute(
+        select(Member).where(Member.id == current_member["user_id"])
+    )
+    member = member_result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    old_time_slot_id = member.time_slot_id
+
+    # Check new slot capacity
+    slot_result = await session.execute(
+        select(CenterTimeSlot).where(CenterTimeSlot.id == payload.new_time_slot_id)
+    )
+    slot = slot_result.scalar_one_or_none()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Time slot not found")
+
+    count_result = await session.execute(
+        select(func.count(Member.id)).where(Member.time_slot_id == slot.id)
+    )
+    count = count_result.scalar_one()
+    if count >= slot.slot_capacity:
+        raise HTTPException(status_code=400, detail="Selected time slot is full")
+
+    # Create request
+    req = TimeSlotChangeRequest(
+        member_id=member.id,
+        old_time_slot_id=old_time_slot_id,
+        new_time_slot_id=payload.new_time_slot_id,
+        change_type=payload.change_type,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        status=TimeSlotChangeStatus.pending
+    )
+    session.add(req)
+    await session.commit()
+    await session.refresh(req)
+    return {"detail": "Time slot change request submitted", "request_id": str(req.id)}

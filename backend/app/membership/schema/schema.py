@@ -2,6 +2,7 @@ from pydantic import BaseModel, UUID4, constr, condecimal, Field, EmailStr
 from datetime import date
 import uuid
 from app.auth.models.models import MemberStatusEnum
+from app.center.models.models import TimeSlotChangeType
 from uuid import UUID
 
 class MembershipCreate(BaseModel):
@@ -41,3 +42,11 @@ class MemberCreate(BaseModel):
     membership_id: UUID4
     time_slot_id: UUID4 = None
     member_status: MemberStatusEnum = MemberStatusEnum.member
+
+
+#time slot change request schema
+class TimeSlotChangeRequestIn(BaseModel):
+    new_time_slot_id: str
+    change_type: TimeSlotChangeType  # "permanent" or "temporary"
+    start_date: date
+    end_date: date | None = None
