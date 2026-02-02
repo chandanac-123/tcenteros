@@ -11,6 +11,7 @@ class CenterAdminLoginRequest(BaseModel):
 class CenterAdminLoginResponse(BaseModel):
     id: str
     email: EmailStr
+    center_id: str | None
     role: str
     access_token: str
     refresh_token: str

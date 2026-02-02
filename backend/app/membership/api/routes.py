@@ -390,14 +390,14 @@ async def list_time_slots(
     )
     slots = slots_result.scalars().all()
 
-    # Get member count per slot
+    # Get member count per slot (from Member table)
     slot_ids = [slot.id for slot in slots]
     member_counts = {}
     if slot_ids:
         count_result = await session.execute(
-            select(MemberMembership.time_slot_id, func.count(MemberMembership.id))
-            .where(MemberMembership.time_slot_id.in_(slot_ids))
-            .group_by(MemberMembership.time_slot_id)
+            select(Member.time_slot_id, func.count(Member.id))
+            .where(Member.time_slot_id.in_(slot_ids), Member.home_center_id == center_id)
+            .group_by(Member.time_slot_id)
         )
         member_counts = dict(count_result.all())
 
@@ -447,19 +447,66 @@ async def request_time_slot_change(
     if count >= slot.slot_capacity:
         raise HTTPException(status_code=400, detail="Selected time slot is full")
 
-    # Create request
+    # Get the member's current membership end date
+    membership_result = await session.execute(
+        select(MemberMembership).where(MemberMembership.member_id == member.id)
+    )
+    member_membership = membership_result.scalar_one_or_none()
+    membership_end_date = member_membership.end_date.date() if member_membership and member_membership.end_date else None
+
+    # If permanent, update member's time_slot_id immediately and set end_date to membership_end_date (as date)
+    if payload.change_type == "permanent":
+        end_date = membership_end_date
+    else:
+        end_date = payload.end_date  # For temporary, use the provided end_date
+
+    # Create the time slot change request record
     req = TimeSlotChangeRequest(
         member_id=member.id,
         old_time_slot_id=old_time_slot_id,
         new_time_slot_id=payload.new_time_slot_id,
         change_type=payload.change_type,
         start_date=payload.start_date,
-        end_date=payload.end_date,
+        end_date=end_date,
+        reason=payload.reason,
         status=TimeSlotChangeStatus.pending
     )
     session.add(req)
     await session.commit()
     await session.refresh(req)
-    return {"detail": "Time slot change request submitted", "request_id": str(req.id)}
+
+    return {
+        "detail": "Time slot change request submitted",
+        "request_id": str(req.id),
+        "change_type": payload.change_type,
+        "start_date": str(payload.start_date),
+        "end_date": str(end_date) if end_date else None,
+        "selected_time_slot_id": str(payload.new_time_slot_id)
+    }
 
 
+@router.post("/admin/approve-time-slot-change/{request_id}")
+async def approve_time_slot_change(
+    request_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Fetch the request
+    req = await session.get(TimeSlotChangeRequest, request_id)
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    if req.status != TimeSlotChangeStatus.pending:
+        raise HTTPException(status_code=400, detail="Request already processed")
+
+    # Approve the request
+    req.status = TimeSlotChangeStatus.approved
+    req.approved_by = current_admin["user_id"]
+
+    # If permanent, update the member's slot
+    if req.change_type == "permanent":
+        member = await session.get(Member, req.member_id)
+        if member:
+            member.time_slot_id = req.new_time_slot_id
+
+    await session.commit()
+    return {"detail": "Time slot change request approved"}

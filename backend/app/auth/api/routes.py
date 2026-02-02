@@ -65,6 +65,12 @@ async def centeradmin_login(
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    # Fetch CenterAdmin to get center_id
+    from app.auth.models.models import CenterAdmin
+    admin_result = await db.execute(select(CenterAdmin).where(CenterAdmin.id == user.id))
+    center_admin = admin_result.scalar_one_or_none()
+    center_id = str(center_admin.center_id) if center_admin and center_admin.center_id else None
+
     access_token = create_access_token({"sub": str(user.id), "role": user.role})
     refresh_token = create_refresh_token({"sub": str(user.id), "role": user.role})
 
@@ -72,6 +78,7 @@ async def centeradmin_login(
         "id": str(user.id),
         "email": user.email,
         "role": user.role,
+        "center_id": center_id,
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"

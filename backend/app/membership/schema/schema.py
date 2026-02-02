@@ -50,3 +50,4 @@ class TimeSlotChangeRequestIn(BaseModel):
     change_type: TimeSlotChangeType  # "permanent" or "temporary"
     start_date: date
     end_date: date | None = None
+    reason: str | None = None
