@@ -43,4 +43,5 @@ class MemberMembership(Base, AuditMixin):
     membership_status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
+    center = relationship("Center", back_populates="member_memberships")
     membership = relationship("Membership", back_populates="member_memberships")

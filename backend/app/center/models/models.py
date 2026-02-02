@@ -75,6 +75,7 @@ class Center(Base, AuditMixin):
     time_slots = relationship("CenterTimeSlot", back_populates="center")
     operational_settings = relationship("CenterOperationalSetting", back_populates="center", uselist=False)
     holidays = relationship("CenterHoliday", back_populates="center")
+    member_memberships = relationship("MemberMembership", back_populates="center")
 
 
 class CenterOnboardingTemp(Base, AuditMixin):

@@ -18,7 +18,8 @@ from uuid import uuid4
 from sqlalchemy import select
 from app.membership.schema.schema import MembershipOut
 from sqlalchemy.orm import selectinload
-
+from dateutil.relativedelta import relativedelta
+from app.center.models.models import CenterTimeSlot
 
 router = APIRouter()
 
@@ -237,13 +238,32 @@ async def create_member(
     db.add(member)
     await db.flush()
 
-    # 4. Create MemberMembership
+    # 4. Fetch Membership to get duration
+    membership = await db.get(Membership, payload.membership_id)
+    if not membership:
+        raise HTTPException(status_code=404, detail="Membership plan not found")
+
+    start_date = date.today()
+    # Parse duration and calculate end_date
+    duration = membership.duration.lower()
+    if "month" in duration:
+        months = int(duration.split("-")[0])
+        end_date = start_date + relativedelta(months=months)
+    elif "year" in duration:
+        years = int(duration.split("-")[0])
+        end_date = start_date + relativedelta(years=years)
+    else:
+        end_date = None  # or handle as needed
+
+
+    # 5. Create MemberMembership
     member_membership = MemberMembership(
         id=uuid4(),
         member_id=member.id,
         membership_id=payload.membership_id,
         center_id=center_id,
-        start_date=date.today(),
+        start_date=start_date,
+        end_date=end_date,
         total_amount=0,  # Set as needed
         membership_status=StatusEnum.active,
         created_by=current_user["user_id"],
@@ -273,17 +293,61 @@ async def get_member_membership(
     current_member=Depends(member_required),
     session: AsyncSession = Depends(get_async_session)
 ):
+    # Fetch MemberMembership with related Membership and Center
     result = await session.execute(
         select(MemberMembership)
-        .options(selectinload(MemberMembership.membership))
+        .options(
+            selectinload(MemberMembership.membership),
+            selectinload(MemberMembership.center)
+        )
         .where(MemberMembership.member_id == current_member["user_id"])
     )
     member_membership = result.scalar_one_or_none()
     if not member_membership:
         return {"detail": "No membership found for this member."}
+
+    membership = member_membership.membership
+    center = member_membership.center
+
+    # Fetch member to get time_slot_id
+    member_result = await session.execute(
+        select(Member).where(Member.id == current_member["user_id"])
+    )
+    member = member_result.scalar_one_or_none()
+    time_slot_id = member.time_slot_id if member else None
+
+    # Fetch time slot details if time_slot_id exists
+    time_slot_details = None
+    if time_slot_id:
+        slot_result = await session.execute(
+            select(CenterTimeSlot).where(CenterTimeSlot.id == time_slot_id)
+        )
+        slot = slot_result.scalar_one_or_none()
+        if slot:
+            time_slot_details = {
+                "id": str(slot.id),
+                "start_time": slot.start_time,
+                "end_time": slot.end_time,
+                "slot_capacity": slot.slot_capacity
+            }
+
+    # Calculate days left and remaining days
+    today = date.today()
+    end_date = member_membership.end_date.date() if member_membership.end_date else None
+    days_left = (end_date - today).days if end_date and end_date > today else 0
+
     return {
         "membership_id": str(member_membership.membership_id),
+        "membership_name": membership.membership_name,
+        "membership_code": membership.membership_code,
+        "description": membership.description,
+        "status": membership.status.value,
         "start_date": member_membership.start_date,
         "end_date": member_membership.end_date,
-        # Add more fields as needed
+        "days_left": days_left,
+        "remaining_days": days_left,
+        "center_id": str(center.id) if center else None,
+        "center_name": center.center_name if center else None,
+        "time_slot_id": str(time_slot_id) if time_slot_id else None,
+        "time_slot_details": time_slot_details
     }
