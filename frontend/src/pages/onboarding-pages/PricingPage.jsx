@@ -36,7 +36,9 @@ const PricingPage = () => {
               {/* Price */}
               <div className='text-center mb-4'>
                 <span className='text-3xl font-bold text-purple-600'>
-                  {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹0'}  
+                  {data?.calculated_amount
+                    ? `₹${data.calculated_amount.toFixed(2)}`
+                    : '₹0'}
                 </span>
                 <span className='text-base font-medium text-purple-600'>
                   {' '}
@@ -76,20 +78,15 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-purple-600'>
-                Total 1-year Cost : {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹0'}      
+                Total 1-year Cost :{' '}
+                {data?.calculated_amount
+                  ? `₹${data.calculated_amount.toFixed(2)}`
+                  : '₹0'}
               </div>
             </div>
 
             {/* BUTTONS (NO px-20 / py-6) */}
-            <div className='px-6 py-4 border-t border-gray-200 flex gap-3'>
-              <Button
-                variant='button_outlined'
-                className='w-1/2'
-                onClick={() => navigate('/contact-details')}
-              >
-                Request a Demo
-              </Button>
-
+            <div className='px-6 py-4 border-t border-gray-200 flex justify-center gap-3'>
               <Button
                 variant='button_filled'
                 size='sm'
@@ -104,7 +101,12 @@ const PricingPage = () => {
 
         {/* Back Button */}
         <div className='mt-6'>
-          <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+          <Button
+            variant='outline_secondary'
+            size='sm'
+            leftIcon={backarrow}
+            onClick={() => navigate('/contact-details')}
+          >
             Back
           </Button>
         </div>
