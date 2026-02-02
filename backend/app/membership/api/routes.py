@@ -336,6 +336,7 @@ async def get_member_membership(
     days_left = (end_date - today).days if end_date and end_date > today else 0
 
     return {
+        "member_id": str(member_membership.member_id),
         "membership_id": str(member_membership.membership_id),
         "membership_name": membership.membership_name,
         "membership_code": membership.membership_code,
@@ -454,9 +455,12 @@ async def request_time_slot_change(
     member_membership = membership_result.scalar_one_or_none()
     membership_end_date = member_membership.end_date.date() if member_membership and member_membership.end_date else None
 
-    # If permanent, update member's time_slot_id immediately and set end_date to membership_end_date (as date)
+    # Set end_date for the request and response
     if payload.change_type == "permanent":
         end_date = membership_end_date
+        print("end_date:", end_date)
+        print("membership_end_date:", membership_end_date)
+
     else:
         end_date = payload.end_date  # For temporary, use the provided end_date
 
@@ -475,9 +479,11 @@ async def request_time_slot_change(
     await session.commit()
     await session.refresh(req)
 
+    # Always return the correct end_date and member_id in the response
     return {
         "detail": "Time slot change request submitted",
         "request_id": str(req.id),
+        "member_id": str(member.id),
         "change_type": payload.change_type,
         "start_date": str(payload.start_date),
         "end_date": str(end_date) if end_date else None,
