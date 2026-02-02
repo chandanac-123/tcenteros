@@ -11,6 +11,7 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { Input } from '@pages/components/ui/input'
 import { Loader } from '@pages/components/ui/loader'
 import { useFormik } from 'formik'
+import { invoiceValidationSchema } from '@utils/validations'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
@@ -29,6 +30,7 @@ const InvoiceSummary = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
       console.log('values: ', values)
       try {
@@ -86,12 +88,16 @@ const InvoiceSummary = () => {
                   name='address_line_1'
                   value={formik.values.address_line_1}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                error={formik.touched.address_line_1 && formik.errors.address_line_1}
                 />
                 <Input
                   label='Pincode'
                   name='address_line_2'
                   value={formik.values.address_line_2}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                error={formik.touched.address_line_2 && formik.errors.address_line_2}
                 />
                 <Input
                   label={

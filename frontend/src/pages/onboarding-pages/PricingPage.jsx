@@ -36,7 +36,7 @@ const PricingPage = () => {
               {/* Price */}
               <div className='text-center mb-4'>
                 <span className='text-3xl font-bold text-purple-600'>
-                  {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹34,998.00'}  
+                  {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹0'}  
                 </span>
                 <span className='text-base font-medium text-purple-600'>
                   {' '}
@@ -59,7 +59,7 @@ const PricingPage = () => {
                 {[
                   'Branded Mobile App (iOS & Android)',
                   'Admin Dashboard CRM',
-                  'Attendance Tracking (QR & Manual)',
+                  'Attendance Tracking',
                   'Center report insight',
                   'Payment Gateway integration',
                   '1-Year Support'
@@ -76,7 +76,7 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-purple-600'>
-                Total 1-year Cost : {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹34,998.00'}      
+                Total 1-year Cost : {data?.calculated_amount ? `₹${data.calculated_amount.toFixed(2)}` : '₹0'}      
               </div>
             </div>
 

@@ -15,3 +15,8 @@ export const onboardingValidationSchema = Yup.object().shape({
     'You must accept the terms'
   )
 })
+
+export const invoiceValidationSchema = Yup.object().shape({
+  address_line_1: Yup.string().required('Enter address'),
+  address_line_2: Yup.string().required('Enter pincode')
+})
