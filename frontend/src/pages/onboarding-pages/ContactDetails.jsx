@@ -90,7 +90,6 @@ const ContactDetails = () => {
                 label='Center Name'
                 name='center_name'
                 placeholder='Center Name'
-                className='border-0 focus:ring-0'
                 icon={<Users className='w-5 h-5 text-primary mr-2' />}
                 value={formik.values.center_name}
                 onChange={formik.handleChange}
@@ -101,7 +100,6 @@ const ContactDetails = () => {
                 label='Contact Person'
                 name='contact_person'
                 placeholder='Contact Person'
-                className='border-0 focus:ring-0'
                 icon={<User className='w-5 h-5 text-primary mr-2' />}
                 value={formik.values.contact_person}
                 onChange={formik.handleChange}
@@ -115,7 +113,6 @@ const ContactDetails = () => {
                 name='center_email'
                 placeholder='Email'
                 type='email'
-                className='border-0 focus:ring-0'
                 icon={<Mail className='w-5 h-5 text-primary mr-2' />}
                 value={formik.values.center_email}
                 onChange={formik.handleChange}
@@ -129,7 +126,6 @@ const ContactDetails = () => {
                 name='center_phone'
                 placeholder='Phone'
                 type='tel'
-                className='border-0 focus:ring-0'
                 icon={<Phone className='w-5 h-5 text-primary mr-2' />}
                 value={formik.values.center_phone}
                 onChange={formik.handleChange}
@@ -142,7 +138,6 @@ const ContactDetails = () => {
                 label='City'
                 name='city'
                 placeholder='City'
-                className='border-0 focus:ring-0'
                 icon={<MapPin className='w-5 h-5 text-primary mr-2' />}
                 value={formik.values.city}
                 onChange={formik.handleChange}

@@ -18,6 +18,9 @@ import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
 import ContactDetails from '@pages/onboarding-pages/ContactDetails'
 import PricingPage from '@pages/onboarding-pages/PricingPage'
 import InvoiceSummary from '@pages/onboarding-pages/InvoiceSummary'
+import Login from '@pages/authentication/Login.'
+import ForgetPassord from '@pages/authentication/ForgetPassord'
+import PrimaryLogin from '@pages/authentication/PrimaryLogin'
 
 const App = () => {
   return (
@@ -43,6 +46,12 @@ const App = () => {
       <Route path='/sellable-item' element={<SellableItem />} />
       <Route path='/slot-and-capacity' element={<SlotAndCapacity />} />
       <Route path='/trainer-and-staff' element={<TrainerAndStaff />} />
+
+      {/* Authentication */}
+      <Route path='/primary-login' element={<PrimaryLogin />} />
+      <Route path='/login' element={<Login />} />
+      <Route path='/forgot-password' element={<ForgetPassord />} />
+
 
       {/* Public-only (Auth) */}
       {/* <Route element={<PublicRoute />}>
