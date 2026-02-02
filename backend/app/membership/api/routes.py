@@ -354,7 +354,36 @@ async def get_member_membership(
 
 #List All Time Slots with Status
 @router.get("/center/time-slots")
-async def list_time_slots(center_id: str, session: AsyncSession = Depends(get_async_session)):
+async def list_time_slots(
+    center_id: str = None,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    # Determine center_id based on role
+    role = current_user["role"]
+
+    if role == "superadmin":
+        if not center_id:
+            raise HTTPException(status_code=400, detail="center_id is required for superadmin")
+    elif role == "centeradmin":
+        result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
+        )
+        center_admin = result.scalar_one_or_none()
+        if not center_admin:
+            raise HTTPException(status_code=404, detail="CenterAdmin not found")
+        center_id = str(center_admin.center_id)
+    elif role == "member":
+        result = await session.execute(
+            select(Member).where(Member.id == current_user["user_id"])
+        )
+        member = result.scalar_one_or_none()
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
+        center_id = str(member.home_center_id)
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     # Get all time slots for the center
     slots_result = await session.execute(
         select(CenterTimeSlot).where(CenterTimeSlot.center_id == center_id)
@@ -385,6 +414,7 @@ async def list_time_slots(center_id: str, session: AsyncSession = Depends(get_as
             "status": "available" if available else "not available"
         })
     return slot_list
+
 
 #Time Slot Change Request
 @router.post("/member/time-slot-change-request")
@@ -431,3 +461,5 @@ async def request_time_slot_change(
     await session.commit()
     await session.refresh(req)
     return {"detail": "Time slot change request submitted", "request_id": str(req.id)}
+
+
