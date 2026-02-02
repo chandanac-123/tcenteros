@@ -140,6 +140,6 @@ class TimeSlotChangeRequest(Base, AuditMixin):
     status = Column(Enum(TimeSlotChangeStatus), default=TimeSlotChangeStatus.pending, nullable=False)
     approved_by = Column(UUID(as_uuid=True), ForeignKey("auth.center_admins.id"), nullable=True)
 
-    member = relationship("Member")
+    member = relationship("Member", foreign_keys=[member_id])
     old_time_slot = relationship("CenterTimeSlot", foreign_keys=[old_time_slot_id])
     new_time_slot = relationship("CenterTimeSlot", foreign_keys=[new_time_slot_id])
