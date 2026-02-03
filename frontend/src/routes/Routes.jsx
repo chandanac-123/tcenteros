@@ -4,6 +4,7 @@ import OTPVerification from '@pages/authentication/OtpVerification'
 import PrimaryLogin from '@pages/authentication/PrimaryLogin'
 import ResetPassword from '@pages/authentication/ResetPassword'
 import ResetSuccess from '@pages/authentication/ResetSuccess'
+import Dashboard from '@pages/Dashboard'
 import CenterSize from '@pages/onboarding-pages/CenterSizeScale'
 import ClassSelectionMode from '@pages/onboarding-pages/ClassMode'
 import ContactDetails from '@pages/onboarding-pages/ContactDetails'
@@ -290,19 +291,17 @@ export const routes = [
     menubar: false,
     permission: true
   },
-   
-
-//   {
-//     key: 1,
-//     path: '/dashboard',
-//     label: '',
-//     privetRoute: false,
-//     isSubRoute: false,
-//     pageTitle: '',
-//     component: Landing,
-//     icon: dashboard_dark,
-//     iconActive: dashboard_light,
-//     menubar: true,
-//     permission: true
-//   }
+  {
+    key: 1,
+    path: '/dashboard',
+    label: '',
+    privetRoute: false,
+    isSubRoute: false,
+    pageTitle: '',
+    component: Dashboard,
+    icon: '',
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }
 ]

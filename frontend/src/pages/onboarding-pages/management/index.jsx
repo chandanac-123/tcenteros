@@ -15,7 +15,6 @@ const CenterManagement = () => {
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
   const store = useOnboardingStore()
-  console.log('store: ', store)
   const { data: platforms, isFetching: platformsFetch } = useAllPlatformsQuery()
 
   const { setFeatureIdMap } = useOnboardingStore()

@@ -10,10 +10,7 @@ import { useOnboardingStore } from '@store/onboardingStore'
 
 const SmartRecommandation = () => {
   const navigate = useNavigate()
-  const { centerTools } = useOnboardingStore()
-  console.log('centerTools: ', centerTools)
   const store = useOnboardingStore()
-  console.log('store: ', store)
 
   const details = [
     { label: 'Center type', value: store.typeSelectionName },
@@ -38,10 +35,12 @@ const SmartRecommandation = () => {
       {/* Heading */}
       <div className='px-4 sm:px-10'>
         <div className='flex flex-col gap-1 mb-6'>
-          <span className='text-lg font-medium text-secondary'>
+          <span className='text-2xl font-medium text-secondary'>
             We’ve Designed an Exclusive Branded Package for You
           </span>
-          <span className='text-grey text-sm'>Based on your inputs</span>
+          <span className='text-pricing_text text-sm'>
+            Based on your inputs
+          </span>
         </div>
       </div>
 

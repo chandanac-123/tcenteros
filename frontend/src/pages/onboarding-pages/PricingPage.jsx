@@ -58,20 +58,13 @@ const PricingPage = () => {
               </h3>
 
               <ul className='space-y-3 mb-6'>
-                {[
-                  'Branded Mobile App (iOS & Android)',
-                  'Admin Dashboard CRM',
-                  'Attendance Tracking',
-                  'Center report insight',
-                  'Payment Gateway integration',
-                  '1-Year Support'
-                ].map(item => (
+                {data?.platform_features?.map(item => (
                   <li
                     key={item}
                     className='flex items-center gap-3 text-sm text-gray-600'
                   >
                     <img src={check} alt='check' className='w-4 h-4' />
-                    {item}
+                    {item.feature_name}
                   </li>
                 ))}
               </ul>

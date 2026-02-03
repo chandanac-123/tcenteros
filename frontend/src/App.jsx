@@ -2,15 +2,15 @@ import { Routes, Route } from 'react-router-dom'
 import PrivateRoute from './routes/PrivateRoute'
 import { routes } from './routes/Routes'
 import PageNotFound from '@common/PageNotFound'
-import MasterLayout from '@common/sidebarLayout'
 import PublicRoute from './routes/PublicRoute'
 import { v4 as uuidv4 } from 'uuid'
+import PageLayout from './common/sidebarLayout/PageLayout'
 
 const App = () => {
   return (
     <Routes>
-      <Route element={<PrivateRoute />}>
-        <Route element={<MasterLayout />}>
+      <Route element={<PublicRoute />}>
+        <Route element={<PageLayout />}>
           <Route path='*' element={<PageNotFound />} />
           {routes.map(item => {
             if (item?.permission && item.privetRoute) {
