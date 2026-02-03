@@ -35,7 +35,12 @@ class Membership(Base, AuditMixin):
     status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
-    member_memberships = relationship("MemberMembership", back_populates="membership")
+    member_memberships = relationship(
+    "MemberMembership",
+    back_populates="membership",
+    cascade="all, delete-orphan",
+    passive_deletes=True
+)
     membership_features = relationship("MembershipFeature", back_populates="membership", cascade="all, delete-orphan")
 
 
@@ -46,7 +51,7 @@ class MemberMembership(Base, AuditMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(UUID(as_uuid=True), ForeignKey("auth.members.id"), nullable=False)
-    membership_id = Column(UUID(as_uuid=True), ForeignKey("membership.memberships.membership_id"), nullable=False)
+    membership_id = Column(UUID(as_uuid=True), ForeignKey("membership.memberships.membership_id", ondelete="CASCADE"), nullable=False)
     center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)

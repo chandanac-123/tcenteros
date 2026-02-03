@@ -226,11 +226,9 @@ async def delete_membership_plan(
     membership = await db.get(Membership, membership_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
-    # Features will be deleted due to cascade
     await db.delete(membership)
     await db.commit()
     return {"detail": "Membership plan deleted"}
-
 
 # #Activate/Inactivate Membership Plan (centeradmin only)
 @router.patch("/memberships-plans/{membership_id}/status")
