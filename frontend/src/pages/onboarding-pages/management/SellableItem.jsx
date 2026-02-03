@@ -1,13 +1,12 @@
 import { Button } from '@pages/components/ui/button'
-import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
+import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
 import RadioGroup from '@common/RadioGroup'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
-import backarrow from '@assets/images/backarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
 import { useNavigate } from 'react-router-dom'
 import { useOnboardingStore } from '@store/onboardingStore'
-import { sellableItems } from '@constants/sellableItem'
 
 const SellableItem = () => {
   const navigate = useNavigate()

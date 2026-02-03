@@ -2,7 +2,7 @@ import logo from '@assets/images/logo.svg'
 import { Button } from '@pages/components/ui/button'
 import { Link } from 'react-router-dom'
 import dummy from '@assets/images/dummy.png'
-import single_arrow from '@assets/images/single-left-arrow.svg'
+import single_arrow from '@assets/navigate-icons/single-left-arrow.svg'
 import OtpInput from '@common/OtpInput'
 
 const OTPVerification = () => {

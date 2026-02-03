@@ -2,7 +2,7 @@ import logo from '@assets/images/logo.svg'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import PasswordInput from '@common/PasswordInput'
-import googleicon from '@assets/formicons/google.svg'
+import googleicon from '@assets/form-icons/google.svg'
 import dummy from '@assets/images/dummy.png'
 
 const PrimaryLogin = () => {

@@ -1,7 +1,7 @@
 import reset_success from '@assets/images/reset-success.png'
 import { Link } from 'react-router-dom'
 import dummy from '@assets/images/dummy.png'
-import single_arrow from '@assets/images/single-left-color-arrow.svg'
+import single_arrow from '@assets/navigate-icons/single-left-color-arrow.svg'
 
 const ResetSuccess = () => {
   return (

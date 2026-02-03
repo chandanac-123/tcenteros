@@ -1,6 +1,6 @@
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
-import backarrow from '@assets/images/backarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import {

@@ -1,13 +1,9 @@
 import logo from '@assets/images/logo.svg'
-import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import PasswordInput from '@common/PasswordInput'
-import googleicon from '@assets/formicons/google.svg'
-import { Switch } from '@pages/components/ui/switch'
 import { Link } from 'react-router-dom'
 import dummy from '@assets/images/dummy.png'
-import single_arrow from '@assets/images/single-left-arrow.svg'
-import OtpInput from '@common/OtpInput'
+import single_arrow from '@assets/navigate-icons/single-left-arrow.svg'
 
 const ResetPassword = () => {
   return (

@@ -1,7 +1,7 @@
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
-import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
-import backarrow from '@assets/images/backarrow.svg'
+import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
+import people_icon from '@assets/form-icons/people.svg'
 
 const ContactDetails = () => {
   const navigate = useNavigate()
@@ -31,7 +32,7 @@ const ContactDetails = () => {
     center_phone: store.center_phone || '',
     city: store.city || '',
     is_terms_and_conditions: Boolean(store.is_terms_and_conditions) || false,
-    center_category_id:store?.typeSelectionId || '',
+    center_category_id: store?.typeSelectionId || '',
     kind_of_center: store.kind_of_center || 'Hybrid',
     members_count:
       store.memberCount === '500+'
@@ -90,7 +91,13 @@ const ContactDetails = () => {
                 label='Center Name'
                 name='center_name'
                 placeholder='Center Name'
-                icon={<Users className='w-5 h-5 text-primary mr-2' />}
+                icon={
+                  <img
+                    src={people_icon}
+                    alt='peopel icon'
+                    className='w-6 h-6 text-primary mr-2'
+                  />
+                }
                 value={formik.values.center_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -159,11 +166,12 @@ const ContactDetails = () => {
                     I agree to be contacted for onboarding and support.
                   </label>
                 </div>
-                {formik.touched.is_terms_and_conditions && formik.errors.is_terms_and_conditions && (
-                  <span className='text-xs text-red-500 mt-1'>
-                    {formik.errors.is_terms_and_conditions}
-                  </span>
-                )}
+                {formik.touched.is_terms_and_conditions &&
+                  formik.errors.is_terms_and_conditions && (
+                    <span className='text-xs text-red-500 mt-1'>
+                      {formik.errors.is_terms_and_conditions}
+                    </span>
+                  )}
               </div>
             </form>
           </div>

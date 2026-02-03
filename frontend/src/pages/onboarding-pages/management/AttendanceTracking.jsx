@@ -1,14 +1,14 @@
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
-import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
-import backarrow from '@assets/images/backarrow.svg'
+import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { useNavigate } from 'react-router-dom'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SelectionCardTick from '../components/SelectionCardTick'
 import { attendanceTrackingType } from '@constants/attendanceTrack'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 const AttendanceTracking = () => {
   const navigate = useNavigate()

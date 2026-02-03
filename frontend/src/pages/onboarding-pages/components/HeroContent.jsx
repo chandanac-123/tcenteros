@@ -1,5 +1,5 @@
 import { Button } from '@pages/components/ui/button'
-import nextarrow from '@assets/images/nextarrow.svg'
+import nextarrow from '@assets/navigate-icons/nextarrow.svg'
 import { useNavigate } from 'react-router-dom'
 
 const HeroContent = () => {
