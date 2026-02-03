@@ -3,10 +3,19 @@ import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import PasswordInput from '@common/PasswordInput'
 import googleicon from '@assets/formicons/google.svg'
+import dummy from '@assets/images/dummy.png'
 
 const PrimaryLogin = () => {
   return (
-    <div className='bg-slate-900 min-h-screen flex justify-center items-center px-2'>
+       <div
+          className="min-h-screen flex justify-center items-center px-2"
+          style={{
+            backgroundImage:  `url(${dummy})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
       <div className='w-full max-w-md sm:w-2/3 md:w-1/2 lg:w-1/3 bg-white gap-4 flex flex-col rounded-lg p-4 sm:p-6'>
         <div className='flex justify-center'>
           <img src={logo} alt='Logo' />

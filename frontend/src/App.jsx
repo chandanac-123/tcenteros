@@ -21,6 +21,9 @@ import InvoiceSummary from '@pages/onboarding-pages/InvoiceSummary'
 import Login from '@pages/authentication/Login.'
 import ForgetPassord from '@pages/authentication/ForgetPassord'
 import PrimaryLogin from '@pages/authentication/PrimaryLogin'
+import OTPVerification from '@pages/authentication/OtpVerification'
+import ResetPassword from '@pages/authentication/ResetPassword'
+import ResetSuccess from '@pages/authentication/ResetSuccess'
 
 const App = () => {
   return (
@@ -51,6 +54,9 @@ const App = () => {
       <Route path='/primary-login' element={<PrimaryLogin />} />
       <Route path='/login' element={<Login />} />
       <Route path='/forgot-password' element={<ForgetPassord />} />
+      <Route path='/otp-verification' element={<OTPVerification />} />
+      <Route path='/reset-password' element={<ResetPassword />} />
+      <Route path='/reset-success' element={<ResetSuccess />} />
 
 
       {/* Public-only (Auth) */}
