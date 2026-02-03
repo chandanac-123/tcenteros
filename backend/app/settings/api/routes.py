@@ -3,10 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
 from app.settings.models.models import CenterCategory, TaxCategory
-from app.settings.schema.schema import CenterCategoryOut, TaxCategoryBase, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate
+from app.settings.schema.schema import CenterCategoryOut, TaxCategoryBase, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut
+from app.settings.models.models import CenterOperationalSetting
+from app.auth.models.models import CenterAdmin
+from app.core.dependencies import centeradmin_required
 from app.s3.service import upload_file
 from app.core.dependencies import get_current_user
 import uuid
+from datetime import time
 
 router = APIRouter()
 
@@ -130,5 +134,103 @@ async def delete_tax_category(
     if not tax_category:
         raise HTTPException(status_code=404, detail="Tax category not found")
     await session.delete(tax_category)
+    await session.commit()
+    return
+
+
+#Center Operational Settings
+# CREATE
+@router.post("/center-operational-settings/", response_model=CenterOperationalSettingOut, status_code=201)
+async def create_center_operational_setting(
+    data: CenterOperationalSettingCreate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    # Check if already exists for this center
+    result = await session.execute(
+        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+    )
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=400, detail="Operational settings already exist for this center")
+
+    ops = CenterOperationalSetting(
+        center_id=center_id,
+        opening_time=data.opening_time,
+        closing_time=data.closing_time,
+        week_off_days=data.week_off_days,
+        attendance_allowed_radius_meters=data.attendance_allowed_radius_meters
+    )
+    session.add(ops)
+    await session.commit()
+    await session.refresh(ops)
+    return ops
+
+# READ (get for current center)
+@router.get("/center-operational-settings/", response_model=CenterOperationalSettingOut)
+async def get_center_operational_setting(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+    )
+    ops = result.scalar_one_or_none()
+    if not ops:
+        raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+    return ops
+
+# UPDATE
+@router.put("/center-operational-settings/", response_model=CenterOperationalSettingOut)
+async def update_center_operational_setting(
+    data: CenterOperationalSettingUpdate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+    )
+    ops = result.scalar_one_or_none()
+    if not ops:
+        raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(ops, key, value)
+    await session.commit()
+    await session.refresh(ops)
+    return ops
+
+# DELETE
+@router.delete("/center-operational-settings/", status_code=204)
+async def delete_center_operational_setting(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+    )
+    ops = result.scalar_one_or_none()
+    if not ops:
+        raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+    await session.delete(ops)
     await session.commit()
     return

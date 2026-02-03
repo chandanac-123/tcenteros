@@ -1,5 +1,6 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, UUID4, conint, validator
+from datetime import time
+from typing import Optional, List
 import uuid
 
 #center category
@@ -34,6 +35,42 @@ class TaxCategoryUpdate(TaxCategoryBase):
 
 class TaxCategoryOut(TaxCategoryBase):
     id: uuid.UUID
+
+    class Config:
+        orm_mode = True
+
+
+
+#center operations settings
+class CenterOperationalSettingCreate(BaseModel):
+    opening_time: time
+    closing_time: time
+    week_off_days: List[str]
+    attendance_allowed_radius_meters: conint(gt=0) = 5
+
+    @validator("opening_time", "closing_time", pre=True)
+    def parse_time(cls, v):
+        if isinstance(v, time):
+            return v
+        try:
+            # Accepts "HH:MM" or "HH:MM:SS"
+            return time.fromisoformat(v) if len(v.split(":")) == 3 else time.fromisoformat(v + ":00")
+        except Exception:
+            raise ValueError("Time must be in HH:MM or HH:MM:SS format")
+
+class CenterOperationalSettingUpdate(BaseModel):
+    opening_time: Optional[time] = None
+    closing_time: Optional[time] = None
+    week_off_days: Optional[List[str]] = None
+    attendance_allowed_radius_meters: Optional[conint(gt=0)] = None
+
+class CenterOperationalSettingOut(BaseModel):
+    id: UUID4
+    center_id: UUID4
+    opening_time: time
+    closing_time: time
+    week_off_days: List[str]
+    attendance_allowed_radius_meters: int
 
     class Config:
         orm_mode = True

@@ -11,7 +11,7 @@ class AttendanceStatus(enum.Enum):
     holiday = "holiday"
 
 class Attendance(Base, AuditMixin):
-    __tablename__ = "attendance"
+    __tablename__ = "attendances"
     __table_args__ = {"schema": "attendance"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

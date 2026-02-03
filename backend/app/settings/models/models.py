@@ -165,6 +165,9 @@ class CenterOperationalSetting(Base, AuditMixin):
         default=[]
     )
 
+    attendance_allowed_radius_meters = Column(Integer, default=5, nullable=True)
+
+                                                                                         
     center = relationship(
         "Center",
         back_populates="operational_settings"
