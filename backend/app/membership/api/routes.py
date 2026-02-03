@@ -19,7 +19,7 @@ from sqlalchemy import select, func
 from app.membership.schema.schema import MembershipOut, MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
-from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest, TimeSlotChangeStatus
+from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest, TimeSlotChangeStatus, TimeSlotChangeType
 router = APIRouter()
 
 #create membership plan
@@ -573,19 +573,78 @@ async def approve_time_slot_change(
     # Fetch the request
     req = await session.get(TimeSlotChangeRequest, request_id)
     if not req:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(status_code=404, detail="Time slot change request not found")
     if req.status != TimeSlotChangeStatus.pending:
-        raise HTTPException(status_code=400, detail="Request already processed")
+        raise HTTPException(status_code=400, detail="Request is not pending")
 
     # Approve the request
     req.status = TimeSlotChangeStatus.approved
     req.approved_by = current_admin["user_id"]
 
     # If permanent, update the member's slot
-    if req.change_type == "permanent":
+    if req.change_type == TimeSlotChangeType.permanent:
+        # Fetch the member and update their time_slot_id
         member = await session.get(Member, req.member_id)
-        if member:
-            member.time_slot_id = req.new_time_slot_id
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
+        member.time_slot_id = req.new_time_slot_id
+        member.updated_at = datetime.utcnow()
+        member.updated_by = current_admin["user_id"]
+        await session.flush()  # Ensure changes are staged
 
     await session.commit()
     return {"detail": "Time slot change request approved"}
+
+
+@router.get("/member/time-slot-change-requests")
+async def get_member_time_slot_change_requests(
+    current_member=Depends(member_required),
+    session: AsyncSession = Depends(get_async_session)
+):
+    # Fetch all requests for the member, including related time slots
+    result = await session.execute(
+        select(TimeSlotChangeRequest)
+        .where(TimeSlotChangeRequest.member_id == current_member["user_id"])
+        .order_by(TimeSlotChangeRequest.created_at.desc())
+    )
+    requests = result.scalars().all()
+
+    # Collect all slot IDs to fetch details in bulk
+    slot_ids = set()
+    for req in requests:
+        if req.old_time_slot_id:
+            slot_ids.add(req.old_time_slot_id)
+        if req.new_time_slot_id:
+            slot_ids.add(req.new_time_slot_id)
+
+    # Fetch all relevant time slots
+    slot_details = {}
+    if slot_ids:
+        slots_result = await session.execute(
+            select(CenterTimeSlot).where(CenterTimeSlot.id.in_(slot_ids))
+        )
+        for slot in slots_result.scalars().all():
+            slot_details[slot.id] = {
+                "id": str(slot.id),
+                "start_time": slot.start_time,
+                "end_time": slot.end_time,
+                "slot_capacity": slot.slot_capacity
+            }
+
+    # Build response
+    return [
+        {
+            "id": str(req.id),
+            "old_time_slot": slot_details.get(req.old_time_slot_id),
+            "new_time_slot": slot_details.get(req.new_time_slot_id),
+            "change_type": req.change_type.value,
+            "start_date": str(req.start_date),
+            "end_date": str(req.end_date) if req.end_date else None,
+            "reason": req.reason,
+            "status": req.status.value,
+            "approved_by": str(req.approved_by) if req.approved_by else None,
+            "created_at": str(req.created_at),
+            "updated_at": str(req.updated_at)
+        }
+        for req in requests
+    ]
