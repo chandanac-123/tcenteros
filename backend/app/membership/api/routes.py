@@ -99,8 +99,7 @@ async def list_membership_plans(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    # All roles can access
-    result = await db.execute(select(Membership))
+    result = await db.execute(select(Membership).options(selectinload(Membership.membership_features)))
     memberships = result.scalars().all()
     return [
         MembershipOut(
@@ -112,6 +111,13 @@ async def list_membership_plans(
             duration=m.duration,
             default_price=float(m.default_price),
             status=m.status.value,
+            membership_features=[
+                MembershipFeatureOut(
+                    id=f.id,
+                    feature_name=f.feature_name,
+                    feature_description=f.feature_description
+                ) for f in m.membership_features
+            ]
         )
         for m in memberships
     ]
@@ -123,7 +129,12 @@ async def get_membership_plan(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    membership = await db.get(Membership, membership_id)
+    result = await db.execute(
+        select(Membership)
+        .options(selectinload(Membership.membership_features))
+        .where(Membership.membership_id == membership_id)
+    )
+    membership = result.scalar_one_or_none()
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
     return MembershipOut(
@@ -135,11 +146,18 @@ async def get_membership_plan(
         duration=membership.duration,
         default_price=float(membership.default_price),
         status=membership.status.value,
+        membership_features=[
+            MembershipFeatureOut(
+                id=f.id,
+                feature_name=f.feature_name,
+                feature_description=f.feature_description
+            ) for f in membership.membership_features
+        ]
     )
 
 
 # # #Update Membership Plan (centeradmin only)
-@router.put("/memberships-plans/{membership_id}")
+@router.put("/memberships-plans/{membership_id}", response_model=MembershipOut)
 async def update_membership_plan(
     membership_id: str,
     payload: MembershipCreate,
@@ -152,13 +170,50 @@ async def update_membership_plan(
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if membership.center_id != center_admin.center_id:
         raise HTTPException(status_code=403, detail="Not allowed to update this plan")
-    for field, value in payload.dict().items():
+
+    # Update fields
+    for field, value in payload.dict(exclude={"membership_features"}).items():
         setattr(membership, field, value)
     membership.updated_by = current_user["user_id"]
     membership.updated_at = datetime.utcnow()
+
+    # Update features: remove old, add new
+    # Remove all existing features
+    for f in list(membership.membership_features):
+        await db.delete(f)
+    await db.flush()
+    # Add new features
+    features = []
+    for feature in payload.membership_features:
+        feat = MembershipFeature(
+            membership_id=membership.membership_id,
+            feature_name=feature.feature_name,
+            feature_description=feature.feature_description,
+            created_by=current_user["user_id"],
+            updated_by=current_user["user_id"],
+        )
+        db.add(feat)
+        features.append(feat)
+
     await db.commit()
     await db.refresh(membership)
-    return {"detail": "Membership plan updated"}
+    return MembershipOut(
+        membership_id=membership.membership_id,
+        center_id=membership.center_id,
+        membership_name=membership.membership_name,
+        membership_code=membership.membership_code,
+        description=membership.description,
+        duration=membership.duration,
+        default_price=float(membership.default_price),
+        status=membership.status.value,
+        membership_features=[
+            MembershipFeatureOut(
+                id=f.id,
+                feature_name=f.feature_name,
+                feature_description=f.feature_description
+            ) for f in features
+        ]
+    )
 
 
 # # #Delete Membership Plan (centeradmin only)
@@ -171,9 +226,7 @@ async def delete_membership_plan(
     membership = await db.get(Membership, membership_id)
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
-    center_admin = await db.get(CenterAdmin, current_user["user_id"])
-    if membership.center_id != center_admin.center_id:
-        raise HTTPException(status_code=403, detail="Not allowed to delete this plan")
+    # Features will be deleted due to cascade
     await db.delete(membership)
     await db.commit()
     return {"detail": "Membership plan deleted"}
