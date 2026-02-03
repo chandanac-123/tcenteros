@@ -24,9 +24,9 @@ const buttonVariants = cva(
       size: {
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-20',
         landing: 'h-10 pl-4 pr-1 rounded-xl text-md gap-40',
-        sm: 'h-10 rounded-xl pr-4 pl-1 text-md gap-20',
+        sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
 
-        googlebutton: 'h-10 pl-4 pr-1 rounded-xl text-md gap-2',
+        googlebutton: 'h-10 pl-4 pr-1 rounded-lg text-md gap-2',
         icon: 'h-9 w-9'
       }
     },

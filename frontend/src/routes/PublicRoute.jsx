@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom"
-import { useAuthStore } from "src/context/AuthContext"
+import { useAuthStore } from "../context/AuthContext"
 
 const PublicRoute = () => {
   const { user } = useAuthStore()
