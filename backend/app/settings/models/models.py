@@ -201,3 +201,5 @@ class CenterHoliday(Base, AuditMixin):
         "Center",
         back_populates="holidays"
     )
+
+

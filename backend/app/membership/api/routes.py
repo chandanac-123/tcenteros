@@ -403,10 +403,48 @@ async def get_member_membership(
                 "slot_capacity": slot.slot_capacity
             }
 
-    # Calculate days left and remaining days
+    # --- Time Slot Change Request Logic ---
     today = date.today()
+    # Find any approved, active temporary slot change
+    temp_req_result = await session.execute(
+        select(TimeSlotChangeRequest)
+        .where(
+            TimeSlotChangeRequest.member_id == current_member["user_id"],
+            TimeSlotChangeRequest.change_type == TimeSlotChangeType.temporary,
+            TimeSlotChangeRequest.status == TimeSlotChangeStatus.approved,
+            TimeSlotChangeRequest.start_date <= today,
+            TimeSlotChangeRequest.end_date >= today
+        )
+        .order_by(TimeSlotChangeRequest.created_at.desc())
+    )
+    temp_req = temp_req_result.scalar_one_or_none()
+    temp_time_slot_details = None
+    if temp_req and temp_req.new_time_slot_id:
+        temp_slot_result = await session.execute(
+            select(CenterTimeSlot).where(CenterTimeSlot.id == temp_req.new_time_slot_id)
+        )
+        temp_slot = temp_slot_result.scalar_one_or_none()
+        if temp_slot:
+            temp_time_slot_details = {
+                "id": str(temp_slot.id),
+                "start_time": temp_slot.start_time,
+                "end_time": temp_slot.end_time,
+                "slot_capacity": temp_slot.slot_capacity
+            }
+
+    # Calculate days left and remaining days
     end_date = member_membership.end_date.date() if member_membership.end_date else None
     days_left = (end_date - today).days if end_date and end_date > today else 0
+
+    # Determine if currently in temporary or permanent slot
+    if temp_req:
+        active_time_slot_type = "temporary"
+        active_time_slot_id = str(temp_req.new_time_slot_id)
+        active_time_slot_details = temp_time_slot_details
+    else:
+        active_time_slot_type = "permanent"
+        active_time_slot_id = str(time_slot_id) if time_slot_id else None
+        active_time_slot_details = time_slot_details
 
     return {
         "member_id": str(member_membership.member_id),
@@ -421,8 +459,17 @@ async def get_member_membership(
         "remaining_days": days_left,
         "center_id": str(center.id) if center else None,
         "center_name": center.center_name if center else None,
-        "time_slot_id": str(time_slot_id) if time_slot_id else None,
-        "time_slot_details": time_slot_details
+        "permanent_time_slot_id": str(time_slot_id) if time_slot_id else None,
+        "permanent_time_slot_details": time_slot_details,
+        "active_time_slot_id": active_time_slot_id,
+        "active_time_slot_details": active_time_slot_details,
+        "active_time_slot_type": active_time_slot_type,  # <-- NEW FIELD
+        "active_time_slot_change_request": {
+            "id": str(temp_req.id),
+            "start_date": str(temp_req.start_date),
+            "end_date": str(temp_req.end_date),
+            "reason": temp_req.reason,
+        } if temp_req else None
     }
 
 
@@ -648,3 +695,5 @@ async def get_member_time_slot_change_requests(
         }
         for req in requests
     ]
+
+
