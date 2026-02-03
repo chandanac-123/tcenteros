@@ -4,6 +4,11 @@ import uuid
 from app.auth.models.models import MemberStatusEnum
 from app.center.models.models import TimeSlotChangeType
 from uuid import UUID
+from typing import List, Optional
+
+class MembershipFeatureIn(BaseModel):
+    feature_name: str
+    feature_description: Optional[str] = None
 
 class MembershipCreate(BaseModel):
     membership_name: str
@@ -11,7 +16,13 @@ class MembershipCreate(BaseModel):
     description: str = ""
     duration: str
     default_price: float
+    membership_features: List[MembershipFeatureIn] = []
 
+
+class MembershipFeatureOut(BaseModel):
+    id: UUID
+    feature_name: str
+    feature_description: Optional[str] = None
 
 class MembershipOut(BaseModel):
     membership_id: UUID
@@ -22,6 +33,7 @@ class MembershipOut(BaseModel):
     duration: str
     default_price: float
     status: str
+    membership_features: List[MembershipFeatureOut] = []
 
 
 class MemberCreate(BaseModel):

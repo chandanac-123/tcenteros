@@ -2,7 +2,7 @@ from app.core.models.models import StatusEnum, User
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Query
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.membership.models.models import Membership
+from app.membership.models.models import Membership, MembershipFeature
 from app.membership.schema.schema import MembershipCreate, MemberCreate
 from app.auth.models.models import Member, MemberStatusEnum
 from app.core.security import get_password_hash
@@ -16,7 +16,7 @@ from app.core.dependencies import centeradmin_required, get_current_user, member
 from app.s3.service import upload_file, get_file_url
 from uuid import uuid4
 from sqlalchemy import select, func
-from app.membership.schema.schema import MembershipOut, TimeSlotChangeRequestIn
+from app.membership.schema.schema import MembershipOut, MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
 from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest, TimeSlotChangeStatus
@@ -56,10 +56,25 @@ async def create_membership_plan(
         updated_by=user.id,
     )
     db.add(membership)
+    await db.flush()  # So membership.membership_id is available
+
+    # 4. Add membership features
+    features = []
+    for feature in payload.membership_features:
+        feat = MembershipFeature(
+            membership_id=membership.membership_id,
+            feature_name=feature.feature_name,
+            feature_description=feature.feature_description,
+            created_by=user.id,
+            updated_by=user.id,
+        )
+        db.add(feat)
+        features.append(feat)
+
     await db.commit()
     await db.refresh(membership)
 
-    # 4. Return membership data
+    # 5. Return membership data with features
     return MembershipOut(
         membership_id=membership.membership_id,
         center_id=membership.center_id,
@@ -69,6 +84,13 @@ async def create_membership_plan(
         duration=membership.duration,
         default_price=float(membership.default_price),
         status=membership.status.value,
+        membership_features=[
+            MembershipFeatureOut(
+                id=feat.id,
+                feature_name=feat.feature_name,
+                feature_description=feat.feature_description,
+            ) for feat in features
+        ]
     )
 
 # #List Membership Plans (superadmin, centeradmin, member)

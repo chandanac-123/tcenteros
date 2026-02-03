@@ -7,6 +7,18 @@ from app.core.models.models import StatusEnum
 import enum
 
 
+class MembershipFeature(Base, AuditMixin):
+    __tablename__ = "membership_features"
+    __table_args__ = {"schema": "membership"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    membership_id = Column(UUID(as_uuid=True), ForeignKey("membership.memberships.membership_id"), nullable=False)
+    feature_name = Column(String, nullable=False)
+    feature_description = Column(String, nullable=True)
+
+    # Relationship back to Membership
+    membership = relationship("Membership", back_populates="membership_features")
+
 
 # 9.1 memberships
 class Membership(Base, AuditMixin):
@@ -24,6 +36,7 @@ class Membership(Base, AuditMixin):
 
     # Relationships (optional)
     member_memberships = relationship("MemberMembership", back_populates="membership")
+    membership_features = relationship("MembershipFeature", back_populates="membership", cascade="all, delete-orphan")
 
 
 # 9.2 member_memberships
