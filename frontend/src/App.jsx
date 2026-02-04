@@ -4,13 +4,13 @@ import { routes } from './routes/Routes'
 import PageNotFound from '@common/PageNotFound'
 import PublicRoute from './routes/PublicRoute'
 import { v4 as uuidv4 } from 'uuid'
-import PageLayout from './common/sidebarLayout/PageLayout'
+import MasterLayout from './common/MasterLayout'
 
 const App = () => {
   return (
     <Routes>
-      <Route element={<PublicRoute />}>
-        <Route element={<PageLayout />}>
+      <Route element={<PrivateRoute />}>
+        <Route element={<MasterLayout />}>
           <Route path='*' element={<PageNotFound />} />
           {routes.map(item => {
             if (item?.permission && item.privetRoute) {

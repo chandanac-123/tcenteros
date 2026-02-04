@@ -24,6 +24,28 @@ import PricingPage from '@pages/onboarding-pages/PricingPage'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import TypeSelection from '@pages/onboarding-pages/TypeSelection'
 
+import dashboard from '../assets/sidebar-icons/dashboard.svg'
+import branding from '../assets/sidebar-icons/branding.svg'
+import attendace from '../assets/sidebar-icons/attendance.svg'
+import employee from '../assets/sidebar-icons/employee.svg'
+import inventory from '../assets/sidebar-icons/inventory.svg'
+import membership from '../assets/sidebar-icons/membership.svg'
+import network from '../assets/sidebar-icons/network.svg'
+import billing from '../assets/sidebar-icons/billing.svg'
+import wallet from '../assets/sidebar-icons/wallet.svg' 
+import performance from '../assets/sidebar-icons/performance.svg' 
+import crm from '../assets/sidebar-icons/crm.svg' 
+import PerformanceAnalytics from '@pages/performance-analytics'
+import Branding from '@pages/branding'
+import Billing from '@pages/billing'
+import Inventories from '@pages/iventories'
+import Wallet from '@pages/wallet'
+import Attendance from '@pages/attendance'
+import Network from '@pages/network/index.'
+import CRM from '@pages/crm'
+import MembershipPlan from '@pages/membership-plan'
+import EmployeeManagement from '@pages/employee-management'
+
 export const routes = [
   {
     key: 0,
@@ -295,11 +317,136 @@ export const routes = [
     key: 1,
     path: '/dashboard',
     label: '',
-    privetRoute: false,
+    privetRoute: true,
     isSubRoute: false,
-    pageTitle: '',
+    pageTitle: 'Dashboard',
     component: Dashboard,
-    icon: '',
+    icon:dashboard,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  },
+   {
+    key: 1,
+    path: '/employee-management',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Employee Management',
+    component: EmployeeManagement,
+    icon: employee,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }
+  , {
+    key: 1,
+    path: '/membership-plan',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Membership Plans',
+    component: MembershipPlan,
+    icon: membership,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }, {
+    key: 1,
+    path: '/crm',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'CRM',
+    component: CRM,
+    icon: crm,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }, {
+    key: 1,
+    path: '/network',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Network',
+    component: Network,
+    icon: network,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }, {
+    key: 1,
+    path: '/attendance',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Attendance',
+    component: Attendance,
+    icon: attendace,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }, {
+    key: 1,
+    path: '/wallet',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Wallet',
+    component: Wallet,
+    icon: wallet,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }, {
+    key: 1,
+    path: '/inventories',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Inventories',
+    component: Inventories,
+    icon: inventory,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }
+  , {
+    key: 1,
+    path: '/billing',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Billing',
+    component: Billing,
+    icon: billing,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }
+  , {
+    key: 1,
+    path: '/branding',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Branding',
+    component: Branding,
+    icon: branding,
+    iconActive: '',
+    menubar: true,
+    permission: true
+  }
+  , {
+    key: 1,
+    path: '/performance-analytics',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Performance Analytics',
+    component: PerformanceAnalytics,
+    icon: performance,
     iconActive: '',
     menubar: true,
     permission: true
