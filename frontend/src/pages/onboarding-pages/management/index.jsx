@@ -15,28 +15,32 @@ const CenterManagement = () => {
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
   const store = useOnboardingStore()
+  console.log('store: ', store);
   const { data: platforms, isFetching: platformsFetch } = useAllPlatformsQuery()
 
   const { setFeatureIdMap } = useOnboardingStore()
 
-useEffect(() => {
-  if (!platforms) return
+  useEffect(() => {
+    if (!platforms) return
 
-  const map = {}
-  platforms.forEach(tool => {
-    const key = featureNameToStoreKey[tool.feature_name]
-    if (key) {
-      map[key] = tool.id
-    }
-  })
+    const map = {}
+    platforms.forEach(tool => {
+      const key = featureNameToStoreKey[tool.feature_name]
+      if (key) {
+        map[key] = tool.id
+      }
+    })
 
-  setFeatureIdMap(map)
-}, [platforms])
+    setFeatureIdMap(map)
+  }, [platforms])
+
+  const handleNavigate = (route, tool) => {
+    navigate(route, { state: { tool } })
+  }
 
   return (
     <SecondaryLayout>
       <OnboardHeader />
-
       <OnboardProgress step={5} total={5} value={80} />
 
       <div className='flex justify-center px-4 sm:px-10'>
@@ -53,7 +57,7 @@ useEffect(() => {
           {/* Map API id to store key for checked state */}
           {platforms?.map(tool => {
             // Map API feature_name to store key
-         
+
             const storeKey = featureNameToStoreKey[tool.feature_name]
             const toolState = centerTools?.[storeKey]
             return (
@@ -63,7 +67,7 @@ useEffect(() => {
                 // checked={centerTools?.[storeKey]?.enabled === true}
                 checked={toolState?.enabled === true}
                 onToggle={(id, value) => setTool(storeKey, value, tool.id)}
-                onNavigate={navigate}
+                onNavigate={handleNavigate}
               />
             )
           })}

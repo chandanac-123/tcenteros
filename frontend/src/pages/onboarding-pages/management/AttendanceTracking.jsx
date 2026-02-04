@@ -3,20 +3,18 @@ import { Button } from '@pages/components/ui/button'
 import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
 import backarrow from '@assets/navigate-icons/backarrow.svg'
 import { useOnboardingStore } from '@store/onboardingStore'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import SelectionCardTick from '../components/SelectionCardTick'
 import { attendanceTrackingType } from '@constants/attendanceTrack'
 import { useEffect } from 'react'
-import { useAllPlatformsQuery } from '@api-queries/on-boarding/Query'
 
-const FEATURE_NAME = 'Attendance Tracking'
 const AttendanceTracking = () => {
   const navigate = useNavigate()
-  const { data: platforms } = useAllPlatformsQuery()
   const { setTool, attendanceType, setAttendanceType } = useOnboardingStore()
-  const platform = platforms?.find(tool => tool.feature_name == FEATURE_NAME)
+  const { state } = useLocation()
+  const tool = state?.tool
 
   useEffect(() => {
     // Update CenterManagement attendance checkbox whenever selection changes
@@ -34,9 +32,9 @@ const AttendanceTracking = () => {
       <div className='flex justify-center px-4 sm:px-10 mt-5'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto'>
           <h2 className='font-semibold text-xl text-secondary'>
-            {platform?.feature_name}
+            {tool?.feature_name}
           </h2>
-          <p className='text-sm text-grey'>{platform?.description}</p>
+          <p className='text-sm text-grey'>{tool?.description}</p>
           <p className='font-medium text-sm text-secondary'>
             Do you need attendance tracking for your members?
           </p>

@@ -1,6 +1,5 @@
 const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
-  
-  // console.log('tool: ', tool);
+  console.log('tool: ', tool)
 
   // Map feature_name to route
   // Use route from tool if available, else fallback to routeMap
@@ -11,9 +10,9 @@ const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
     'Payment & Billing': '/payment-billing',
     'Trainer & Staff Management': '/trainer-and-staff',
     'Reports & Insights': '/report-and-insight',
-    'Sellable Itemss': '/sellable-item',
+    'Sellable Itemss': '/sellable-item'
   }
-  const route = tool?.route || routeMap[tool?.feature_name] || '/';
+  const route = tool?.route || routeMap[tool?.feature_name] || '/'
 
   return (
     <div
@@ -26,10 +25,9 @@ const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
         }
       `}
     >
-
       <span
-        className='flex-1 cursor-pointer hover:underline'
-        onClick={() => onNavigate(route)}
+        className='flex-1 cursor-pointer'
+        onClick={() => onNavigate(route, tool)}
       >
         {tool.feature_name}
       </span>
