@@ -213,6 +213,7 @@ async def member_monthly_attendance(
         weekday = d.strftime("%A")
         status = "upcoming"
         attendance = attendance_map.get(d)
+        duration = None
         if d > date.today():
             status = "upcoming"
         elif d in holiday_dates:
@@ -221,6 +222,9 @@ async def member_monthly_attendance(
             status = "week_off"
         elif attendance:
             status = attendance.status.value
+            if status == "present" and attendance.check_in_time and attendance.check_out_time:
+                duration_td = attendance.check_out_time - attendance.check_in_time
+                duration = str(duration_td)
         else:
             status = "absent"
         summary.append({
@@ -229,6 +233,7 @@ async def member_monthly_attendance(
             "status": status,
             "check_in_time": attendance.check_in_time if attendance else None,
             "check_out_time": attendance.check_out_time if attendance else None,
+            "duration": duration,
             "time_slot": {
                 "id": str(slot.id) if slot else None,
                 "start_time": slot.start_time if slot else None,
