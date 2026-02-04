@@ -32,7 +32,9 @@ class Attendance(Base, AuditMixin):
     status = Column(Enum(AttendanceStatus), nullable=False, default=AttendanceStatus.absent)
     remarks = Column(String, nullable=True)
 
-    user = relationship("User")
-    center = relationship("Center")
+    user = relationship("User", foreign_keys=[user_id])
+    center = relationship("Center", foreign_keys=[center_id])
 
     # Optionally, add device_id, ip_address, etc. for audit
+
+

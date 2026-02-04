@@ -480,3 +480,35 @@ async def delete_center_time_slot(
     await db.delete(slot)
     await db.commit()
     return {"detail": "Time slot deleted"}
+
+
+#Center Location Endpoints
+@router.post("/center-location/", response_model=CenterLocationOut, status_code=201)
+async def create_center_location(
+    data: CenterLocationCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    center = await session.get(Center, data.center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    address = center.address
+    if not address:
+        raise HTTPException(status_code=404, detail="Center address not found")
+    address.latitude = data.latitude
+    address.longitude = data.longitude
+    await session.commit()
+    await session.refresh(address)
+    return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)
+
+@router.get("/center-location/{center_id}", response_model=CenterLocationOut)
+async def get_center_location(
+    center_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    address = center.address
+    if not address or address.latitude is None or address.longitude is None:
+        raise HTTPException(status_code=404, detail="Center location not set")
+    return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)

@@ -162,3 +162,17 @@ class CenterTimeSlotOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CenterLocationCreate(BaseModel):
+    center_id: UUID4
+    latitude: float
+    longitude: float
+
+class CenterLocationOut(BaseModel):
+    center_id: UUID4
+    latitude: float
+    longitude: float
+
+    class Config:
+        orm_mode = True
