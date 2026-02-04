@@ -253,3 +253,4 @@ async def member_monthly_attendance(
         } if slot else None,
         "attendance_summary": summary
     }
+
