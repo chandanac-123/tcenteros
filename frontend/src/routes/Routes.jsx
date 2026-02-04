@@ -23,6 +23,16 @@ import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
 import PricingPage from '@pages/onboarding-pages/PricingPage'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import TypeSelection from '@pages/onboarding-pages/TypeSelection'
+import PerformanceAnalytics from '@pages/performance-analytics'
+import Branding from '@pages/branding'
+import Billing from '@pages/billing'
+import Inventories from '@pages/iventories'
+import Wallet from '@pages/wallet'
+import Attendance from '@pages/attendance'
+import Network from '@pages/network/index.'
+import CRM from '@pages/crm'
+import MembershipPlan from '@pages/membership-plan'
+import EmployeeManagement from '@pages/employee-management'
 
 import dashboard from '../assets/sidebar-icons/dashboard.svg'
 import branding from '../assets/sidebar-icons/branding.svg'
@@ -35,16 +45,18 @@ import billing from '../assets/sidebar-icons/billing.svg'
 import wallet from '../assets/sidebar-icons/wallet.svg' 
 import performance from '../assets/sidebar-icons/performance.svg' 
 import crm from '../assets/sidebar-icons/crm.svg' 
-import PerformanceAnalytics from '@pages/performance-analytics'
-import Branding from '@pages/branding'
-import Billing from '@pages/billing'
-import Inventories from '@pages/iventories'
-import Wallet from '@pages/wallet'
-import Attendance from '@pages/attendance'
-import Network from '@pages/network/index.'
-import CRM from '@pages/crm'
-import MembershipPlan from '@pages/membership-plan'
-import EmployeeManagement from '@pages/employee-management'
+import active_dashboard from '../assets/sidebar-icons/active-dashboard.svg'
+import active_branding from '../assets/sidebar-icons/active-branding.svg'
+import active_attendance from '../assets/sidebar-icons/active-attendance.svg'
+import active_employee from '../assets/sidebar-icons/active-employee.svg'
+import active_inventory from '../assets/sidebar-icons/active-inventory.svg'
+import active_membership from '../assets/sidebar-icons/active-membership.svg'
+import active_network from '../assets/sidebar-icons/active-network.svg'
+import active_billing from '../assets/sidebar-icons/active-billing.svg'
+import active_wallet from '../assets/sidebar-icons/active-wallet.svg' 
+import active_performance from '../assets/sidebar-icons/active-performance.svg' 
+import active_crm from '../assets/sidebar-icons/active-crm.svg' 
+
 
 export const routes = [
   {
@@ -322,7 +334,7 @@ export const routes = [
     pageTitle: 'Dashboard',
     component: Dashboard,
     icon:dashboard,
-    iconActive: '',
+    iconActive: active_dashboard,
     menubar: true,
     permission: true
   },
@@ -335,7 +347,7 @@ export const routes = [
     pageTitle: 'Employee Management',
     component: EmployeeManagement,
     icon: employee,
-    iconActive: '',
+    iconActive: active_employee,
     menubar: true,
     permission: true
   }
@@ -348,7 +360,7 @@ export const routes = [
     pageTitle: 'Membership Plans',
     component: MembershipPlan,
     icon: membership,
-    iconActive: '',
+    iconActive: active_membership,
     menubar: true,
     permission: true
   }, {
@@ -360,7 +372,7 @@ export const routes = [
     pageTitle: 'CRM',
     component: CRM,
     icon: crm,
-    iconActive: '',
+    iconActive: active_crm,
     menubar: true,
     permission: true
   }, {
@@ -372,7 +384,7 @@ export const routes = [
     pageTitle: 'Network',
     component: Network,
     icon: network,
-    iconActive: '',
+    iconActive: active_network,
     menubar: true,
     permission: true
   }, {
@@ -384,7 +396,7 @@ export const routes = [
     pageTitle: 'Attendance',
     component: Attendance,
     icon: attendace,
-    iconActive: '',
+    iconActive: active_attendance,
     menubar: true,
     permission: true
   }, {
@@ -396,7 +408,7 @@ export const routes = [
     pageTitle: 'Wallet',
     component: Wallet,
     icon: wallet,
-    iconActive: '',
+    iconActive: active_wallet,
     menubar: true,
     permission: true
   }, {
@@ -408,7 +420,7 @@ export const routes = [
     pageTitle: 'Inventories',
     component: Inventories,
     icon: inventory,
-    iconActive: '',
+    iconActive: active_inventory,
     menubar: true,
     permission: true
   }
@@ -421,7 +433,7 @@ export const routes = [
     pageTitle: 'Billing',
     component: Billing,
     icon: billing,
-    iconActive: '',
+    iconActive: active_billing,
     menubar: true,
     permission: true
   }
@@ -434,7 +446,7 @@ export const routes = [
     pageTitle: 'Branding',
     component: Branding,
     icon: branding,
-    iconActive: '',
+    iconActive: active_branding,
     menubar: true,
     permission: true
   }
@@ -447,7 +459,7 @@ export const routes = [
     pageTitle: 'Performance Analytics',
     component: PerformanceAnalytics,
     icon: performance,
-    iconActive: '',
+    iconActive: active_performance,
     menubar: true,
     permission: true
   }

@@ -13,7 +13,7 @@ const MenuCard = ({
       to={path}
       className={({ isActive }) =>
         `inline-flex items-center gap-2 text-base px-3 py-2 rounded-lg transition-colors  text-white duration-200 ${
-          isActive ? 'bg-primary ' : 'bg-transparent X'
+          isActive ? 'bg-primary' : 'bg-transparent'
         }`
       }
     >
