@@ -33,7 +33,13 @@ export default {
         progress_yellow:'#FFCD0FFC',
         progress_blue:'#55EFC2',
         progress_green:'#B0F6B5',
-        filter_border:"#8F8F8F"
+        filter_border:"#8F8F8F",
+        green_text:'#34C759',
+        green_bg:'#DEF4E6',
+        red_text:'#EB4824',
+        red_bg:'#EA292914',
+        search_bg:'#FFFFFF1A',
+
       }
     }
   },

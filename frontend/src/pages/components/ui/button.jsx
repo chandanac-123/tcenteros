@@ -27,6 +27,7 @@ const buttonVariants = cva(
         landing: 'h-10 pl-4 pr-1 rounded-xl text-md gap-40',
         sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
         filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
+        addbutton: 'h-10 px-6 rounded-lg text-sm gap-2',
         icon: 'h-9 w-9'
       }
     },

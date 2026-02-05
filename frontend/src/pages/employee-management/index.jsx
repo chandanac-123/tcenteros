@@ -10,6 +10,13 @@ const EmployeeManagement = () => {
     page: 1,
     search: ''
   })
+  const [editId, setEditId] = useState(2)
+  const [open, setOpen] = useState(false)
+
+  const handleOpen = () => {
+    setEditId(1)
+    setOpen(true)
+  }
 
   const data = [
     {
@@ -85,6 +92,9 @@ const EmployeeManagement = () => {
 
       <EmployeeTable
         data={data}
+        setOpen={setOpen}
+        handleOpen={handleOpen}
+        open={open}
         tableParams={tableParams}
         setTableParams={setTableParams}
       />
