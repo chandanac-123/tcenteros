@@ -17,6 +17,7 @@ const buttonVariants = cva(
           'border border-input text-grey border-grey  font-medium justify-between',
         button_filled: 'bg-primary text-white',
         button_outlined: ' text-primary outline ',
+        button_filter: 'text-textgrey border-2 border-filter_border',
 
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline'
@@ -25,8 +26,7 @@ const buttonVariants = cva(
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-20',
         landing: 'h-10 pl-4 pr-1 rounded-xl text-md gap-40',
         sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
-
-        googlebutton: 'h-10 pl-4 pr-1 rounded-lg text-md gap-2',
+        filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
         icon: 'h-9 w-9'
       }
     },

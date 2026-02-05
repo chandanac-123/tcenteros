@@ -28,7 +28,12 @@ export default {
         textblack:'#000000',
         secondary_light:"#8B24E21F",
         pricing_text:"#808080",
-        textwhite:'#FFFFFF'
+        textwhite:'#FFFFFF',
+        tableborder:'#D9D9D9',
+        progress_yellow:'#FFCD0FFC',
+        progress_blue:'#55EFC2',
+        progress_green:'#B0F6B5',
+        filter_border:"#8F8F8F"
       }
     }
   },
