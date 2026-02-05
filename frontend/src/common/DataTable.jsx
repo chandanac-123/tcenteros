@@ -135,7 +135,7 @@ export function DataTable ({
         </TableBody>
       </Table>
       <div className='py-2 flex justify-between items-center w-full px-2'>
-        <span className='text-xs text-gray-500 w-full'>
+        <span className='text-xs text-textblack font-medium w-full'>
           Showing 5 from 10 data
         </span>
         {paginationVisibile && (
@@ -143,18 +143,16 @@ export function DataTable ({
             <div className='text-grey text-sm '>{pagination?.displayRange}</div>
 
             <div className='flex items-center space-x-2'>
-              <Pagination
-                currentPage={page}
-                lastPage={pagination?.totalPages}
-                setPageIndex={handlePageChange}
-              >
+              <Pagination currentPage={page} lastPage={pagination?.totalPages} setPageIndex={handlePageChange}>
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
-                      onClick={() => handlePageChange(Math.max(page - 1, 0))}
+                      onClick={() => handlePageChange(Math.max(page - 1, 1))}
                     />
                   </PaginationItem>
-                  {paginationItems}
+                  <div className="flex border border-secondary rounded-md overflow-hidden">
+                    {paginationItems}
+                  </div>
                   <PaginationItem>
                     <PaginationNext
                       onClick={() =>
