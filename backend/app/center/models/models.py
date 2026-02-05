@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, Foreign
 from app.core.models.base import AuditMixin, Base
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import  relationship
+import sqlalchemy as sa
 import uuid
 import enum
 
@@ -51,7 +52,7 @@ class Center(Base, AuditMixin):
     approval_status = Column(Enum(ApprovalStatus), default=ApprovalStatus.pending, nullable=True, index=True)
     center_status = Column(Enum(CenterStatus), default=CenterStatus.active, nullable=False, index=True)
     
-    network_enabled = Column(Boolean, default=False)
+    network_enabled = Column(Boolean, default=True, server_default=sa.text('true'))
     network_joined_date = Column(DateTime, nullable=True)
     white_label_enabled = Column(Boolean, default=True)
 
