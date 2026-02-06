@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, JSON, Integer, Date
 from app.core.models.base import AuditMixin, Base
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 from sqlalchemy.orm import  relationship
 import sqlalchemy as sa
 import uuid
@@ -56,6 +57,8 @@ class Center(Base, AuditMixin):
     network_joined_date = Column(DateTime, nullable=True)
     white_label_enabled = Column(Boolean, default=True)
 
+    networking_amount = Column(Numeric(10, 2), nullable=True)
+
     # ------------------------
     # Other onboarding Fields
     # ------------------------
@@ -86,6 +89,8 @@ class Center(Base, AuditMixin):
     operational_settings = relationship("CenterOperationalSetting", back_populates="center", uselist=False)
     holidays = relationship("CenterHoliday", back_populates="center")
     member_memberships = relationship("MemberMembership", back_populates="center")
+    wallet = relationship("CenterWallet", back_populates="center", uselist=False)
+
 
 
 class CenterOnboardingTemp(Base, AuditMixin):
@@ -144,3 +149,37 @@ class TimeSlotChangeRequest(Base, AuditMixin):
     member = relationship("Member", foreign_keys=[member_id])
     old_time_slot = relationship("CenterTimeSlot", foreign_keys=[old_time_slot_id])
     new_time_slot = relationship("CenterTimeSlot", foreign_keys=[new_time_slot_id])
+
+
+
+class CenterWallet(Base, AuditMixin):
+    __tablename__ = "center_wallets"
+    __table_args__ = {"schema": "center"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id", ondelete="CASCADE"), nullable=False, unique=True)
+    balance = Column(Numeric(12, 2), nullable=False, default=0)
+    deposit = Column(Numeric(12, 2), nullable=False, default=0)
+    min_balance = Column(Numeric(12, 2), nullable=False, default=10000)
+    min_deposit = Column(Numeric(12, 2), nullable=False, default=2000)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    center = relationship("Center", back_populates="wallet")
+
+
+class WalletTransaction(Base, AuditMixin):
+    __tablename__ = "wallet_transactions"
+    __table_args__ = {"schema": "center"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    from_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
+    to_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
+    platform_wallet_id = Column(UUID(as_uuid=True), ForeignKey("platform.platform_wallet.id"), nullable=True)
+    amount = Column(Numeric(12, 2), nullable=False)
+    transaction_type = Column(String, nullable=False)  # e.g., "deposit", "transfer", "platform_income"
+    description = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    from_wallet = relationship("CenterWallet", foreign_keys=[from_wallet_id])
+    to_wallet = relationship("CenterWallet", foreign_keys=[to_wallet_id])
+    platform_wallet = relationship("PlatformWallet", foreign_keys=[platform_wallet_id])

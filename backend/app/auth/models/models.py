@@ -117,6 +117,13 @@ class Member(User):
         ForeignKey("center.centers.id"),
         nullable=True
     )
+
+    network_center_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("center.centers.id"),
+        nullable=True
+    )
+
     date_of_birth = Column(Date)
     blood_group = Column(String)
     blocked_reason = Column(String)
@@ -126,6 +133,7 @@ class Member(User):
     member_status = Column(Enum(MemberStatusEnum), nullable=False, default=MemberStatusEnum.member)
 
     home_center = relationship("Center", foreign_keys=[home_center_id])
+    network_center = relationship("Center", foreign_keys=[network_center_id])
 
     __mapper_args__ = {
         "polymorphic_identity": "member",

@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Numeric, Enum, DateTime, ForeignKey, Bool
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.models.base import AuditMixin, Base
 from app.core.models.models import StatusEnum
+from datetime import datetime
 from sqlalchemy.orm import relationship 
 import enum
 import uuid
@@ -88,3 +89,10 @@ class CenterFeatureSubscription(Base, AuditMixin):
 
 
 
+class PlatformWallet(Base, AuditMixin):
+    __tablename__ = "platform_wallet"
+    __table_args__ = {"schema": "platform"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    balance = Column(Numeric(12, 2), nullable=False, default=0)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

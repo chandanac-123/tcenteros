@@ -697,3 +697,43 @@ async def get_member_time_slot_change_requests(
     ]
 
 
+
+
+#expaired memberships 
+@router.get("/member/expired-memberships")
+async def get_expired_member_memberships(
+    session: AsyncSession = Depends(get_async_session),
+    current_member=Depends(member_required)
+):
+    now = datetime.utcnow()
+    result = await session.execute(
+        select(MemberMembership)
+        .options(selectinload(MemberMembership.membership))
+        .where(
+            MemberMembership.member_id == current_member["user_id"],
+            MemberMembership.end_date != None,
+            MemberMembership.end_date < now
+        )
+    )
+    expired_memberships = result.scalars().all()
+    return [
+        {
+            "id": str(m.id),
+            "membership_id": str(m.membership_id),
+            "center_id": str(m.center_id),
+            "start_date": m.start_date,
+            "end_date": m.end_date,
+            "total_amount": float(m.total_amount),
+            "membership_status": m.membership_status.value,
+            "membership_plan": {
+                "membership_id": str(m.membership.membership_id),
+                "membership_name": m.membership.membership_name,
+                "membership_code": m.membership.membership_code,
+                "description": m.membership.description,
+                "duration": m.membership.duration,
+                "default_price": float(m.membership.default_price),
+                "status": m.membership.status.value
+            } if m.membership else None
+        }
+        for m in expired_memberships
+    ]

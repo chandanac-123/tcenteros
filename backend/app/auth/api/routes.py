@@ -135,3 +135,10 @@ async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_
         "token_type": "bearer"
     }
 
+
+@router.post("/member/logout")
+async def logout_member():
+    """
+    Instructs the client to delete the JWT token.
+    """
+    return {"detail": "Logout successful. Please delete your token on the client side."}

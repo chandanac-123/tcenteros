@@ -8,9 +8,9 @@ import traceback
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot
+from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction
 from app.settings.models.models import CenterCategory, Address, TaxCategory
-from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription
+from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
 from app.auth.models.models import CenterAdmin, User
 from app.core.models.models import StatusEnum
@@ -513,3 +513,120 @@ async def get_center_location(
     if not address or address.latitude is None or address.longitude is None:
         raise HTTPException(status_code=404, detail="Center location not set")
     return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)
+
+
+
+#-------------------------------
+# Wallet APIs (Admin Only)
+#-------------------------------
+
+#wallet creation api
+@router.post("/center/wallet/create")
+async def create_center_wallet(
+    deposit: float,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # Check if wallet already exists
+    wallet_result = await session.execute(
+        select(CenterWallet).where(CenterWallet.center_id == center_id)
+    )
+    wallet = wallet_result.scalar_one_or_none()
+    if wallet:
+        raise HTTPException(400, "Wallet already exists for this center")
+
+    # Create wallet
+    wallet = CenterWallet(
+        id=uuid4(),
+        center_id=center_id,
+        balance=deposit,
+        deposit=deposit,
+        min_balance=10000,
+        min_deposit=2000,
+        last_updated=datetime.utcnow(),
+        created_by=current_admin["user_id"],
+        updated_by=current_admin["user_id"],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    session.add(wallet)
+    await session.commit()
+    await session.refresh(wallet)
+    return {
+        "center_id": str(center_id),
+        "wallet_id": str(wallet.id),
+        "balance": float(wallet.balance),
+        "deposit": float(wallet.deposit),
+        "min_balance": float(wallet.min_balance),
+        "min_deposit": float(wallet.min_deposit)
+    }
+
+#Get Center Wallet
+@router.get("/center/{center_id}/wallet")
+async def get_center_wallet(
+    center_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    wallet = await session.execute(
+        select(CenterWallet).where(CenterWallet.center_id == center_id)
+    )
+    wallet = wallet.scalar_one_or_none()
+    if not wallet:
+        raise HTTPException(404, "Wallet not found")
+    return {
+        "center_id": center_id,
+        "balance": float(wallet.balance),
+        "deposit": float(wallet.deposit),
+        "min_balance": float(wallet.min_balance),
+        "min_deposit": float(wallet.min_deposit)
+    }
+
+#Get Platform Wallet
+@router.get("/platform/wallet")
+async def get_platform_wallet(
+    session: AsyncSession = Depends(get_async_session)
+):
+    wallet = await session.execute(select(PlatformWallet))
+    wallet = wallet.scalar_one_or_none()
+    if not wallet:
+        raise HTTPException(404, "Platform wallet not found")
+    return {
+        "balance": float(wallet.balance)
+    }
+
+
+#List Wallet Transactions (Admin Only)
+@router.get("/center/{center_id}/wallet/transactions")
+async def list_wallet_transactions(
+    center_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    wallet = await session.execute(
+        select(CenterWallet).where(CenterWallet.center_id == center_id)
+    )
+    wallet = wallet.scalar_one_or_none()
+    if not wallet:
+        raise HTTPException(404, "Wallet not found")
+    txs = await session.execute(
+        select(WalletTransaction)
+        .where((WalletTransaction.from_wallet_id == wallet.id) | (WalletTransaction.to_wallet_id == wallet.id))
+        .order_by(WalletTransaction.created_at.desc())
+    )
+    return [
+        {
+            "id": str(tx.id),
+            "from_wallet_id": str(tx.from_wallet_id) if tx.from_wallet_id else None,
+            "to_wallet_id": str(tx.to_wallet_id) if tx.to_wallet_id else None,
+            "platform_wallet_id": str(tx.platform_wallet_id) if tx.platform_wallet_id else None,
+            "amount": float(tx.amount),
+            "transaction_type": tx.transaction_type,
+            "description": tx.description,
+            "created_at": tx.created_at
+        }
+        for tx in txs.scalars().all()
+    ]
