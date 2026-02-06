@@ -26,9 +26,9 @@ const MembershipPlan = () => {
           <CustomeTab
             tabList={employeeOrCenter}
             defaultVal='All'
-            tabsListClass='inline-flex h-9 p-0 overflow-hidden bg-transparent border-none outline-none'
-            tabsTriggerClass='text-textblack  rounded-2xl border-none outline-none focus:outline-none focus:border-none data-[state=inactive]:bg-transparent data-[state=active]:bg-white data-[state=active]:text-black'
-            tabsClass='bg-tab_bg rounded-2xl w-full border-none outline-none'
+            tabsListClass='inline-flex h-10 w-[400px] p-[1px] overflow-hidden bg-transparent border-none outline-none'
+            tabsTriggerClass='text-textblack rounded-2xl border-none outline-none focus:outline-none focus:border-none w-1/3 min-w-[120px] data-[state=inactive]:bg-transparent data-[state=active]:bg-white data-[state=active]:text-black justify-center'
+            tabsClass='bg-tab_bg  rounded-2xl border-none outline-none'
           />
         </div>
         <div className='flex'>
