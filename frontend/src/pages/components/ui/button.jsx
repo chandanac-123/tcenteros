@@ -18,6 +18,7 @@ const buttonVariants = cva(
         button_filled: 'bg-primary text-white',
         button_outlined: ' text-primary outline ',
         button_filter: 'text-textgrey border-2 border-filter_border',
+        delete_button: 'text-delete_red border-2 border-delete_red bg-delete_red text-white',
 
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline'

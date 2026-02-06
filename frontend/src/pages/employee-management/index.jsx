@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import EmployeeTable from './table'
-import { Tabs } from '@pages/components/ui/tabs'
 import CustomeTab from '@common/CustomeTab'
 import MultiColorProgressBar from '@common/MulticolorProgressBar'
 import CustomFilter from '@common/CustomeFilter'
+import ContentLayout from '@common/MasterLayout/ContentLayout'
 
 const EmployeeManagement = () => {
   const [tableParams, setTableParams] = useState({
@@ -36,7 +36,7 @@ const EmployeeManagement = () => {
       status: 'Active Member'
     },
     {
-       id: '728ed52f',
+      id: '728ed52f',
       firstName: 'John',
       lastName: 'Doe',
       designation: 'Trainer',
@@ -45,12 +45,12 @@ const EmployeeManagement = () => {
       center: 'Center A',
       joinDate: '2023-01-01',
       status: 'Inactive Member'
-    },
+    }
   ]
-    console.log('data: ', data);
+  console.log('data: ', data)
 
   return (
-    <div className='rounded-tl-2xl bg-textwhite p-4 h-full'>
+    <ContentLayout>
       <div className='flex justify-between items-center mb-6'>
         <div className='flex flex-col'>
           <span>Employees</span>
@@ -116,7 +116,7 @@ const EmployeeManagement = () => {
         tableParams={tableParams}
         setTableParams={setTableParams}
       />
-    </div>
+    </ContentLayout>
   )
 }
 export default EmployeeManagement

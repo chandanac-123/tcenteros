@@ -21,11 +21,16 @@ export default function CustomeSelect ({
 
   return (
     <Select onValueChange={handleSelect}>
-      <label className='block mb-1 text-sm font-normal text-textblack'>
-        {label}
-      </label>
+      {label && (
+        <label className='block mb-1 text-sm font-normal text-textblack'>
+          {label}
+        </label>
+      )}
       <SelectTrigger className='w-full h-9'>
-        <SelectValue placeholder={placeholder} className='placeholder:text-textwhite text-textwhite'/>
+        <SelectValue
+          placeholder={placeholder}
+          className='placeholder:text-textwhite text-textwhite'
+        />
       </SelectTrigger>
       <SelectContent>
         {options?.map((item, index) => {

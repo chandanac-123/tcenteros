@@ -40,6 +40,10 @@ export default {
         red_bg:'#EA292914',
         search_bg:'#FFFFFF1A',
         switch_bg:'#D3D6E4',
+        tab_bg:'#7676801F',
+        primary_light:'#4581FF',
+        grey_text:'#4A4747'  ,
+        delete_red:'#AD3F2B',
 
       }
     }
