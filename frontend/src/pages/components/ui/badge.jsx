@@ -9,9 +9,9 @@ const badgeVariants = cva(
     variants: {
       variant: {
         active:
-          "bg-green_bg text-green_text rounded-xl text-xs font-medium px-3 py-1",
+          "bg-green_bg text-green_text rounded-xl text-xs font-medium px-3 justify-center py-1 w-32",
         inactive:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-red_bg bg-red_bg text-red_text rounded-xl text-xs font-medium justify-center w-32 px-3 py-1",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground",

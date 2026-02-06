@@ -10,7 +10,7 @@ const CustomeSearch = ({placeholder}) => {
       <input
         type='text'
         placeholder={placeholder}
-        className='border  border-textwhite text-textwhite rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-textwhite bg-search_bg text-sm font-light placeholder:text-textwhite'
+        className='border w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl border-textwhite text-textwhite rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-textwhite bg-search_bg text-sm font-light placeholder:text-textwhite'
       />
     </div>
   )

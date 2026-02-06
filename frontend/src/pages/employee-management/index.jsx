@@ -13,6 +13,11 @@ const EmployeeManagement = () => {
   const [editId, setEditId] = useState(2)
   const [open, setOpen] = useState(false)
 
+  const employeeOrCenter = [
+    { id: 1, name: 'Center User' },
+    { id: 2, name: 'Employee' }
+  ]
+
   const handleOpen = () => {
     setEditId(1)
     setOpen(true)
@@ -21,31 +26,31 @@ const EmployeeManagement = () => {
   const data = [
     {
       id: '728ed52f',
-      amount: 100,
-      status: 'pending',
-      email: 'm@example.com'
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Active Member'
     },
     {
-      id: '728ed52f',
-      amount: 100,
-      status: 'pending',
-      email: 'm@example.com'
+       id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
     },
-    {
-      id: '728ed52f',
-      amount: 100,
-      status: 'pending',
-      email: 'm@example.com'
-    },
-    {
-      id: '728ed52f',
-      amount: 100,
-      status: 'pending',
-      email: 'm@example.com'
-    }
   ]
+    console.log('data: ', data);
+
   return (
-    <div className='rounded-tl-2xl bg-textwhite pl-4 py-4 h-full'>
+    <div className='rounded-tl-2xl bg-textwhite p-4 h-full'>
       <div className='flex justify-between items-center mb-6'>
         <div className='flex flex-col'>
           <span>Employees</span>
@@ -56,7 +61,7 @@ const EmployeeManagement = () => {
 
         <div className='flex-1 flex justify-end items-center gap-2'>
           <CustomFilter />
-          <CustomeTab />
+          <CustomeTab tabList={employeeOrCenter} defaultVal='Employee' />
         </div>
       </div>
       <div className='w-full h-px bg-gray-300 my-4'></div>
@@ -65,6 +70,7 @@ const EmployeeManagement = () => {
         <span className='font-semibold text-3xl'>244</span>
         <span className='text-textgrey'>Total Employees</span>
       </div>
+
       <div>
         <MultiColorProgressBar
           segments={[
@@ -90,6 +96,18 @@ const EmployeeManagement = () => {
         </div>
       </div>
 
+      {/* <div className='gap-2 flex items-center'>
+        <span className='font-semibold text-3xl'>244</span>
+        <span className='text-textgrey'>Center User</span>
+      </div>
+
+      <div>
+        <MultiColorProgressBar
+          segments={[
+            { value: 60, role: 'trainee', role__color: 'progress_yellow' },
+          ]}
+        />
+      </div> */}
       <EmployeeTable
         data={data}
         setOpen={setOpen}

@@ -39,6 +39,7 @@ export default {
         red_text:'#EB4824',
         red_bg:'#EA292914',
         search_bg:'#FFFFFF1A',
+        switch_bg:'#D3D6E4',
 
       }
     }

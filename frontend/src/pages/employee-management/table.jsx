@@ -4,7 +4,6 @@ import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
 import { Badge } from '@pages/components/ui/badge'
-import CustomeModal from '@common/CustomeModal'
 import { useState } from 'react'
 import AddEditForm from './AddEditForm'
 import ViewForm from './View'
@@ -22,39 +21,39 @@ const EmployeeTable = ({
 
   const columns = [
     {
-      accessorKey: 'status',
+      accessorKey: 'firstName',
       header: 'First Name'
     },
     {
-      accessorKey: 'email',
+      accessorKey: 'lastName',
       header: 'Last Name'
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'designation',
       header: 'Designation'
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'email',
       header: 'Email'
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'phoneNumber',
       header: 'Phone number'
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'center',
       header: 'Center'
     },
     {
-      accessorKey: 'amount',
+      accessorKey: 'joinDate',
       header: 'Join Date'
     },
     {
       header: 'STATUS',
-      accessorKey: '',
-      cell: () => (
+      accessorKey: 'status',
+      cell: ({ row }) => (
         <span className='flex gap-3'>
-          <Badge label='Active Member' variant='active' />
+          <Badge label={row.original.status} variant={row.original.status=='Active Member' ? 'active' : 'inactive'} />
           <button onClick={() => setViewOpen(true)}>
             <img src={view} alt='view' />
           </button>

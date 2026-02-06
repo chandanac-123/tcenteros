@@ -22,7 +22,7 @@ const Header = () => {
 
   return (
     <header className='w-full bg-textblack shadow flex items-center h-auto p-3'>
-      <div>
+      <div className='w-1/2 flex'>
         <CustomeSearch placeholder='Search User' />
       </div>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
