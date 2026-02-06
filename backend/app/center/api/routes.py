@@ -221,6 +221,7 @@ async def finalize_onboarding(
             contact_person=onboarding_temp.contact_person,
             approval_status="approved",
             center_status="active",
+            network_enabled=True,
             created_by=None,  # Will set after CenterAdmin is created
             updated_by=None,
             created_at=datetime.utcnow(),
