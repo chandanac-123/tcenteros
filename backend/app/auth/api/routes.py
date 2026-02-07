@@ -3,22 +3,33 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
-from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse
+from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, MemberProfileUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.auth.models.models import User
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
-from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse
-from app.auth.models.models import Member
+from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate
+from app.core.dependencies import superadmin_required
+from app.auth.models.models import Member, Employee
 from datetime import datetime
 from uuid import uuid4
 from app.auth.models.models import MemberStatusEnum
 from app.core.models.models import StatusEnum
+from app.core.dependencies import member_required, get_current_user
+from passlib.context import CryptContext
+import uuid
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter()
 
 otp_store = {}
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
 
 # @router.post("/login")
 # async def login():
@@ -135,10 +146,148 @@ async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_
         "token_type": "bearer"
     }
 
-
+#member logout endpoint (client should delete token on their side)
 @router.post("/member/logout")
 async def logout_member():
     """
     Instructs the client to delete the JWT token.
     """
     return {"detail": "Logout successful. Please delete your token on the client side."}
+
+
+#------------------------------
+#member profile update endpoint
+#-------------------------------
+
+#1. Member Profile Update (Self)
+@router.put("/member/profile")
+async def update_member_profile(
+    payload: MemberProfileUpdate,
+    session: AsyncSession = Depends(get_async_session),
+    current_member=Depends(member_required)
+):
+    member = await session.get(Member, current_member["user_id"])
+    if not member:
+        raise HTTPException(404, "Member not found")
+    for field, value in payload.dict(exclude_unset=True).items():
+        if value is not None:
+            setattr(member, field, value)
+    member.updated_at = datetime.utcnow()
+    await session.commit()
+    await session.refresh(member)
+    return {
+        "id": str(member.id),
+        "email": member.email,
+        "username": member.username,
+        "mobile": member.mobile,
+        "profile_photo": member.profile_photo,
+        "date_of_birth": member.date_of_birth,
+        "blood_group": member.blood_group,
+        "blocked_reason": member.blocked_reason,
+        "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
+        "member_status": member.member_status.value
+    }
+
+#-------------------------------
+#employee management endpoints
+#-------------------------------
+
+#2. Get Profile by Member ID (Member or CenterAdmin)
+@router.get("/member/profile/{member_id}")
+async def get_member_profile(
+    member_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    member = await session.get(Member, member_id)
+    if not member:
+        raise HTTPException(404, "Member not found")
+    # Only allow access if current user is the member or a centeradmin
+    if current_user["role"] not in ["member", "centeradmin"]:
+        raise HTTPException(403, "Not authorized")
+    if current_user["role"] == "member" and current_user["user_id"] != member_id:
+        raise HTTPException(403, "Members can only access their own profile")
+    return {
+        "id": str(member.id),
+        "email": member.email,
+        "username": member.username,
+        "mobile": member.mobile,
+        "profile_photo": member.profile_photo,
+        "date_of_birth": member.date_of_birth,
+        "blood_group": member.blood_group,
+        "blocked_reason": member.blocked_reason,
+        "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
+        "member_status": member.member_status.value,
+        "home_center_id": str(member.home_center_id) if member.home_center_id else None,
+        "network_center_id": str(member.network_center_id) if member.network_center_id else None,
+        "network_eligible": member.network_eligible
+    }
+
+
+
+@router.post("/", response_model=EmployeeOut)
+async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(get_async_session)):
+    # Check for duplicate email/mobile
+    result = await session.execute(select(Employee).where(Employee.email == data.email))
+    if result.scalar():
+        raise HTTPException(status_code=400, detail="Email already exists")
+    result = await session.execute(select(Employee).where(Employee.mobile == data.mobile))
+    if result.scalar():
+        raise HTTPException(status_code=400, detail="Mobile already exists")
+
+    employee = Employee(
+        fullname=data.fullname,
+        email=data.email,
+        mobile=data.mobile,
+        qualification=data.qualification,
+        experience_years=data.experience,
+        country=data.country,
+        state=data.state,
+        city=data.city,
+        pin=data.pin,
+        address_line_1=data.address,
+        password_hash=hash_password(data.password)
+    )
+    session.add(employee)
+    await session.commit()
+    await session.refresh(employee)
+    return employee
+
+@router.get("/{employee_id}", response_model=EmployeeOut)
+async def get_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    employee = await session.get(Employee, employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return employee
+
+@router.put("/{employee_id}", response_model=EmployeeOut)
+async def update_employee(employee_id: uuid.UUID, data: EmployeeUpdate, session: AsyncSession = Depends(get_async_session)):
+    employee = await session.get(Employee, employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    for key, value in data.dict(exclude_unset=True).items():
+        if key == "password" and value:
+            setattr(employee, "password_hash", hash_password(value))
+        elif key == "experience":
+            setattr(employee, "experience_years", value)
+        elif key == "address":
+            setattr(employee, "address_line_1", value)
+        else:
+            setattr(employee, key, value)
+    await session.commit()
+    await session.refresh(employee)
+    return employee
+
+@router.delete("/{employee_id}")
+async def delete_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    employee = await session.get(Employee, employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    await session.delete(employee)
+    await session.commit()
+    return {"detail": "Employee deleted"}
+
+@router.get("/", response_model=list[EmployeeOut])
+async def list_employees(session: AsyncSession = Depends(get_async_session)):
+    result = await session.execute(select(Employee))
+    return result.scalars().all()

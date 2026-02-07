@@ -94,6 +94,7 @@ class Employee(User):
     experience_years = Column(Integer)
     salary = Column(Numeric(10, 2))
     attendance_marking_allowed = Column(Boolean, default=False, nullable=False)
+    qualification = Column(String, nullable=True)
 
     center = relationship("Center", foreign_keys=[center_id])
     designation = relationship("Designation", foreign_keys=[designation_id])

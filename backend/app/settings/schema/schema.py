@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, conint, validator
+from pydantic import BaseModel, UUID4, conint, validator, HttpUrl
 from datetime import time
 from typing import Optional, List
 import uuid
@@ -71,6 +71,41 @@ class CenterOperationalSettingOut(BaseModel):
     closing_time: time
     week_off_days: List[str]
     attendance_allowed_radius_meters: int
+
+    class Config:
+        orm_mode = True
+
+
+#-----------------------------------------
+#Designation crud schemas
+#-----------------------------------------
+class DesignationCreate(BaseModel):
+    name: str
+    code: str
+    description: Optional[str] = None
+    hierarchy_level: Optional[int] = 0
+    is_managerial: Optional[bool] = False
+    status: Optional[str] = "active"
+    image_url: Optional[HttpUrl] = None  # S3 URL
+
+class DesignationUpdate(BaseModel):
+    name: Optional[str]
+    code: Optional[str]
+    description: Optional[str]
+    hierarchy_level: Optional[int]
+    is_managerial: Optional[bool]
+    status: Optional[str]
+    image_url: Optional[HttpUrl]
+
+class DesignationOut(BaseModel):
+    id: UUID4
+    name: str
+    code: str
+    description: Optional[str]
+    hierarchy_level: int
+    is_managerial: bool
+    status: str
+    image_url: Optional[HttpUrl]
 
     class Config:
         orm_mode = True

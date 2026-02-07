@@ -2,8 +2,8 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
-from app.settings.models.models import CenterCategory, TaxCategory
-from app.settings.schema.schema import CenterCategoryOut, TaxCategoryBase, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut
+from app.settings.models.models import CenterCategory, TaxCategory, Designation
+from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate
 from app.settings.models.models import CenterOperationalSetting
 from app.auth.models.models import CenterAdmin
 from app.core.dependencies import centeradmin_required
@@ -234,3 +234,61 @@ async def delete_center_operational_setting(
     await session.delete(ops)
     await session.commit()
     return
+
+
+#------------------------------------
+#Designation crud
+#------------------------------------
+# Create Designation
+@router.post("/", response_model=DesignationOut)
+async def create_designation(
+    data: DesignationCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    designation = Designation(**data.dict())
+    session.add(designation)
+    await session.commit()
+    await session.refresh(designation)
+    return designation
+
+# Get Designation by ID
+@router.get("/{designation_id}", response_model=DesignationOut)
+async def get_designation(designation_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    designation = await session.get(Designation, designation_id)
+    if not designation:
+        raise HTTPException(status_code=404, detail="Designation not found")
+    return designation
+
+# Update Designation
+@router.put("/{designation_id}", response_model=DesignationOut)
+async def update_designation(
+    designation_id: uuid.UUID,
+    data: DesignationUpdate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    designation = await session.get(Designation, designation_id)
+    if not designation:
+        raise HTTPException(status_code=404, detail="Designation not found")
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(designation, key, value)
+    await session.commit()
+    await session.refresh(designation)
+    return designation
+
+# Delete Designation
+@router.delete("/{designation_id}")
+async def delete_designation(designation_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    designation = await session.get(Designation, designation_id)
+    if not designation:
+        raise HTTPException(status_code=404, detail="Designation not found")
+    await session.delete(designation)
+    await session.commit()
+    return {"detail": "Designation deleted"}
+
+# List Designations
+@router.get("/", response_model=list[DesignationOut])
+async def list_designations(session: AsyncSession = Depends(get_async_session)):
+    result = await session.execute(select(Designation))
+    return result.scalars().all()
+
+

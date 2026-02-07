@@ -103,7 +103,8 @@ class Designation(Base, AuditMixin):
     hierarchy_level = Column(Integer, default=0)
     is_managerial = Column(Boolean, default=False)
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
-    
+    image_url = Column(String, nullable=True)  # S3 image URL
+
 
 # ------------------------
 # Center Categories
