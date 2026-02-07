@@ -5,6 +5,7 @@ from app.core.dependencies import get_current_user, centeradmin_required, member
 from app.billing.models.models import PaymentOrder, PaymentOrderStatus,  PayerType, PayeeType, OrderType, ReferenceSchema, Currency
 from app.networking.schema.schema import NetworkingAccessRequest
 from app.center.models.models import CenterWallet, WalletTransaction
+from app.auth.models.models import UserCenterMembership, MemberStatusEnum
 from app.platforms.models.models import PlatformWallet
 from uuid import uuid4
 from datetime import datetime
@@ -12,6 +13,7 @@ from app.auth.models.models import Member, MemberStatusEnum
 from app.core.database import get_async_session
 from app.center.models.models import Center
 from app.settings.models.models import Address
+from decimal import Decimal
 
 router = APIRouter()
 
@@ -131,14 +133,14 @@ async def request_networking_access(
         raise HTTPException(400, "Network center wallet does not meet requirements")
 
     # 2. Calculate fee
-    per_day = float(network_center.networking_amount or 0)
+    per_day = Decimal(str(network_center.networking_amount or 0))
     d1 = datetime.strptime(payload.start_date, "%Y-%m-%d").date()
     d2 = datetime.strptime(payload.end_date, "%Y-%m-%d").date()
     total_days = (d2 - d1).days + 1
     if total_days < 1:
         raise HTTPException(400, "End date must be after or equal to start date")
-    total_amount = per_day * total_days
-    platform_share = total_amount * 0.15
+    total_amount = per_day * Decimal(total_days)
+    platform_share = total_amount * Decimal("0.15")
     center_share = total_amount - platform_share
 
     # 3. Home center wallet
@@ -169,7 +171,7 @@ async def request_networking_access(
         reference_schema=ReferenceSchema.center,
         reference_id=network_center.id,
         subtotal_amount=total_amount,
-        tax_amount=0,
+        tax_amount=Decimal("0"),
         total_amount=total_amount,
         currency=Currency.INR,
         status=PaymentOrderStatus.paid,
@@ -198,38 +200,91 @@ async def request_networking_access(
             description="Platform income from networking"
         ))
 
-    # 7. Create network member
-    network_member = Member(
-        id=uuid4(),
-        email=member.email,
-        username=member.username,
-        password_hash=member.password_hash,
-        role="member",
-        status=member.status,
-        gender=member.gender,
-        mobile=member.mobile,
-        profile_photo=member.profile_photo,
-        home_center_id=network_center_id,
-        network_center_id=network_center_id,
-        network_eligible=True,
-        date_of_birth=member.date_of_birth,
-        blood_group=member.blood_group,
-        time_slot_id=payload.time_slot_id,
-        member_status=member.member_status,
-        created_by=member.id,
-        updated_by=member.id,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+    # 7. Create or update UserCenterMembership for networking
+    from app.auth.models.models import UserCenterMembership, MemberStatusEnum
+
+    # Check if membership already exists for this user and center
+    existing_membership = await session.execute(
+        select(UserCenterMembership).where(
+            UserCenterMembership.user_id == member.id,
+            UserCenterMembership.center_id == network_center_id
+        )
     )
-    session.add(network_member)
+    existing_membership = existing_membership.scalar_one_or_none()
+
+    if existing_membership:
+        # Optionally update membership details (dates, time slot, status)
+        existing_membership.time_slot_id = payload.time_slot_id
+        existing_membership.start_date = d1
+        existing_membership.end_date = d2
+        existing_membership.member_status = MemberStatusEnum.network_member  
+        existing_membership.updated_by = member.id
+        existing_membership.updated_at = datetime.utcnow()
+        network_membership_id = existing_membership.id
+    else:
+        # Create new membership record
+        network_membership = UserCenterMembership(
+            id=uuid4(),
+            user_id=member.id,
+            center_id=network_center_id,
+            time_slot_id=payload.time_slot_id,
+            member_status=MemberStatusEnum.network_member,  
+            network_eligible=True,
+            start_date=d1,
+            end_date=d2,
+            created_by=member.id,
+            updated_by=member.id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        session.add(network_membership)
+        await session.flush()
+        network_membership_id = network_membership.id
+
     await session.commit()
     return {
         "detail": "Networking access granted",
-        "network_member_id": str(network_member.id),
+        "network_membership_id": str(network_membership_id),
         "network_center_id": network_center_id,
         "home_center_id": str(member.home_center_id),
-        "amount": total_amount,
-        "platform_income": platform_share,
-        "transferred_to_network_center": center_share,
+        "amount": float(total_amount),
+        "platform_income": float(platform_share),
+        "transferred_to_network_center": float(center_share),
         "payment_order_id": str(payment_order.payment_order_id)
     }
+
+
+
+@router.get("/networking/list/{member_id}")
+async def list_networking_by_member_id(
+    member_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    # Get all networking memberships for the user
+    memberships = await session.execute(
+        select(UserCenterMembership)
+        .where(
+            UserCenterMembership.user_id == member_id,
+            UserCenterMembership.member_status == MemberStatusEnum.network_member
+        )
+    )
+    memberships = memberships.scalars().all()
+
+    if not memberships:
+        return {"networking_memberships": []}
+
+    # Optionally, include center details
+    result = []
+    for membership in memberships:
+        center = await session.get(Center, membership.center_id)
+        result.append({
+            "network_membership_id": str(membership.id),
+            "center_id": str(membership.center_id),
+            "center_name": center.center_name if center else None,
+            "start_date": membership.start_date,
+            "end_date": membership.end_date,
+            "time_slot_id": str(membership.time_slot_id) if membership.time_slot_id else None,
+            "member_status": membership.member_status.value,
+        })
+
+    return {"networking_memberships": result}

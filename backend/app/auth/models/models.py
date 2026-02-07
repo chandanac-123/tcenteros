@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Boolean, ForeignKey, Date, Integer, Numer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.models.models import User
-from app.core.models.base import Base
+from app.core.models.base import AuditMixin, Base
 from app.core.models.models import UserRole
 import uuid
 import enum
@@ -15,6 +15,7 @@ class MemberStatusEnum(enum.Enum):
     guest = "guest"
     lead = "lead"
     visitor = "visitor"
+    network_member = "network_member"
 
 class SuperAdmin(User):
     __tablename__ = "superadmins"
@@ -131,8 +132,7 @@ class Member(User):
     network_eligible = Column(Boolean, default=True, nullable=False)
     last_login_device = Column(String)
     time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
-    member_status = Column(Enum(MemberStatusEnum), nullable=False, default=MemberStatusEnum.member)
-
+    member_status = Column(Enum(MemberStatusEnum, name="member_status_enum"), nullable=False, default=MemberStatusEnum.member)
     home_center = relationship("Center", foreign_keys=[home_center_id])
     network_center = relationship("Center", foreign_keys=[network_center_id])
 
@@ -141,3 +141,23 @@ class Member(User):
     }
 
     
+
+#To support a user being a member in multiple centers (networking), so  linking table (association table) that connects users to centers with membership-specific data.
+class UserCenterMembership(Base, AuditMixin):
+    __tablename__ = "user_center_memberships"
+    __table_args__ = {"schema": "auth"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("shared.users.id", ondelete="CASCADE"), nullable=False)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id", ondelete="CASCADE"), nullable=False)
+    time_slot_id = Column(UUID(as_uuid=True), ForeignKey("center.center_time_slots.id"), nullable=True)
+    member_status = Column(Enum(MemberStatusEnum, name="member_status_enum"), nullable=False, default=MemberStatusEnum.member)
+    network_eligible = Column(Boolean, default=True, nullable=False)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    # Add other membership-specific fields as needed
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    center = relationship("Center", foreign_keys=[center_id])
+    time_slot = relationship("CenterTimeSlot", foreign_keys=[time_slot_id])

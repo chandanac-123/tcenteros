@@ -18,6 +18,7 @@ from app.auth.models.models import MemberStatusEnum
 from app.core.models.models import StatusEnum
 from app.core.dependencies import member_required, get_current_user
 from passlib.context import CryptContext
+from app.settings.models.models import Designation
 import uuid
 
 
@@ -159,6 +160,21 @@ async def logout_member():
 #member profile update endpoint
 #-------------------------------
 
+# S3 Upload Endpoint for Member Profile Photo
+@router.post("/member/profile/upload-photo")
+async def upload_profile_photo(
+    file: UploadFile = File(...),
+    current_member=Depends(member_required)
+):
+    # Generate a unique S3 key
+    ext = file.filename.split('.')[-1]
+    key = f"uploads/profile_photos/{current_member['user_id']}_{uuid.uuid4()}.{ext}"
+    file_bytes = await file.read()
+    upload_file(file_bytes, key, content_type=file.content_type)
+    url = get_file_url(key)
+    return {"profile_photo_url": url}
+
+
 #1. Member Profile Update (Self)
 @router.put("/member/profile")
 async def update_member_profile(
@@ -171,6 +187,9 @@ async def update_member_profile(
         raise HTTPException(404, "Member not found")
     for field, value in payload.dict(exclude_unset=True).items():
         if value is not None:
+            # Convert date_of_birth string to date object if needed
+            if field == "date_of_birth" and isinstance(value, str):
+                value = datetime.strptime(value, "%Y-%m-%d").date()
             setattr(member, field, value)
     member.updated_at = datetime.utcnow()
     await session.commit()
@@ -223,9 +242,11 @@ async def get_member_profile(
         "network_eligible": member.network_eligible
     }
 
+#-----------------------------
+#employee management endpoints (CRUD)
+#-----------------------------
 
-
-@router.post("/", response_model=EmployeeOut)
+@router.post("/employee", response_model=EmployeeOut)
 async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(get_async_session)):
     # Check for duplicate email/mobile
     result = await session.execute(select(Employee).where(Employee.email == data.email))
@@ -234,6 +255,10 @@ async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(
     result = await session.execute(select(Employee).where(Employee.mobile == data.mobile))
     if result.scalar():
         raise HTTPException(status_code=400, detail="Mobile already exists")
+    # Check designation exists
+    designation = await session.get(Designation, data.designation_id)
+    if not designation:
+        raise HTTPException(status_code=400, detail="Invalid designation_id")
 
     employee = Employee(
         fullname=data.fullname,
@@ -246,21 +271,33 @@ async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(
         city=data.city,
         pin=data.pin,
         address_line_1=data.address,
-        password_hash=hash_password(data.password)
+        password_hash=hash_password(data.password),
+        designation_id=data.designation_id
     )
     session.add(employee)
     await session.commit()
     await session.refresh(employee)
-    return employee
+    return {
+        **employee.__dict__,
+        "designation_id": str(employee.designation_id),
+        "designation_name": designation.name
+    }
 
-@router.get("/{employee_id}", response_model=EmployeeOut)
+# Get Employee by ID
+@router.get("/employee/{employee_id}", response_model=EmployeeOut)
 async def get_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
     employee = await session.get(Employee, employee_id)
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
-    return employee
+    designation = await session.get(Designation, employee.designation_id) if employee.designation_id else None
+    return {
+        **employee.__dict__,
+        "designation_id": str(employee.designation_id) if employee.designation_id else None,
+        "designation_name": designation.name if designation else None
+    }
 
-@router.put("/{employee_id}", response_model=EmployeeOut)
+# Update Employee
+@router.put("/employee/{employee_id}", response_model=EmployeeOut)
 async def update_employee(employee_id: uuid.UUID, data: EmployeeUpdate, session: AsyncSession = Depends(get_async_session)):
     employee = await session.get(Employee, employee_id)
     if not employee:
@@ -272,13 +309,25 @@ async def update_employee(employee_id: uuid.UUID, data: EmployeeUpdate, session:
             setattr(employee, "experience_years", value)
         elif key == "address":
             setattr(employee, "address_line_1", value)
+        elif key == "designation_id":
+            # Check designation exists
+            designation = await session.get(Designation, value)
+            if not designation:
+                raise HTTPException(status_code=400, detail="Invalid designation_id")
+            setattr(employee, key, value)
         else:
             setattr(employee, key, value)
     await session.commit()
     await session.refresh(employee)
-    return employee
+    designation = await session.get(Designation, employee.designation_id) if employee.designation_id else None
+    return {
+        **employee.__dict__,
+        "designation_id": str(employee.designation_id) if employee.designation_id else None,
+        "designation_name": designation.name if designation else None
+    }
 
-@router.delete("/{employee_id}")
+# Delete Employee
+@router.delete("/employee/{employee_id}")
 async def delete_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
     employee = await session.get(Employee, employee_id)
     if not employee:
@@ -287,7 +336,23 @@ async def delete_employee(employee_id: uuid.UUID, session: AsyncSession = Depend
     await session.commit()
     return {"detail": "Employee deleted"}
 
-@router.get("/", response_model=list[EmployeeOut])
+# List Employees
+@router.get("/employee", response_model=list[EmployeeOut])
 async def list_employees(session: AsyncSession = Depends(get_async_session)):
     result = await session.execute(select(Employee))
-    return result.scalars().all()
+    employees = result.scalars().all()
+    # Fetch all designations in one go for efficiency
+    designation_map = {}
+    designation_ids = {e.designation_id for e in employees if e.designation_id}
+    if designation_ids:
+        designation_result = await session.execute(select(Designation).where(Designation.id.in_(designation_ids)))
+        for d in designation_result.scalars().all():
+            designation_map[d.id] = d.name
+    return [
+        {
+            **employee.__dict__,
+            "designation_id": str(employee.designation_id) if employee.designation_id else None,
+            "designation_name": designation_map.get(employee.designation_id)
+        }
+        for employee in employees
+    ]

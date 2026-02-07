@@ -11,6 +11,7 @@ from app.s3.service import upload_file
 from app.core.dependencies import get_current_user
 import uuid
 from datetime import time
+from app.s3.service import get_file_url
 
 router = APIRouter()
 
@@ -240,30 +241,52 @@ async def delete_center_operational_setting(
 #Designation crud
 #------------------------------------
 # Create Designation
-@router.post("/", response_model=DesignationOut)
+@router.post("/designation", response_model=DesignationOut)
 async def create_designation(
-    data: DesignationCreate,
+    data: DesignationCreate = Depends(),
+    image: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session)
 ):
-    designation = Designation(**data.dict())
+    # Check for duplicate code
+    result_code = await session.execute(select(Designation).where(Designation.code == data.code))
+    if result_code.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Designation code already exists")
+    # Check for duplicate name
+    result_name = await session.execute(select(Designation).where(Designation.name == data.name))
+    if result_name.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Designation name already exists")
+
+    image_key = f"designations/{uuid.uuid4()}_{image.filename}"
+    image_bytes = await image.read()
+    upload_file(image_bytes, image_key, image.content_type)
+    image_url = get_file_url(image_key)
+
+    data_dict = data.dict()
+    data_dict["image_url"] = image_url
+
+    designation = Designation(**data_dict)
     session.add(designation)
     await session.commit()
     await session.refresh(designation)
-    return designation
+    return {
+        **designation.__dict__,
+        "image_url": image_url
+    }
 
 # Get Designation by ID
-@router.get("/{designation_id}", response_model=DesignationOut)
+@router.get("/designation/{designation_id}", response_model=DesignationOut)
 async def get_designation(designation_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
     designation = await session.get(Designation, designation_id)
     if not designation:
         raise HTTPException(status_code=404, detail="Designation not found")
     return designation
 
-# Update Designation
-@router.put("/{designation_id}", response_model=DesignationOut)
+# Update Designation with optional image
+@router.put("/designation/{designation_id}", response_model=DesignationOut)
 async def update_designation(
     designation_id: uuid.UUID,
-    data: DesignationUpdate,
+    data: DesignationUpdate = Depends(),
+    image: UploadFile = File(None),
     session: AsyncSession = Depends(get_async_session)
 ):
     designation = await session.get(Designation, designation_id)
@@ -271,12 +294,17 @@ async def update_designation(
         raise HTTPException(status_code=404, detail="Designation not found")
     for key, value in data.dict(exclude_unset=True).items():
         setattr(designation, key, value)
+    if image:
+        image_key = f"designations/{uuid.uuid4()}_{image.filename}"
+        image_bytes = await image.read()
+        upload_file(image_bytes, image_key, image.content_type)
+        designation.image_url = image_key  # Or use get_file_url(image_key)
     await session.commit()
     await session.refresh(designation)
     return designation
 
 # Delete Designation
-@router.delete("/{designation_id}")
+@router.delete("/designation/{designation_id}")
 async def delete_designation(designation_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
     designation = await session.get(Designation, designation_id)
     if not designation:
@@ -286,9 +314,17 @@ async def delete_designation(designation_id: uuid.UUID, session: AsyncSession = 
     return {"detail": "Designation deleted"}
 
 # List Designations
-@router.get("/", response_model=list[DesignationOut])
+@router.get("/designation", response_model=list[DesignationOut])
 async def list_designations(session: AsyncSession = Depends(get_async_session)):
     result = await session.execute(select(Designation))
-    return result.scalars().all()
+    designations = result.scalars().all()
+    # Convert image_url to absolute URL for each designation
+    return [
+        {
+            **designation.__dict__,
+            "image_url": get_file_url(designation.image_url) if designation.image_url else None
+        }
+        for designation in designations
+    ]
 
 

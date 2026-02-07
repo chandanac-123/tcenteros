@@ -64,6 +64,7 @@ class EmployeeCreate(BaseModel):
     pin: Optional[str] = None
     address: Optional[str] = None
     password: str
+    designation_id: UUID4  # <-- Add this field
 
 class EmployeeUpdate(BaseModel):
     fullname: Optional[str]
@@ -77,6 +78,7 @@ class EmployeeUpdate(BaseModel):
     pin: Optional[str]
     address: Optional[str]
     password: Optional[str]
+    designation_id: Optional[UUID4]  # <-- Add this field
 
 class EmployeeOut(BaseModel):
     id: UUID4
@@ -90,6 +92,8 @@ class EmployeeOut(BaseModel):
     city: Optional[str]
     pin: Optional[str]
     address: Optional[str]
+    designation_id: Optional[UUID4]  # <-- Add this field
+    designation_name: Optional[str]  # <-- Add this field
 
     class Config:
         orm_mode = True
