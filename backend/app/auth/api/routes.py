@@ -261,7 +261,7 @@ async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(
         raise HTTPException(status_code=400, detail="Invalid designation_id")
 
     employee = Employee(
-        fullname=data.fullname,
+        full_name=data.full_name,
         email=data.email,
         mobile=data.mobile,
         qualification=data.qualification,

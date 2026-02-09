@@ -53,7 +53,7 @@ class MemberProfileUpdate(BaseModel):
 #employee management schemas
 #-------------------------------
 class EmployeeCreate(BaseModel):
-    fullname: str
+    full_name: str
     email: EmailStr
     mobile: str
     qualification: Optional[str] = None
@@ -67,7 +67,7 @@ class EmployeeCreate(BaseModel):
     designation_id: UUID4  # <-- Add this field
 
 class EmployeeUpdate(BaseModel):
-    fullname: Optional[str]
+    full_name: Optional[str]
     email: Optional[EmailStr]
     mobile: Optional[str]
     qualification: Optional[str]
@@ -82,7 +82,7 @@ class EmployeeUpdate(BaseModel):
 
 class EmployeeOut(BaseModel):
     id: UUID4
-    fullname: str
+    full_name: str
     email: EmailStr
     mobile: str
     qualification: Optional[str]

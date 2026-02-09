@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
+from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
@@ -245,22 +245,21 @@ async def delete_center_operational_setting(
 # Create Designation
 @router.post("/designation", response_model=DesignationOut)
 async def create_designation(
-    data: DesignationCreate = Depends(),
+    name: str = Form(...),  # Accept name as a form field
     image: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session)
 ):
     # Auto-generate code
-    name_part = ''.join(re.findall(r'[A-Za-z]', data.name))[:3].upper().ljust(3, 'X')
+    name_part = ''.join(re.findall(r'[A-Za-z]', name))[:3].upper().ljust(3, 'X')
     while True:
         rand_part = f"{random.randint(0, 999):03d}"
         code = f"{name_part}{rand_part}"
-        # Ensure code is unique
         result_code = await session.execute(select(Designation).where(Designation.code == code))
         if not result_code.scalar_one_or_none():
             break
 
     # Check for duplicate name
-    result_name = await session.execute(select(Designation).where(Designation.name == data.name))
+    result_name = await session.execute(select(Designation).where(Designation.name == name))
     if result_name.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Designation name already exists")
 
@@ -269,11 +268,11 @@ async def create_designation(
     upload_file(image_bytes, image_key, image.content_type)
     image_url = get_file_url(image_key)
 
-    data_dict = data.dict(exclude={"code"})
-    data_dict["code"] = code
-    data_dict["image_url"] = image_url
-
-    designation = Designation(**data_dict)
+    designation = Designation(
+        name=name,
+        code=code,
+        image_url=image_url
+    )
     session.add(designation)
     await session.commit()
     await session.refresh(designation)
