@@ -40,7 +40,7 @@ const EmployeeTable = ({
     },
     {
       accessorKey: 'phoneNumber',
-      header: 'Phone number'
+      header: 'Phone Number'
     },
     {
       accessorKey: 'center',
@@ -51,7 +51,7 @@ const EmployeeTable = ({
       header: 'Join Date'
     },
     {
-      header: 'STATUS',
+      header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>

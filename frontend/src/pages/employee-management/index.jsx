@@ -45,7 +45,337 @@ const EmployeeManagement = () => {
       center: 'Center A',
       joinDate: '2023-01-01',
       status: 'Inactive Member'
-    }
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },{
+      id: '728ed52f',
+      firstName: 'John',
+      lastName: 'Doe',
+      designation: 'Trainer',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      center: 'Center A',
+      joinDate: '2023-01-01',
+      status: 'Inactive Member'
+    },
   ]
   console.log('data: ', data)
 
@@ -58,12 +388,11 @@ const EmployeeManagement = () => {
             All Employees and Trainee Details
           </span>
         </div>
-
         <div className='flex-1 flex justify-end items-center gap-2'>
           <CustomFilter />
-          <CustomeTab tabList={employeeOrCenter} defaultVal='Employee' />
         </div>
       </div>
+
       <div className='w-full h-px bg-gray-300 my-4'></div>
 
       <div className='gap-2 flex items-center'>
@@ -96,18 +425,6 @@ const EmployeeManagement = () => {
         </div>
       </div>
 
-      {/* <div className='gap-2 flex items-center'>
-        <span className='font-semibold text-3xl'>244</span>
-        <span className='text-textgrey'>Center User</span>
-      </div>
-
-      <div>
-        <MultiColorProgressBar
-          segments={[
-            { value: 60, role: 'trainee', role__color: 'progress_yellow' },
-          ]}
-        />
-      </div> */}
       <EmployeeTable
         data={data}
         setOpen={setOpen}

@@ -30,6 +30,44 @@ const ViewForm = ({ open, setOpen }) => {
       </div>
 
       <div className='flex gap-10'>
+        <div className='flex flex-col gap-2'>
+          <span className='text-sm'>Qualification</span>
+          <span className='flex text-textgrey '>Richard Nainggolan</span>
+        </div>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Total Experience</span>
+          <span className='flex text-textgrey '>Aradhya</span>
+        </div>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Country</span>
+          <span className='flex text-textgrey '>
+            Richardnainggolan@gmail.com
+          </span>
+        </div>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>State</span>
+          <span className='flex text-textgrey '>858584447858</span>
+        </div>
+      </div>
+
+      <div className='flex gap-10'>
+        <div className='flex flex-col gap-2'>
+          <span className='text-sm'>City</span>
+          <span className='flex text-textgrey '>Richard Nainggolan</span>
+        </div>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Pin</span>
+          <span className='flex text-textgrey '>Aradhya</span>
+        </div>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Address</span>
+          <span className='flex text-textgrey '>
+            Richardnainggolan@gmail.com
+          </span>
+        </div>
+      </div>
+
+      <div className='flex gap-10'>
         <div className='flex flex-col gap-1'>
           <span className='text-sm'>Center</span>
           <span className='flex text-textgrey '>Aradhya</span>
