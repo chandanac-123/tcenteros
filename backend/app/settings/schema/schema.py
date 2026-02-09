@@ -81,7 +81,7 @@ class CenterOperationalSettingOut(BaseModel):
 #-----------------------------------------
 class DesignationCreate(BaseModel):
     name: str
-    code: str
+    # code: str
     description: Optional[str] = None
     hierarchy_level: Optional[int] = 0
     is_managerial: Optional[bool] = False
