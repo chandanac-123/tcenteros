@@ -81,6 +81,9 @@ class Employee(User):
         ForeignKey("shared.users.id", ondelete="CASCADE"),
         primary_key=True
     )
+
+    full_name = Column(String, nullable=True)
+
     center_id = Column(
         UUID(as_uuid=True),
         ForeignKey("center.centers.id"),
@@ -114,6 +117,9 @@ class Member(User):
         ForeignKey("shared.users.id", ondelete="CASCADE"),
         primary_key=True
     )
+
+    full_name = Column(String, nullable=True)
+
     home_center_id = Column(
         UUID(as_uuid=True),
         ForeignKey("center.centers.id"),
