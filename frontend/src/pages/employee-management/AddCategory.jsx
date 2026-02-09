@@ -10,7 +10,7 @@ import { categoryValidationSchema } from '@utils/validations'
 const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
   const { mutateAsync: createCategory, isPending } = useCreateCategoryMutation()
 
-  const initialValues = { name: '', image: null }
+  const initialValues = { name: '', image_url: null }
 
   const formik = useFormik({
     initialValues,
@@ -18,7 +18,7 @@ const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
     onSubmit: async (values, { resetForm }) => {
       const formData = new FormData()
       formData.append('name', values.name)
-      if (values.image) formData.append('image', values.image)
+      if (values.image_url) formData.append('image', values.image_url)
       try {
         await createCategory(formData)
         setCategoryOpen(false)
@@ -46,24 +46,24 @@ const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
           name='name'
           value={formik.values.name}
           onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
           error={formik.touched.name && formik.errors.name}
         />
 
-       <InputFile
-  label="Upload Image"
-  name="image"
-  onChange={e => {
-    formik.setFieldValue('image', e.target.value) // value is already File
-    formik.setFieldTouched('image', true)
-  }}
-  onRemove={() => {
-    formik.setFieldValue('image', null)
-    formik.setFieldTouched('image', true)
-  }}
-  error={formik.touched.image && formik.errors.image}
-/>
-
+        <InputFile
+          label='Upload Image'
+          name='image_url'
+          onChange={e => {
+            formik.setFieldValue('image_url', e.target.value) // value is File
+            formik.setFieldTouched('image_url', true, false)
+            formik.validateField('image_url') // <-- Add this line
+          }}
+          onRemove={() => {
+            formik.setFieldValue('image_url', null)
+            formik.setFieldTouched('image_url', true, false)
+            formik.validateField('image_url') // <-- Add this line
+          }}
+          error={formik.touched.image_url && formik.errors.image_url}
+        />
 
         <div className='flex justify-end'>
           <Button size='addbutton' type='submit' disabled={isPending}>

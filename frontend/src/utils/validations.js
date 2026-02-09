@@ -23,8 +23,7 @@ export const invoiceValidationSchema = Yup.object().shape({
 
 export const categoryValidationSchema = Yup.object().shape({
   name: Yup.string().required('Enter Designation'),
-
-  image: Yup.mixed()
+  image_url: Yup.mixed()
     .nullable()
     .required('Upload an image')
     .test(
