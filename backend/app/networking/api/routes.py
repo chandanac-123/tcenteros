@@ -112,6 +112,54 @@ async def get_networking_amount(
     return {"center_id": center_id, "networking_amount": float(center.networking_amount or 0)}
 
 
+@router.get("/networking/calculate-amount")
+async def calculate_networking_amount(
+    network_center_id: str = Query(..., description="Target networking center UUID"),
+    start_date: str = Query(..., description="Start date in YYYY-MM-DD"),
+    end_date: str = Query(..., description="End date in YYYY-MM-DD"),
+    time_slot_id: str = Query(..., description="Time slot UUID"),
+    session: AsyncSession = Depends(get_async_session),
+    current_member=Depends(member_required)
+):
+    """
+    Calculate the payable networking amount for a member for the given period and time slot.
+    """
+    from decimal import Decimal
+    from datetime import datetime
+
+    # 1. Validate network center
+    network_center = await session.get(Center, network_center_id)
+    if not network_center or not network_center.network_enabled:
+        raise HTTPException(404, "Networking center not found or not enabled")
+
+    # 2. Calculate fee
+    per_day = Decimal(str(network_center.networking_amount or 0))
+    try:
+        d1 = datetime.strptime(start_date, "%Y-%m-%d").date()
+        d2 = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD.")
+
+    total_days = (d2 - d1).days + 1
+    if total_days < 1:
+        raise HTTPException(400, "End date must be after or equal to start date")
+    total_amount = per_day * Decimal(total_days)
+    platform_share = total_amount * Decimal("0.15")
+    center_share = total_amount - platform_share
+
+    return {
+        "network_center_id": network_center_id,
+        "time_slot_id": time_slot_id,
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_days": total_days,
+        "amount_payable": float(total_amount),
+        "platform_income": float(platform_share),
+        "transferred_to_network_center": float(center_share)
+    }
+
+
+
 
 # Networking Access Request & Payment (Member)
 @router.post("/networking/access")

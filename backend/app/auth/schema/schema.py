@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, UUID4
 from pydantic import BaseModel, EmailStr
 from app.auth.models import MemberStatusEnum
-
+from datetime import date
 
 #center admin login request and response schemas
 class CenterAdminLoginRequest(BaseModel):
@@ -64,7 +64,9 @@ class EmployeeCreate(BaseModel):
     pin: Optional[str] = None
     address: Optional[str] = None
     password: str
-    designation_id: UUID4  # <-- Add this field
+    designation_id: UUID4
+    center_id: UUID4
+    joining_date: Optional[date] = None  # <-- Add this
 
 class EmployeeUpdate(BaseModel):
     full_name: Optional[str]
@@ -72,13 +74,10 @@ class EmployeeUpdate(BaseModel):
     mobile: Optional[str]
     qualification: Optional[str]
     experience: Optional[int]
-    country: Optional[str]
-    state: Optional[str]
-    city: Optional[str]
-    pin: Optional[str]
-    address: Optional[str]
     password: Optional[str]
-    designation_id: Optional[UUID4]  # <-- Add this field
+    designation_id: Optional[UUID4]
+    address_id: Optional[UUID4]
+    joining_date: Optional[date] = None  # <-- Add this
 
 class EmployeeOut(BaseModel):
     id: UUID4
@@ -87,13 +86,12 @@ class EmployeeOut(BaseModel):
     mobile: str
     qualification: Optional[str]
     experience: Optional[int]
-    country: Optional[str]
-    state: Optional[str]
-    city: Optional[str]
-    pin: Optional[str]
-    address: Optional[str]
-    designation_id: Optional[UUID4]  # <-- Add this field
-    designation_name: Optional[str]  # <-- Add this field
+    designation_id: Optional[UUID4]
+    designation_name: Optional[str]
+    address_id: Optional[UUID4]
+    address: Optional[dict]
+    center_id: Optional[UUID4]
+    joining_date: Optional[date]  # <-- Add this
 
     class Config:
         orm_mode = True

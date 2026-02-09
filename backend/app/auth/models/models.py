@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 from app.core.models.models import User
 from app.core.models.base import AuditMixin, Base
 from app.core.models.models import UserRole
+from sqlalchemy import DateTime
+from datetime import datetime
 import uuid
 import enum
 
@@ -94,9 +96,17 @@ class Employee(User):
         ForeignKey("settings.designations.id"),
         nullable=True
     )
+
+    address_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("settings.address.id"),
+        nullable=True
+    )
+
     specialization = Column(String)
     experience_years = Column(Integer)
     salary = Column(Numeric(10, 2))
+    joining_date = Column(DateTime, nullable=True, default=datetime.utcnow)
     attendance_marking_allowed = Column(Boolean, default=False, nullable=False)
     qualification = Column(String, nullable=True)
 
@@ -129,6 +139,12 @@ class Member(User):
     network_center_id = Column(
         UUID(as_uuid=True),
         ForeignKey("center.centers.id"),
+        nullable=True
+    )
+
+    address_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("settings.address.id"),
         nullable=True
     )
 
