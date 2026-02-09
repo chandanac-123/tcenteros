@@ -8,6 +8,7 @@ import { useState } from 'react'
 import AddEditForm from './AddEditForm'
 import ViewForm from './View'
 import DeleteModal from '@common/CustomeDelete'
+import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 
 const EmployeeTable = ({
   data,
@@ -20,6 +21,7 @@ const EmployeeTable = ({
 }) => {
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const { mutate: deleteEmployee } = useDeleteEmployeeMutation()
 
   const columns = [
     {
@@ -55,7 +57,12 @@ const EmployeeTable = ({
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-          <Badge label={row.original.status} variant={row.original.status=='Active Member' ? 'active' : 'inactive'} />
+          <Badge
+            label={row.original.status}
+            variant={
+              row.original.status == 'Active Member' ? 'active' : 'inactive'
+            }
+          />
           <button onClick={() => setViewOpen(true)}>
             <img src={view} alt='view' />
           </button>
@@ -84,9 +91,19 @@ const EmployeeTable = ({
         tableParams={tableParams}
         paginationVisibile={true}
       />
-      <AddEditForm id={1} open={open} setOpen={setOpen} closeModal={() => setOpen(false)} />
+      <AddEditForm
+        id={1}
+        open={open}
+        setOpen={setOpen}
+        closeModal={() => setOpen(false)}
+      />
       <ViewForm open={viewopen} setOpen={setViewOpen} />
-      <DeleteModal open={deleteOpen} setOpen={setDeleteOpen} header="Delete Employee" description="Are you sure you want to delete this employee?" />
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Employee'
+        description='Are you sure you want to delete this employee?'
+      />
     </>
   )
 }

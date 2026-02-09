@@ -19,3 +19,11 @@ export const CreateEmployeeCategoriesApiCall = details =>
   axiosInstance.post('/settings/superadmin/designation', details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
+
+export const getEmployeeApiCall = () => axiosInstance.get('/auth/employee')
+export const createEmployeeApiCall = details =>
+  axiosInstance.post('/auth/employee', details)
+export const updateEmployeeApiCall = (details, id) =>
+  axiosInstance.put(`/auth/employee/employee_id=${id}`, details)
+export const deleteEmployeeApiCall = id =>
+  axiosInstance.delete(`/auth/employee/employee_id=${id}`)

@@ -5,12 +5,18 @@ import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
 import CustomeModal from '@common/CustomeModal'
 import { Plus } from 'lucide-react'
-import InputFile from '@common/CustomeFileUpload'
 import AddCategory from './AddCategory'
-import { useCategoriesQuery } from '@api-queries/employee-management/Query'
+import {
+  useCategoriesQuery,
+  useCreateEmployeeMutation,
+  useUpdateEmployeeMutation
+} from '@api-queries/employee-management/Query'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
+  const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
+  const { mutateAsync: updateCategory, isPending: updatePending } =
+    useUpdateEmployeeMutation()
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [category, setCategory] = useState()
   const [formData, setFormData] = useState({
@@ -28,10 +34,16 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     password: ''
   })
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-
-    closeModal()
+    try {
+      if (id) {
+        await updateCategory({ id, ...formData })
+      } else {
+        await createCategory(formData)
+      }
+      closeModal()
+    } catch (err) {}
   }
 
   const handleSelect = id => {

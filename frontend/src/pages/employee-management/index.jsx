@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import EmployeeTable from './table'
-import CustomeTab from '@common/CustomeTab'
 import MultiColorProgressBar from '@common/MulticolorProgressBar'
 import CustomFilter from '@common/CustomeFilter'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
+import { useEmployeeQuery } from '@api-queries/employee-management/Query'
 
 const EmployeeManagement = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
   })
+  const {data, isFetching} = useEmployeeQuery()
   const [editId, setEditId] = useState(2)
   const [open, setOpen] = useState(false)
 
@@ -23,7 +24,7 @@ const EmployeeManagement = () => {
     setOpen(true)
   }
 
-  const data = [
+  const datas = [
     {
       id: '728ed52f',
       firstName: 'John',
@@ -377,7 +378,7 @@ const EmployeeManagement = () => {
       status: 'Inactive Member'
     },
   ]
-  console.log('data: ', data)
+
 
   return (
     <ContentLayout>
@@ -426,7 +427,7 @@ const EmployeeManagement = () => {
       </div>
 
       <EmployeeTable
-        data={data}
+        data={datas}
         setOpen={setOpen}
         handleOpen={handleOpen}
         open={open}
