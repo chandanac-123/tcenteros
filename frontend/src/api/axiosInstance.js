@@ -6,9 +6,8 @@ const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
     timeout: 10000, // Optional: 10 seconds timeout
     headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json ,multipart/formdata'
-    }
+    Accept: 'application/json'
+  }
 });
 
 export default axiosInstance;

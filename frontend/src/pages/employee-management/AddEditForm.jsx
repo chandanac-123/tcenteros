@@ -1,12 +1,17 @@
 import { Input } from '@pages/components/ui/input'
 import SelectCategory from '@common/SelectCategory'
-import { employeeCategory } from '@constants/employeeCategory'
 import CustomeSelect from '@common/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
 import CustomeModal from '@common/CustomeModal'
+import { Plus } from 'lucide-react'
+import InputFile from '@common/CustomeFileUpload'
+import AddCategory from './AddCategory'
+import { useCategoriesQuery } from '@api-queries/employee-management/Query'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
+  const { data, isFetching } = useCategoriesQuery()
+  const [categoryOpen, setCategoryOpen] = useState(false)
   const [category, setCategory] = useState()
   const [formData, setFormData] = useState({
     category: '',
@@ -34,97 +39,122 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   }
 
   return (
-    <CustomeModal open={open} onOpenChange={setOpen} header={id ? 'Edit Employee' : 'Add Employee'}>
-      <form className='space-y-2 w-full' onSubmit={handleSubmit}>
-        <span>Select Category</span>
-        <div className='flex gap-4'>
-          {employeeCategory.map(item => (
-            <SelectCategory
-              key={item.id}
-              item={item}
-              selected={category === item.id}
-              onSelect={() => handleSelect(item.id)}
-            />
-          ))}
-        </div>
+    <>
+      <CustomeModal
+        open={open}
+        onOpenChange={setOpen}
+        header={id ? 'Edit Employee' : 'Create Employee'}
+      >
+        <form className='space-y-2' onSubmit={handleSubmit}>
+          <span>Select Category</span>
+          <div className='w-full'>
+            <div className='grid grid-cols-2 md:grid-cols-5 gap-2'>
+              {data?.map(item => (
+                <SelectCategory
+                  key={item.id}
+                  item={item}
+                  selected={category === item.id}
+                  onSelect={() => handleSelect(item.id)}
+                />
+              ))}
+              <label
+                onClick={() => setCategoryOpen(true)}
+                className='flex flex-col items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
+              >
+                <Plus className='w-6 h-6 text-secondary' />
+                <span className='flex-1 text-sm text-secondary'>
+                  Add Designation
+                </span>
+              </label>
+            </div>
+          </div>
 
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Full Name'
-              name='name'
-              placeholder='Enter Your Full Name'
-            />
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <Input
+                label='Full Name'
+                name='name'
+                placeholder='Enter Your Full Name'
+              />
+            </div>
+            <div className='flex-1'>
+              <Input
+                label='Email ID'
+                name='email'
+                placeholder='Enter Your Email ID'
+              />
+            </div>
           </div>
-          <div className='flex-1'>
-            <Input
-              label='Email ID'
-              name='email'
-              placeholder='Enter Your Email ID'
-            />
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <Input
+                label=' Mobile Number'
+                name='name'
+                placeholder='Enter Your Mobile Number'
+              />
+            </div>
+            <div className='flex-1'>
+              <Input
+                label=' Qualification'
+                name='name'
+                placeholder='Enter Your Qualification'
+              />
+            </div>
           </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label=' Mobile Number'
-              name='name'
-              placeholder='Enter Your Mobile Number'
-            />
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <Input
+                label=' Total Experience '
+                name='name'
+                placeholder='Enter Your Experience '
+              />
+            </div>
+            <div className='flex-1'>
+              <CustomeSelect
+                label=' Country'
+                name='name'
+                placeholder='Select'
+              />
+            </div>
           </div>
-          <div className='flex-1'>
-            <Input
-              label=' Qualification'
-              name='name'
-              placeholder='Enter Your Qualification'
-            />
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <CustomeSelect label=' State' name='name' placeholder='Select' />
+            </div>
+            <div className='flex-1'>
+              <CustomeSelect label=' City' name='name' placeholder='Select' />
+            </div>
           </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label=' Total Experience '
-              name='name'
-              placeholder='Enter Your Experience '
-            />
+          <div className='flex gap-4 '>
+            <div className='flex-1'>
+              <Input label=' Pin' name='name' placeholder='Enter PIN' />
+            </div>
+            <div className='flex-1'>
+              <Input
+                label=' Address'
+                name='name'
+                placeholder='Enter your Address'
+              />
+            </div>
           </div>
-          <div className='flex-1'>
-            <CustomeSelect label=' Country' name='name' placeholder='Select' />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CustomeSelect label=' State' name='name' placeholder='Select' />
-          </div>
-          <div className='flex-1'>
-            <CustomeSelect label=' City' name='name' placeholder='Select' />
-          </div>
-        </div>
-        <div className='flex gap-4 '>
-          <div className='flex-1'>
-            <Input label=' Pin' name='name' placeholder='Enter PIN' />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label=' Address'
-              name='name'
-              placeholder='Enter your Address'
-            />
-          </div>
-        </div>
-        <Input
-          label=' Password'
-          name='name'
-          placeholder='Enter Your Password'
-        />
+          <Input
+            label=' Password'
+            name='name'
+            placeholder='Enter Your Password'
+          />
 
-        <div className='flex justify-center mt-4 '>
-          <Button size='addbutton' variant='default' type='submit'>
-            {id ? 'Update Employee' : 'Add Employee'}
-          </Button>
-        </div>
-      </form>
-    </CustomeModal>
+          <div className='flex justify-center mt-4 '>
+            <Button size='addbutton' variant='default' type='submit'>
+              {id ? 'Update Employee' : 'Add Employee'}
+            </Button>
+          </div>
+        </form>
+      </CustomeModal>
+      <AddCategory
+        categoryOpen={categoryOpen}
+        setCategoryOpen={setCategoryOpen}
+      />
+    </>
   )
 }
 export default AddEditForm

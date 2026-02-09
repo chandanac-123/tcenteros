@@ -20,3 +20,22 @@ export const invoiceValidationSchema = Yup.object().shape({
   address_line_1: Yup.string().required('Enter address'),
   address_line_2: Yup.string().required('Enter pincode')
 })
+
+export const categoryValidationSchema = Yup.object().shape({
+  name: Yup.string().required('Enter Designation'),
+
+  image: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test(
+      'fileType',
+      'Only JPG, JPEG, PNG files are allowed',
+      value =>
+        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
+    )
+    .test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    )
+})
