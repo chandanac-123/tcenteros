@@ -1,7 +1,7 @@
 # app/center/schema/onboarding.py
 
 from pydantic import BaseModel, EmailStr, UUID4, Field
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 
 class CenterOnboardingTempCreate(BaseModel):
     center_name: str
@@ -176,3 +176,31 @@ class CenterLocationOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+
+#--------------------------------
+#central profile update schema  
+#--------------------------------
+class AddressUpdate(BaseModel):
+    address_line_1: Optional[str]
+    address_line_2: Optional[str]
+    city: Optional[str]
+    district: Optional[str]
+    state: Optional[str]
+    country: Optional[str]
+    postal_code: Optional[str]
+
+class CenterProfileUpdate(BaseModel):
+    center_name: Optional[str]
+    about: Optional[str]
+    facilities: Optional[List[str]]
+    website_url: Optional[str]
+    capacity: Optional[float]
+    kind_of_center: Optional[Dict]
+    contact_person: Optional[str]
+    center_email: Optional[str]
+    center_phone: Optional[str]
+    gst_number: Optional[str]
+    live_class_enable: Optional[bool]
+    address: Optional[AddressUpdate]

@@ -1,9 +1,10 @@
 # app/center/api/routes.py
 import email
 from sqlite3 import IntegrityError
-from fastapi import APIRouter, HTTPException, Depends, Query, Path
+from fastapi import APIRouter, Body, HTTPException, Depends, Query, Path, UploadFile, File, Form
 from typing import List, Optional
 import uuid
+import json
 import traceback
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,8 @@ from app.core.database import get_async_session
 from uuid import uuid4
 from app.core.dependencies import centeradmin_required, get_db, get_current_user
 from app.core.security import get_password_hash
+from app.s3.service import upload_file, get_file_url
+from fastapi.concurrency import run_in_threadpool
 
 router = APIRouter()
 
@@ -630,3 +633,160 @@ async def list_wallet_transactions(
         }
         for tx in txs.scalars().all()
     ]
+
+
+@router.get("/center/me")
+async def get_my_center_details(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    result = await session.execute(
+        select(Center).where(Center.id == center_id)
+    )
+    center = result.scalar_one_or_none()
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+
+    # Optionally fetch address details
+    address = None
+    if center.address_id:
+        address_result = await session.execute(
+            select(Address).where(Address.id == center.address_id)
+        )
+        address = address_result.scalar_one_or_none()
+
+    return {
+        "center_id": str(center.id),
+        "center_name": center.center_name,
+        "about": center.about,
+        "facilities": center.facilities,
+        "website_url": center.website_url,
+        "capacity": float(center.capacity) if center.capacity else None,
+        "approval_status": center.approval_status.value if center.approval_status else None,
+        "center_status": center.center_status.value if center.center_status else None,
+        "network_enabled": center.network_enabled,
+        "networking_amount": float(center.networking_amount) if center.networking_amount else None,
+        "white_label_enabled": center.white_label_enabled,
+        "kind_of_center": center.kind_of_center,
+        "members_count": center.members_count,
+        "trainer_count": center.trainer_count,
+        "currently_using_digital_tool": center.currently_using_digital_tool,
+        "marketing_platform": center.marketing_platform,
+        "contact_person": center.contact_person,
+        "center_email": center.center_email,
+        "center_phone": center.center_phone,
+        "gst_number": center.gst_number,
+        "live_class_enable": center.live_class_enable,
+        "address": {
+            "address_line_1": address.address_line_1,
+            "address_line_2": address.address_line_2,
+            "city": address.city,
+            "district": address.district,
+            "state": address.state,
+            "country": address.country,
+            "postal_code": address.postal_code,
+        } if address else None
+    }
+
+
+@router.put("/center/profile/update")
+async def update_center_profile(
+    data: CenterProfileUpdate = Body(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # Update Center fields (except address)
+    update_data = data.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        if field != "address" and hasattr(center, field):
+            setattr(center, field, value)
+
+    # Update Address if present
+    address_data = None
+    if "address" in update_data and update_data["address"]:
+        if not center.address_id:
+            raise HTTPException(400, "Center has no address to update")
+        address = await session.get(Address, center.address_id)
+        if not address:
+            raise HTTPException(404, "Address not found")
+        for field, value in update_data["address"].items():
+            if hasattr(address, field):
+                setattr(address, field, value)
+        address_data = {
+            "address_line_1": address.address_line_1,
+            "address_line_2": address.address_line_2,
+            "city": address.city,
+            "district": address.district,
+            "state": address.state,
+            "country": address.country,
+            "postal_code": address.postal_code,
+        }
+
+    await session.commit()
+
+    # Prepare updated response
+    updated_center = {
+        "center_id": str(center.id),
+        "center_name": center.center_name,
+        "about": center.about,
+        "facilities": center.facilities,
+        "website_url": center.website_url,
+        "capacity": float(center.capacity) if center.capacity else None,
+        "approval_status": center.approval_status.value if center.approval_status else None,
+        "center_status": center.center_status.value if center.center_status else None,
+        "network_enabled": center.network_enabled,
+        "networking_amount": float(center.networking_amount) if center.networking_amount else None,
+        "white_label_enabled": center.white_label_enabled,
+        "kind_of_center": center.kind_of_center,
+        "members_count": center.members_count,
+        "trainer_count": center.trainer_count,
+        "currently_using_digital_tool": center.currently_using_digital_tool,
+        "marketing_platform": center.marketing_platform,
+        "contact_person": center.contact_person,
+        "center_email": center.center_email,
+        "center_phone": center.center_phone,
+        "gst_number": center.gst_number,
+        "live_class_enable": center.live_class_enable,
+        "address": address_data,
+    }
+
+    return {
+        "detail": "Center profile updated successfully",
+        "updated_center": updated_center
+    }
+
+
+@router.put("/centeradmin/profile-photo")
+async def update_centeradmin_profile_photo(
+    profile_photo: UploadFile = File(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    admin_result = await session.execute(
+        select(CenterAdmin).where(CenterAdmin.center_id == center_id)
+    )
+    admin = admin_result.scalar_one_or_none()
+    if not admin:
+        raise HTTPException(404, "CenterAdmin not found")
+    user = await session.get(User, admin.user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    file_bytes = await profile_photo.read()
+    file_ext = profile_photo.filename.split('.')[-1]
+    key = f"profile_photos/{user.id}.{file_ext}"
+    await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
+    profile_photo_url = await run_in_threadpool(get_file_url, key)
+    user.profile_photo_url = profile_photo_url
+
+    await session.commit()
+    return {
+        "detail": "Profile photo updated successfully",
+        "profile_photo_url": profile_photo_url
+    }

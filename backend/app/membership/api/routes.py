@@ -480,7 +480,6 @@ async def list_time_slots(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    # Determine center_id based on role
     role = current_user["role"]
 
     if role == "superadmin":
@@ -495,13 +494,15 @@ async def list_time_slots(
             raise HTTPException(status_code=404, detail="CenterAdmin not found")
         center_id = str(center_admin.center_id)
     elif role == "member":
-        result = await session.execute(
-            select(Member).where(Member.id == current_user["user_id"])
-        )
-        member = result.scalar_one_or_none()
-        if not member:
-            raise HTTPException(status_code=404, detail="Member not found")
-        center_id = str(member.home_center_id)
+        if not center_id:
+            result = await session.execute(
+                select(Member).where(Member.id == current_user["user_id"])
+            )
+            member = result.scalar_one_or_none()
+            if not member:
+                raise HTTPException(status_code=404, detail="Member not found")
+            center_id = str(member.home_center_id)
+        # else: use provided center_id
     else:
         raise HTTPException(status_code=403, detail="Not authorized")
 

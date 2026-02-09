@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, JSON, Integer, Date
+from sqlalchemy import Column, String, Boolean, ARRAY, Numeric, Text, Enum, DateTime, ForeignKey, JSON, Integer, Date
 from app.core.models.base import AuditMixin, Base
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
@@ -43,6 +43,9 @@ class Center(Base, AuditMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     center_name = Column(String, nullable=False, index=True)
     
+    about = Column(Text, nullable=True)
+    facilities = Column(ARRAY(Text), nullable=True)
+
     # Foreign keys to settings schema
     center_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.center_categories.id"), nullable=True)
     address_id = Column(UUID(as_uuid=True), ForeignKey("settings.address.id"), nullable=True)

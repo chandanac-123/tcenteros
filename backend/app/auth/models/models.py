@@ -106,7 +106,7 @@ class Employee(User):
     specialization = Column(String)
     experience_years = Column(Integer)
     salary = Column(Numeric(10, 2))
-    joining_date = Column(DateTime, nullable=True, default=datetime.utcnow)
+    joining_date = Column(DateTime, nullable=True)
     attendance_marking_allowed = Column(Boolean, default=False, nullable=False)
     qualification = Column(String, nullable=True)
 
