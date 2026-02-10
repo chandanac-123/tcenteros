@@ -38,3 +38,11 @@ export const categoryValidationSchema = Yup.object().shape({
       value => !value || value.size <= 2 * 1024 * 1024
     )
 })
+
+export const employeeValidationSchema = Yup.object().shape({
+  full_name: Yup.string().required('Enter full name'),
+  email: Yup.string().required('Enter email'),
+  mobile: Yup.string().required('Enter mobile number'),
+  password: Yup.string().required('Enter password'),
+  designation_id: Yup.string().required('Enter designation category'),
+})

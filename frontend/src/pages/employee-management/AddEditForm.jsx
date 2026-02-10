@@ -9,60 +9,70 @@ import AddCategory from './AddCategory'
 import {
   useCategoriesQuery,
   useCreateEmployeeMutation,
-  useUpdateEmployeeMutation
+  useUpdateEmployeeMutation,
+  useEmployeeGetByIdQuery
 } from '@api-queries/employee-management/Query'
 import InputFile from '@common/CustomeFileUpload'
+import { useAuthStore } from '@store/authStore'
+import { useFormik } from 'formik'
+import { employeeValidationSchema } from '@utils/validations'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
+  const state = useAuthStore.getState()
   const { data, isFetching } = useCategoriesQuery()
+  const { data: employeeData, isFetching: isEmployeeFetching } =
+    useEmployeeGetByIdQuery(id)
+  //   console.log('employeeData: ', employeeData)
   const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateCategory, isPending: updatePending } =
     useUpdateEmployeeMutation()
   const [categoryOpen, setCategoryOpen] = useState(false)
-  const [category, setCategory] = useState()
-  const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    mobile: '',
-    qualification: '',
-    experience: '',
-    country: '',
-    state: '',
-    city: '',
-    pin: '',
-    address: '',
-    password: '',
-    designation_id: '',
-    center_id: 'ee8fa07d-a766-415e-b131-ff897d41c538',
-    joining_date: '2026-02-10'
-  })
+  //   console.log('state?.auth?.center_id: ', state?.auth?.center_id)
 
-  const handleSubmit = async e => {
-    e.preventDefault()
-    // Build FormData for file upload and fields
-    const formData = new FormData()
-    // Add all fields from formData
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value)
-      }
-    })
-    // Add selected category (designation_id)
-    if (category) {
-      formData.set('designation_id', category)
-    }
-    try {
-      if (id) {
-        await updateCategory({ id, ...formData, designation_id: category })
-      } else {
-        await createCategory(formData)
-      }
-      closeModal()
-    } catch (err) {}
+  const initialValues = {
+    full_name: employeeData?.full_name || '',
+    email: employeeData?.email || '',
+    mobile: employeeData?.mobile || '',
+    qualification: employeeData?.qualification || '',
+    experience: employeeData?.experience || '',
+    country: employeeData?.country || '',
+    state: employeeData?.state || '',
+    city: employeeData?.city || '',
+    pin: employeeData?.pin || '',
+    address: employeeData?.address || '',
+    password: '',
+    designation_id: employeeData?.designation_id || '',
+    center_id: state?.auth?.center_id || '',
+    joining_date: employeeData?.joining_date || '2026-02-10',
+    document: null
   }
 
+  const formik = useFormik({
+    initialValues,
+    validationSchema: employeeValidationSchema,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      const fd = new FormData()
+      Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          fd.append(key, value)
+        }
+      })
+      try {
+        if (id) {
+          await updateCategory({ id, ...values })
+        } else {
+          await createCategory(fd)
+        }
+        closeModal()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
+
   const handleSelect = id => {
-    setCategory(id)
+    formik.setFieldValue('designation_id', id)
   }
 
   return (
@@ -72,7 +82,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
         onOpenChange={setOpen}
         header={id ? 'Edit Employee' : 'Create Employee'}
       >
-        <form className='space-y-2' onSubmit={handleSubmit}>
+        <form className='space-y-2' onSubmit={formik.handleSubmit}>
           <span>Select Category</span>
           <div className='w-full'>
             <div className='grid grid-cols-2 md:grid-cols-5 gap-2'>
@@ -80,19 +90,23 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 <SelectCategory
                   key={item.id}
                   item={item}
-                  selected={category === item.id}
+                  selected={formik.values.designation_id === item.id}
                   onSelect={() => handleSelect(item.id)}
                 />
               ))}
-              <label
-                onClick={() => setCategoryOpen(true)}
-                className='flex flex-col items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
-              >
-                <Plus className='w-6 h-6 text-secondary' />
-                <span className='flex-1 text-sm text-secondary'>
-                  Add Designation
-                </span>
-              </label>
+              {id ? (
+                ''
+              ) : (
+                <label
+                  onClick={() => setCategoryOpen(true)}
+                  className='flex flex-col items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
+                >
+                  <Plus className='w-6 h-6 text-secondary' />
+                  <span className='flex-1 text-sm text-secondary'>
+                    Add Designation
+                  </span>
+                </label>
+              )}
             </div>
           </div>
 
@@ -101,10 +115,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Full Name'
                 name='full_name'
-                value={formData.full_name}
-                onChange={e =>
-                  setFormData({ ...formData, full_name: e.target.value })
-                }
+                value={formik.values.full_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.full_name && formik.errors.full_name}
                 placeholder='Enter Your Full Name'
               />
             </div>
@@ -112,10 +126,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Email ID'
                 name='email'
-                value={formData.email}
-                onChange={e =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.email && formik.errors.email}
                 placeholder='Enter Your Email ID'
               />
             </div>
@@ -125,10 +139,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Mobile Number'
                 name='mobile'
-                value={formData.mobile}
-                onChange={e =>
-                  setFormData({ ...formData, mobile: e.target.value })
-                }
+                value={formik.values.mobile}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.mobile && formik.errors.mobile}
                 placeholder='Enter Your Mobile Number'
               />
             </div>
@@ -136,10 +150,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Qualification'
                 name='qualification'
-                value={formData.qualification}
-                onChange={e =>
-                  setFormData({ ...formData, qualification: e.target.value })
-                }
+                value={formik.values.qualification}
+                onChange={formik.handleChange}
                 placeholder='Enter Your Qualification'
               />
             </div>
@@ -149,22 +161,17 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Total Experience'
                 name='experience'
-                value={formData.experience}
-                onChange={e =>
-                  setFormData({ ...formData, experience: e.target.value })
-                }
-                placeholder='Enter Your Experience'
+                type='number'
+                value={formik.values.experience}
+                onChange={formik.handleChange}
               />
             </div>
             <div className='flex-1'>
               <Input
                 label='Country'
                 name='country'
-                value={formData.country}
-                onChange={e =>
-                  setFormData({ ...formData, country: e.target.value })
-                }
-                placeholder='Select Country'
+                value={formik.values.country}
+                onChange={formik.handleChange}
               />
             </div>
           </div>
@@ -173,22 +180,16 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='State'
                 name='state'
-                value={formData.state}
-                onChange={e =>
-                  setFormData({ ...formData, state: e.target.value })
-                }
-                placeholder='Select State'
+                value={formik.values.state}
+                onChange={formik.handleChange}
               />
             </div>
             <div className='flex-1'>
               <Input
                 label='City'
                 name='city'
-                value={formData.city}
-                onChange={e =>
-                  setFormData({ ...formData, city: e.target.value })
-                }
-                placeholder='Select City'
+                value={formik.values.city}
+                onChange={formik.handleChange}
               />
             </div>
           </div>
@@ -197,22 +198,16 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Pin'
                 name='pin'
-                value={formData.pin}
-                onChange={e =>
-                  setFormData({ ...formData, pin: e.target.value })
-                }
-                placeholder='Enter PIN'
+                value={formik.values.pin}
+                onChange={formik.handleChange}
               />
             </div>
             <div className='flex-1'>
               <Input
                 label='Address'
                 name='address'
-                value={formData.address}
-                onChange={e =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder='Enter your Address'
+                value={formik.values.address}
+                onChange={formik.handleChange}
               />
             </div>
           </div>
@@ -221,11 +216,11 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Password'
                 name='password'
-                value={formData.password}
-                onChange={e =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                placeholder='Enter Your Password'
+                type='password'
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.password && formik.errors.password}
               />
             </div>
             <div className='flex-1'>
@@ -233,9 +228,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Upload Image'
                 name='document'
                 onChange={e => {
-                  formik.setFieldValue('document', e.target.value) // value is File
-                  formik.setFieldTouched('document', true, false)
-                  formik.validateField('document') // <-- Add this line
+                  formik.setFieldValue('document', e.currentTarget.files[0])
                 }}
               />
             </div>
@@ -245,10 +238,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <CustomeSelect
                 label='Choose Center'
                 name='center_id'
-                value={formData.center_id}
-                onChange={e =>
-                  setFormData({ ...formData, center_id: e.target.value })
-                }
+                value={formik.values.center_id}
+                onChange={formik.handleChange}
                 placeholder='Choose Center'
               />
             </div>
@@ -256,11 +247,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Joining Date'
                 name='joining_date'
-                value={formData.joining_date}
-                onChange={e =>
-                  setFormData({ ...formData, joining_date: e.target.value })
-                }
-                placeholder='Enter your Joining Date'
+                value={formik.values.joining_date}
+                onChange={formik.handleChange}
               />
             </div>
           </div>
@@ -271,6 +259,11 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             </Button>
           </div>
         </form>
+        {/* {process.env.NODE_ENV === 'development' && (
+          <pre className='text-xs text-red-500'>
+            {JSON.stringify(formik.errors, null, 2)}
+          </pre>
+        )} */}
       </CustomeModal>
       <AddCategory
         categoryOpen={categoryOpen}

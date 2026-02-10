@@ -8,7 +8,8 @@ import {
   getAllEmployees,
   updateEmployee,
   getCategoryById,
-  updateCategory
+  updateCategory,
+  getEmployeeById
 } from './Urls'
 
 export const useCategoriesQuery = () => {
@@ -113,5 +114,15 @@ export const useDeleteEmployeeMutation = () => {
     onError: err => {
       return err
     }
+  })
+}
+
+
+export const useEmployeeGetByIdQuery = id => {
+  return useQuery({
+    queryKey: ['employees', id],
+    queryFn: () => getEmployeeById(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

@@ -23,20 +23,21 @@ export const CreateEmployeeCategoriesApiCall = details =>
   axiosInstance.post('/settings/superadmin/designation', details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
-  export const UpdateEmployeeCategoriesApiCall = (details, id) =>
+export const UpdateEmployeeCategoriesApiCall = (details, id) =>
   axiosInstance.put(`/settings/superadmin/designation/${id}`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
-  export const DeleteEmployeeCategoriesApiCall = id =>
+export const DeleteEmployeeCategoriesApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/designation/${id}`)
-
-  export const GetEmployeeCategoriesByIdApiCall = id =>
+export const GetEmployeeCategoriesByIdApiCall = id =>
   axiosInstance.get(`/settings/superadmin/designation/${id}`)
 
 export const getEmployeeApiCall = () => axiosInstance.get('/auth/employee')
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)
 export const updateEmployeeApiCall = (details, id) =>
-  axiosInstance.put(`/auth/employee/employee_id=${id}`, details)
+  axiosInstance.put(`/auth/employee/${id}`, details)
 export const deleteEmployeeApiCall = id =>
-  axiosInstance.delete(`/auth/employee/employee_id=${id}`)
+  axiosInstance.delete(`/auth/employee/${id}`)
+export const GetEmployeeByIdApiCall = id =>
+  axiosInstance.get(`/auth/employee/${id}`)

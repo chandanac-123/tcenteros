@@ -11,18 +11,12 @@ const EmployeeManagement = () => {
     search: ''
   })
   const {data, isFetching} = useEmployeeQuery()
-  const [editId, setEditId] = useState(2)
-  const [open, setOpen] = useState(false)
 
   const employeeOrCenter = [
     { id: 1, name: 'Center User' },
     { id: 2, name: 'Employee' }
   ]
 
-  const handleOpen = () => {
-    setEditId(1)
-    setOpen(true)
-  }
 
   return (
     <ContentLayout>
@@ -72,9 +66,6 @@ const EmployeeManagement = () => {
 
       <EmployeeTable
         data={data}
-        setOpen={setOpen}
-        handleOpen={handleOpen}
-        open={open}
         tableParams={tableParams}
         setTableParams={setTableParams}
       />

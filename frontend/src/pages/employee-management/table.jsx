@@ -10,19 +10,14 @@ import ViewForm from './View'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 
-const EmployeeTable = ({
-  data,
-  pagination,
-  tableParams,
-  setTableParams,
-  open,
-  setOpen,
-  handleOpen
-}) => {
+const EmployeeTable = ({ data, pagination, tableParams, setTableParams }) => {
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [editopen, setEditOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-  const { mutate: deleteEmployee } = useDeleteEmployeeMutation()
+  const [editId, setEditId] = useState(null)
+  const [viewId, setViewId] = useState(null)
+  const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
 
   const handleDelete = () => {
     if (deleteId) {
@@ -72,10 +67,20 @@ const EmployeeTable = ({
               row.original.status == 'Active Member' ? 'active' : 'inactive'
             }
           />
-          <button onClick={() => setViewOpen(true)}>
+          <button
+            onClick={() => {
+              setViewId(row.original.id)
+              setViewOpen(true)
+            }}
+          >
             <img src={view} alt='view' />
           </button>
-          <button onClick={handleOpen}>
+          <button
+            onClick={() => {
+              setEditId(row.original.id)
+              setEditOpen(true)
+            }}
+          >
             <img src={edit} alt='edit' />
           </button>
           <button
@@ -106,12 +111,12 @@ const EmployeeTable = ({
         paginationVisibile={true}
       />
       <AddEditForm
-        id={1}
-        open={open}
-        setOpen={setOpen}
-        closeModal={() => setOpen(false)}
+        id={editId}
+        open={editopen}
+        setOpen={setEditOpen}
+        closeModal={() => setEditOpen(false)}
       />
-      <ViewForm open={viewopen} setOpen={setViewOpen} />
+      <ViewForm id={viewId} open={viewopen} setOpen={setViewOpen} />
       <DeleteModal
         open={deleteOpen}
         setOpen={setDeleteOpen}
