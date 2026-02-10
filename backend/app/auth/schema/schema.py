@@ -38,15 +38,24 @@ class MemberLoginResponse(BaseModel):
 
 
 
-class MemberProfileUpdate(BaseModel):
-    username: str = None
-    mobile: str = None
-    profile_photo: str = None
-    date_of_birth: str = None  # "YYYY-MM-DD"
-    blood_group: str = None
-    blocked_reason: str = None
-    time_slot_id: str = None
-    member_status: MemberStatusEnum = None
+class AddressOut(BaseModel):
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    pin: Optional[str] = None
+
+class MemberProfileOut(BaseModel):
+    id: str
+    email: EmailStr
+    full_name: Optional[str] = None
+    mobile: str
+    profile_photo: Optional[str] = None
+    address: Optional[AddressOut] = None
+    member_status: str
+
+    class Config:
+        orm_mode = True
 
 
 #-------------------------------

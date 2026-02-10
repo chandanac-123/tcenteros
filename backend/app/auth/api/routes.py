@@ -3,13 +3,13 @@ from fastapi import APIRouter, Query , UploadFile, File, HTTPException, Depends,
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
-from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, MemberProfileUpdate
+from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.auth.models.models import User
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
-from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate
+from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, AddressOut
 from app.core.dependencies import superadmin_required
 from app.auth.models.models import Member, Employee
 from app.center.models.models import Center
@@ -183,71 +183,131 @@ async def upload_profile_photo(
 
 
 #1. Member Profile Update (Self)
-@router.put("/member/profile")
+@router.put("/member/profile", response_model=MemberProfileOut)
 async def update_member_profile(
-    payload: MemberProfileUpdate,
+    full_name: Optional[str] = Form(None),
+    email: Optional[EmailStr] = Form(None),
+    city: Optional[str] = Form(None),
+    profile_photo: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session),
     current_member=Depends(member_required)
 ):
     member = await session.get(Member, current_member["user_id"])
     if not member:
         raise HTTPException(404, "Member not found")
-    for field, value in payload.dict(exclude_unset=True).items():
-        if value is not None:
-            # Convert date_of_birth string to date object if needed
-            if field == "date_of_birth" and isinstance(value, str):
-                value = datetime.strptime(value, "%Y-%m-%d").date()
-            setattr(member, field, value)
-    member.updated_at = datetime.utcnow()
-    await session.commit()
-    await session.refresh(member)
-    return {
-        "id": str(member.id),
-        "email": member.email,
-        "username": member.username,
-        "mobile": member.mobile,
-        "profile_photo": member.profile_photo,
-        "date_of_birth": member.date_of_birth,
-        "blood_group": member.blood_group,
-        "blocked_reason": member.blocked_reason,
-        "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
-        "member_status": member.member_status.value
-    }
+
+    updated = False
+
+    if full_name is not None:
+        member.full_name = full_name
+        updated = True
+    if email is not None:
+        member.email = email
+        updated = True
+    if profile_photo:
+        file_bytes = await profile_photo.read()
+        ext = profile_photo.filename.split('.')[-1]
+        key = f"uploads/profile_photos/{member.id}_{uuid.uuid4()}.{ext}"
+        upload_file(file_bytes, key, content_type=profile_photo.content_type)
+        member.profile_photo = get_file_url(key)
+        updated = True
+
+    address_dict = None
+    if city is not None:
+        if member.address_id:
+            address = await session.get(Address, member.address_id)
+            if address:
+                address.city = city
+                address.updated_at = datetime.utcnow()
+                address_dict = {
+                    "address": address.address_line_1,
+                    "city": address.city,
+                    "state": address.state,
+                    "country": address.country,
+                    "pin": address.postal_code,
+                }
+        else:
+            new_addr = Address(
+                id=uuid4(),
+                city=city,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            session.add(new_addr)
+            await session.flush()
+            member.address_id = new_addr.id
+            address_dict = {
+                "address": new_addr.address_line_1,
+                "city": new_addr.city,
+                "state": new_addr.state,
+                "country": new_addr.country,
+                "pin": new_addr.postal_code,
+            }
+        updated = True
+
+    if updated:
+        member.updated_at = datetime.utcnow()
+        await session.commit()
+        await session.refresh(member)
+
+    if not address_dict and member.address_id:
+        address = await session.get(Address, member.address_id)
+        if address:
+            address_dict = {
+                "address": address.address_line_1,
+                "city": address.city,
+                "state": address.state,
+                "country": address.country,
+                "pin": address.postal_code,
+            }
+
+    return MemberProfileOut(
+        id=str(member.id),
+        email=member.email,
+        full_name=member.full_name,
+        mobile=member.mobile,
+        profile_photo=member.profile_photo,
+        address=address_dict,
+        member_status=member.member_status.value,
+    )
+
+
 
 #-------------------------------
 #employee management endpoints
 #-------------------------------
 
-#2. Get Profile by Member ID (Member or CenterAdmin)
-@router.get("/member/profile/{member_id}")
-async def get_member_profile(
-    member_id: str,
+#2. Get Profile 
+@router.get("/member/profile", response_model=MemberProfileOut)
+async def get_own_member_profile(
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_member=Depends(member_required)
 ):
-    member = await session.get(Member, member_id)
+    member = await session.get(Member, current_member["user_id"])
     if not member:
         raise HTTPException(404, "Member not found")
-    # Only allow access if current user is the member or a centeradmin
-    if current_user["role"] not in ["member", "centeradmin"]:
-        raise HTTPException(403, "Not authorized")
-    if current_user["role"] == "member" and current_user["user_id"] != member_id:
-        raise HTTPException(403, "Members can only access their own profile")
-    return {
-        "id": str(member.id),
-        "email": member.email,
-        "username": member.username,
-        "mobile": member.mobile,
-        "profile_photo": member.profile_photo,
-        "date_of_birth": member.date_of_birth,
-        "blood_group": member.blood_group,
-        "blocked_reason": member.blocked_reason,
-        "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
-        "member_status": member.member_status.value,
-        "home_center_id": str(member.home_center_id) if member.home_center_id else None,
-        "network_center_id": str(member.network_center_id) if member.network_center_id else None,
-        "network_eligible": member.network_eligible
-    }
+
+    address_dict = None
+    if member.address_id:
+        address = await session.get(Address, member.address_id)
+        if address:
+            address_dict = {
+                "address": address.address_line_1,
+                "city": address.city,
+                "state": address.state,
+                "country": address.country,
+                "pin": address.postal_code,
+            }
+
+    return MemberProfileOut(
+        id=str(member.id),
+        email=member.email,
+        full_name=member.full_name,
+        mobile=member.mobile,
+        profile_photo=member.profile_photo,
+        address=address_dict,
+        member_status=member.member_status.value,
+    )
 
 #-----------------------------
 #employee management endpoints (CRUD)
