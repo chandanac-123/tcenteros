@@ -45,6 +45,12 @@ class AddressOut(BaseModel):
     country: Optional[str] = None
     pin: Optional[str] = None
 
+class TimeSlotOut(BaseModel):
+    id: str
+    start_time: str
+    end_time: str
+    slot_capacity: int
+
 class MemberProfileOut(BaseModel):
     id: str
     email: EmailStr
@@ -53,9 +59,9 @@ class MemberProfileOut(BaseModel):
     profile_photo: Optional[str] = None
     address: Optional[AddressOut] = None
     member_status: str
-
-    class Config:
-        orm_mode = True
+    city: Optional[str] = None
+    time_slot_id: Optional[str] = None
+    time_slot: Optional[TimeSlotOut] = None
 
 
 #-------------------------------

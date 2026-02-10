@@ -9,10 +9,10 @@ from sqlalchemy.future import select
 from app.auth.models.models import User
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
-from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, AddressOut
+from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, EmployeeOut, TimeSlotOut, AddressOut
 from app.core.dependencies import superadmin_required
 from app.auth.models.models import Member, Employee
-from app.center.models.models import Center
+from app.center.models.models import Center, CenterTimeSlot
 from datetime import datetime
 from uuid import uuid4
 from app.auth.models.models import MemberStatusEnum
@@ -187,7 +187,6 @@ async def upload_profile_photo(
 async def update_member_profile(
     full_name: Optional[str] = Form(None),
     email: Optional[EmailStr] = Form(None),
-    city: Optional[str] = Form(None),
     profile_photo: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session),
     current_member=Depends(member_required)
@@ -212,54 +211,44 @@ async def update_member_profile(
         member.profile_photo = get_file_url(key)
         updated = True
 
-    address_dict = None
-    if city is not None:
-        if member.address_id:
-            address = await session.get(Address, member.address_id)
-            if address:
-                address.city = city
-                address.updated_at = datetime.utcnow()
-                address_dict = {
-                    "address": address.address_line_1,
-                    "city": address.city,
-                    "state": address.state,
-                    "country": address.country,
-                    "pin": address.postal_code,
-                }
-        else:
-            new_addr = Address(
-                id=uuid4(),
-                city=city,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
-            session.add(new_addr)
-            await session.flush()
-            member.address_id = new_addr.id
-            address_dict = {
-                "address": new_addr.address_line_1,
-                "city": new_addr.city,
-                "state": new_addr.state,
-                "country": new_addr.country,
-                "pin": new_addr.postal_code,
-            }
-        updated = True
-
     if updated:
         member.updated_at = datetime.utcnow()
         await session.commit()
         await session.refresh(member)
 
-    if not address_dict and member.address_id:
+    # Get center city from center's address
+    center_city = None
+    if member.home_center_id:
+        center = await session.get(Center, member.home_center_id)
+        if center and center.address_id:
+            center_address = await session.get(Address, center.address_id)
+            if center_address:
+                center_city = center_address.city
+
+    # Get time slot details
+    time_slot_dict = None
+    if member.time_slot_id:
+        time_slot = await session.get(CenterTimeSlot, member.time_slot_id)
+        if time_slot:
+            time_slot_dict = TimeSlotOut(
+                id=str(time_slot.id),
+                start_time=time_slot.start_time,
+                end_time=time_slot.end_time,
+                slot_capacity=time_slot.slot_capacity
+            )
+
+    # Member's address (optional, for completeness)
+    address_dict = None
+    if member.address_id:
         address = await session.get(Address, member.address_id)
         if address:
-            address_dict = {
-                "address": address.address_line_1,
-                "city": address.city,
-                "state": address.state,
-                "country": address.country,
-                "pin": address.postal_code,
-            }
+            address_dict = AddressOut(
+                address=address.address_line_1,
+                city=address.city,
+                state=address.state,
+                country=address.country,
+                pin=address.postal_code,
+            )
 
     return MemberProfileOut(
         id=str(member.id),
@@ -269,13 +258,12 @@ async def update_member_profile(
         profile_photo=member.profile_photo,
         address=address_dict,
         member_status=member.member_status.value,
+        city=center_city,  # This is the center's city
+        time_slot_id=str(member.time_slot_id) if member.time_slot_id else None,
+        time_slot=time_slot_dict,
     )
 
 
-
-#-------------------------------
-#employee management endpoints
-#-------------------------------
 
 #2. Get Profile 
 @router.get("/member/profile", response_model=MemberProfileOut)
@@ -287,17 +275,39 @@ async def get_own_member_profile(
     if not member:
         raise HTTPException(404, "Member not found")
 
+    # Get center city from center's address
+    center_city = None
+    if member.home_center_id:
+        center = await session.get(Center, member.home_center_id)
+        if center and center.address_id:
+            center_address = await session.get(Address, center.address_id)
+            if center_address:
+                center_city = center_address.city
+
+    # Get time slot details
+    time_slot_dict = None
+    if member.time_slot_id:
+        time_slot = await session.get(CenterTimeSlot, member.time_slot_id)
+        if time_slot:
+            time_slot_dict = TimeSlotOut(
+                id=str(time_slot.id),
+                start_time=time_slot.start_time,
+                end_time=time_slot.end_time,
+                slot_capacity=time_slot.slot_capacity
+            )
+
+    # Member's address (optional, for completeness)
     address_dict = None
     if member.address_id:
         address = await session.get(Address, member.address_id)
         if address:
-            address_dict = {
-                "address": address.address_line_1,
-                "city": address.city,
-                "state": address.state,
-                "country": address.country,
-                "pin": address.postal_code,
-            }
+            address_dict = AddressOut(
+                address=address.address_line_1,
+                city=address.city,
+                state=address.state,
+                country=address.country,
+                pin=address.postal_code,
+            )
 
     return MemberProfileOut(
         id=str(member.id),
@@ -307,6 +317,9 @@ async def get_own_member_profile(
         profile_photo=member.profile_photo,
         address=address_dict,
         member_status=member.member_status.value,
+        city=center_city,
+        time_slot_id=str(member.time_slot_id) if member.time_slot_id else None,
+        time_slot=time_slot_dict,
     )
 
 #-----------------------------
