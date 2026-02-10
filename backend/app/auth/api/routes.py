@@ -183,7 +183,7 @@ async def upload_profile_photo(
 
 
 #1. Member Profile Update (Self)
-@router.put("/member/profile", response_model=MemberProfileOut)
+@router.post("/member/profile", response_model=MemberProfileOut)
 async def update_member_profile(
     full_name: Optional[str] = Form(None),
     email: Optional[EmailStr] = Form(None),
