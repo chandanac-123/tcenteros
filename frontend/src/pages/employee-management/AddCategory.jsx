@@ -2,25 +2,40 @@ import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import InputFile from '@common/CustomeFileUpload'
 import CustomeModal from '@common/CustomeModal'
-import { useCreateCategoryMutation } from '@api-queries/employee-management/Query'
+import {
+  useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useCategoriesGetByIdQuery
+} from '@api-queries/employee-management/Query'
 import React from 'react'
 import { useFormik } from 'formik'
 import { categoryValidationSchema } from '@utils/validations'
 
-const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
+const AddCategory = ({ id, categoryOpen, setCategoryOpen }) => {
+  const { data, isFetching } = useCategoriesGetByIdQuery(id)
   const { mutateAsync: createCategory, isPending } = useCreateCategoryMutation()
+  const { mutateAsync: updateCategory, isPending: isUpdating } =
+    useUpdateCategoryMutation()
 
-  const initialValues = { name: '', image_url: null }
+  const initialValues = {
+    name: data?.name || '',
+    image_url: data?.image_url || null
+  }
 
   const formik = useFormik({
     initialValues,
+    enableReinitialize: true,
     validationSchema: categoryValidationSchema, // Uncomment if you have a schema
     onSubmit: async (values, { resetForm }) => {
       const formData = new FormData()
       formData.append('name', values.name)
       if (values.image_url) formData.append('image', values.image_url)
       try {
-        await createCategory(formData)
+        if (id) {
+          await updateCategory({ id, data: formData })
+        } else {
+          await createCategory(formData)
+        }
         setCategoryOpen(false)
         resetForm()
       } catch (error) {
@@ -33,7 +48,7 @@ const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
     <CustomeModal
       open={categoryOpen}
       onOpenChange={setCategoryOpen}
-      header='Create New Designation'
+      header={id ? 'Edit Designation' : 'Create New Designation'}
     >
       <form
         className='space-y-4 w-96 max-w-md sm:max-w-lg md:max-w-xl px-2 sm:px-4'
@@ -66,8 +81,12 @@ const AddCategory = ({ categoryOpen, setCategoryOpen }) => {
         />
 
         <div className='flex justify-end'>
-          <Button size='addbutton' type='submit' disabled={isPending}>
-            {isPending ? 'Adding...' : 'Add Designation'}
+          <Button
+            size='addbutton'
+            type='submit'
+            disabled={isPending || isUpdating}
+          >
+            {id ? 'Update Designation' : 'Add Designation'}
           </Button>
         </div>
       </form>

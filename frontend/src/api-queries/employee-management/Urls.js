@@ -2,9 +2,12 @@ import {
   createEmployeeApiCall,
   CreateEmployeeCategoriesApiCall,
   deleteEmployeeApiCall,
+  DeleteEmployeeCategoriesApiCall,
   getEmployeeApiCall,
   getEmployeeCategoriesApiCall,
-  updateEmployeeApiCall
+  updateEmployeeApiCall,
+  UpdateEmployeeCategoriesApiCall,
+  GetEmployeeCategoriesByIdApiCall
 } from '../../api'
 
 export const getAllCategories = async () => {
@@ -19,6 +22,32 @@ export const getAllCategories = async () => {
 export const createCategory = async details => {
   try {
     const response = await CreateEmployeeCategoriesApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateCategory = async (details, id) => {
+  try {
+    const response = await UpdateEmployeeCategoriesApiCall(details, id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+export const deleteCategory = async id => {
+  try {
+    const response = await DeleteEmployeeCategoriesApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getCategoryById = async id => {
+  try {
+    const response = await GetEmployeeCategoriesByIdApiCall(id)
     return response.data
   } catch (error) {
     throw error

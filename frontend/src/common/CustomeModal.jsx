@@ -17,7 +17,7 @@ const CustomeModal = ({ label, header, children, open, onOpenChange }) => {
         </DialogTrigger>
       )}
 
-      <DialogContent className='w-auto'>
+      <DialogContent className='w-auto max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>{header}</DialogTitle>
         </DialogHeader>

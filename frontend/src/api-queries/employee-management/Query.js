@@ -2,10 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createCategory,
   createEmployee,
+  deleteCategory,
   deleteEmployee,
   getAllCategories,
   getAllEmployees,
-  updateEmployee
+  updateEmployee,
+  getCategoryById,
+  updateCategory
 } from './Urls'
 
 export const useCategoriesQuery = () => {
@@ -27,6 +30,41 @@ export const useCreateCategoryMutation = () => {
     onError: err => {
       return err
     }
+  })
+}
+
+export const useUpdateCategoryMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => updateCategory(data, id),
+    onSuccess: async data => {
+      query.invalidateQueries('categories')
+    },
+    onError: err => {
+      return err
+    }
+  })
+}
+
+export const useDeleteCategoryMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: id => deleteCategory(id),
+    onSuccess: async data => {
+      query.invalidateQueries('categories')
+    },
+    onError: err => {
+      return err
+    }
+  })
+}
+
+export const useCategoriesGetByIdQuery = id => {
+  return useQuery({
+    queryKey: ['categories', id],
+    queryFn: () => getCategoryById(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
 

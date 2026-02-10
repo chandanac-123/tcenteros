@@ -11,6 +11,7 @@ import {
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation
 } from '@api-queries/employee-management/Query'
+import InputFile from '@common/CustomeFileUpload'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
@@ -20,8 +21,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [category, setCategory] = useState()
   const [formData, setFormData] = useState({
-    category: '',
-    name: '',
+    full_name: '',
     email: '',
     mobile: '',
     qualification: '',
@@ -31,7 +31,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     city: '',
     pin: '',
     address: '',
-    password: ''
+    password: '',
+    designation_id: '',
+    center_id: '',
+    joining_date: ''
   })
 
   const handleSubmit = async e => {
@@ -85,7 +88,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             <div className='flex-1'>
               <Input
                 label='Full Name'
-                name='name'
+                name='full_name'
+                value={formData.full_name}
+                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                 placeholder='Enter Your Full Name'
               />
             </div>
@@ -93,6 +98,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <Input
                 label='Email ID'
                 name='email'
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
                 placeholder='Enter Your Email ID'
               />
             </div>
@@ -100,15 +107,19 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
           <div className='flex gap-4'>
             <div className='flex-1'>
               <Input
-                label=' Mobile Number'
-                name='name'
+                label='Mobile Number'
+                name='mobile'
+                value={formData.mobile}
+                onChange={e => setFormData({ ...formData, mobile: e.target.value })}
                 placeholder='Enter Your Mobile Number'
               />
             </div>
             <div className='flex-1'>
               <Input
-                label=' Qualification'
-                name='name'
+                label='Qualification'
+                name='qualification'
+                value={formData.qualification}
+                onChange={e => setFormData({ ...formData, qualification: e.target.value })}
                 placeholder='Enter Your Qualification'
               />
             </div>
@@ -116,44 +127,101 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
           <div className='flex gap-4'>
             <div className='flex-1'>
               <Input
-                label=' Total Experience '
-                name='name'
-                placeholder='Enter Your Experience '
+                label='Total Experience'
+                name='experience'
+                value={formData.experience}
+                onChange={e => setFormData({ ...formData, experience: e.target.value })}
+                placeholder='Enter Your Experience'
               />
             </div>
             <div className='flex-1'>
-              <CustomeSelect
-                label=' Country'
-                name='name'
-                placeholder='Select'
+              <Input
+                label='Country'
+                name='country'
+                value={formData.country}
+                onChange={e => setFormData({ ...formData, country: e.target.value })}
+                placeholder='Select Country'
               />
             </div>
           </div>
           <div className='flex gap-4'>
             <div className='flex-1'>
-              <CustomeSelect label=' State' name='name' placeholder='Select' />
+              <Input
+                label='State'
+                name='state'
+                value={formData.state}
+                onChange={e => setFormData({ ...formData, state: e.target.value })}
+                placeholder='Select State'
+              />
             </div>
             <div className='flex-1'>
-              <CustomeSelect label=' City' name='name' placeholder='Select' />
+              <Input
+                label='City'
+                name='city'
+                value={formData.city}
+                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                placeholder='Select City'
+              />
             </div>
           </div>
           <div className='flex gap-4 '>
             <div className='flex-1'>
-              <Input label=' Pin' name='name' placeholder='Enter PIN' />
+              <Input
+                label='Pin'
+                name='pin'
+                value={formData.pin}
+                onChange={e => setFormData({ ...formData, pin: e.target.value })}
+                placeholder='Enter PIN'
+              />
             </div>
             <div className='flex-1'>
               <Input
-                label=' Address'
-                name='name'
+                label='Address'
+                name='address'
+                value={formData.address}
+                onChange={e => setFormData({ ...formData, address: e.target.value })}
                 placeholder='Enter your Address'
               />
             </div>
           </div>
-          <Input
-            label=' Password'
-            name='name'
-            placeholder='Enter Your Password'
-          />
+          <div className='flex gap-4 '>
+            <div className='flex-1'>
+              <Input
+                label='Password'
+                name='password'
+                value={formData.password}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                placeholder='Enter Your Password'
+              />
+            </div>
+            <div className='flex-1'>
+              <InputFile
+                label='Upload Document'
+                name='document'
+                // Add file handler if needed
+              />
+            </div>
+          </div>
+          <div className='flex gap-4 '>
+            <div className='flex-1'>
+              <CustomeSelect
+                label='Choose Center'
+                name='center_id'
+                value={formData.center_id}
+                onChange={e => setFormData({ ...formData, center_id: e.target.value })}
+                placeholder='Choose Center'
+              />
+            </div>
+            <div className='flex-1'>
+              <Input
+                label='Joining Date'
+                name='joining_date'
+                value={formData.joining_date}
+                onChange={e => setFormData({ ...formData, joining_date: e.target.value })}
+                placeholder='Enter your Joining Date'
+              />
+            </div>
+          </div>
 
           <div className='flex justify-center mt-4 '>
             <Button size='addbutton' variant='default' type='submit'>

@@ -21,7 +21,16 @@ const EmployeeTable = ({
 }) => {
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
   const { mutate: deleteEmployee } = useDeleteEmployeeMutation()
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteEmployee(deleteId);
+      setDeleteOpen(false);
+      setDeleteId(null);
+    }
+  };
 
   const columns = [
     {
@@ -69,7 +78,10 @@ const EmployeeTable = ({
           <button onClick={handleOpen}>
             <img src={edit} alt='edit' />
           </button>
-          <button onClick={() => setDeleteOpen(true)}>
+          <button onClick={() => {
+            setDeleteId(row.original.id);
+            setDeleteOpen(true);
+          }}>
             <img src={deleteicon} alt='delete' />
           </button>
           <Switch />
@@ -103,6 +115,7 @@ const EmployeeTable = ({
         setOpen={setDeleteOpen}
         header='Delete Employee'
         description='Are you sure you want to delete this employee?'
+        onConfirm={handleDelete}
       />
     </>
   )

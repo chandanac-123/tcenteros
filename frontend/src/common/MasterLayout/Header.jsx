@@ -12,9 +12,11 @@ import CustomeModal from '../CustomeModal'
 import AddEditForm from '../../pages/employee-management/AddEditForm'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
+import { useNavigate } from 'react-router-dom'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
 
   const handleOpen = () => {
     setOpen(true)
@@ -79,7 +81,10 @@ const Header = () => {
                 <Key className='w-5 h-5 text-primary' />
                 Reset Password
               </button>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
+              <button
+                onClick={() => navigate('/settings')}
+                className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
+              >
                 <Settings className='w-5 h-5 text-primary' />
                 Settings
               </button>

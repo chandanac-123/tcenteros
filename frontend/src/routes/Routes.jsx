@@ -57,6 +57,7 @@ import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
 import active_performance from '../assets/sidebar-icons/active-performance.svg' 
 import active_crm from '../assets/sidebar-icons/active-crm.svg' 
 import CreateMembershipForm from '@pages/membership-plan/CreateForm'
+import Settings from '@pages/settings'
 
 
 export const routes = [
@@ -475,6 +476,17 @@ export const routes = [
     icon: performance,
     iconActive: active_performance,
     menubar: true,
+    permission: true
+  },
+  {
+    key: 1,
+    path: '/settings',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Settings',
+    component: Settings,
+    menubar: false,
     permission: true
   }
 ]
