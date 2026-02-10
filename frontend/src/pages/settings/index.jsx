@@ -1,10 +1,11 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
-import { useState } from 'react'
+import { useSettingsTabStore } from '@store/settingsTabStore'
 import { setting_tabs } from '@constants/settingsTabs'
 
 const Settings = () => {
-  const [selected, setSelected] = useState(setting_tabs[0].id)
+  const selected = useSettingsTabStore(state => state.selectedTab)
+  const setSelected = useSettingsTabStore(state => state.setSelectedTab)
   const selectedCategory = setting_tabs?.find(c => c?.id === selected)
 
   return (
