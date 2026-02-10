@@ -27,6 +27,7 @@ from datetime import datetime, date
 from typing import Optional, List
 from pydantic import EmailStr
 from sqlalchemy import  and_
+import logging
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -199,8 +200,9 @@ async def update_member_profile(
 ):  
     if request:
         form = await request.form()
-        print("Incoming form data:", dict(form))
-        print("Headers:", dict(request.headers))
+        logger = logging.getLogger("uvicorn")
+        logger.info("Incoming form data: %s", dict(form))
+        logger.info("Headers: %s", dict(request.headers))
 
     member = await session.get(Member, current_member["user_id"])
     if not member:

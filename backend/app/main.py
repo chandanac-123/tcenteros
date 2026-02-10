@@ -7,6 +7,10 @@ from app.center.api.routes import router as center_router
 from app.membership.api.routes import router as membership_router
 from app.attendance.api.routes import router as attendance_router
 from app.networking.api.routes import router as networking_router
+from app.support.api.routes import router as support_router
+
+
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -50,3 +54,4 @@ app.include_router(center_router, prefix="/api/center", tags=["Center Onboarding
 app.include_router(membership_router, prefix="/api/membership", tags=["Membership"])
 app.include_router(attendance_router, prefix="/api/attendance", tags=["Attendance"])
 app.include_router(networking_router, prefix="/api/networking", tags=["Networking"])
+app.include_router(support_router, prefix="/api/support", tags=["Support"])

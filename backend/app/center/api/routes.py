@@ -494,17 +494,25 @@ async def create_center_location(
     data: CenterLocationCreate,
     session: AsyncSession = Depends(get_async_session)
 ):
+    # Fetch the center
     center = await session.get(Center, data.center_id)
     if not center:
         raise HTTPException(status_code=404, detail="Center not found")
-    address = center.address
+
+    # Fetch the address explicitly
+    if not center.address_id:
+        raise HTTPException(status_code=404, detail="Center address not found")
+    address = await session.get(Address, center.address_id)
     if not address:
         raise HTTPException(status_code=404, detail="Center address not found")
+
+    # Update latitude and longitude
     address.latitude = data.latitude
     address.longitude = data.longitude
     await session.commit()
     await session.refresh(address)
     return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)
+
 
 @router.get("/center-location/{center_id}", response_model=CenterLocationOut)
 async def get_center_location(
