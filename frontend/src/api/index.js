@@ -12,6 +12,10 @@ export const gsteApiCall = id =>
 export const onboardFinalizeApiCall = (details, id) =>
   axiosInstance.post(`/center/billing/onboarding/finalize/${id}`, details)
 
+//Authentication
+export const loginApiCall = details =>
+  axiosInstance.post('/auth/centeradmin/login', details)
+
 // EmployeeManagement
 export const getEmployeeCategoriesApiCall = () =>
   axiosInstance.get('/settings/superadmin/designation')

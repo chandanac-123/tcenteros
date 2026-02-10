@@ -33,15 +33,27 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     address: '',
     password: '',
     designation_id: '',
-    center_id: '',
-    joining_date: ''
+    center_id: 'ee8fa07d-a766-415e-b131-ff897d41c538',
+    joining_date: '2026-02-10'
   })
 
   const handleSubmit = async e => {
     e.preventDefault()
+    // Build FormData for file upload and fields
+    const formData = new FormData()
+    // Add all fields from formData
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value)
+      }
+    })
+    // Add selected category (designation_id)
+    if (category) {
+      formData.set('designation_id', category)
+    }
     try {
       if (id) {
-        await updateCategory({ id, ...formData })
+        await updateCategory({ id, ...formData, designation_id: category })
       } else {
         await createCategory(formData)
       }
@@ -90,7 +102,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Full Name'
                 name='full_name'
                 value={formData.full_name}
-                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, full_name: e.target.value })
+                }
                 placeholder='Enter Your Full Name'
               />
             </div>
@@ -99,7 +113,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Email ID'
                 name='email'
                 value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder='Enter Your Email ID'
               />
             </div>
@@ -110,7 +126,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Mobile Number'
                 name='mobile'
                 value={formData.mobile}
-                onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, mobile: e.target.value })
+                }
                 placeholder='Enter Your Mobile Number'
               />
             </div>
@@ -119,7 +137,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Qualification'
                 name='qualification'
                 value={formData.qualification}
-                onChange={e => setFormData({ ...formData, qualification: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, qualification: e.target.value })
+                }
                 placeholder='Enter Your Qualification'
               />
             </div>
@@ -130,7 +150,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Total Experience'
                 name='experience'
                 value={formData.experience}
-                onChange={e => setFormData({ ...formData, experience: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, experience: e.target.value })
+                }
                 placeholder='Enter Your Experience'
               />
             </div>
@@ -139,7 +161,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Country'
                 name='country'
                 value={formData.country}
-                onChange={e => setFormData({ ...formData, country: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
                 placeholder='Select Country'
               />
             </div>
@@ -150,7 +174,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='State'
                 name='state'
                 value={formData.state}
-                onChange={e => setFormData({ ...formData, state: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
                 placeholder='Select State'
               />
             </div>
@@ -159,7 +185,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='City'
                 name='city'
                 value={formData.city}
-                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
                 placeholder='Select City'
               />
             </div>
@@ -170,7 +198,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Pin'
                 name='pin'
                 value={formData.pin}
-                onChange={e => setFormData({ ...formData, pin: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, pin: e.target.value })
+                }
                 placeholder='Enter PIN'
               />
             </div>
@@ -179,7 +209,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Address'
                 name='address'
                 value={formData.address}
-                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 placeholder='Enter your Address'
               />
             </div>
@@ -190,15 +222,21 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Password'
                 name='password'
                 value={formData.password}
-                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 placeholder='Enter Your Password'
               />
             </div>
             <div className='flex-1'>
               <InputFile
-                label='Upload Document'
+                label='Upload Image'
                 name='document'
-                // Add file handler if needed
+                onChange={e => {
+                  formik.setFieldValue('document', e.target.value) // value is File
+                  formik.setFieldTouched('document', true, false)
+                  formik.validateField('document') // <-- Add this line
+                }}
               />
             </div>
           </div>
@@ -208,7 +246,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Choose Center'
                 name='center_id'
                 value={formData.center_id}
-                onChange={e => setFormData({ ...formData, center_id: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, center_id: e.target.value })
+                }
                 placeholder='Choose Center'
               />
             </div>
@@ -217,7 +257,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Joining Date'
                 name='joining_date'
                 value={formData.joining_date}
-                onChange={e => setFormData({ ...formData, joining_date: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, joining_date: e.target.value })
+                }
                 placeholder='Enter your Joining Date'
               />
             </div>

@@ -26,23 +26,19 @@ const EmployeeTable = ({
 
   const handleDelete = () => {
     if (deleteId) {
-      deleteEmployee(deleteId);
-      setDeleteOpen(false);
-      setDeleteId(null);
+      deleteEmployee(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
     }
-  };
+  }
 
   const columns = [
     {
-      accessorKey: 'firstName',
-      header: 'First Name'
+      accessorKey: 'full_name',
+      header: 'Name'
     },
     {
-      accessorKey: 'lastName',
-      header: 'Last Name'
-    },
-    {
-      accessorKey: 'designation',
+      accessorKey: 'designation_name',
       header: 'Designation'
     },
     {
@@ -50,15 +46,15 @@ const EmployeeTable = ({
       header: 'Email'
     },
     {
-      accessorKey: 'phoneNumber',
+      accessorKey: 'mobile',
       header: 'Phone Number'
     },
     {
-      accessorKey: 'center',
+      accessorKey: 'center_name',
       header: 'Center'
     },
     {
-      accessorKey: 'joinDate',
+      accessorKey: 'joining_date',
       header: 'Join Date'
     },
     {
@@ -67,7 +63,11 @@ const EmployeeTable = ({
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
-            label={row.original.status}
+            label={
+              row.original.status == 'active'
+                ? 'Active Member'
+                : 'Inactive Member'
+            }
             variant={
               row.original.status == 'Active Member' ? 'active' : 'inactive'
             }
@@ -78,10 +78,12 @@ const EmployeeTable = ({
           <button onClick={handleOpen}>
             <img src={edit} alt='edit' />
           </button>
-          <button onClick={() => {
-            setDeleteId(row.original.id);
-            setDeleteOpen(true);
-          }}>
+          <button
+            onClick={() => {
+              setDeleteId(row.original.id)
+              setDeleteOpen(true)
+            }}
+          >
             <img src={deleteicon} alt='delete' />
           </button>
           <Switch />

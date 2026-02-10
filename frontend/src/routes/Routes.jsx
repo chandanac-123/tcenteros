@@ -1,5 +1,5 @@
 import ForgetPassord from '@pages/authentication/ForgetPassord'
-import Login from '@pages/authentication/Login.'
+import Login from '@pages/authentication/Login'
 import OTPVerification from '@pages/authentication/OtpVerification'
 import PrimaryLogin from '@pages/authentication/PrimaryLogin'
 import ResetPassword from '@pages/authentication/ResetPassword'

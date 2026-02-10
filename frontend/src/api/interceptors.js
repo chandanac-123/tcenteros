@@ -1,10 +1,11 @@
 import axiosInstance from './axiosInstance';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@store/authStore';
 
 axiosInstance.interceptors.request.use(
   config => {
-    // Get the token from zustand store
-    const token = useAuthStore.getState().token;
+    // Get the accessToken from zustand store
+    const state = useAuthStore.getState();
+    const token = state.accessToken || state.auth?.access_token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
