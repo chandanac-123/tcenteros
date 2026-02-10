@@ -5,7 +5,6 @@ import { useEmployeeGetByIdQuery } from '@api-queries/employee-management/Query'
 const ViewForm = ({ open, setOpen, id }) => {
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
-  console.log('employeeData: ', employeeData)
 
   return (
     <CustomeModal
@@ -49,26 +48,26 @@ const ViewForm = ({ open, setOpen, id }) => {
         </div>
         <div className='flex flex-col gap-1'>
           <span className='text-sm'>Country</span>
-          <span className='flex text-textgrey '>{employeeData?.country}</span>
+          <span className='flex text-textgrey '>{employeeData?.address?.country}</span>
         </div>
         <div className='flex flex-col gap-1'>
           <span className='text-sm'>State</span>
-          <span className='flex text-textgrey '>{employeeData?.state}</span>
+          <span className='flex text-textgrey '>{employeeData?.address?.state}</span>
         </div>
       </div>
 
       <div className='flex gap-10'>
         <div className='flex flex-col gap-2'>
           <span className='text-sm'>City</span>
-          <span className='flex text-textgrey '>{employeeData?.city}</span>
+          <span className='flex text-textgrey '>{employeeData?.address?.city}</span>
         </div>
         <div className='flex flex-col gap-1'>
           <span className='text-sm'>Pin</span>
-          <span className='flex text-textgrey '>{employeeData?.pin}</span>
+          <span className='flex text-textgrey '>{employeeData?.address?.pin}</span>
         </div>
         <div className='flex flex-col gap-1'>
           <span className='text-sm'>Address</span>
-          <span className='flex text-textgrey '>{employeeData?.address}</span>
+          <span className='flex text-textgrey '>{employeeData?.address?.address}</span>
         </div>
       </div>
 

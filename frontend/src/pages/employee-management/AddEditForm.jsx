@@ -22,7 +22,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
-    console.log('employeeData: ', employeeData)
+//   console.log('employeeData: ', employeeData)
   const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateCategory, isPending: updatePending } =
     useUpdateEmployeeMutation()
@@ -35,11 +35,11 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     mobile: employeeData?.mobile || '',
     qualification: employeeData?.qualification || '',
     experience: employeeData?.experience || '',
-    country: employeeData?.country || '',
-    state: employeeData?.state || '',
-    city: employeeData?.city || '',
-    pin: employeeData?.pin || '',
-    address: employeeData?.address || '',
+    country: employeeData?.address?.country || '',
+    state: employeeData?.address?.state || '',
+    city: employeeData?.address?.city || '',
+    pin: employeeData?.address?.pin || '',
+    address: employeeData?.address?.address || '',
     password: '',
     designation_id: employeeData?.designation_id || '',
     center_id: state?.auth?.center_id || '',
@@ -54,7 +54,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     onSubmit: async values => {
       const fd = new FormData()
       Object.entries(values).forEach(([key, value]) => {
-          if (values.profile_photo) fd.append('profile_photo', values.profile_photo)
+        if (values.profile_photo)
+          fd.append('profile_photo', values.profile_photo)
         if (value !== undefined && value !== null) {
           fd.append(key, value)
         }
@@ -229,7 +230,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 label='Upload Image'
                 name='profile_photo'
                 onChange={e => {
-                  formik.setFieldValue('profile_photo',e.target.value)
+                  formik.setFieldValue('profile_photo', e.target.value)
                 }}
               />
             </div>
