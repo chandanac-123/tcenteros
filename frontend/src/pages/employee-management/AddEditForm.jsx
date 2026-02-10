@@ -22,7 +22,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
-  //   console.log('employeeData: ', employeeData)
+    console.log('employeeData: ', employeeData)
   const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateCategory, isPending: updatePending } =
     useUpdateEmployeeMutation()
@@ -44,7 +44,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     designation_id: employeeData?.designation_id || '',
     center_id: state?.auth?.center_id || '',
     joining_date: employeeData?.joining_date || '2026-02-10',
-    document: null
+    profile_photo: null
   }
 
   const formik = useFormik({
@@ -54,6 +54,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     onSubmit: async values => {
       const fd = new FormData()
       Object.entries(values).forEach(([key, value]) => {
+          if (values.profile_photo) fd.append('profile_photo', values.profile_photo)
         if (value !== undefined && value !== null) {
           fd.append(key, value)
         }
@@ -226,9 +227,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             <div className='flex-1'>
               <InputFile
                 label='Upload Image'
-                name='document'
+                name='profile_photo'
                 onChange={e => {
-                  formik.setFieldValue('document', e.currentTarget.files[0])
+                  formik.setFieldValue('profile_photo',e.target.value)
                 }}
               />
             </div>
