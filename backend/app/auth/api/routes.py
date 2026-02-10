@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form
+from fastapi import APIRouter, Query , UploadFile, File, HTTPException, Depends, Form
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
@@ -26,6 +26,7 @@ from fastapi.concurrency import run_in_threadpool
 from datetime import datetime, date
 from typing import Optional, List
 from pydantic import EmailStr
+from sqlalchemy import  and_
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -552,17 +553,45 @@ async def delete_employee(
 
 @router.get("/employee", response_model=List[EmployeeOut])
 async def list_employees(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    full_name: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
+    mobile: Optional[str] = Query(None),
+    designation_name: Optional[str] = Query(None),
     session: AsyncSession = Depends(get_async_session)
 ):
-    result = await session.execute(select(Employee))
+    filters = []
+    if full_name:
+        filters.append(Employee.full_name.ilike(f"%{full_name}%"))
+    if email:
+        filters.append(Employee.email.ilike(f"%{email}%"))
+    if mobile:
+        filters.append(Employee.mobile.ilike(f"%{mobile}%"))
+
+    # If designation_name filter is used, join Designation table
+    query = select(Employee)
+    if designation_name:
+        from sqlalchemy.orm import aliased, joinedload
+        DesignationAlias = aliased(Designation)
+        query = query.join(DesignationAlias, Employee.designation_id == DesignationAlias.id)
+        filters.append(DesignationAlias.name.ilike(f"%{designation_name}%"))
+
+    if filters:
+        query = query.where(and_(*filters))
+
+    # Pagination
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    result = await session.execute(query)
     employees = result.scalars().all()
     employee_list = []
     for emp in employees:
         # Fetch designation name if needed
-        designation_name = None
+        designation_name_val = None
         if emp.designation_id:
             desig = await session.get(Designation, emp.designation_id)
-            designation_name = desig.name if desig else None
+            designation_name_val = desig.name if desig else None
         # Fetch center name if needed
         center_name = None
         if emp.center_id:
@@ -588,7 +617,7 @@ async def list_employees(
             qualification=emp.qualification,
             experience=emp.experience_years,
             designation_id=emp.designation_id,
-            designation_name=designation_name,
+            designation_name=designation_name_val,
             address_id=emp.address_id,
             address=address_dict,
             center_id=emp.center_id,
