@@ -93,7 +93,7 @@ class Center(Base, AuditMixin):
     holidays = relationship("CenterHoliday", back_populates="center")
     member_memberships = relationship("MemberMembership", back_populates="center")
     wallet = relationship("CenterWallet", back_populates="center", uselist=False)
-
+    gallery_images = relationship("CenterGalleryImage", back_populates="center", cascade="all, delete-orphan")
 
 
 class CenterOnboardingTemp(Base, AuditMixin):
@@ -186,3 +186,16 @@ class WalletTransaction(Base, AuditMixin):
     from_wallet = relationship("CenterWallet", foreign_keys=[from_wallet_id])
     to_wallet = relationship("CenterWallet", foreign_keys=[to_wallet_id])
     platform_wallet = relationship("PlatformWallet", foreign_keys=[platform_wallet_id])
+
+
+
+
+class CenterGalleryImage(Base, AuditMixin):
+    __tablename__ = "center_gallery_images"
+    __table_args__ = {"schema": "center"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id", ondelete="CASCADE"), nullable=False)
+    image_url = Column(String, nullable=False)
+
+    center = relationship("Center", back_populates="gallery_images")

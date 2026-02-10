@@ -17,18 +17,19 @@ from decimal import Decimal
 
 router = APIRouter()
 
+#list both network enabled cities and not enabled cities 
 @router.get("/centers/network-enabled-cities")
-async def list_network_enabled_cities(
-    session: AsyncSession = Depends(get_async_session)
+async def list_all_center_cities(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)  # Require authentication
 ):
     """
-    List distinct cities of centers where network_enabled is True.
-    Accessible to all users.
+    List distinct cities of all centers (network_enabled True or False).
+    Accessible to all authenticated users.
     """
     result = await session.execute(
         select(Address.city)
         .join(Center, Center.address_id == Address.id)
-        .where(Center.network_enabled == True)
         .distinct()
     )
     cities = [row[0] for row in result.all() if row[0]]

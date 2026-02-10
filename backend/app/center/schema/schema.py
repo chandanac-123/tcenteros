@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, EmailStr, UUID4, Field
 from typing import List, Optional, Any, Union, Dict
+from datetime import time
+from uuid import UUID
 
 class CenterOnboardingTempCreate(BaseModel):
     center_name: str
@@ -204,3 +206,54 @@ class CenterProfileUpdate(BaseModel):
     gst_number: Optional[str] = None
     live_class_enable: Optional[bool] = None
     address: Optional[AddressUpdate] = None
+
+#image gallary schema
+class CenterGalleryImageOut(BaseModel):
+    id: UUID
+    center_id: UUID
+    center_name: str
+    image_url: str
+
+    class Config:
+        orm_mode = True
+
+class CenterGalleryImageCreate(BaseModel):
+    image_url: str  # This will be set after S3 upload
+
+class CenterGalleryImageUpdate(BaseModel):
+    image_url: str
+
+
+#schema for center profile  for member
+class TrainerOut(BaseModel):
+    name: str
+    profile_photo: Optional[str] = None
+
+class AddressOut(BaseModel):
+    city: Optional[str]
+    state: Optional[str]
+    country: Optional[str]
+    district: Optional[str]
+    postal_code: Optional[str]
+    address_line_1: Optional[str]
+    address_line_2: Optional[str]
+    latitude: Optional[float]
+    longitude: Optional[float]
+
+class CenterOperationalInfoOut(BaseModel):
+    center_id: str
+    center_name: str
+    about: Optional[str]
+    facilities: Optional[List[str]]
+    address: AddressOut
+    opening_time: str
+    closing_time: str
+    current_day: str
+    trainers: List[TrainerOut]
+    gallery: List[CenterGalleryImageOut]  
+
+    class Config:
+        orm_mode = True
+
+
+

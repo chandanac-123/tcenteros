@@ -9,21 +9,23 @@ import traceback
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction
-from app.settings.models.models import CenterCategory, Address, TaxCategory
+from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage
+from app.settings.models.models import CenterCategory,Designation, Address, TaxCategory, CenterOperationalSetting
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
-from app.auth.models.models import CenterAdmin, User
+from app.auth.models.models import CenterAdmin, User, Employee
 from app.core.models.models import StatusEnum
 from app.center.schema.schema import *
 from datetime import datetime
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from app.core.database import get_async_session
 from uuid import uuid4
 from app.core.dependencies import centeradmin_required, get_db, get_current_user
 from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
+
 
 router = APIRouter()
 
@@ -775,9 +777,13 @@ async def update_centeradmin_profile_photo(
     admin = admin_result.scalar_one_or_none()
     if not admin:
         raise HTTPException(404, "CenterAdmin not found")
-    user = await session.get(User, admin.user_id)
+    user = await session.get(User, admin.id)  # Use admin.id, not admin.user_id
     if not user:
         raise HTTPException(404, "User not found")
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
     file_bytes = await profile_photo.read()
     file_ext = profile_photo.filename.split('.')[-1]
     key = f"profile_photos/{user.id}.{file_ext}"
@@ -788,5 +794,217 @@ async def update_centeradmin_profile_photo(
     await session.commit()
     return {
         "detail": "Profile photo updated successfully",
-        "profile_photo_url": profile_photo_url
+        "profile_photo_url": profile_photo_url,
+        "center_id": str(center.id),
+        "center_name": center.center_name
     }
+
+
+
+@router.get("/center/{center_id}/profile", response_model=CenterOperationalInfoOut)
+async def get_center_operational_info(center_id: str, session: AsyncSession = Depends(get_async_session)):
+    # Get center with address and operational settings
+    result = await session.execute(
+        select(Center)
+        .where(Center.id == center_id)
+        .options(
+            selectinload(Center.address),
+            selectinload(Center.operational_settings)
+        )
+    )
+    center = result.scalar_one_or_none()
+    if not center or not center.address:
+        raise HTTPException(status_code=404, detail="Center or address not found")
+
+    # Get operational settings
+    op_settings = await session.execute(
+        select(CenterOperationalSetting)
+        .where(CenterOperationalSetting.center_id == center_id)
+    )
+    op_setting = op_settings.scalar_one_or_none()
+    if not op_setting:
+        raise HTTPException(status_code=404, detail="Operational settings not found")
+
+    # Get designation id for "Trainer"
+    designation_result = await session.execute(
+        select(Designation.id)
+        .where(Designation.name == "Trainer")
+    )
+    trainer_designation_id = designation_result.scalar_one_or_none()
+    if not trainer_designation_id:
+        trainers = []
+    else:
+        trainers_result = await session.execute(
+            select(Employee.full_name, Employee.profile_photo)
+            .where(Employee.center_id == center_id)
+            .where(Employee.designation_id == trainer_designation_id)
+        )
+        trainers = [
+            TrainerOut(name=row[0], profile_photo=row[1])
+            for row in trainers_result.all()
+        ]
+
+    # Fetch gallery images
+    gallery_result = await session.execute(
+        select(CenterGalleryImage).where(CenterGalleryImage.center_id == center_id)
+    )
+    gallery_images = gallery_result.scalars().all()
+    gallery = [
+        CenterGalleryImageOut(
+            id=img.id,
+            center_id=center.id,
+            center_name=center.center_name,
+            image_url=img.image_url
+        ) for img in gallery_images
+    ]
+
+    address = center.address
+    address_out = AddressOut(
+        city=address.city,
+        state=address.state,
+        country=address.country,
+        district=address.district,
+        postal_code=address.postal_code,
+        address_line_1=address.address_line_1,
+        address_line_2=address.address_line_2,
+        latitude=float(address.latitude) if address.latitude is not None else None,
+        longitude=float(address.longitude) if address.longitude is not None else None,
+    )
+
+    return CenterOperationalInfoOut(
+        center_id=str(center_id),
+        center_name=center.center_name,
+        about=center.about,
+        facilities=center.facilities,
+        address=address_out,
+        opening_time=op_setting.opening_time.strftime("%H:%M:%S"),
+        closing_time=op_setting.closing_time.strftime("%H:%M:%S"),
+        current_day=datetime.now().strftime("%A"),
+        trainers=trainers,
+        gallery=gallery
+    )
+
+
+#image gallery APIs
+# Create image (center admin only)
+@router.post("/center/gallery", response_model=CenterGalleryImageOut)
+async def create_center_gallery_image(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    file_bytes = await file.read()
+    file_ext = file.filename.split('.')[-1]
+    key = f"gallery/{center_id}/{uuid4()}.{file_ext}"
+    await run_in_threadpool(upload_file, file_bytes, key, file.content_type)
+    image_url = await run_in_threadpool(get_file_url, key)
+
+    gallery_image = CenterGalleryImage(
+        id=uuid4(),
+        center_id=center_id,
+        image_url=image_url,
+        created_by=current_admin["user_id"],
+        updated_by=current_admin["user_id"]
+    )
+    session.add(gallery_image)
+    await session.commit()
+    await session.refresh(gallery_image)
+    return CenterGalleryImageOut(
+        id=gallery_image.id,
+        center_id=center.id,
+        center_name=center.center_name,
+        image_url=gallery_image.image_url
+    )
+
+# List images (member or admin)
+@router.get("/center/{center_id}/gallery", response_model=List[CenterGalleryImageOut])
+async def list_center_gallery_images(
+    center_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+    result = await session.execute(
+        select(CenterGalleryImage).where(CenterGalleryImage.center_id == center_id)
+    )
+    images = result.scalars().all()
+    return [
+        CenterGalleryImageOut(
+            id=img.id,
+            center_id=center.id,
+            center_name=center.center_name,
+            image_url=img.image_url
+        ) for img in images
+    ]
+
+# Get single image (member or admin)
+@router.get("/center/gallery/{image_id}", response_model=CenterGalleryImageOut)
+async def get_center_gallery_image(
+    image_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    img = await session.get(CenterGalleryImage, image_id)
+    if not img:
+        raise HTTPException(404, "Image not found")
+    center = await session.get(Center, img.center_id)
+    return CenterGalleryImageOut(
+        id=img.id,
+        center_id=center.id,
+        center_name=center.center_name,
+        image_url=img.image_url
+    )
+
+# Update image (center admin only)
+@router.put("/center/gallery/{image_id}", response_model=CenterGalleryImageOut)
+async def update_center_gallery_image(
+    image_id: str,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    img = await session.get(CenterGalleryImage, image_id)
+    if not img:
+        raise HTTPException(404, "Image not found")
+    if img.center_id != current_admin["center_id"]:
+        raise HTTPException(403, "Not allowed")
+
+    file_bytes = await file.read()
+    file_ext = file.filename.split('.')[-1]
+    key = f"gallery/{img.center_id}/{uuid4()}.{file_ext}"
+    await run_in_threadpool(upload_file, file_bytes, key, file.content_type)
+    image_url = await run_in_threadpool(get_file_url, key)
+    img.image_url = image_url
+    img.updated_by = current_admin["user_id"]
+    await session.commit()
+    await session.refresh(img)
+    center = await session.get(Center, img.center_id)
+    return CenterGalleryImageOut(
+        id=img.id,
+        center_id=center.id,
+        center_name=center.center_name,
+        image_url=img.image_url
+    )
+
+# Delete image (center admin only)
+@router.delete("/center/gallery/{image_id}")
+async def delete_center_gallery_image(
+    image_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    img = await session.get(CenterGalleryImage, image_id)
+    if not img:
+        raise HTTPException(404, "Image not found")
+    if img.center_id != current_admin["center_id"]:
+        raise HTTPException(403, "Not allowed")
+    await session.delete(img)
+    await session.commit()
+    return {"detail": "Image deleted"}
