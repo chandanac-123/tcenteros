@@ -64,7 +64,7 @@ const AddCategory = ({ id, categoryOpen, setCategoryOpen }) => {
           error={formik.touched.name && formik.errors.name}
         />
 
-        <InputFile
+        {/* <InputFile
           label='Upload Image'
           name='image_url'
           onChange={e => {
@@ -76,6 +76,20 @@ const AddCategory = ({ id, categoryOpen, setCategoryOpen }) => {
             formik.setFieldValue('image_url', null)
             formik.setFieldTouched('image_url', true, false)
             formik.validateField('image_url') // <-- Add this line
+          }}
+          error={formik.touched.image_url && formik.errors.image_url}
+        /> */}
+        <InputFile
+          label='Upload Image'
+          name='image_url'
+          value={formik.values.image_url}
+          onChange={e => {
+            formik.setFieldValue('image_url', e.target.value)
+            formik.setFieldTouched('image_url', true, false)
+          }}
+          onRemove={() => {
+            formik.setFieldValue('image_url', null)
+            formik.setFieldTouched('image_url', true, false)
           }}
           error={formik.touched.image_url && formik.errors.image_url}
         />

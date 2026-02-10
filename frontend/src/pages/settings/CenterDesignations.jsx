@@ -2,11 +2,16 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { useCreateCategoryMutation } from '@api-queries/employee-management/Query'
 import {
   useCategoriesQuery,
-  useDeleteCategoryMutation,
+  useDeleteCategoryMutation
 } from '@api-queries/employee-management/Query'
 import { useState } from 'react'
 import AddCategory from '@pages/employee-management/AddCategory'
 import DeleteModal from '@common/CustomeDelete'
+import { Button } from '@pages/components/ui/button'
+import InputFile from '@common/CustomeFileUpload'
+import { useFormik } from 'formik'
+import { categoryValidationSchema } from '@utils/validations'
+import { Input } from '@pages/components/ui/input'
 
 const CenterDesignations = () => {
   const [categoryOpen, setCategoryOpen] = useState(false)
@@ -18,6 +23,11 @@ const CenterDesignations = () => {
   const { mutateAsync: deleteCategory, isPending: isDeleting } =
     useDeleteCategoryMutation()
 
+  const initialValues = {
+    name: data?.name || '',
+    image_url: data?.image_url || null
+  }
+
   const handleDelete = () => {
     if (delValue) {
       deleteCategory(delValue)
@@ -25,23 +35,88 @@ const CenterDesignations = () => {
       setValue('')
     }
   }
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    validationSchema: categoryValidationSchema, // Uncomment if you have a schema
+    onSubmit: async (values, { resetForm }) => {
+      const formData = new FormData()
+      formData.append('name', values.name)
+      if (values.image_url) formData.append('image', values.image_url)
+      try {
+        await createCategory(formData)
+
+        resetForm()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
 
   return (
     <div>
       <div className='text-lg font-semibold mb-6'>Added Designations</div>
+      <form className='space-y-4 w-full py-4' onSubmit={formik.handleSubmit}>
+        <Input
+          className='w-full'
+          label='Name the Designation'
+          placeholder='Enter your employee Designation'
+          name='name'
+          value={formik.values.name}
+          onChange={formik.handleChange}
+          error={formik.touched.name && formik.errors.name}
+        />
+
+        {/* <InputFile
+          label='Upload Image'
+          name='image_url'
+          onChange={e => {
+            formik.setFieldValue('image_url', e.target.value) // value is File
+            formik.setFieldTouched('image_url', true, false)
+            formik.validateField('image_url') // <-- Add this line
+          }}
+          onRemove={() => {
+            formik.setFieldValue('image_url', null)
+            formik.setFieldTouched('image_url', true, false)
+            formik.validateField('image_url') // <-- Add this line
+          }}
+          error={formik.touched.image_url && formik.errors.image_url}
+        /> */}
+        <InputFile
+          label='Upload Image'
+          name='image_url'
+          value={formik.values.image_url}
+          onChange={e => {
+            formik.setFieldValue('image_url', e.target.value)
+            formik.setFieldTouched('image_url', true, false)
+          }}
+          onRemove={() => {
+            formik.setFieldValue('image_url', null)
+            formik.setFieldTouched('image_url', true, false)
+          }}
+          error={formik.touched.image_url && formik.errors.image_url}
+        />
+
+        <div className='flex justify-end'>
+          <Button size='addbutton' type='submit' disabled={isPending}>
+            Add Designation
+          </Button>
+        </div>
+      </form>
+
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
         {data?.map(d => (
           <div
             key={d.id}
-            className='rounded-xl border border-gray-300 gap-3 bg-white shadow-sm flex items-center p-4 min-w-[220px] max-w-xs mx-auto'
+            className='rounded-xl border justify-center border-gray-300 gap-3 bg-white shadow-sm flex items-center p-2 min-w-[200px] max-w-xs mx-auto'
           >
             <img
               src={d.image_url}
               alt={d.name}
               className='w-16 h-16 object-cover rounded-xl mb-2'
             />
-            <div className='flex flex-col gap-3'>
-              <div className='font-medium text-base mb-3 text-center w-full'>
+            <div className='flex flex-col gap-2 justify-center items-center w-full'>
+              <div className='font-normal text-sm text-pricing_text text-center w-full'>
                 {d.name}
               </div>
               <div className='flex gap-3 w-full justify-center'>
@@ -53,7 +128,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#F3E8FF] text-primary p-2 rounded-md hover:bg-primary/10 transition'
                 >
-                  <Pencil className='w-5 h-5' />
+                  <Pencil className='w-4 h-4' />
                 </button>
                 <button
                   type='button'
@@ -63,7 +138,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#FFE4E6] text-red-500 p-2 rounded-md hover:bg-red-100 transition'
                 >
-                  <Trash2 className='w-5 h-5' />
+                  <Trash2 className='w-4 h-4' />
                 </button>
               </div>
             </div>
