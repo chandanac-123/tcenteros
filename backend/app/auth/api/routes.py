@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Query , UploadFile, File, HTTPException, Depends, Form
+from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException, Depends, Form
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
@@ -156,13 +156,18 @@ async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_
 
 #member logout endpoint (client should delete token on their side)
 @router.post("/member/logout")
-async def logout_member():
+async def logout_member(request: Request, current_member=Depends(member_required)):
     """
-    Instructs the client to delete the JWT token.
+    Logs out an authenticated member.
+    Requires a valid JWT token in the Authorization header.
     """
+    # Debug: Print headers and member info
+    print("Logout request headers:", dict(request.headers))
+    print("Authenticated member info:", current_member)
+
+    # You can't invalidate JWT on the server side (unless you use a blacklist).
+    # The client should delete the token.
     return {"detail": "Logout successful. Please delete your token on the client side."}
-
-
 #------------------------------
 #member profile update endpoint
 #-------------------------------
@@ -189,8 +194,14 @@ async def update_member_profile(
     email: Optional[EmailStr] = Form(None),
     profile_photo: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session),
-    current_member=Depends(member_required)
-):
+    current_member=Depends(member_required),
+    request: Request = None, 
+):  
+    if request:
+        form = await request.form()
+        print("Incoming form data:", dict(form))
+        print("Headers:", dict(request.headers))
+
     member = await session.get(Member, current_member["user_id"])
     if not member:
         raise HTTPException(404, "Member not found")
