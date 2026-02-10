@@ -36,7 +36,7 @@ const CenterDesignations = () => {
             className='rounded-xl border border-gray-300 gap-3 bg-white shadow-sm flex items-center p-4 min-w-[220px] max-w-xs mx-auto'
           >
             <img
-              src={d.img}
+              src={d.image_url}
               alt={d.name}
               className='w-16 h-16 object-cover rounded-xl mb-2'
             />

@@ -55,9 +55,9 @@ export const getCategoryById = async id => {
   }
 }
 
-export const getAllEmployees = async () => {
+export const getAllEmployees = async (data) => {
   try {
-    const response = await getEmployeeApiCall()
+    const response = await getEmployeeApiCall(data)
     return response.data
   } catch (error) {
     throw error

@@ -27,7 +27,6 @@ import {
 export function DataTable ({
   columns,
   data,
-  pagination,
   setTableParams,
   tableParams,
   paginationVisibile
@@ -44,7 +43,7 @@ export function DataTable ({
     }))
   }
 
-  const totalPageCount = pagination?.totalPages || 5
+  const totalPageCount = tableParams?.totalCount || 5
   const paginationItems = []
 
   const visibleRange = 2 // pages before & after current
@@ -83,7 +82,7 @@ export function DataTable ({
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: setRowSelection,
     manualPagination: true,
-    pageCount: pagination?.totalCount,
+    pageCount: tableParams?.totalCount,
     state: {
       rowSelection,
       pagination: { pageIndex: page, pageSize: rowsPerPage }
@@ -135,15 +134,12 @@ export function DataTable ({
         </TableBody>
       </Table>
       <div className='py-2 flex justify-between items-center w-full px-2'>
-        <span className='text-xs text-textblack font-medium w-full'>
-          Showing 5 from 10 data
-        </span>
         {paginationVisibile && (
           <div className='flex justify-between items-center w-full mt-4'>
-            <div className='text-grey text-sm '>{pagination?.displayRange}</div>
+            <div className='text-grey text-sm '> Showing {tableParams?.page} from {tableParams?.totalCount} data</div>
 
             <div className='flex items-center space-x-2'>
-              <Pagination currentPage={page} lastPage={pagination?.totalPages} setPageIndex={handlePageChange}>
+              <Pagination currentPage={tableParams?.page} lastPage={tableParams?.pageSize} setPageIndex={handlePageChange}>
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious

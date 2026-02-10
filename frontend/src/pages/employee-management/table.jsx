@@ -10,7 +10,7 @@ import ViewForm from './View'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 
-const EmployeeTable = ({ data, pagination, tableParams, setTableParams }) => {
+const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [editopen, setEditOpen] = useState(false)
@@ -102,10 +102,8 @@ const EmployeeTable = ({ data, pagination, tableParams, setTableParams }) => {
       <DataTable
         title='Products'
         subTitle='Products'
-        total={pagination?.totalCount}
         columns={columns}
         data={data}
-        pagination={pagination}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}

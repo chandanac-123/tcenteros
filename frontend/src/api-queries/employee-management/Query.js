@@ -64,15 +64,16 @@ export const useCategoriesGetByIdQuery = id => {
   return useQuery({
     queryKey: ['categories', id],
     queryFn: () => getCategoryById(id),
+    enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
 
-export const useEmployeeQuery = () => {
+export const useEmployeeQuery = (data) => {
   return useQuery({
-    queryKey: ['employees'],
-    queryFn: () => getAllEmployees(),
+    queryKey: ['employees', data],
+    queryFn: () => getAllEmployees(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
@@ -117,11 +118,11 @@ export const useDeleteEmployeeMutation = () => {
   })
 }
 
-
 export const useEmployeeGetByIdQuery = id => {
   return useQuery({
     queryKey: ['employees', id],
     queryFn: () => getEmployeeById(id),
+    enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

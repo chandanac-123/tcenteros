@@ -22,7 +22,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
-//   console.log('employeeData: ', employeeData)
+  //   console.log('employeeData: ', employeeData)
   const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateCategory, isPending: updatePending } =
     useUpdateEmployeeMutation()
@@ -44,7 +44,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     designation_id: employeeData?.designation_id || '',
     center_id: state?.auth?.center_id || '',
     joining_date: employeeData?.joining_date || '2026-02-10',
-    profile_photo: null
+    profile_photo: employeeData?.profile_photo || null
   }
 
   const formik = useFormik({

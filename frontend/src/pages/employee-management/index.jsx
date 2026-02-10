@@ -8,15 +8,11 @@ import { useEmployeeQuery } from '@api-queries/employee-management/Query'
 const EmployeeManagement = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
+    pageSize: 10,
+    totalCount: 3,
     search: ''
   })
-  const {data, isFetching} = useEmployeeQuery()
-
-  const employeeOrCenter = [
-    { id: 1, name: 'Center User' },
-    { id: 2, name: 'Employee' }
-  ]
-
+  const { data, isFetching } = useEmployeeQuery(tableParams)
 
   return (
     <ContentLayout>
