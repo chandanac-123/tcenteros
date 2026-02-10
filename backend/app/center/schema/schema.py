@@ -183,24 +183,24 @@ class CenterLocationOut(BaseModel):
 #central profile update schema  
 #--------------------------------
 class AddressUpdate(BaseModel):
-    address_line_1: Optional[str]
-    address_line_2: Optional[str]
-    city: Optional[str]
-    district: Optional[str]
-    state: Optional[str]
-    country: Optional[str]
-    postal_code: Optional[str]
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    postal_code: Optional[str] = None
 
 class CenterProfileUpdate(BaseModel):
-    center_name: Optional[str]
-    about: Optional[str]
-    facilities: Optional[List[str]]
-    website_url: Optional[str]
-    capacity: Optional[float]
-    kind_of_center: Optional[Dict]
-    contact_person: Optional[str]
-    center_email: Optional[str]
-    center_phone: Optional[str]
-    gst_number: Optional[str]
-    live_class_enable: Optional[bool]
-    address: Optional[AddressUpdate]
+    center_name: Optional[str] = None
+    about: Optional[str] = None
+    facilities: Optional[List[str]] = None
+    website_url: Optional[str] = None
+    capacity: Optional[float] = None
+    kind_of_center: Optional[Dict] = None
+    contact_person: Optional[str] = None
+    center_email: Optional[str] = None
+    center_phone: Optional[str] = None
+    gst_number: Optional[str] = None
+    live_class_enable: Optional[bool] = None
+    address: Optional[AddressUpdate] = None

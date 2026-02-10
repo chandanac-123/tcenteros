@@ -84,14 +84,17 @@ class EmployeeOut(BaseModel):
     full_name: str
     email: EmailStr
     mobile: str
-    qualification: Optional[str]
-    experience: Optional[int]
-    designation_id: Optional[UUID4]
-    designation_name: Optional[str]
-    address_id: Optional[UUID4]
-    address: Optional[dict]
-    center_id: Optional[UUID4]
-    joining_date: Optional[date]  # <-- Add this
+    qualification: Optional[str] = None
+    experience: Optional[int] = None
+    designation_id: Optional[UUID4] = None
+    designation_name: Optional[str] = None
+    address_id: Optional[UUID4] = None
+    address: Optional[dict] = None
+    center_id: Optional[UUID4] = None
+    center_name: Optional[str] = None
+    joining_date: Optional[date] = None
+    status: Optional[str] = None
+    profile_photo: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

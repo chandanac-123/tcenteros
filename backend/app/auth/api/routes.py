@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
@@ -12,6 +12,7 @@ from app.core.security import create_access_token, create_refresh_token
 from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate
 from app.core.dependencies import superadmin_required
 from app.auth.models.models import Member, Employee
+from app.center.models.models import Center
 from datetime import datetime
 from uuid import uuid4
 from app.auth.models.models import MemberStatusEnum
@@ -21,6 +22,10 @@ from app.core.dependencies import member_required, get_current_user
 from passlib.context import CryptContext
 from app.settings.models.models import Designation
 import uuid
+from fastapi.concurrency import run_in_threadpool
+from datetime import datetime, date
+from typing import Optional, List
+from pydantic import EmailStr
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -248,198 +253,348 @@ async def get_member_profile(
 #-----------------------------
 
 @router.post("/employee", response_model=EmployeeOut)
-async def create_employee(data: EmployeeCreate, session: AsyncSession = Depends(get_async_session)):
-    # Check for duplicate email/mobile in User table (not just Employee)
-    result = await session.execute(select(User).where(User.email == data.email))
-    if result.scalar():
-        raise HTTPException(status_code=400, detail="Email already exists")
-    result = await session.execute(select(User).where(User.mobile == data.mobile))
-    if result.scalar():
-        raise HTTPException(status_code=400, detail="Mobile already exists")
-    # Check designation exists
-    designation = await session.get(Designation, data.designation_id)
-    if not designation:
-        raise HTTPException(status_code=400, detail="Invalid designation_id")
+async def create_employee(
+    full_name: str = Form(...),
+    email: EmailStr = Form(...),
+    mobile: str = Form(...),
+    qualification: Optional[str] = Form(None),
+    experience: Optional[int] = Form(0),
+    country: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    pin: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    password: str = Form(...),
+    designation_id: str = Form(...),
+    center_id: str = Form(...),
+    joining_date: Optional[date] = Form(None),
+    profile_photo: Optional[UploadFile] = File(None),
+    session: AsyncSession = Depends(get_async_session)
+):
+    # Handle S3 image upload
+    profile_photo_url = None
+    if profile_photo:
+        file_bytes = await profile_photo.read()
+        file_ext = profile_photo.filename.split('.')[-1]
+        key = f"employee_photos/{uuid4()}.{file_ext}"
+        await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
+        profile_photo_url = await run_in_threadpool(get_file_url, key)
 
-    # Create Address record
-    address = Address(
-        address_line_1=data.address,
-        city=data.city,
-        state=data.state,
-        country=data.country,
-        postal_code=data.pin,
-        address_type=AddressType.other,
-        status=StatusEnum.active
-    )
-    session.add(address)
-    await session.commit()
-    await session.refresh(address)
-
+    # Create Employee (inherits from User)
     employee = Employee(
-        full_name=data.full_name,
-        email=data.email,
-        mobile=data.mobile,
-        qualification=data.qualification,
-        experience_years=data.experience,
-        password_hash=hash_password(data.password),
-        designation_id=data.designation_id,
-        address_id=address.id,
-        center_id=data.center_id,
-        joining_date=data.joining_date or datetime.utcnow()  # <-- Set joining_date
+        id=uuid4(),
+        full_name=full_name,
+        email=email,
+        mobile=mobile,
+        qualification=qualification,
+        experience_years=experience,
+        password_hash=password,  # Hash if needed
+        designation_id=designation_id,
+        center_id=center_id,
+        joining_date=joining_date,
+        profile_photo=profile_photo_url,
+        # Add other fields as needed
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     session.add(employee)
     await session.commit()
     await session.refresh(employee)
 
-    return {
-        "id": employee.id,
-        "full_name": employee.full_name,
-        "email": employee.email,
-        "mobile": employee.mobile,
-        "qualification": employee.qualification,
-        "experience": employee.experience_years,
-        "designation_id": str(employee.designation_id),
-        "designation_name": designation.name,
-        "address_id": str(employee.address_id),
-        "address": {
-            "id": str(address.id),
-            "address_line_1": address.address_line_1,
-            "city": address.city,
-            "state": address.state,
-            "country": address.country,
-            "postal_code": address.postal_code
-        },
-        "center_id": str(employee.center_id),
-        "joining_date": employee.joining_date
-    }
+    # Prepare address dict if needed (not shown here)
+    address_dict = None
+
+    return EmployeeOut(
+        id=employee.id,
+        full_name=employee.full_name,
+        email=employee.email,
+        mobile=employee.mobile,
+        qualification=employee.qualification,
+        experience=employee.experience_years,
+        designation_id=employee.designation_id,
+        designation_name=None,  # Fill if you join Designation
+        address_id=employee.address_id,
+        address=address_dict,
+        center_id=employee.center_id,
+        joining_date=employee.joining_date,
+    )
+
 
 @router.get("/employee/{employee_id}", response_model=EmployeeOut)
-async def get_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    employee = await session.get(Employee, employee_id)
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    designation = await session.get(Designation, employee.designation_id) if employee.designation_id else None
-    address = await session.get(Address, employee.address_id) if employee.address_id else None
-    return {
-        "id": employee.id,
-        "full_name": employee.full_name,
-        "email": employee.email,
-        "mobile": employee.mobile,
-        "qualification": employee.qualification,
-        "experience": employee.experience_years,
-        "designation_id": str(employee.designation_id) if employee.designation_id else None,
-        "designation_name": designation.name if designation else None,
-        "address_id": str(employee.address_id) if employee.address_id else None,
-        "address": {
-            "id": str(address.id),
-            "address_line_1": address.address_line_1,
-            "city": address.city,
-            "state": address.state,
-            "country": address.country,
-            "postal_code": address.postal_code
-        } if address else None,
-        "center_id": str(employee.center_id) if hasattr(employee, "center_id") else None,
-        "joining_date": employee.joining_date
-    }
+async def get_employee(
+    employee_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    emp = await session.get(Employee, employee_id)
+    if not emp:
+        raise HTTPException(404, "Employee not found")
+    designation_name = None
+    if emp.designation_id:
+        desig = await session.get(Designation, emp.designation_id)
+        designation_name = desig.name if desig else None
+    center_name = None
+    if emp.center_id:
+        center = await session.get(Center, emp.center_id)
+        center_name = center.center_name if center else None
+    address_dict = None
+    if emp.address_id:
+        address = await session.get(Address, emp.address_id)
+        if address:
+            address_dict = {
+                "address": address.address_line_1,
+                "city": address.city,
+                "state": address.state,
+                "country": address.country,
+                "pin": address.postal_code,
+            }
+    return EmployeeOut(
+        id=emp.id,
+        full_name=emp.full_name,
+        email=emp.email,
+        mobile=emp.mobile,
+        qualification=emp.qualification,
+        experience=emp.experience_years,
+        designation_id=emp.designation_id,
+        designation_name=designation_name,
+        address_id=emp.address_id,
+        address=address_dict,
+        center_id=emp.center_id,
+        center_name=center_name,
+        joining_date=emp.joining_date,
+        status=emp.status.value if hasattr(emp, "status") else None,
+        profile_photo=emp.profile_photo,
+    )
 
 @router.put("/employee/{employee_id}", response_model=EmployeeOut)
-async def update_employee(employee_id: uuid.UUID, data: EmployeeUpdate, session: AsyncSession = Depends(get_async_session)):
-    employee = await session.get(Employee, employee_id)
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    for key, value in data.dict(exclude_unset=True).items():
-        if key == "password" and value:
-            setattr(employee, "password_hash", hash_password(value))
-        elif key == "experience":
-            setattr(employee, "experience_years", value)
-        elif key == "designation_id":
-            designation = await session.get(Designation, value)
-            if not designation:
-                raise HTTPException(status_code=400, detail="Invalid designation_id")
-            setattr(employee, key, value)
-        elif key == "address_id":
-            address = await session.get(Address, value)
-            if not address:
-                raise HTTPException(status_code=400, detail="Invalid address_id")
-            setattr(employee, key, value)
-        elif key == "joining_date":
-            setattr(employee, "joining_date", value)
+async def update_employee(
+    employee_id: str,
+    # Employee fields
+    full_name: Optional[str] = Form(None),
+    email: Optional[EmailStr] = Form(None),
+    mobile: Optional[str] = Form(None),
+    qualification: Optional[str] = Form(None),
+    experience: Optional[int] = Form(None),
+    country: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    pin: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
+    designation_id: Optional[str] = Form(None),
+    center_id: Optional[str] = Form(None),
+    joining_date: Optional[date] = Form(None),
+    profile_photo: Optional[UploadFile] = File(None),
+    # Address fields
+    address_line_1: Optional[str] = Form(None),
+    address_line_2: Optional[str] = Form(None),
+    address_city: Optional[str] = Form(None),
+    address_state: Optional[str] = Form(None),
+    address_country: Optional[str] = Form(None),
+    address_pin: Optional[str] = Form(None),
+    session: AsyncSession = Depends(get_async_session)
+):
+    emp = await session.get(Employee, employee_id)
+    if not emp:
+        raise HTTPException(404, "Employee not found")
+
+    updated = False
+
+    # Update Employee fields
+    if full_name is not None:
+        emp.full_name = full_name
+        updated = True
+    if email is not None:
+        emp.email = email
+        updated = True
+    if mobile is not None:
+        emp.mobile = mobile
+        updated = True
+    if qualification is not None:
+        emp.qualification = qualification
+        updated = True
+    if experience is not None:
+        emp.experience_years = experience
+        updated = True
+    if country is not None:
+        emp.country = country
+        updated = True
+    if state is not None:
+        emp.state = state
+        updated = True
+    if city is not None:
+        emp.city = city
+        updated = True
+    if pin is not None:
+        emp.pin = pin
+        updated = True
+    if address is not None:
+        emp.address = address
+        updated = True
+    if password is not None:
+        emp.password_hash = password  # Hash if needed
+        updated = True
+    if designation_id is not None:
+        emp.designation_id = designation_id
+        updated = True
+    if center_id is not None:
+        emp.center_id = center_id
+        updated = True
+    if joining_date is not None:
+        emp.joining_date = joining_date
+        updated = True
+
+    # Handle profile photo update
+    if profile_photo:
+        file_bytes = await profile_photo.read()
+        file_ext = profile_photo.filename.split('.')[-1]
+        key = f"employee_photos/{uuid4()}.{file_ext}"
+        await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
+        emp.profile_photo = await run_in_threadpool(get_file_url, key)
+        updated = True
+
+    # Update or create Address if any address field is provided
+    if any([address_line_1, address_line_2, address_city, address_state, address_country, address_pin]):
+        if not emp.address_id:
+            # Create a new Address if none exists
+            new_addr = Address(
+                id=uuid4(),
+                address_line_1=address_line_1,
+                address_line_2=address_line_2,
+                city=address_city,
+                state=address_state,
+                country=address_country,
+                postal_code=address_pin,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            session.add(new_addr)
+            await session.flush()
+            emp.address_id = new_addr.id
+            addr = new_addr
         else:
-            setattr(employee, key, value)
-    await session.commit()
-    await session.refresh(employee)
-    designation = await session.get(Designation, employee.designation_id) if employee.designation_id else None
-    address = await session.get(Address, employee.address_id) if employee.address_id else None
-    return {
-        "id": employee.id,
-        "full_name": employee.full_name,
-        "email": employee.email,
-        "mobile": employee.mobile,
-        "qualification": employee.qualification,
-        "experience": employee.experience_years,
-        "designation_id": str(employee.designation_id) if employee.designation_id else None,
-        "designation_name": designation.name if designation else None,
-        "address_id": str(employee.address_id) if employee.address_id else None,
-        "address": {
-            "id": str(address.id),
-            "address_line_1": address.address_line_1,
-            "city": address.city,
-            "state": address.state,
-            "country": address.country,
-            "postal_code": address.postal_code
-        } if address else None,
-        "center_id": str(employee.center_id) if hasattr(employee, "center_id") else None,
-        "joining_date": employee.joining_date
-    }
+            addr = await session.get(Address, emp.address_id)
+            if not addr:
+                raise HTTPException(404, "Address not found")
+            if address_line_1 is not None:
+                addr.address_line_1 = address_line_1
+            if address_line_2 is not None:
+                addr.address_line_2 = address_line_2
+            if address_city is not None:
+                addr.city = address_city
+            if address_state is not None:
+                addr.state = address_state
+            if address_country is not None:
+                addr.country = address_country
+            if address_pin is not None:
+                addr.postal_code = address_pin
+        updated = True
+    else:
+        addr = None
+
+    if updated:
+        await session.commit()
+        await session.refresh(emp)
+
+    # Fetch related fields for response
+    designation_name = None
+    if emp.designation_id:
+        desig = await session.get(Designation, emp.designation_id)
+        designation_name = desig.name if desig else None
+
+    center_name = None
+    if emp.center_id:
+        center = await session.get(Center, emp.center_id)
+        center_name = center.center_name if center else None
+
+    address_dict = None
+    if emp.address_id:
+        addr = await session.get(Address, emp.address_id)
+        if addr:
+            address_dict = {
+                "address": addr.address_line_1,
+                "city": addr.city,
+                "state": addr.state,
+                "country": addr.country,
+                "pin": addr.postal_code,
+            }
+
+    return EmployeeOut(
+        id=emp.id,
+        full_name=emp.full_name,
+        email=emp.email,
+        mobile=emp.mobile,
+        qualification=emp.qualification,
+        experience=emp.experience_years,
+        designation_id=emp.designation_id,
+        designation_name=designation_name,
+        address_id=emp.address_id,
+        address=address_dict,
+        center_id=emp.center_id,
+        center_name=center_name,
+        joining_date=emp.joining_date,
+        status=emp.status.value if hasattr(emp, "status") and emp.status else None,
+        profile_photo=emp.profile_photo,
+    )
+
 
 @router.delete("/employee/{employee_id}")
-async def delete_employee(employee_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    employee = await session.get(Employee, employee_id)
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    await session.delete(employee)
+async def delete_employee(
+    employee_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    emp = await session.get(Employee, employee_id)
+    if not emp:
+        raise HTTPException(404, "Employee not found")
+    await session.delete(emp)
     await session.commit()
     return {"detail": "Employee deleted"}
 
-@router.get("/employee", response_model=list[EmployeeOut])
-async def list_employees(session: AsyncSession = Depends(get_async_session)):
+
+@router.get("/employee", response_model=List[EmployeeOut])
+async def list_employees(
+    session: AsyncSession = Depends(get_async_session)
+):
     result = await session.execute(select(Employee))
     employees = result.scalars().all()
-    designation_ids = {e.designation_id for e in employees if e.designation_id}
-    address_ids = {e.address_id for e in employees if e.address_id}
-    designation_map = {}
-    address_map = {}
-
-    if designation_ids:
-        designation_result = await session.execute(select(Designation).where(Designation.id.in_(designation_ids)))
-        for d in designation_result.scalars().all():
-            designation_map[d.id] = d.name
-    if address_ids:
-        address_result = await session.execute(select(Address).where(Address.id.in_(address_ids)))
-        for a in address_result.scalars().all():
-            address_map[a.id] = a
-
-    return [
-        {
-            "id": employee.id,
-            "full_name": employee.full_name,
-            "email": employee.email,
-            "mobile": employee.mobile,
-            "qualification": employee.qualification,
-            "experience": employee.experience_years,
-            "designation_id": str(employee.designation_id) if employee.designation_id else None,
-            "designation_name": designation_map.get(employee.designation_id),
-            "address_id": str(employee.address_id) if employee.address_id else None,
-            "address": {
-                "id": str(address_map[employee.address_id].id),
-                "address_line_1": address_map[employee.address_id].address_line_1,
-                "city": address_map[employee.address_id].city,
-                "state": address_map[employee.address_id].state,
-                "country": address_map[employee.address_id].country,
-                "postal_code": address_map[employee.address_id].postal_code
-            } if employee.address_id and employee.address_id in address_map else None,
-            "center_id": str(employee.center_id) if hasattr(employee, "center_id") else None,
-            "joining_date": employee.joining_date
-        }
-        for employee in employees
-    ]
+    employee_list = []
+    for emp in employees:
+        # Fetch designation name if needed
+        designation_name = None
+        if emp.designation_id:
+            desig = await session.get(Designation, emp.designation_id)
+            designation_name = desig.name if desig else None
+        # Fetch center name if needed
+        center_name = None
+        if emp.center_id:
+            center = await session.get(Center, emp.center_id)
+            center_name = center.center_name if center else None
+        # Fetch address details if needed
+        address_dict = None
+        if emp.address_id:
+            address = await session.get(Address, emp.address_id)
+            if address:
+                address_dict = {
+                    "address": address.address_line_1,
+                    "city": address.city,
+                    "state": address.state,
+                    "country": address.country,
+                    "pin": address.postal_code,
+                }
+        employee_list.append(EmployeeOut(
+            id=emp.id,
+            full_name=emp.full_name,
+            email=emp.email,
+            mobile=emp.mobile,
+            qualification=emp.qualification,
+            experience=emp.experience_years,
+            designation_id=emp.designation_id,
+            designation_name=designation_name,
+            address_id=emp.address_id,
+            address=address_dict,
+            center_id=emp.center_id,
+            center_name=center_name,
+            joining_date=emp.joining_date,
+            status=emp.status.value if hasattr(emp, "status") else None,
+            profile_photo=emp.profile_photo,
+        ))
+    return employee_list

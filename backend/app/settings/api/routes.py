@@ -296,27 +296,36 @@ async def get_designation(designation_id: uuid.UUID, session: AsyncSession = Dep
 @router.put("/designation/{designation_id}", response_model=DesignationOut)
 async def update_designation(
     designation_id: uuid.UUID,
-    data: DesignationUpdate = Depends(),
+    name: str = Form(...),
     image: UploadFile = File(None),
     session: AsyncSession = Depends(get_async_session)
 ):
     designation = await session.get(Designation, designation_id)
     if not designation:
         raise HTTPException(status_code=404, detail="Designation not found")
-    update_data = data.dict(exclude_unset=True, exclude={"code"})
-    for key, value in update_data.items():
-        setattr(designation, key, value)
+
+    # Check for duplicate name (optional, but recommended)
+    result_name = await session.execute(
+        select(Designation).where(Designation.name == name, Designation.id != designation_id)
+    )
+    if result_name.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Designation name already exists")
+
+    designation.name = name
+
     if image:
         image_key = f"designations/{uuid.uuid4()}_{image.filename}"
         image_bytes = await image.read()
         upload_file(image_bytes, image_key, image.content_type)
         designation.image_url = get_file_url(image_key)
+
     await session.commit()
     await session.refresh(designation)
     return {
         **designation.__dict__,
         "image_url": get_file_url(designation.image_url) if designation.image_url else None
     }
+
 
 # Delete Designation
 @router.delete("/designation/{designation_id}")
