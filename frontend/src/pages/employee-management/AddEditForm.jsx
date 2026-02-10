@@ -23,8 +23,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
   //   console.log('employeeData: ', employeeData)
-  const { mutateAsync: createCategory, isPending } = useCreateEmployeeMutation()
-  const { mutateAsync: updateCategory, isPending: updatePending } =
+  const { mutateAsync: createEmployee, isPending } = useCreateEmployeeMutation()
+  const { mutateAsync: updateEmployee, isPending: updatePending } =
     useUpdateEmployeeMutation()
   const [categoryOpen, setCategoryOpen] = useState(false)
   //   console.log('state?.auth?.center_id: ', state?.auth?.center_id)
@@ -62,9 +62,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
       })
       try {
         if (id) {
-          await updateCategory({ id, ...values })
+          await updateEmployee({ id, ...values })
         } else {
-          await createCategory(fd)
+          await createEmployee(fd)
         }
         closeModal()
       } catch (error) {
