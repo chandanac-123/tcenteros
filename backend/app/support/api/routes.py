@@ -16,7 +16,7 @@ router = APIRouter()
 # 1. Member raises ticket
 @router.post("/ticket/raise", response_model=TicketOut)
 async def raise_ticket(
-    subject: str = Form(...),
+    subject: Optional[str] = Form(None),  # Now optional
     description: str = Form(...),
     image: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session),
@@ -34,6 +34,7 @@ async def raise_ticket(
     if not member:
         raise HTTPException(404, "Member not found")
 
+    subject = subject or "No Subject"
     ticket = Ticket(
         id=uuid4(),
         member_id=member.id,
@@ -49,6 +50,7 @@ async def raise_ticket(
     await session.commit()
     await session.refresh(ticket)
     return await get_ticket(ticket.id, session, current_member)
+
 
 # 2. Get ticket and messages (all roles)
 @router.get("/ticket/{ticket_id}", response_model=TicketOut)
