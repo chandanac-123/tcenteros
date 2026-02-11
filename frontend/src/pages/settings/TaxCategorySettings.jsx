@@ -10,9 +10,14 @@ import {
   useAllTaxQuery,
   useCreateTaxMutation,
   useDeleteTaxMutation,
-  useUpdateTaxMutation
+  useUpdateTaxMutation,
+  useTaxGetByIdQuery
 } from '@api-queries/tax/Query'
 import { useFormik } from 'formik'
+import { Badge } from '@pages/components/ui/badge'
+import edit from '@assets/form-icons/edit.svg'
+import deleteicon from '@assets/form-icons/delete.svg'
+import DeleteModal from '@common/CustomeDelete'
 
 const TaxCategorySettings = () => {
   const [tableParams, setTableParams] = useState({
@@ -21,18 +26,26 @@ const TaxCategorySettings = () => {
     totalCount: 3
   })
   const { data, isFetching: isTaxFetching } = useAllTaxQuery()
-
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
+  const [editId, setEditId] = useState(null)
   const { mutateAsync: createTax, isPending } = useCreateTaxMutation()
-  // const { mutateAsync: updateTax, isPending: isUpdating } =
-  //   useUpdateTaxMutation()
-  // const { mutateAsync: deleteTax, isPending: isDeleting } =
-  //   useDeleteTaxMutation()
+  const { mutateAsync: updateTax, isPending: isUpdating } =
+    useUpdateTaxMutation()
+  const { mutateAsync: deleteTax, isPending: isDeleting } =
+    useDeleteTaxMutation(deleteId)
+  const { data: taxData, isFetching: isTaxFetchingById } = useTaxGetByIdQuery(
+    editId,
+    {
+      enabled: !!editId
+    }
+  )
 
   const initialValues = {
-    name: data?.name || '',
-    tax_type: data?.tax_type || '',
-    tax_percentage: data?.tax_percentage || '',
-    tax_scope: data?.tax_scope || ''
+    name: taxData?.name || '',
+    tax_type: taxData?.tax_type || '',
+    tax_percentage: taxData?.tax_percentage || '',
+    tax_scope: taxData?.tax_scope || ''
   }
 
   const formik = useFormik({
@@ -40,15 +53,27 @@ const TaxCategorySettings = () => {
     enableReinitialize: true,
     onSubmit: async values => {
       try {
-        await createTax(values)
+        if (editId) {
+          await updateTax({ id: editId, data: values })
+        } else {
+          await createTax(values)
+        }
 
-        closeModal()
+        formik.resetForm()
+        setEditId(null)
       } catch (error) {
         console.error(error)
       }
     }
   })
 
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteTax(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
+    }
+  }
   const columns = [
     {
       accessorKey: 'name',
@@ -68,27 +93,22 @@ const TaxCategorySettings = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
-            label={
-              row.original.status == 'active'
-                ? 'Active Member'
-                : 'Inactive Member'
-            }
+            label={row.original.status == 'active' ? 'Active' : 'Inactive'}
             variant={
               row.original.status == 'Active Member' ? 'active' : 'inactive'
             }
           />
-          <button
-            onClick={() => {
-              setViewId(row.original.id)
-              setViewOpen(true)
-            }}
-          >
-            <img src={view} alt='view' />
-          </button>
+        </span>
+      )
+    },
+    {
+      accessorKey: 'tax_scope',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
           <button
             onClick={() => {
               setEditId(row.original.id)
-              setEditOpen(true)
             }}
           >
             <img src={edit} alt='edit' />
@@ -104,10 +124,6 @@ const TaxCategorySettings = () => {
           <Switch />
         </span>
       )
-    },
-    {
-      accessorKey: 'tax_scope',
-      header: 'Actions'
     }
   ]
 
@@ -156,7 +172,7 @@ const TaxCategorySettings = () => {
         </div>
         <div className='flex justify-end mt-4 '>
           <Button size='addbutton' variant='default' type='submit'>
-            + Create Tax Category
+            {editId ? 'Update Tax Category' : '+ Create Tax Category'}
           </Button>
         </div>
       </form>
@@ -165,10 +181,17 @@ const TaxCategorySettings = () => {
         title='Products'
         subTitle='Products'
         columns={columns}
-        data={[]}
+        data={data || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}
+      />
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Tax Category'
+        description='Are you sure you want to delete this Tax Category?'
+        onConfirm={handleDelete}
       />
     </div>
   )
