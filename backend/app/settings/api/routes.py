@@ -3,17 +3,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
 from app.settings.models.models import CenterCategory, TaxCategory, Designation
-from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate
+from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut
 from app.settings.models.models import CenterOperationalSetting
 from app.auth.models.models import CenterAdmin
-from app.core.dependencies import centeradmin_required
+from app.center.models.models import Center
+from app.settings.models.models import TermsPrivacy, FAQ
+from app.settings.schema.schema import FAQCreate, FAQOut
+from uuid import uuid4
+from typing import List
+from app.settings.schema.schema import TermsPrivacyOut
+from app.core.dependencies import centeradmin_required, superadmin_required
 from app.s3.service import upload_file
 from app.core.dependencies import get_current_user
+from jinja2 import Template
 import uuid
 from datetime import time
 from app.s3.service import get_file_url
 import random
 import re
+from datetime import datetime
 
 router = APIRouter()
 
@@ -351,3 +359,107 @@ async def list_designations(session: AsyncSession = Depends(get_async_session)):
     ]
 
 
+
+
+@router.get("/terms-privacy", response_model=TermsPrivacyOut)
+async def get_terms_privacy(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    # Fetch the global terms/privacy (just get the first one)
+    result = await session.execute(select(TermsPrivacy))
+    template = result.scalars().first()
+    if not template:
+        raise HTTPException(404, "Terms/Privacy not found")
+
+    center_data = {}
+    if current_user["role"] in ("centeradmin", "member"):
+        center_id = None
+        if current_user["role"] == "centeradmin":
+            center_admin = await session.get(CenterAdmin, current_user["user_id"])
+            if not center_admin:
+                raise HTTPException(404, "CenterAdmin not found")
+            center_id = center_admin.center_id
+        elif current_user["role"] == "member":
+            from app.auth.models.models import Member
+            member = await session.get(Member, current_user["user_id"])
+            if not member:
+                raise HTTPException(404, "Member not found")
+            center_id = member.home_center_id
+
+        center = await session.get(Center, center_id)
+        if not center:
+            raise HTTPException(404, "Center not found")
+
+        # Explicitly fetch address using address_id to avoid MissingGreenlet
+        address = None
+        if center.address_id:
+            from app.settings.models.models import Address
+            address = await session.get(Address, center.address_id)
+
+        center_data = {
+            "center_name": center.center_name,
+            "center_address": (
+                f"{address.address_line_1 or ''}, {address.address_line_2 or ''}, "
+                f"{address.city or ''}, {address.state or ''}, {address.country or ''}, {address.postal_code or ''}"
+            ) if address else "",
+        }
+
+    rendered_content = Template(template.content).render(**center_data)
+    return {
+        "id": template.id,
+        "title": template.title,
+        "content": rendered_content,
+        "created_at": template.created_at,
+        "updated_at": template.updated_at,
+    }
+
+
+@router.post("/terms-privacy", response_model=TermsPrivacyOut)
+async def create_terms_privacy(
+    title: str = Form(...),
+    content: str = Form(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(superadmin_required)
+):
+    terms = TermsPrivacy(
+        title=title,
+        content=content,
+        created_by=current_user["user_id"],
+        updated_by=current_user["user_id"],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    session.add(terms)
+    await session.commit()
+    await session.refresh(terms)
+    return terms
+
+
+@router.post("/faqs", response_model=FAQOut, status_code=status.HTTP_201_CREATED)
+async def create_faq(
+    data: FAQCreate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(superadmin_required)
+):
+    faq = FAQ(
+        id=uuid4(),
+        question=data.question,
+        answer=data.answer,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    session.add(faq)
+    await session.commit()
+    await session.refresh(faq)
+    return faq
+
+# List FAQs (all members)
+@router.get("/faqs", response_model=List[FAQOut])
+async def list_faqs(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    result = await session.execute(select(FAQ))
+    faqs = result.scalars().all()
+    return faqs

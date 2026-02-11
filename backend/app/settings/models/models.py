@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Text, ForeignKey, Enum, Boolean, Integer, Numeric, Time, ARRAY, Date
+from sqlalchemy import Column, String, Text, ForeignKey, Enum, Boolean, Integer, Numeric, Time, ARRAY, Date, DateTime
 from app.core.models.base import AuditMixin, Base
 from app.core.models.models import StatusEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, declarative_base
+from datetime import datetime
 import uuid
 import enum
 
@@ -207,3 +208,25 @@ class CenterHoliday(Base, AuditMixin):
     )
 
 
+
+class TermsPrivacy(Base):
+    __tablename__ = "terms_privacy"
+    __table_args__ = {"schema": "settings"}
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)  # Use placeholders like {{center_name}}
+    created_by = Column(UUID(as_uuid=True), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = Column(UUID(as_uuid=True), nullable=False)
+
+
+
+class FAQ(Base):
+    __tablename__ = "faqs"
+    __table_args__ = {"schema": "settings"}
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    question = Column(String, nullable=False)
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

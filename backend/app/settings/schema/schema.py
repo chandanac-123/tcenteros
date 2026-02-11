@@ -2,6 +2,9 @@ from pydantic import BaseModel, UUID4, conint, validator, HttpUrl
 from datetime import time
 from typing import Optional, List
 import uuid
+from datetime import datetime
+from uuid import UUID
+
 
 #center category
 class CenterCategoryCreate(BaseModel):
@@ -109,3 +112,30 @@ class DesignationOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class TermsPrivacyOut(BaseModel):
+    id: UUID
+    title: str
+    content: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+
+class FAQCreate(BaseModel):
+    question: str
+    answer: str
+
+class FAQOut(BaseModel):
+    id: UUID
+    question: str
+    answer: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
