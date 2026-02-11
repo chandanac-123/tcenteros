@@ -32,7 +32,10 @@ export const DeleteEmployeeCategoriesApiCall = id =>
 export const GetEmployeeCategoriesByIdApiCall = id =>
   axiosInstance.get(`/settings/superadmin/designation/${id}`)
 
-export const getEmployeeApiCall = (data) => axiosInstance.get(`/auth/employee?page=${data?.page}&page_size=${data?.pageSize}`)
+export const getEmployeeApiCall = data =>
+  axiosInstance.get(
+    `/auth/employee?page=${data?.page}&page_size=${data?.pageSize}`
+  )
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)
 export const updateEmployeeApiCall = (details, id) =>
@@ -41,3 +44,16 @@ export const deleteEmployeeApiCall = id =>
   axiosInstance.delete(`/auth/employee/${id}`)
 export const GetEmployeeByIdApiCall = id =>
   axiosInstance.get(`/auth/employee/${id}`)
+
+// Tax API
+
+export const getTaxApiCall = () =>
+  axiosInstance.get(`settings/superadmin/tax-categories/`)
+export const createTaxApiCall = details =>
+  axiosInstance.post('/settings/superadmin/tax-categories/', details)
+export const updateTaxApiCall = (details, id) =>
+  axiosInstance.put(`/settings/superadmin/tax-categories/${id}`, details)
+export const deleteTaxApiCall = id =>
+  axiosInstance.delete(`/settings/superadmin/tax-categories/${id}`)
+export const getTaxByIdApiCall = id =>
+  axiosInstance.get(`/settings/superadmin/tax-categories/${id}`)

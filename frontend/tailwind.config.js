@@ -44,6 +44,8 @@ export default {
         primary_light:'#4581FF',
         grey_text:'#4A4747'  ,
         delete_red:'#AD3F2B',
+        day_select_bg:'#EEF3FF',
+        day_select:'#CDDDFF'
       }
     }
   },

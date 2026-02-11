@@ -6,7 +6,13 @@ import { Switch } from '@radix-ui/react-switch'
 import { Button } from '@pages/components/ui/button'
 import { tax_type } from '@constants/taxType'
 import { tax_scope } from '@constants/taxScope'
-
+import {
+  useAllTaxQuery,
+  useCreateTaxMutation,
+  useDeleteTaxMutation,
+  useUpdateTaxMutation
+} from '@api-queries/tax/Query'
+import { useFormik } from 'formik'
 
 const TaxCategorySettings = () => {
   const [tableParams, setTableParams] = useState({
@@ -14,18 +20,46 @@ const TaxCategorySettings = () => {
     pageSize: 10,
     totalCount: 3
   })
+  const { data, isFetching: isTaxFetching } = useAllTaxQuery()
+
+  const { mutateAsync: createTax, isPending } = useCreateTaxMutation()
+  // const { mutateAsync: updateTax, isPending: isUpdating } =
+  //   useUpdateTaxMutation()
+  // const { mutateAsync: deleteTax, isPending: isDeleting } =
+  //   useDeleteTaxMutation()
+
+  const initialValues = {
+    name: data?.name || '',
+    tax_type: data?.tax_type || '',
+    tax_percentage: data?.tax_percentage || '',
+    tax_scope: data?.tax_scope || ''
+  }
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      try {
+        await createTax(values)
+
+        closeModal()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
 
   const columns = [
     {
-      accessorKey: 'full_name',
+      accessorKey: 'name',
       header: 'Tax Name'
     },
     {
-      accessorKey: 'designation_name',
+      accessorKey: 'tax_type',
       header: 'Tax Type'
     },
     {
-      accessorKey: 'email',
+      accessorKey: 'tax_percentage',
       header: 'Tax Rate'
     },
     {
@@ -72,27 +106,31 @@ const TaxCategorySettings = () => {
       )
     },
     {
-      accessorKey: 'mobile',
+      accessorKey: 'tax_scope',
       header: 'Actions'
     }
   ]
 
   return (
     <div className='py-4 gap-4 flex flex-col'>
-      <form className='space-y-2'>
+      <form className='space-y-2' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
           <div className='flex-1'>
             <Input
               label='Tax Category Name'
-              name='full_name'
-              placeholder='Enter Your Full Name'
+              name='name'
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              placeholder='Enter Tax Name'
             />
           </div>
           <div className='flex-1'>
             <Input
               label='Tax Rate (Percentage)'
-              name='email'
-              placeholder='Enter Your Email ID'
+              name='tax_percentage'
+              value={formik.values.tax_percentage}
+              onChange={formik.handleChange}
+              placeholder='Enter Tax Rate (Percentage)'
             />
           </div>
         </div>
@@ -100,17 +138,19 @@ const TaxCategorySettings = () => {
           <div className='flex-1'>
             <CustomeSelect
               label='Tax Type'
-              name='full_name'
+              name='tax_type'
               options={tax_type}
-              placeholder='Enter Your Full Name'
+              value={formik.values.tax_type}
+              onChange={value => formik.setFieldValue('tax_type', value)}
             />
           </div>
           <div className='flex-1'>
             <CustomeSelect
               label='Tax Scope'
-              name='email'
+              name='tax_scope'
               options={tax_scope}
-              placeholder='Enter Your Email ID'
+              value={formik.values.tax_scope}
+              onChange={value => formik.setFieldValue('tax_scope', value)}
             />
           </div>
         </div>

@@ -6,42 +6,34 @@ import {
   SelectValue
 } from '@pages/components/ui/select'
 
-export default function CustomeSelect ({
+export default function CustomeSelect({
   label,
   placeholder,
-  constant = false,
   options,
-  onSelect
+  value,
+  onChange
 }) {
-  function handleSelect () {
-    if (onSelect) {
-      onSelect(value)
-    }
-  }
-
   return (
-    <Select onValueChange={handleSelect}>
+    <div>
       {label && (
         <label className='block mb-1 text-sm font-normal text-textblack'>
           {label}
         </label>
       )}
-      <SelectTrigger className='w-full h-9'>
-        <SelectValue
-          placeholder={placeholder}
-          className='placeholder:text-textwhite text-textwhite'
-        />
-      </SelectTrigger>
-      <SelectContent>
-        {options?.map((item, index) => {
-          return (
+
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className='w-full h-9'>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+
+        <SelectContent>
+          {options?.map((item, index) => (
             <SelectItem key={index} value={item?.id}>
-              {' '}
               {item?.label || item?.name}
             </SelectItem>
-          )
-        })}
-      </SelectContent>
-    </Select>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }

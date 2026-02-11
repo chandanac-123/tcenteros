@@ -1,94 +1,113 @@
-import { useState } from "react"
-import { Button } from "@pages/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@pages/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@pages/components/ui/select"
+import { useState } from 'react'
+import { Clock, X } from 'lucide-react'
 
-const hours = Array.from({ length: 12 }, (_, i) => i + 1)
-const minutes = Array.from({ length: 60 }, (_, i) =>
-  i.toString().padStart(2, "0")
-)
+export default function TimePicker ({ label }) {
+  const [hour, setHour] = useState('')
+  const [minute, setMinute] = useState('')
+  const [period, setPeriod] = useState('AM')
 
-const TimePicker = ({ value, onChange }) => {
-  const [hour, setHour] = useState("12")
-  const [minute, setMinute] = useState("00")
-  const [period, setPeriod] = useState("AM")
+  const isTimeSelected = hour !== '' && minute !== ''
 
-  const handleChange = (h, m, p) => {
-    const time = `${h}:${m} ${p}`
-    onChange?.(time)
+  // Hour validation (1–12 only)
+  const handleHourChange = e => {
+    let value = e.target.value
+
+    if (value === '') {
+      setHour('')
+      return
+    }
+
+    value = Number(value)
+
+    if (value >= 1 && value <= 12) {
+      setHour(value)
+    }
+  }
+
+  // Minute validation (0–59 only)
+  const handleMinuteChange = e => {
+    let value = e.target.value
+
+    if (value === '') {
+      setMinute('')
+      return
+    }
+
+    value = Number(value)
+
+    if (value >= 0 && value <= 59) {
+      setMinute(value)
+    }
+  }
+
+  const handleClear = () => {
+    setHour('')
+    setMinute('')
+    setPeriod('AM')
   }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-40 justify-start">
-          {value || "Select Time"}
-        </Button>
-      </PopoverTrigger>
+    <div className='w-full'>
+      <label className='block mb-1 text-sm font-normal text-textblack'>
+        {label}
+      </label>
 
-      <PopoverContent className="w-72 p-4">
-        <div className="flex gap-2">
-          
-          {/* Hour */}
-          <Select
-            value={hour}
-            onValueChange={(val) => {
-              setHour(val)
-              handleChange(val, minute, period)
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Hour" />
-            </SelectTrigger>
-            <SelectContent>
-              {hours.map((h) => (
-                <SelectItem key={h} value={h.toString()}>
-                  {h}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className='relative'>
+        {/* Clock Icon */}
+        <Clock
+          size={18}
+          className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'
+        />
 
-          {/* Minute */}
-          <Select
-            value={minute}
-            onValueChange={(val) => {
-              setMinute(val)
-              handleChange(hour, val, period)
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Min" />
-            </SelectTrigger>
-            <SelectContent className="h-60">
-              {minutes.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className='flex items-center justify-between border border-gray-300 rounded-xl pl-9 pr-3 py-2 bg-white shadow-sm'>
+          {/* HH : MM */}
+          <div className='flex items-center'>
+            <input
+              type='number'
+              placeholder='HH'
+              value={hour}
+              onChange={handleHourChange}
+              className='w-16 outline-none text-center'
+            />
 
-          {/* AM / PM */}
-          <Select
-            value={period}
-            onValueChange={(val) => {
-              setPeriod(val)
-              handleChange(hour, minute, val)
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="AM/PM" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="AM">AM</SelectItem>
-              <SelectItem value="PM">PM</SelectItem>
-            </SelectContent>
-          </Select>
+            <span className='mx-1'>:</span>
+
+            <input
+              type='number'
+              placeholder='MM'
+              value={minute}
+              onChange={handleMinuteChange}
+              className='w-16 outline-none text-center'
+            />
+          </div>
+
+          {/* AM/PM + Clear */}
+          <div className='flex items-center gap-3'>
+            <select
+              value={period}
+              onChange={e => setPeriod(e.target.value)}
+              className='outline-none bg-transparent cursor-pointer text-sm  text-textgrey'
+            >
+              <option value='AM'>AM</option>
+              <option value='PM'>PM</option>
+            </select>
+
+            {isTimeSelected && (
+              <X
+                size={16}
+                onClick={handleClear}
+                className='text-gray-400 hover:text-red-500 cursor-pointer'
+              />
+            )}
+          </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      </div>
+
+      {isTimeSelected && (
+        <p className='mt-2 text-sm text-gray-600'>
+          Selected Time: {hour}:{minute.toString().padStart(2, '0')} {period}
+        </p>
+      )}
+    </div>
   )
 }
-
-export default TimePicker
