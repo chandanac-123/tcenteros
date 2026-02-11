@@ -25,6 +25,8 @@ from app.core.dependencies import centeradmin_required, get_db, get_current_user
 from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy import or_
+import sqlalchemy as sa
 
 
 router = APIRouter()
@@ -1044,58 +1046,62 @@ async def delete_center_gallery_image(
     return {"detail": "Image deleted"}
 
 
+@router.get("/centers", response_model=dict)
+async def list_centers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    name: Optional[str] = Query(None),
+    location: Optional[str] = Query(None),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)  # Require authentication for all users
+):
+    # Build base query
+    stmt = select(Center)
+    if name:
+        stmt = stmt.where(Center.center_name.ilike(f"%{name}%"))
+    if location:
+        # Join with Address for location-based search
+        stmt = stmt.join(Address, Center.address_id == Address.id).where(
+            or_(
+                Address.city.ilike(f"%{location}%"),
+                Address.state.ilike(f"%{location}%"),
+                Address.country.ilike(f"%{location}%")
+            )
+        )
 
-# @router.get("/centers", response_model=dict)
-# async def list_centers(
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(10, ge=1, le=100),
-#     name: Optional[str] = Query(None),
-#     location: Optional[str] = Query(None),
-#     session: AsyncSession = Depends(get_async_session)
-# ):
-#     # Build base query
-#     stmt = select(Center)
-#     if name:
-#         stmt = stmt.where(Center.center_name.ilike(f"%{name}%"))
-#     if location:
-#         # Join with Address for location-based search
-#         stmt = stmt.join(Address, Center.address_id == Address.id).where(
-#             or_(
-#                 Address.city.ilike(f"%{location}%"),
-#                 Address.state.ilike(f"%{location}%"),
-#                 Address.country.ilike(f"%{location}%")
-#             )
-#         )
+    # Get total count
+    count_stmt = stmt.with_only_columns(sa.func.count()).order_by(None)
+    total_result = await session.execute(count_stmt)
+    total = total_result.scalar_one()
 
-#     # Get total count
-#     count_stmt = stmt.with_only_columns([sa.func.count()]).order_by(None)
-#     total_result = await session.execute(count_stmt)
-#     total = total_result.scalar_one()
+    # Pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    result = await session.execute(stmt)
+    centers = result.scalars().all()
 
-#     # Pagination
-#     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-#     result = await session.execute(stmt)
-#     centers = result.scalars().all()
+    # Prepare response (add address info)
+    centers_out = []
+    for center in centers:
+        # Fetch address explicitly to avoid async relationship issues
+        address = None
+        if center.address_id:
+            address = await session.get(Address, center.address_id)
+        centers_out.append({
+            "id": center.id,
+            "center_name": center.center_name,
+            "city": address.city if address else None,
+            "state": address.state if address else None,
+            "country": address.country if address else None,
+            # Add more fields as needed
+        })
 
-#     # Prepare response (add address info)
-#     centers_out = []
-#     for center in centers:
-#         # Fetch address explicitly to avoid async relationship issues
-#         address = None
-#         if center.address_id:
-#             address = await session.get(Address, center.address_id)
-#         centers_out.append({
-#             "id": center.id,
-#             "center_name": center.center_name,
-#             "city": address.city if address else None,
-#             "state": address.state if address else None,
-#             "country": address.country if address else None,
-#             # Add more fields as needed
-#         })
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "centers": centers_out
+    }
 
-#     return {
-#         "total": total,
-#         "page": page,
-#         "page_size": page_size,
-#         "centers": centers_out
-#     }
+
+
+
