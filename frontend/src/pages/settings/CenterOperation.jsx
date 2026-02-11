@@ -5,13 +5,23 @@ import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import SlotCard from './components/SlotCard'
 import DaySelector from './components/DaySelector'
-import { useAllSlotQuery, useCreateSlotMutation } from '@api-queries/slot/Query'
+import {
+  useAllSlotQuery,
+  useCreateSlotMutation,
+  useDeleteSlotMutation
+} from '@api-queries/slot/Query'
 import { useFormik } from 'formik'
+import DeleteModal from '@common/CustomeDelete'
 
 const CenterOperations = () => {
   const [selectedDays, setSelectedDays] = useState([])
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [selectedSlotId, setSelectedSlotId] = useState(null)
+
   const { data: slots, isFetching } = useAllSlotQuery()
-  const { mutateAsync: createSlot, isPending } = useCreateSlotMutation()
+  const { mutateAsync: createSlot, isPending: isCreating } =
+    useCreateSlotMutation()
+  const { mutateAsync: deleteSlot, isPending } = useDeleteSlotMutation()
 
   const initialValues = {
     start_time: '',
@@ -31,6 +41,17 @@ const CenterOperations = () => {
       }
     }
   })
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (!selectedSlotId) return
+      await deleteSlot(selectedSlotId)
+      setDeleteOpen(false)
+      setSelectedSlotId(null)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <div className='flex flex-col gap-6 py-2'>
@@ -122,11 +143,21 @@ const CenterOperations = () => {
               startTime={slot.start_time}
               endTime={slot.end_time}
               capacity={slot.slot_capacity}
-              onDelete={() => console.log('Delete', slot.id)}
+              onDelete={() => {
+                setSelectedSlotId(slot.id)
+                setDeleteOpen(true)
+              }}
             />
           ))}
         </div>
       </div>
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Slot'
+        description='Are you sure you want to delete this Slot?'
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }
