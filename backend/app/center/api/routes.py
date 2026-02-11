@@ -528,6 +528,32 @@ async def get_center_location(
     return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)
 
 
+@router.put("/center-location/", response_model=CenterLocationOut)
+async def update_center_location(
+    data: CenterLocationCreate,  # Or CenterLocationUpdate if you want a separate schema
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Get the center for the current admin
+    center_id = current_admin["center_id"]
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+
+    # Fetch the address explicitly
+    if not center.address_id:
+        raise HTTPException(status_code=404, detail="Center address not found")
+    address = await session.get(Address, center.address_id)
+    if not address:
+        raise HTTPException(status_code=404, detail="Center address not found")
+
+    # Update latitude and longitude
+    address.latitude = data.latitude
+    address.longitude = data.longitude
+    await session.commit()
+    await session.refresh(address)
+    return CenterLocationOut(center_id=center.id, latitude=address.latitude, longitude=address.longitude)
+
 
 #-------------------------------
 # Wallet APIs (Admin Only)
@@ -1016,3 +1042,60 @@ async def delete_center_gallery_image(
     await session.delete(img)
     await session.commit()
     return {"detail": "Image deleted"}
+
+
+
+# @router.get("/centers", response_model=dict)
+# async def list_centers(
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(10, ge=1, le=100),
+#     name: Optional[str] = Query(None),
+#     location: Optional[str] = Query(None),
+#     session: AsyncSession = Depends(get_async_session)
+# ):
+#     # Build base query
+#     stmt = select(Center)
+#     if name:
+#         stmt = stmt.where(Center.center_name.ilike(f"%{name}%"))
+#     if location:
+#         # Join with Address for location-based search
+#         stmt = stmt.join(Address, Center.address_id == Address.id).where(
+#             or_(
+#                 Address.city.ilike(f"%{location}%"),
+#                 Address.state.ilike(f"%{location}%"),
+#                 Address.country.ilike(f"%{location}%")
+#             )
+#         )
+
+#     # Get total count
+#     count_stmt = stmt.with_only_columns([sa.func.count()]).order_by(None)
+#     total_result = await session.execute(count_stmt)
+#     total = total_result.scalar_one()
+
+#     # Pagination
+#     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+#     result = await session.execute(stmt)
+#     centers = result.scalars().all()
+
+#     # Prepare response (add address info)
+#     centers_out = []
+#     for center in centers:
+#         # Fetch address explicitly to avoid async relationship issues
+#         address = None
+#         if center.address_id:
+#             address = await session.get(Address, center.address_id)
+#         centers_out.append({
+#             "id": center.id,
+#             "center_name": center.center_name,
+#             "city": address.city if address else None,
+#             "state": address.state if address else None,
+#             "country": address.country if address else None,
+#             # Add more fields as needed
+#         })
+
+#     return {
+#         "total": total,
+#         "page": page,
+#         "page_size": page_size,
+#         "centers": centers_out
+#     }
