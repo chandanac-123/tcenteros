@@ -4,19 +4,20 @@ from sqlalchemy.future import select
 from uuid import uuid4
 from typing import Optional, List
 from app.support.models.models import Ticket, TicketMessage, TicketStatus
-from app.auth.models.models import Member, CenterAdmin
+from app.auth.models.models import Member, CenterAdmin,SuperAdmin
 from app.center.models.models import Center
 from app.s3.service import upload_file, get_file_url
 from app.core.dependencies import member_required, superadmin_required, centeradmin_required, get_async_session, get_current_user
 from app.support.schema.schema import TicketOut, TicketMessageOut
 from datetime import datetime
-
+from fastapi.concurrency import run_in_threadpool
+from app.core.models.models import User 
 router = APIRouter()
 
 # 1. Member raises ticket
 @router.post("/ticket/raise", response_model=TicketOut)
 async def raise_ticket(
-    subject: Optional[str] = Form(None),  # Now optional
+    subject: Optional[str] = Form(None),
     description: str = Form(...),
     image: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session),
@@ -27,18 +28,29 @@ async def raise_ticket(
         file_bytes = await image.read()
         ext = image.filename.split('.')[-1]
         key = f"ticket_images/{uuid4()}.{ext}"
-        upload_file(file_bytes, key, content_type=image.content_type)
-        image_url = get_file_url(key)
+        await run_in_threadpool(upload_file, file_bytes, key, image.content_type)
+        image_url = await run_in_threadpool(get_file_url, key)
 
     member = await session.get(Member, current_member["user_id"])
     if not member:
         raise HTTPException(404, "Member not found")
 
     subject = subject or "No Subject"
+
+    # Fetch the first superadmin (assuming role field is present)
+    superadmin_result = await session.execute(
+        select(User).where(User.role == "superadmin")
+    )
+    superadmin = superadmin_result.scalars().first()
+    assigned_admin_id = superadmin.id if superadmin else None
+    assigned_admin_role = "superadmin" if superadmin else None
+
     ticket = Ticket(
         id=uuid4(),
         member_id=member.id,
         center_id=member.home_center_id,
+        assigned_admin_id=assigned_admin_id,
+        assigned_admin_role=assigned_admin_role,
         status=TicketStatus.pending,
         subject=subject,
         description=description,
@@ -46,11 +58,27 @@ async def raise_ticket(
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
+
     session.add(ticket)
     await session.commit()
     await session.refresh(ticket)
-    return await get_ticket(ticket.id, session, current_member)
 
+    messages = []
+
+    ticket_out = TicketOut(
+        id=ticket.id,
+        member_id=ticket.member_id,
+        center_id=ticket.center_id,
+        assigned_admin_id=ticket.assigned_admin_id,
+        status=ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status),
+        subject=ticket.subject,
+        description=ticket.description,
+        image_url=ticket.image_url,
+        created_at=ticket.created_at,
+        updated_at=ticket.updated_at,
+        messages=messages
+    )
+    return ticket_out
 
 # 2. Get ticket and messages (all roles)
 @router.get("/ticket/{ticket_id}", response_model=TicketOut)
@@ -63,16 +91,39 @@ async def get_ticket(
     if not ticket:
         raise HTTPException(404, "Ticket not found")
     # Access control: member (own), superadmin (all), centeradmin (assigned)
-    if current_user["role"] == "member" and ticket.member_id != current_user["user_id"]:
+    if current_user["role"] == "member" and str(ticket.member_id) != str(current_user["user_id"]):
         raise HTTPException(403, "Not allowed")
-    if current_user["role"] == "centeradmin" and ticket.assigned_admin_id != current_user["user_id"]:
+    if current_user["role"] == "centeradmin" and str(ticket.assigned_admin_id) != str(current_user["user_id"]):
         raise HTTPException(403, "Not allowed")
     # Fetch messages
-    messages = await session.execute(
+    messages_result = await session.execute(
         select(TicketMessage).where(TicketMessage.ticket_id == ticket.id).order_by(TicketMessage.created_at)
     )
-    ticket.messages = messages.scalars().all()
-    return ticket
+    messages = messages_result.scalars().all()
+    messages_out = [
+        TicketMessageOut(
+            id=msg.id,
+            sender_id=msg.sender_id,
+            sender_role=msg.sender_role,
+            message=msg.message,
+            image_url=msg.image_url,
+            created_at=msg.created_at
+        ) for msg in messages
+    ]
+    ticket_out = TicketOut(
+        id=ticket.id,
+        member_id=ticket.member_id,
+        center_id=ticket.center_id,
+        assigned_admin_id=ticket.assigned_admin_id,
+        status=ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status),
+        subject=ticket.subject,
+        description=ticket.description,
+        image_url=ticket.image_url,
+        created_at=ticket.created_at,
+        updated_at=ticket.updated_at,
+        messages=messages_out
+    )
+    return ticket_out
 
 # 3. Send message (all roles)
 @router.post("/ticket/{ticket_id}/message", response_model=TicketMessageOut)

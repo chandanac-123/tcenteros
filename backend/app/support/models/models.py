@@ -19,7 +19,8 @@ class Ticket(Base, AuditMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     member_id = Column(UUID(as_uuid=True), ForeignKey("auth.members.id"), nullable=False)
     center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
-    assigned_admin_id = Column(UUID(as_uuid=True), ForeignKey("auth.center_admins.id"), nullable=True)
+    assigned_admin_id = Column(UUID(as_uuid=True), nullable=True)  
+    assigned_admin_role = Column(String, nullable=True)  # "superadmin" or "centeradmin"
     status = Column(Enum(TicketStatus), default=TicketStatus.pending, nullable=False)
     subject = Column(String, nullable=False)
     description = Column(Text, nullable=False)
@@ -29,7 +30,6 @@ class Ticket(Base, AuditMixin):
 
     member = relationship("Member", foreign_keys=[member_id])
     center = relationship("Center", foreign_keys=[center_id])
-    assigned_admin = relationship("CenterAdmin", foreign_keys=[assigned_admin_id])
     messages = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan")
 
 

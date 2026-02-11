@@ -69,8 +69,8 @@ async def create_tax_category(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can create tax categories")
+    if current_user["role"] not in ("superadmin", "centeradmin"):
+        raise HTTPException(status_code=403, detail="Only superadmin or centeradmin can create tax categories")
     tax_category = TaxCategory(**data.dict())
     session.add(tax_category)
     await session.commit()
@@ -83,8 +83,8 @@ async def list_tax_categories(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can view tax categories")
+    if current_user["role"] not in ("superadmin", "centeradmin", "member"):
+        raise HTTPException(status_code=403, detail="Only superadmin, centeradmin, or member can view tax categories")
     result = await session.execute(select(TaxCategory))
     return result.scalars().all()
 
@@ -95,8 +95,8 @@ async def get_tax_category(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can view tax categories")
+    if current_user["role"] not in ("superadmin", "centeradmin", "member"):
+        raise HTTPException(status_code=403, detail="Only superadmin, centeradmin, or member can view tax categories")
     result = await session.execute(select(TaxCategory).where(TaxCategory.id == tax_id))
     tax_category = result.scalar_one_or_none()
     if not tax_category:
@@ -111,8 +111,8 @@ async def update_tax_category(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can update tax categories")
+    if current_user["role"] not in ("superadmin", "centeradmin"):
+        raise HTTPException(status_code=403, detail="Only superadmin or centeradmin can update tax categories")
     result = await session.execute(select(TaxCategory).where(TaxCategory.id == tax_id))
     tax_category = result.scalar_one_or_none()
     if not tax_category:
@@ -130,8 +130,8 @@ async def delete_tax_category(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
 ):
-    if current_user["role"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Only superadmin can delete tax categories")
+    if current_user["role"] not in ("superadmin", "centeradmin"):
+        raise HTTPException(status_code=403, detail="Only superadmin or centeradmin can delete tax categories")
     result = await session.execute(select(TaxCategory).where(TaxCategory.id == tax_id))
     tax_category = result.scalar_one_or_none()
     if not tax_category:
