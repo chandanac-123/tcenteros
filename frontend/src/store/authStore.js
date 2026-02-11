@@ -13,11 +13,12 @@ export const useAuthStore = create(
           accessToken: auth?.access_token || null, // use the correct property name
           refreshToken: auth?.refresh_token || null
         }),
-      clearAuth: () => ({
-        auth: null,
-        accessToken: null,
-        refreshToken: null
-      })
+      clearAuth: () =>
+        set({
+          auth: null,
+          accessToken: null,
+          refreshToken: null
+        })
     }),
     { name: 'auth-store' }
   )
