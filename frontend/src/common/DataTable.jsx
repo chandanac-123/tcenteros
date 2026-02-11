@@ -31,7 +31,7 @@ export function DataTable ({
   tableParams,
   paginationVisibile
 }) {
-  const page = tableParams.page || 1
+  const page = tableParams?.page || 1
   const rowsPerPage = 10
   const [rowSelection, setRowSelection] = useState({})
   const [loading, setLoading] = useState(false)
@@ -94,15 +94,15 @@ export function DataTable ({
     <div className='overflow-hidden rounded-md border'>
       <Table>
         <TableHeader>
-          {table.getHeaderGroups().map(headerGroup => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map(header => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
+          {table?.getHeaderGroups()?.map(headerGroup => (
+            <TableRow key={headerGroup?.id}>
+              {headerGroup?.headers?.map(header => (
+                <TableHead key={header?.id}>
+                  {header?.isPlaceholder
                     ? null
                     : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+                        header?.column?.columnDef?.header,
+                        header?.getContext()
                       )}
                 </TableHead>
               ))}
@@ -111,22 +111,22 @@ export function DataTable ({
         </TableHeader>
 
         <TableBody>
-          {table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map(row => (
+          {table?.getRowModel()?.rows.length ? (
+            table?.getRowModel()?.rows.map(row => (
               <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
+                key={row?.id}
+                data-state={row?.getIsSelected() && 'selected'}
               >
-                {row.getVisibleCells().map(cell => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                {row?.getVisibleCells()?.map(cell => (
+                  <TableCell key={cell?.id}>
+                    {flexRender(cell?.column?.columnDef?.cell, cell?.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className='h-24 text-center'>
+              <TableCell colSpan={columns?.length} className='h-24 text-center'>
                 No results.
               </TableCell>
             </TableRow>
