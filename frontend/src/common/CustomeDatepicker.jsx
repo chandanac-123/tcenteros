@@ -36,7 +36,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
 
-            <div className="flex items-center justify-between border border-gray-300 rounded-xl pl-9 pr-3 py-2 bg-white shadow-sm">
+            <div className="flex items-center justify-between border border-gray-300 rounded-md pl-9 pr-3 py-2 bg-white shadow-sm">
               {/* Date Text */}
               <span
                 className={`text-sm ${
