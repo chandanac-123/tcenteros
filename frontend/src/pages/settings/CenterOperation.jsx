@@ -5,17 +5,32 @@ import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import SlotCard from './components/SlotCard'
 import DaySelector from './components/DaySelector'
+import { useAllSlotQuery, useCreateSlotMutation } from '@api-queries/slot/Query'
+import { useFormik } from 'formik'
 
 const CenterOperations = () => {
   const [selectedDays, setSelectedDays] = useState([])
+  const { data: slots, isFetching } = useAllSlotQuery()
+  const { mutateAsync: createSlot, isPending } = useCreateSlotMutation()
 
+  const initialValues = {
+    start_time: '',
+    end_time: '',
+    slot_capacity: 0
+  }
 
-  const slots = [
-    { id: 1, start: '9:00 AM', end: '11:00 AM', capacity: 20 },
-    { id: 2, start: '11:00 AM', end: '1:00 PM', capacity: 25 },
-    { id: 3, start: '2:00 PM', end: '4:00 PM', capacity: 15 },
-    { id: 4, start: '4:00 PM', end: '6:00 PM', capacity: 18 }
-  ]
+  const formik = useFormik({
+    initialValues,
+    onSubmit: async values => {
+      console.log('values: ', values)
+      try {
+        await createSlot(values)
+        formik.resetForm()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
 
   return (
     <div className='flex flex-col gap-6 py-2'>
@@ -47,7 +62,7 @@ const CenterOperations = () => {
           <Button
             id='center-timing'
             size='addbutton'
-            variant='default'
+            variant='button_outlined'
             type='submit'
           >
             Save Changes
@@ -56,20 +71,37 @@ const CenterOperations = () => {
       </form>
 
       <span className='text-lg font-medium'>Center Slots</span>
-      <form className='space-y-4' id='create-center-slot'>
+      <form
+        className='space-y-4'
+        id='create-center-slot'
+        onSubmit={formik.handleSubmit}
+      >
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <TimePicker label='Start Time' />
+            <TimePicker
+              label='Start Time'
+              value={formik.values.start_time}
+              onChange={val => formik.setFieldValue('start_time', val)}
+            />
           </div>
           <div className='flex-1'>
-            <TimePicker label='Ending Time' />
+            <TimePicker
+              label='Ending Time'
+              value={formik.values.end_time}
+              onChange={val => formik.setFieldValue('end_time', val)}
+            />
           </div>
           <div className='flex-1'>
-            <Input label='Slot Capacity' />
+            <Input
+              type='number'
+              label='Slot Capacity'
+              name='slot_capacity'
+              value={formik.values.slot_capacity}
+              onChange={formik.handleChange}
+            />
           </div>
         </div>
-        <div className='flex justify-between items-center'>
-          <Input label='Attendance allowed radius' />
+        <div className='flex justify-end items-center'>
           <Button
             id='create-center-slot'
             size='addbutton'
@@ -84,12 +116,12 @@ const CenterOperations = () => {
       <div className='flex flex-col gap-4'>
         <span className='font-semibold'>Existing Slots</span>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-          {slots.map(slot => (
+          {slots?.map(slot => (
             <SlotCard
               key={slot.id}
-              startTime={slot.start}
-              endTime={slot.end}
-              capacity={slot.capacity}
+              startTime={slot.start_time}
+              endTime={slot.end_time}
+              capacity={slot.slot_capacity}
               onDelete={() => console.log('Delete', slot.id)}
             />
           ))}

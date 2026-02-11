@@ -15,3 +15,12 @@ export const applyTheme = theme => {
 
 // const { data } = await getThemeConfig()
 // applyTheme(data)
+
+export const convertTo12Hour = time => {
+  if (!time) return ''
+  const [hours, minutes] = time.split(':')
+  let hour = parseInt(hours, 10)
+  const period = hour >= 12 ? 'PM' : 'AM'
+  hour = hour % 12 || 12
+  return `${hour.toString().padStart(2, '0')}:${minutes} ${period}`
+}

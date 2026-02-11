@@ -45,8 +45,7 @@ export const deleteEmployeeApiCall = id =>
 export const GetEmployeeByIdApiCall = id =>
   axiosInstance.get(`/auth/employee/${id}`)
 
-// Tax API
-
+// TAX API
 export const getTaxApiCall = () =>
   axiosInstance.get(`settings/superadmin/tax-categories/`)
 export const createTaxApiCall = details =>
@@ -57,3 +56,11 @@ export const deleteTaxApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/tax-categories/${id}`)
 export const getTaxByIdApiCall = id =>
   axiosInstance.get(`/settings/superadmin/tax-categories/${id}`)
+
+//SLOT CREATION API
+export const getSlotApiCall = () =>
+  axiosInstance.get(`center/center/time-slots`)
+export const createSlotApiCall = details =>
+  axiosInstance.post('/center/center/time-slots/', details)
+export const deleteSlotApiCall = id =>
+  axiosInstance.delete(`/center/center/time-slots/${id}`)

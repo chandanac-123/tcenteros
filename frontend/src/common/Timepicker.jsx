@@ -1,66 +1,104 @@
-import { useState } from 'react'
 import { Clock, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-export default function TimePicker ({ label }) {
+export default function TimePicker ({ label, value, onChange }) {
   const [hour, setHour] = useState('')
   const [minute, setMinute] = useState('')
   const [period, setPeriod] = useState('AM')
 
-  const isTimeSelected = hour !== '' && minute !== ''
-
-  // Hour validation (1–12 only)
-  const handleHourChange = e => {
-    let value = e.target.value
-
-    if (value === '') {
+  // If parent value changes, update local UI
+  useEffect(() => {
+    if (!value) {
       setHour('')
+      setMinute('')
+      setPeriod('AM')
       return
     }
 
-    value = Number(value)
+    const [h, m] = value.split(':')
+    let hour24 = Number(h)
 
-    if (value >= 1 && value <= 12) {
-      setHour(value)
+    let newPeriod = hour24 >= 12 ? 'PM' : 'AM'
+    let hour12 = hour24 % 12 || 12
+
+    setHour(hour12)
+    setMinute(Number(m))
+    setPeriod(newPeriod)
+  }, [value])
+
+  const updateParent = (h, m, p) => {
+    if (h && m !== '') {
+      let hour24 = Number(h)
+
+      if (p === 'PM' && hour24 !== 12) hour24 += 12
+      if (p === 'AM' && hour24 === 12) hour24 = 0
+
+      const formatted = `${hour24.toString().padStart(2, '0')}:${m
+        .toString()
+        .padStart(2, '0')}`
+
+      onChange(formatted)
+    } else {
+      onChange('')
     }
   }
 
-  // Minute validation (0–59 only)
-  const handleMinuteChange = e => {
-    let value = e.target.value
-
+  const handleHourChange = e => {
+    const value = e.target.value
     if (value === '') {
-      setMinute('')
+      setHour('')
+      updateParent('', minute, period)
       return
     }
 
-    value = Number(value)
-
-    if (value >= 0 && value <= 59) {
-      setMinute(value)
+    const num = Number(value)
+    if (num >= 1 && num <= 12) {
+      setHour(num)
+      updateParent(num, minute, period)
     }
+  }
+
+  const handleMinuteChange = e => {
+    const value = e.target.value
+    if (value === '') {
+      setMinute('')
+      updateParent(hour, '', period)
+      return
+    }
+
+    const num = Number(value)
+    if (num >= 0 && num <= 59) {
+      setMinute(num)
+      updateParent(hour, num, period)
+    }
+  }
+
+  const handlePeriodChange = e => {
+    const value = e.target.value
+    setPeriod(value)
+    updateParent(hour, minute, value)
   }
 
   const handleClear = () => {
     setHour('')
     setMinute('')
     setPeriod('AM')
+    // onChange('')
   }
+
+  const isTimeSelected = hour !== '' && minute !== ''
 
   return (
     <div className='w-full'>
-      <label className='block mb-1 text-sm font-normal text-textblack'>
-        {label}
-      </label>
+      <label className='block mb-1 text-sm'>{label}</label>
 
       <div className='relative'>
-        {/* Clock Icon */}
         <Clock
           size={18}
           className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'
         />
 
-        <div className='flex items-center justify-between border border-gray-300 rounded-xl pl-9 pr-3 py-2 bg-white shadow-sm'>
-          {/* HH : MM */}
+        <div className='flex items-center justify-between border rounded-lg pl-9 pr-3 py-2 h-9  bg-white shadow-sm'>
           <div className='flex items-center'>
             <input
               type='number'
@@ -81,12 +119,11 @@ export default function TimePicker ({ label }) {
             />
           </div>
 
-          {/* AM/PM + Clear */}
           <div className='flex items-center gap-3'>
             <select
               value={period}
-              onChange={e => setPeriod(e.target.value)}
-              className='outline-none bg-transparent cursor-pointer text-sm  text-textgrey'
+              onChange={handlePeriodChange}
+              className='outline-none bg-transparent text-sm'
             >
               <option value='AM'>AM</option>
               <option value='PM'>PM</option>
@@ -96,18 +133,12 @@ export default function TimePicker ({ label }) {
               <X
                 size={16}
                 onClick={handleClear}
-                className='text-gray-400 hover:text-red-500 cursor-pointer'
+                className='cursor-pointer text-gray-400 hover:text-red-500'
               />
             )}
           </div>
         </div>
       </div>
-
-      {isTimeSelected && (
-        <p className='mt-2 text-sm text-gray-600'>
-          Selected Time: {hour}:{minute.toString().padStart(2, '0')} {period}
-        </p>
-      )}
     </div>
   )
 }
