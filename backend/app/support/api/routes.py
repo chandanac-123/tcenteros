@@ -138,9 +138,9 @@ async def send_ticket_message(
     if not ticket:
         raise HTTPException(404, "Ticket not found")
     # Access control: member (own), superadmin (all), centeradmin (assigned)
-    if current_user["role"] == "member" and ticket.member_id != current_user["user_id"]:
+    if current_user["role"] == "member" and str(ticket.member_id) != str(current_user["user_id"]):
         raise HTTPException(403, "Not allowed")
-    if current_user["role"] == "centeradmin" and ticket.assigned_admin_id != current_user["user_id"]:
+    if current_user["role"] == "centeradmin" and str(ticket.assigned_admin_id) != str(current_user["user_id"]):
         raise HTTPException(403, "Not allowed")
     # Only allow chat if ticket is open or assigned
     if ticket.status not in [TicketStatus.open, TicketStatus.assigned]:
@@ -223,7 +223,7 @@ async def close_ticket(
         raise HTTPException(404, "Ticket not found")
     if current_user["role"] not in ["superadmin", "centeradmin"]:
         raise HTTPException(403, "Not allowed")
-    if current_user["role"] == "centeradmin" and ticket.assigned_admin_id != current_user["user_id"]:
+    if current_user["role"] == "centeradmin" and str(ticket.assigned_admin_id) != str(current_user["user_id"]):
         raise HTTPException(403, "Not allowed")
     ticket.status = TicketStatus.closed
     ticket.updated_at = datetime.utcnow()
@@ -246,10 +246,34 @@ async def list_tickets(
         raise HTTPException(403, "Not allowed")
     result = await session.execute(stmt)
     tickets = result.scalars().all()
-    # Attach messages for each ticket
+    ticket_out_list = []
     for ticket in tickets:
-        messages = await session.execute(
+        messages_result = await session.execute(
             select(TicketMessage).where(TicketMessage.ticket_id == ticket.id).order_by(TicketMessage.created_at)
         )
-        ticket.messages = messages.scalars().all()
-    return tickets
+        messages = messages_result.scalars().all()
+        messages_out = [
+            TicketMessageOut(
+                id=msg.id,
+                sender_id=msg.sender_id,
+                sender_role=msg.sender_role,
+                message=msg.message,
+                image_url=msg.image_url,
+                created_at=msg.created_at
+            ) for msg in messages
+        ]
+        ticket_out = TicketOut(
+            id=ticket.id,
+            member_id=ticket.member_id,
+            center_id=ticket.center_id,
+            assigned_admin_id=ticket.assigned_admin_id,
+            status=ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status),
+            subject=ticket.subject,
+            description=ticket.description,
+            image_url=ticket.image_url,
+            created_at=ticket.created_at,
+            updated_at=ticket.updated_at,
+            messages=messages_out
+        )
+        ticket_out_list.append(ticket_out)
+    return ticket_out_list
