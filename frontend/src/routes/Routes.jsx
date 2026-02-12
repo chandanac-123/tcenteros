@@ -42,9 +42,9 @@ import inventory from '../assets/sidebar-icons/inventory.svg'
 import membership from '../assets/sidebar-icons/membership.svg'
 import network from '../assets/sidebar-icons/network.svg'
 import billing from '../assets/sidebar-icons/billing.svg'
-import wallet from '../assets/sidebar-icons/wallet.svg' 
-import performance from '../assets/sidebar-icons/performance.svg' 
-import crm from '../assets/sidebar-icons/crm.svg' 
+import wallet from '../assets/sidebar-icons/wallet.svg'
+import performance from '../assets/sidebar-icons/performance.svg'
+import crm from '../assets/sidebar-icons/crm.svg'
 import active_dashboard from '../assets/sidebar-icons/active-dashboard.svg'
 import active_branding from '../assets/sidebar-icons/active-branding.svg'
 import active_attendance from '../assets/sidebar-icons/active-attendance.svg'
@@ -53,11 +53,10 @@ import active_inventory from '../assets/sidebar-icons/active-inventory.svg'
 import active_membership from '../assets/sidebar-icons/active-membership.svg'
 import active_network from '../assets/sidebar-icons/active-network.svg'
 import active_billing from '../assets/sidebar-icons/active-billing.svg'
-import active_wallet from '../assets/sidebar-icons/active-wallet.svg' 
-import active_performance from '../assets/sidebar-icons/active-performance.svg' 
-import active_crm from '../assets/sidebar-icons/active-crm.svg' 
+import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
+import active_performance from '../assets/sidebar-icons/active-performance.svg'
+import active_crm from '../assets/sidebar-icons/active-crm.svg'
 import Settings from '@pages/settings'
-
 
 export const routes = [
   {
@@ -71,7 +70,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/type-selection',
     label: '',
@@ -82,7 +81,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/class-mode',
     label: '',
@@ -93,7 +92,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/center-size-scale',
     label: '',
@@ -104,7 +103,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/digital-presence',
     label: '',
@@ -115,7 +114,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/smart-recommandation',
     label: '',
@@ -126,7 +125,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/marketing-support',
     label: '',
@@ -137,7 +136,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/contact-details',
     label: '',
@@ -148,7 +147,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/pricing-page',
     label: '',
@@ -159,7 +158,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/invoice-summary',
     label: '',
@@ -170,7 +169,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/management',
     label: '',
@@ -181,7 +180,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/member-management',
     label: '',
@@ -192,7 +191,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/attendance-tracking',
     label: '',
@@ -204,7 +203,7 @@ export const routes = [
     permission: true
   },
 
-     {
+  {
     key: 0,
     path: '/payment-billing',
     label: '',
@@ -215,7 +214,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-     {
+  {
     key: 0,
     path: '/report-and-insight',
     label: '',
@@ -226,7 +225,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-     {
+  {
     key: 0,
     path: '/sellable-item',
     label: '',
@@ -237,7 +236,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-     {
+  {
     key: 0,
     path: '/slot-and-capacity',
     label: '',
@@ -249,7 +248,7 @@ export const routes = [
     permission: true
   },
 
-    {
+  {
     key: 0,
     path: '/trainer-and-staff',
     label: '',
@@ -260,7 +259,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/primary-login',
     label: '',
@@ -271,7 +270,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/login',
     label: '',
@@ -282,7 +281,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/forgot-password',
     label: '',
@@ -293,7 +292,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/otp-verification',
     label: '',
@@ -304,7 +303,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/reset-password',
     label: '',
@@ -315,7 +314,7 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
+  {
     key: 0,
     path: '/reset-success',
     label: '',
@@ -334,12 +333,12 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Dashboard',
     component: Dashboard,
-    icon:dashboard,
+    icon: dashboard,
     iconActive: active_dashboard,
     menubar: true,
     permission: true
   },
-   {
+  {
     key: 1,
     path: '/employee-management',
     label: '',
@@ -351,8 +350,8 @@ export const routes = [
     iconActive: active_employee,
     menubar: true,
     permission: true
-  }
-  , {
+  },
+  {
     key: 1,
     path: '/membership-plan',
     label: '',
@@ -365,7 +364,7 @@ export const routes = [
     menubar: true,
     permission: true
   },
-   {
+  {
     key: 1,
     path: '/crm',
     label: '',
@@ -377,7 +376,8 @@ export const routes = [
     iconActive: active_crm,
     menubar: true,
     permission: true
-  }, {
+  },
+  {
     key: 1,
     path: '/network',
     label: '',
@@ -389,7 +389,8 @@ export const routes = [
     iconActive: active_network,
     menubar: true,
     permission: true
-  }, {
+  },
+  {
     key: 1,
     path: '/attendance',
     label: '',
@@ -401,7 +402,8 @@ export const routes = [
     iconActive: active_attendance,
     menubar: true,
     permission: true
-  }, {
+  },
+  {
     key: 1,
     path: '/wallet',
     label: '',
@@ -413,7 +415,8 @@ export const routes = [
     iconActive: active_wallet,
     menubar: true,
     permission: true
-  }, {
+  },
+  {
     key: 1,
     path: '/inventories',
     label: '',
@@ -425,8 +428,8 @@ export const routes = [
     iconActive: active_inventory,
     menubar: true,
     permission: true
-  }
-  , {
+  },
+  {
     key: 1,
     path: '/billing',
     label: '',
@@ -438,8 +441,8 @@ export const routes = [
     iconActive: active_billing,
     menubar: true,
     permission: true
-  }
-  , {
+  },
+  {
     key: 1,
     path: '/branding',
     label: '',
@@ -451,8 +454,8 @@ export const routes = [
     iconActive: active_branding,
     menubar: true,
     permission: true
-  }
-  , {
+  },
+  {
     key: 1,
     path: '/performance-analytics',
     label: '',
