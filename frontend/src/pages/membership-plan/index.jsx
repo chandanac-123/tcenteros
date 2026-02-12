@@ -1,23 +1,108 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import CustomeTab from '@common/CustomeTab'
 import { Button } from '@pages/components/ui/button'
-import memberimg from '@assets/dummy/member.png'
-import tick from '@assets/form-icons/tick.svg'
-import edit from '@assets/form-icons/edit.svg'
-import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
+import CreateMembershipForm from './CreateForm'
+import PlanCard from './PlanCard'
 
 const MembershipPlan = () => {
   const navigate = useNavigate()
+
+  const [active, setActive] = useState(true)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const employeeOrCenter = [
     { id: 1, name: 'All' },
     { id: 2, name: 'Active' },
     { id: 3, name: 'Inactive' }
   ]
+
+
+  const colorPalette = [
+  {
+    bg: "bg-plan_bg_grey",
+    foorter_bg: "bg-plan_grey",
+    text: "text-plan_grey"
+  },
+  {
+    foorter_bg: "bg-plan_green",
+    bg: "bg-plan_bg_green",
+    text: "text-plan_green"
+  },
+  {
+    foorter_bg: "bg-plan_blue",
+    bg: "bg-plan_bg_blue",
+    text: "bg-plan_blue",
+  },
+  {
+    foorter_bg: "bg-plan_purple",
+    bg: "bg-plan_bg_purple",
+    text: "text-plan_purple"
+  }
+]
+
+
+  const dummyPlans = [
+    {
+      title: 'Base Plan',
+      price: 3999,
+      duration: '3 Months',
+      membershipId: '7896543',
+      description:
+        'Experience exclusive access to personal training sessions and advanced nutrition plans.',
+      features: [
+        'Dedicated Nutrition App (iOS & Android)',
+        'Performance Analytics',
+        'Progress Tracking',
+        'Workout Insights'
+      ]
+    },
+    {
+      title: 'Silver Plan',
+      price: 5999,
+      duration: '6 Months',
+      membershipId: '4561237',
+      description:
+        'Enhanced features including personalized diet charts and premium support.',
+      features: [
+        'Premium Nutrition Plan',
+        'Custom Workouts',
+        'Progress Reports',
+        'Priority Support'
+      ]
+    },
+    {
+      title: 'Gold Plan',
+      price: 8999,
+      duration: '12 Months',
+      membershipId: '1122334',
+      description:
+        'Full access membership with unlimited sessions and AI fitness tracking.',
+      features: [
+        'Unlimited Sessions',
+        'AI Fitness Tracking',
+        'Dedicated Coach',
+        'Advanced Reports'
+      ]
+    },
+    {
+      title: 'Platinum Plan',
+      price: 12999,
+      duration: '18 Months',
+      membershipId: '4455667',
+      description:
+        'Ultimate experience with luxury features and complete customization.',
+      features: [
+        'VIP Support',
+        'Fully Customized Plans',
+        'Elite Analytics',
+        '24/7 Assistance'
+      ]
+    }
+  ]
+
   return (
     <ContentLayout>
       <div className='font-medium text-2xl'> Available Membership Plans</div>
@@ -32,14 +117,37 @@ const MembershipPlan = () => {
           />
         </div>
         <div className='flex'>
-          <Button size='addbutton' onClick={() => navigate('/membership-form')}>
+          <Button size='addbutton' onClick={() => setOpen(true)}>
             {' '}
             + Create New Plan
           </Button>
         </div>
       </div>
 
-      <div className='w-full flex border border-primary  rounded-lg px-3 py-5 justify-between items-center gap-2'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+        {dummyPlans.map((plan, index) => (
+          <PlanCard
+            key={index}
+            {...plan}
+             colors={colorPalette[index % colorPalette.length]}
+          />
+        ))}
+      </div>
+
+      <CreateMembershipForm open={open} setOpen={setOpen} />
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Are you sure you want to delete this plan?'
+        description='This plan will be removed from your active offerings and new members wont be able to purchase it. This action cannot be undone.'
+      />
+    </ContentLayout>
+  )
+}
+export default MembershipPlan
+
+{
+  /* <div className='w-full flex border border-primary  rounded-lg px-3 py-5 justify-between items-center gap-2'>
         <div>
           <img src={memberimg} alt='Member' className='w-40 h-40' />
         </div>
@@ -108,14 +216,5 @@ const MembershipPlan = () => {
             </button>
           </div>
         </div>
-      </div>
-      <DeleteModal
-        open={deleteOpen}
-        setOpen={setDeleteOpen}
-        header='Are you sure you want to delete this plan?'
-        description='This plan will be removed from your active offerings and new members wont be able to purchase it. This action cannot be undone.'
-      />
-    </ContentLayout>
-  )
+      </div> */
 }
-export default MembershipPlan

@@ -17,6 +17,7 @@ const buttonVariants = cva(
           'border border-input text-grey border-grey  font-medium justify-between',
         button_filled: 'bg-primary text-white',
         button_outlined: ' text-primary outline ',
+        button_outlined_textleft: 'text-primary outline justify-start',
         button_filter: 'text-textgrey border-2 border-filter_border',
         delete_button: 'text-delete_red border-2 border-delete_red bg-delete_red text-white',
 
