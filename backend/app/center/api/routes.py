@@ -1165,10 +1165,9 @@ async def list_all_facilities(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    # Allow only centeradmin or member with status 'guest'
+    # Allow access to centeradmin and all members
     user_role = current_user.get("role")
-    member_status = current_user.get("member_status")
-    if not (user_role == "centeradmin" or (user_role == "member" and member_status == "guest")):
+    if user_role not in ("centeradmin", "member"):
         raise HTTPException(status_code=403, detail="Not authorized")
 
     result = await session.execute(select(Center.facilities))
