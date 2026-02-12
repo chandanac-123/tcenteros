@@ -2,7 +2,7 @@
 import email
 from sqlite3 import IntegrityError
 from fastapi import APIRouter, Body, HTTPException, Depends, Query, Path, UploadFile, File, Form
-from typing import List, Optional
+from typing import List, Optional, Set
 import uuid
 import json
 import traceback
@@ -1160,3 +1160,20 @@ async def list_centers(
 
 
 
+@router.get("/facilities/all", response_model=List[str])
+async def list_all_facilities(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    # Allow only centeradmin or member with status 'guest'
+    user_role = current_user.get("role")
+    member_status = current_user.get("member_status")
+    if not (user_role == "centeradmin" or (user_role == "member" and member_status == "guest")):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    result = await session.execute(select(Center.facilities))
+    facilities_set: Set[str] = set()
+    for row in result.scalars().all():
+        if row:
+            facilities_set.update(row)
+    return list(facilities_set)
