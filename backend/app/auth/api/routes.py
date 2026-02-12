@@ -113,13 +113,13 @@ async def request_otp(data: OTPRequest, session: AsyncSession = Depends(get_asyn
         phone_str = str(data.phone)
         new_member = Member(
             id=uuid4(),
-            email=f"lead_{phone_str}@autogen.local",
-            username=f"lead_{phone_str}",
-            password_hash="otp_lead",  # <-- Provide a dummy non-null value
+            email=f"guest_{phone_str}@autogen.local",
+            username=f"guest_{phone_str}",
+            password_hash="otp_guest",  # <-- Provide a dummy non-null value
             role="member",
             status=StatusEnum.active,
             mobile=phone_str,
-            member_status=MemberStatusEnum.lead,
+            member_status=MemberStatusEnum.guest,  # <-- Set as guest
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )

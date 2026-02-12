@@ -9,6 +9,7 @@ import traceback
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
+from app.membership.models.models import Membership
 from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage
 from app.settings.models.models import CenterCategory,Designation, Address, TaxCategory, CenterOperationalSetting
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
@@ -25,11 +26,27 @@ from app.core.dependencies import centeradmin_required, get_db, get_current_user
 from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
+from math import radians, cos, sin, asin, sqrt
 from sqlalchemy import or_
 import sqlalchemy as sa
 
 
 router = APIRouter()
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    # Calculate the great circle distance between two points on the earth (in km)
+    # All args must be float
+    lon1, lat1, lon2, lat2 = map(float, [lon1, lat1, lon2, lat2])
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    km = 6371 * c
+    return km
 
 # 1. POST /center/onboarding/temp
 @router.post("/onboarding/temp", response_model=CenterOnboardingTempOut)
@@ -1052,15 +1069,23 @@ async def list_centers(
     page_size: int = Query(10, ge=1, le=100),
     name: Optional[str] = Query(None),
     location: Optional[str] = Query(None),
+    category_id: Optional[str] = Query(None),
+    facilities: Optional[List[str]] = Query(None),  # e.g. ?facilities=wifi&facilities=parking
+    time_slot_id: Optional[str] = Query(None),
+    min_price: Optional[float] = Query(None),
+    max_price: Optional[float] = Query(None),
+    latitude: Optional[float] = Query(None),  # User's current latitude
+    longitude: Optional[float] = Query(None), # User's current longitude
+    range_km: Optional[float] = Query(None),  # Range in km
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)  # Require authentication for all users
+    current_user=Depends(get_current_user)
 ):
-    # Build base query
     stmt = select(Center)
+
+    # Search filters
     if name:
         stmt = stmt.where(Center.center_name.ilike(f"%{name}%"))
     if location:
-        # Join with Address for location-based search
         stmt = stmt.join(Address, Center.address_id == Address.id).where(
             or_(
                 Address.city.ilike(f"%{location}%"),
@@ -1069,7 +1094,30 @@ async def list_centers(
             )
         )
 
-    # Get total count
+    # Filter by category
+    if category_id:
+        stmt = stmt.where(Center.center_category_id == category_id)
+
+    # Filter by facilities (array contains all)
+    if facilities:
+        for facility in facilities:
+            stmt = stmt.where(Center.facilities.contains([facility]))
+
+    # Filter by time slot
+    if time_slot_id:
+        stmt = stmt.join(CenterTimeSlot, Center.id == CenterTimeSlot.center_id).where(
+            CenterTimeSlot.id == time_slot_id
+        )
+
+    # Filter by membership price
+    if min_price is not None or max_price is not None:
+        stmt = stmt.join(Membership, Center.id == Membership.center_id)
+        if min_price is not None:
+            stmt = stmt.where(Membership.default_price >= min_price)
+        if max_price is not None:
+            stmt = stmt.where(Membership.default_price <= max_price)
+
+    # Get total count (before location filter)
     count_stmt = stmt.with_only_columns(sa.func.count()).order_by(None)
     total_result = await session.execute(count_stmt)
     total = total_result.scalar_one()
@@ -1079,24 +1127,30 @@ async def list_centers(
     result = await session.execute(stmt)
     centers = result.scalars().all()
 
-    # Prepare response (add address info)
     centers_out = []
     for center in centers:
-        # Fetch address explicitly to avoid async relationship issues
         address = None
         if center.address_id:
             address = await session.get(Address, center.address_id)
+        # Location range filter
+        if latitude is not None and longitude is not None and range_km is not None:
+            if address and address.latitude is not None and address.longitude is not None:
+                distance = haversine(latitude, longitude, float(address.latitude), float(address.longitude))
+                if distance > range_km:
+                    continue  # Skip centers outside the range
         centers_out.append({
             "id": center.id,
             "center_name": center.center_name,
             "city": address.city if address else None,
             "state": address.state if address else None,
             "country": address.country if address else None,
+            "category_id": center.center_category_id,
+            "facilities": center.facilities,
             # Add more fields as needed
         })
 
     return {
-        "total": total,
+        "total": len(centers_out) if latitude and longitude and range_km else total,
         "page": page,
         "page_size": page_size,
         "centers": centers_out
