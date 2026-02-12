@@ -12,9 +12,14 @@ import {
 } from '@api-queries/slot/Query'
 import { useFormik } from 'formik'
 import DeleteModal from '@common/CustomeDelete'
+import {
+  useAllCenterTimeQuery,
+  useCreateCenterTimeMutation,
+  useUpdateCenterTimeMutation
+} from '@api-queries/center-time/Query'
+import { convertTo12Hour } from '@utils/helper'
 
 const CenterOperations = () => {
-  const [selectedDays, setSelectedDays] = useState([])
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [selectedSlotId, setSelectedSlotId] = useState(null)
 
@@ -22,6 +27,23 @@ const CenterOperations = () => {
   const { mutateAsync: createSlot, isPending: isCreating } =
     useCreateSlotMutation()
   const { mutateAsync: deleteSlot, isPending } = useDeleteSlotMutation()
+
+  const { data: centerTime, isFetching: isFetchingCenterTime } =
+    useAllCenterTimeQuery()
+  console.log('centerTime: ', centerTime)
+  const { mutateAsync: createCenterTime, isPending: isCreatingCenterTime } =
+    useCreateCenterTimeMutation()
+  const { mutateAsync: updateCenterTime, isPending: isUpdatingCenterTime } =
+    useUpdateCenterTimeMutation()
+
+  const centerTimeInitialValues = {
+    opening_time: convertTo12Hour(centerTime?.opening_time) || '',
+    closing_time: convertTo12Hour(centerTime?.closing_time) || '',
+    week_off_days:
+      centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
+    attendance_allowed_radius_meters:
+      centerTime?.attendance_allowed_radius_meters || ''
+  }
 
   const initialValues = {
     start_time: '',
@@ -36,6 +58,23 @@ const CenterOperations = () => {
       try {
         await createSlot(values)
         formik.resetForm()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
+
+  const centerTimeFormik = useFormik({
+    initialValues: centerTimeInitialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      
+      try {
+        if (centerTime) {
+          await updateCenterTime({ id: centerTime.id, data: values })
+        } else {
+          await createCenterTime(values)
+        }
       } catch (error) {
         console.error(error)
       }
@@ -57,14 +96,30 @@ const CenterOperations = () => {
     <div className='flex flex-col gap-6 py-2'>
       <span className='text-lg font-semibold'>Center Timings</span>
 
-      <form className='space-y-4' id='center-timing'>
+      <form
+        className='space-y-4'
+        id='center-timing'
+        onSubmit={centerTimeFormik.handleSubmit}
+      >
         {/* Time Pickers */}
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <TimePicker label='Opening Time' />
+            <TimePicker
+              label='Opening Time'
+              value={centerTimeFormik.values.opening_time}
+              onChange={val =>
+                centerTimeFormik.setFieldValue('opening_time', val)
+              }
+            />
           </div>
           <div className='flex-1'>
-            <TimePicker label='Closing Time' />
+            <TimePicker
+              label='Closing Time'
+              value={centerTimeFormik.values.closing_time}
+              onChange={val =>
+                centerTimeFormik.setFieldValue('closing_time', val)
+              }
+            />
           </div>
         </div>
 
@@ -73,13 +128,24 @@ const CenterOperations = () => {
           <DaySelector
             label='Week-off Days'
             days={days}
-            selectedDays={selectedDays}
-            onChange={setSelectedDays}
+            selectedDays={centerTimeFormik.values.week_off_days}
+            onChange={val =>
+              centerTimeFormik.setFieldValue('week_off_days', val)
+            }
           />
         </div>
 
         <div className='flex justify-between items-center'>
-          <Input label='Attendance allowed radius' />
+          <Input
+            label='Attendance allowed radius'
+            value={centerTimeFormik.values.attendance_allowed_radius_meters}
+            onChange={e =>
+              centerTimeFormik.setFieldValue(
+                'attendance_allowed_radius_meters',
+                e.target.value
+              )
+            }
+          />
           <Button
             id='center-timing'
             size='addbutton'

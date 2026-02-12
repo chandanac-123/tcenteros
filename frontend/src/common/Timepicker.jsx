@@ -2,6 +2,7 @@ import { Clock, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export default function TimePicker ({ label, value, onChange }) {
+  console.log('value: ', value)
   const [hour, setHour] = useState('')
   const [minute, setMinute] = useState('')
   const [period, setPeriod] = useState('AM')
@@ -14,29 +15,23 @@ export default function TimePicker ({ label, value, onChange }) {
       setPeriod('AM')
       return
     }
-
     const [h, m] = value.split(':')
-    let hour24 = Number(h)
-
-    let newPeriod = hour24 >= 12 ? 'PM' : 'AM'
-    let hour12 = hour24 % 12 || 12
-
-    setHour(hour12)
-    setMinute(Number(m))
+    const hour24 = parseInt(h, 10)
+    const newPeriod = hour24 >= 12 ? 'PM' : 'AM'
+    const hour12 = hour24 % 12 || 12
+    setHour(hour12.toString())
+    setMinute((m || '').slice(0, 2)) // safe minute
     setPeriod(newPeriod)
   }, [value])
 
   const updateParent = (h, m, p) => {
-    if (h && m !== '') {
+    if (h !== '' && m !== '') {
       let hour24 = Number(h)
-
       if (p === 'PM' && hour24 !== 12) hour24 += 12
       if (p === 'AM' && hour24 === 12) hour24 = 0
-
       const formatted = `${hour24.toString().padStart(2, '0')}:${m
         .toString()
         .padStart(2, '0')}`
-
       onChange(formatted)
     } else {
       onChange('')
@@ -50,11 +45,10 @@ export default function TimePicker ({ label, value, onChange }) {
       updateParent('', minute, period)
       return
     }
-
     const num = Number(value)
     if (num >= 1 && num <= 12) {
-      setHour(num)
-      updateParent(num, minute, period)
+      setHour(value) // 👈 STRING
+      updateParent(value, minute, period)
     }
   }
 
@@ -65,11 +59,10 @@ export default function TimePicker ({ label, value, onChange }) {
       updateParent(hour, '', period)
       return
     }
-
     const num = Number(value)
     if (num >= 0 && num <= 59) {
-      setMinute(num)
-      updateParent(hour, num, period)
+      setMinute(value) // 👈 STRING
+      updateParent(hour, value, period)
     }
   }
 
@@ -83,7 +76,7 @@ export default function TimePicker ({ label, value, onChange }) {
     setHour('')
     setMinute('')
     setPeriod('AM')
-    // onChange('')
+    onChange('')
   }
 
   const isTimeSelected = hour !== '' && minute !== ''
