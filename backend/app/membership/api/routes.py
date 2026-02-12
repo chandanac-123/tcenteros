@@ -1,5 +1,5 @@
 from app.core.models.models import StatusEnum, User
-from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Query, Path
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership, MembershipFeature
@@ -19,7 +19,7 @@ from sqlalchemy import select, func
 from app.membership.schema.schema import MembershipOut, MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
-from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest, TimeSlotChangeStatus, TimeSlotChangeType
+from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest,  TimeSlotChangeStatus, TimeSlotChangeType, Center
 router = APIRouter()
 
 #create membership plan
@@ -738,3 +738,39 @@ async def get_expired_member_memberships(
         }
         for m in expired_memberships
     ]
+
+
+
+@router.post("/member/register-guest/{center_id}")
+async def register_guest_member_to_center(
+    center_id: str = Path(..., description="ID of the center to register the guest in"),
+    session: AsyncSession = Depends(get_async_session),
+    current_member=Depends(member_required)
+):
+    # Fetch the member from DB
+    member = await session.get(Member, current_member["user_id"])
+    if not member:
+        raise HTTPException(404, "Member not found")
+    if member.member_status != MemberStatusEnum.guest:
+        raise HTTPException(400, "Only guest members can use this endpoint")
+
+    # Check if the center exists
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # Register the guest to the center (set home_center_id or similar logic)
+    member.home_center_id = center.id
+    member.updated_at = datetime.utcnow()
+    await session.commit()
+    await session.refresh(member)
+
+    return {
+        "id": str(member.id),
+        "email": member.email,
+        "mobile": member.mobile,
+        "member_status": member.member_status.value,
+        "home_center_id": str(center.id),
+        "center_name": center.center_name,
+        "detail": "Guest member registered to center"
+    }

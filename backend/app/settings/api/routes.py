@@ -6,7 +6,8 @@ from app.settings.models.models import CenterCategory, TaxCategory, Designation
 from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut
 from app.settings.models.models import CenterOperationalSetting
 from app.auth.models.models import CenterAdmin
-from app.center.models.models import Center
+from app.center.models.models import Center, CenterTimeSlot
+from app.center.schema.schema import CenterTimeSlotOut
 from app.settings.models.models import TermsPrivacy, FAQ
 from app.settings.schema.schema import FAQCreate, FAQOut
 from uuid import uuid4
@@ -463,3 +464,16 @@ async def list_faqs(
     result = await session.execute(select(FAQ))
     faqs = result.scalars().all()
     return faqs
+
+
+
+@router.get("/center/time-slots/all", response_model=List[CenterTimeSlotOut])
+async def list_all_time_slots(
+    db: AsyncSession = Depends(get_async_session)
+):
+    result = await db.execute(select(CenterTimeSlot))
+    slots = result.scalars().all()
+    return slots
+
+
+
