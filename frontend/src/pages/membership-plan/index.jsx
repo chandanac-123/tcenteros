@@ -23,21 +23,21 @@ const MembershipPlan = () => {
   const colorPalette = [
   {
     bg: "bg-plan_bg_grey",
-    foorter_bg: "bg-plan_grey",
+    footer_bg: "bg-plan_grey",
     text: "text-plan_grey"
   },
   {
-    foorter_bg: "bg-plan_green",
+    footer_bg: "bg-plan_green",
     bg: "bg-plan_bg_green",
     text: "text-plan_green"
   },
   {
-    foorter_bg: "bg-plan_blue",
+    footer_bg: "bg-plan_blue",
     bg: "bg-plan_bg_blue",
-    text: "bg-plan_blue",
+    text: "text-plan_blue",
   },
   {
-    foorter_bg: "bg-plan_purple",
+    footer_bg: "bg-plan_purple",
     bg: "bg-plan_bg_purple",
     text: "text-plan_purple"
   }
