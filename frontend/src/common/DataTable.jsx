@@ -91,53 +91,53 @@ export function DataTable ({
   })
 
   return (
-    <div className='overflow-hidden rounded-md border'>
-      <Table>
-        <TableHeader>
-          {table?.getHeaderGroups()?.map(headerGroup => (
-            <TableRow key={headerGroup?.id}>
-              {headerGroup?.headers?.map(header => (
-                <TableHead key={header?.id}>
-                  {header?.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header?.column?.columnDef?.header,
-                        header?.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody>
-          {table?.getRowModel()?.rows.length ? (
-            table?.getRowModel()?.rows.map(row => (
-              <TableRow
-                key={row?.id}
-                data-state={row?.getIsSelected() && 'selected'}
-              >
-                {row?.getVisibleCells()?.map(cell => (
-                  <TableCell key={cell?.id}>
-                    {flexRender(cell?.column?.columnDef?.cell, cell?.getContext())}
-                  </TableCell>
+    <div className='overflow-hidden rounded-md border '>
+      <div className='max-h-[380px] overflow-y-auto'>
+        <Table>
+          <TableHeader>
+            {table?.getHeaderGroups()?.map(headerGroup => (
+              <TableRow key={headerGroup?.id}>
+                {headerGroup?.headers?.map(header => (
+                  <TableHead key={header?.id}>
+                    {header?.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header?.column?.columnDef?.header,
+                          header?.getContext()
+                        )}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns?.length} className='h-24 text-center'>
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table?.getRowModel()?.rows.length ? (
+              table?.getRowModel()?.rows.map(row => (
+                <TableRow
+                  key={row?.id}
+                  data-state={row?.getIsSelected() && 'selected'}
+                >
+                  {row?.getVisibleCells()?.map(cell => (
+                    <TableCell key={cell?.id}>
+                      {flexRender(cell?.column?.columnDef?.cell, cell?.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns?.length} className='h-24 text-center'>
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       <div className='py-2 flex justify-between items-center w-full px-2'>
         {paginationVisibile && (
           <div className='flex justify-between items-center w-full mt-4'>
             <div className='text-grey text-sm '> Showing {tableParams?.page} from {tableParams?.totalCount} data</div>
-
             <div className='flex items-center space-x-2'>
               <Pagination currentPage={tableParams?.page} lastPage={tableParams?.pageSize} setPageIndex={handlePageChange}>
                 <PaginationContent>
