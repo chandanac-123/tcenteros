@@ -1183,11 +1183,9 @@ async def list_all_time_slots(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    # Allow access to members and center admins
     user_role = current_user.get("role")
     if user_role not in ("member", "centeradmin"):
         raise HTTPException(status_code=403, detail="Not authorized")
-
     result = await db.execute(select(CenterTimeSlot))
     slots = result.scalars().all()
     return slots
