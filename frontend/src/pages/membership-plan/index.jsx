@@ -6,6 +6,7 @@ import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
 import PlanCard from './PlanCard'
+import { CarouselSize } from '@common/CuatomeCarousel'
 
 const MembershipPlan = () => {
   const navigate = useNavigate()
@@ -19,32 +20,44 @@ const MembershipPlan = () => {
     { id: 3, name: 'Inactive' }
   ]
 
-
   const colorPalette = [
-  {
-    bg: "bg-plan_bg_grey",
-    footer_bg: "bg-plan_grey",
-    text: "text-plan_grey"
-  },
-  {
-    footer_bg: "bg-plan_green",
-    bg: "bg-plan_bg_green",
-    text: "text-plan_green"
-  },
-  {
-    footer_bg: "bg-plan_blue",
-    bg: "bg-plan_bg_blue",
-    text: "text-plan_blue",
-  },
-  {
-    footer_bg: "bg-plan_purple",
-    bg: "bg-plan_bg_purple",
-    text: "text-plan_purple"
-  }
-]
-
+    {
+      bg: 'bg-plan_bg_grey',
+      footer_bg: 'bg-plan_grey',
+      text: 'text-plan_grey'
+    },
+    {
+      footer_bg: 'bg-plan_green',
+      bg: 'bg-plan_bg_green',
+      text: 'text-plan_green'
+    },
+    {
+      footer_bg: 'bg-plan_blue',
+      bg: 'bg-plan_bg_blue',
+      text: 'text-plan_blue'
+    },
+    {
+      footer_bg: 'bg-plan_purple',
+      bg: 'bg-plan_bg_purple',
+      text: 'text-plan_purple'
+    }
+  ]
 
   const dummyPlans = [
+    {
+      title: 'Base Plan',
+      price: 3999,
+      duration: '3 Months',
+      membershipId: '7896543',
+      description:
+        'Experience exclusive access to personal training sessions and advanced nutrition plans.',
+      features: [
+        'Dedicated Nutrition App (iOS & Android)',
+        'Performance Analytics',
+        'Progress Tracking',
+        'Workout Insights'
+      ]
+    },
     {
       title: 'Base Plan',
       price: 3999,
@@ -124,15 +137,17 @@ const MembershipPlan = () => {
         </div>
       </div>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <CarouselSize>
         {dummyPlans.map((plan, index) => (
           <PlanCard
             key={index}
             {...plan}
-             colors={colorPalette[index % colorPalette.length]}
+            colors={colorPalette[index % colorPalette.length]}
           />
         ))}
-      </div>
+      </CarouselSize>
+
+      {/* <CarouselSize/> */}
 
       <CreateMembershipForm open={open} setOpen={setOpen} />
       <DeleteModal
