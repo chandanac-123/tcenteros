@@ -1118,6 +1118,7 @@ async def list_centers(
             stmt = stmt.where(Membership.default_price <= max_price)
 
     # Get total count (before location filter)
+    import sqlalchemy as sa
     count_stmt = stmt.with_only_columns(sa.func.count()).order_by(None)
     total_result = await session.execute(count_stmt)
     total = total_result.scalar_one()

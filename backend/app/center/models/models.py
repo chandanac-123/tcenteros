@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Boolean, ARRAY, Numeric, Text, Enum, DateTime, ForeignKey, JSON, Integer, Date
+from sqlalchemy import Column, String, Boolean, Numeric, Text, Enum, DateTime, ForeignKey, JSON, Integer, Date
 from app.core.models.base import AuditMixin, Base
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from datetime import datetime
 from sqlalchemy.orm import  relationship
 import sqlalchemy as sa
