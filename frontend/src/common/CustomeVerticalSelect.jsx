@@ -7,7 +7,7 @@ const CustomeVerticalSelect = ({
 }) => {
   return (
     <div className='flex min-h-screen gap-2'>
-      <div className='flex flex-col gap-2 w-64 pr-4 border-r border-gray-300 min-h-screen'>
+      <div className='flex py-4 flex-col gap-2 w-64 pr-4 border-r border-gray-300 min-h-screen'>
         {options.map(opt => (
           <button
             key={opt?.id}
@@ -23,7 +23,7 @@ const CustomeVerticalSelect = ({
           </button>
         ))}
       </div>
-      <div className='pl-4 flex-1'>
+      <div className='pl-4 flex-1 pt-4'>
         <span className='font-semibold text-lg'>{heading}</span>
         {children}
       </div>

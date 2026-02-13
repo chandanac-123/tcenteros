@@ -3,11 +3,11 @@ import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
 
 const MemberView = ({ goBack }) => {
   return (
-    <div className='flex gap-3 flex-col'>
+    <div className='flex gap-3 flex-col pb-6'>
       <CustomeBreadcrumb
         goBack={goBack}
-        buttonName='Member Details'
-        currentPageName='Basic Information'
+        buttonName='Members Listing'
+        currentPageName='Member Details'
       />
       <span className='text-base font-semibold'>Basic Information</span>
       <div className='flex border border-tableborder p-4 rounded-xl'>

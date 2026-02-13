@@ -10,10 +10,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     { id: 'unpaid', name: 'Unpaid' }
   ]
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-4 pb-6'>
       <CustomeBreadcrumb
         goBack={goBack}
-        buttonName='Add Member'
+        buttonName='Members Listing'
         currentPageName='Member creation form'
       />
       <form className='space-y-2'>
