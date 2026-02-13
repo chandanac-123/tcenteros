@@ -1,10 +1,16 @@
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
+import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
   return (
-    <div>
+    <div className='flex flex-col gap-4'>
+      <CustomeBreadcrumb
+        goBack={goBack}
+        buttonName='Add Member'
+        currentPageName='Member creation form'
+      />
       <form className='space-y-2'>
         <div className='flex gap-4'>
           <div className='flex-1'>

@@ -1,8 +1,14 @@
 import { Button } from '@pages/components/ui/button'
+import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
 
-const MemberView = () => {
+const MemberView = ({ goBack }) => {
   return (
     <div className='flex gap-3 flex-col'>
+      <CustomeBreadcrumb
+        goBack={goBack}
+        buttonName='Member Details'
+        currentPageName='Basic Information'
+      />
       <span className='text-base font-semibold'>Basic Information</span>
       <div className='flex border border-tableborder p-4 rounded-xl'>
         <div className='flex gap-3 justify-between w-full'>
