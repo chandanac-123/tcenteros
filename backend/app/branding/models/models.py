@@ -20,4 +20,5 @@ class WhiteLabelConfig(Base, AuditMixin):
     status = Column(Enum(StatusEnum), default=StatusEnum.active, nullable=False)
 
     # Relationship to Center (optional)
-    center = relationship("Center", backref="white_label_configs")
+    center = relationship("Center", back_populates="branding_config")
+

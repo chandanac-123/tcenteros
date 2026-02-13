@@ -712,4 +712,6 @@ async def list_employees(
             status=emp.status.value if hasattr(emp, "status") else None,
             profile_photo=emp.profile_photo,
         ))
-    return employee_list
+    return 
+
+

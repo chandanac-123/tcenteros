@@ -94,6 +94,12 @@ class Center(Base, AuditMixin):
     member_memberships = relationship("MemberMembership", back_populates="center")
     wallet = relationship("CenterWallet", back_populates="center", uselist=False)
     gallery_images = relationship("CenterGalleryImage", back_populates="center", cascade="all, delete-orphan")
+    branding_config = relationship(
+    "WhiteLabelConfig",
+    back_populates="center",
+    uselist=False,
+    cascade="all, delete-orphan"
+)
 
 
 class CenterOnboardingTemp(Base, AuditMixin):

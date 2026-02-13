@@ -8,6 +8,7 @@ from app.membership.api.routes import router as membership_router
 from app.attendance.api.routes import router as attendance_router
 from app.networking.api.routes import router as networking_router
 from app.support.api.routes import router as support_router
+from app.branding.api.routes import router as branding_router
 
 
 
@@ -55,3 +56,4 @@ app.include_router(membership_router, prefix="/api/membership", tags=["Membershi
 app.include_router(attendance_router, prefix="/api/attendance", tags=["Attendance"])
 app.include_router(networking_router, prefix="/api/networking", tags=["Networking"])
 app.include_router(support_router, prefix="/api/support", tags=["Support"])
+app.include_router(branding_router, prefix="/api/branding", tags=["Branding"])
