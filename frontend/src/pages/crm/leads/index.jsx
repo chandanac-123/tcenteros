@@ -1,10 +1,11 @@
 import { DataTable } from '@common/DataTable'
 import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
-import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 import Card from '../components/Cards'
 import { leadsType } from '@constants/leads'
-import { date } from 'yup'
+import edit from '@assets/form-icons/edit.svg'
+import CustomeModal from '@common/CustomeModal'
+import LeadStatusChange from './LeadStatusChange'
 
 const Leads = () => {
   const [tableParams, setTableParams] = useState({
@@ -13,6 +14,7 @@ const Leads = () => {
     totalCount: 3,
     search: ''
   })
+  const [editOpen, setEditOpen] = useState(false)
 
   // Dummy data for DataTable
   const data = [
@@ -97,7 +99,18 @@ const Leads = () => {
     },
     {
       header: 'Followup date',
-      accessorKey: 'date'
+      accessorKey: 'date',
+      cell: ({ row }) => {
+        const date = row.original.date
+
+        return date ? (
+          <span>{date}</span>
+        ) : (
+          <button onClick={()=>setEditOpen(true)}>
+            <img src={edit} alt='edit' />
+          </button>
+        )
+      }
     }
   ]
 
@@ -108,7 +121,6 @@ const Leads = () => {
           <Card key={member.id} label={member.name} />
         ))}
       </div>
-
       <DataTable
         title='Products'
         subTitle='Products'
@@ -118,6 +130,7 @@ const Leads = () => {
         tableParams={tableParams}
         paginationVisibile={true}
       />
+      <LeadStatusChange open={editOpen} setOpen={setEditOpen}/>
     </>
   )
 }

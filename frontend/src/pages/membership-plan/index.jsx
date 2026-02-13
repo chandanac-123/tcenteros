@@ -1,7 +1,6 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import CustomeTab from '@common/CustomeTab'
 import { Button } from '@pages/components/ui/button'
-import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
@@ -9,9 +8,6 @@ import PlanCard from './PlanCard'
 import { CarouselSize } from '@common/CuatomeCarousel'
 
 const MembershipPlan = () => {
-  const navigate = useNavigate()
-
-  const [active, setActive] = useState(true)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const employeeOrCenter = [
@@ -124,9 +120,7 @@ const MembershipPlan = () => {
           <CustomeTab
             tabList={employeeOrCenter}
             defaultVal='All'
-            tabsListClass='inline-flex h-10 w-[400px] p-[1px] overflow-hidden bg-transparent border-none outline-none'
-            tabsTriggerClass='text-textblack rounded-2xl border-none outline-none focus:outline-none focus:border-none w-1/3 min-w-[120px] data-[state=inactive]:bg-transparent data-[state=active]:bg-white data-[state=active]:text-black justify-center'
-            tabsClass='bg-tab_bg  rounded-2xl border-none outline-none'
+            tabsListClass=' w-[400px] p-[1px]'
           />
         </div>
         <div className='flex'>
@@ -160,6 +154,12 @@ const MembershipPlan = () => {
   )
 }
 export default MembershipPlan
+
+// tabsListClass =
+//   'inline-flex h-10 w-[400px] p-[1px] overflow-hidden bg-transparent border-none outline-none'
+// tabsTriggerClass =
+//   'text-textblack rounded-2xl border-none outline-none focus:outline-none focus:border-none w-1/3 min-w-[120px] data-[state=inactive]:bg-transparent data-[state=active]:bg-white data-[state=active]:text-black justify-center'
+// tabsClass = 'bg-tab_bg  rounded-2xl border-none outline-none'
 
 {
   /* <div className='w-full flex border border-primary  rounded-lg px-3 py-5 justify-between items-center gap-2'>

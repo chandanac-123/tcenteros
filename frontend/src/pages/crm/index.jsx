@@ -7,6 +7,7 @@ import { useState } from 'react'
 import Members from './member'
 import MemberView from './member/MemberView'
 import MemberAdd from './member/MemberAdd'
+import { SquarePen } from 'lucide-react'
 
 const CRM = () => {
   const selected = useCrmStore(state => state.selectedTab)
@@ -21,15 +22,20 @@ const CRM = () => {
         <span className='text-xl font-semibold text-textblack'>
           Customer Relationship Management
         </span>
-        <Button
-          size='addbutton'
-          onClick={() => {
-            setSelected(1)
-            setMemberView('add')
-          }}
-        >
-          + Add Member
-        </Button>
+        <div>
+          {selected === 1 && memberView === 'list' && (
+            <Button size='addbutton' onClick={() => setMemberView('add')}>
+              + Add Member
+            </Button>
+          )}
+
+          {selected === 1 && memberView === 'view' && (
+            <Button size='addbutton' onClick={() => setMemberView('edit')}>
+              <SquarePen />
+              Edit
+            </Button>
+          )}
+        </div>
       </div>
 
       <CustomeVerticalSelect
