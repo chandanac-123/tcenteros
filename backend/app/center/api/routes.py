@@ -1177,3 +1177,65 @@ async def list_all_facilities(
             facilities_set.update(row)
     return list(facilities_set)
 
+
+
+@router.get("/centers/nearest", response_model=List[dict])
+async def list_centers_by_location(
+    latitude: float = Query(..., description="Current latitude"),
+    longitude: float = Query(..., description="Current longitude"),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    # Allow access only to members and center admins
+    user_role = current_user.get("role")
+    if user_role not in ("member", "centeradmin"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    result = await session.execute(select(Center))
+    centers = result.scalars().all()
+    centers_with_distance = []
+
+    for center in centers:
+        address = None
+        if center.address_id:
+            address = await session.get(Address, center.address_id)
+        if address and address.latitude is not None and address.longitude is not None:
+            distance = haversine(latitude, longitude, float(address.latitude), float(address.longitude))
+        else:
+            distance = float('inf')  # If no location, put at end
+
+        # Fetch gallery images
+        gallery_result = await session.execute(
+            select(CenterGalleryImage).where(CenterGalleryImage.center_id == center.id)
+        )
+        gallery_images = gallery_result.scalars().all()
+        gallery = [
+            {
+                "id": str(img.id),
+                "image_url": img.image_url
+            } for img in gallery_images
+        ]
+
+        centers_with_distance.append({
+            "id": str(center.id),
+            "center_name": center.center_name,
+            "distance_km": distance,
+            "city": address.city if address else None,
+            "state": address.state if address else None,
+            "country": address.country if address else None,
+            "address": {
+                "address_line_1": address.address_line_1,
+                "address_line_2": address.address_line_2,
+                "city": address.city,
+                "state": address.state,
+                "country": address.country,
+                "postal_code": address.postal_code,
+                "latitude": float(address.latitude) if address.latitude is not None else None,
+                "longitude": float(address.longitude) if address.longitude is not None else None,
+            } if address else None,
+            "gallery": gallery
+        })
+
+    # Sort by distance ascending
+    centers_with_distance.sort(key=lambda x: x["distance_km"])
+    return centers_with_distance
