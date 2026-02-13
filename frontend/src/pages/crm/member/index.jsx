@@ -7,16 +7,41 @@ import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
-import Card from './components/Cards'
 import { memberType } from '@constants/members'
+import Card from '../components/Cards'
 
-const Members = () => {
+const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
     pageSize: 10,
     totalCount: 3,
     search: ''
   })
+
+  // Dummy data for DataTable
+  const data = [
+    {
+      id: 1,
+      full_name: 'John Doe',
+      email: 'john.doe@example.com',
+      mobile: '9876543210',
+      status: 'active'
+    },
+    {
+      id: 2,
+      full_name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      mobile: '9123456780',
+      status: 'inactive'
+    },
+    {
+      id: 3,
+      full_name: 'Alice Johnson',
+      email: 'alice.johnson@example.com',
+      mobile: '9988776655',
+      status: 'active'
+    }
+  ];
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [editopen, setEditOpen] = useState(false)
@@ -70,18 +95,12 @@ const Members = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <button
-            onClick={() => {
-              setViewId(row.original.id)
-              setViewOpen(true)
-            }}
+            onClick={() => onView(row.original.id)}
           >
             <img src={view} alt='view' />
           </button>
           <button
-            onClick={() => {
-              setEditId(row.original.id)
-              setEditOpen(true)
-            }}
+            onClick={() => onEdit(row.original.id)}
           >
             <img src={edit} alt='edit' />
           </button>
@@ -111,7 +130,7 @@ const Members = () => {
         title='Products'
         subTitle='Products'
         columns={columns}
-        data={[]}
+        data={data}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}

@@ -1,7 +1,7 @@
-import Guest from '@pages/crm/Guest'
-import Leads from '@pages/crm/Leads'
-import Members from '@pages/crm/Members'
-import Visitors from '@pages/crm/Visitors'
+import Guest from '@pages/crm/guest'
+import Leads from '@pages/crm/leads'
+import Members from '@pages/crm/member'
+import Visitors from '@pages/crm/visitor'
 
 export const crm_tabs = [
   {

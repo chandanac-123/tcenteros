@@ -2,7 +2,7 @@ import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
 
-const MemberAdd = () => {
+const MemberAdd = ({ memberId, isEdit, goBack }) => {
   return (
     <div>
       <form className='space-y-2'>
@@ -69,7 +69,7 @@ const MemberAdd = () => {
 
         <div className='flex justify-start mt-4 '>
           <Button size='addbutton' variant='default' type='submit'>
-            Save Member
+            {isEdit ? 'Update Member' : 'Create Member'}
           </Button>
         </div>
       </form>
