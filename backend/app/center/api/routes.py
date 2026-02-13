@@ -993,7 +993,7 @@ async def list_center_gallery_images(
             id=img.id,
             center_id=center.id,
             center_name=center.center_name,
-            image_url=img.image_url
+            image_url=get_file_url(img.image_url)  # Always generate a fresh presigned URL
         ) for img in images
     ]
 

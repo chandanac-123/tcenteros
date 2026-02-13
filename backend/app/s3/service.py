@@ -1,3 +1,4 @@
+from http.client import HTTPException
 import uuid
 import os
 import io
@@ -34,6 +35,23 @@ def get_file_url(key: str):
         Params={"Bucket": BUCKET, "Key": key},
         ExpiresIn=3600,
     )
+
+
+# def upload_file(file_bytes, key, content_type="image/jpeg"):
+#     file_obj = io.BytesIO(file_bytes)
+#     s3.upload_fileobj(
+#         file_obj,
+#         BUCKET,
+#         key,
+#         ExtraArgs={
+#             "ContentType": content_type,
+#             "ACL": "public-read",  # Make the file public
+#         },
+#     )
+#     return key
+
+# def get_file_url(key: str):
+#     return f"https://{BUCKET}.s3.amazonaws.com/{key}"
 
 def delete_file(key: str):
     s3.delete_object(Bucket=BUCKET, Key=key)
