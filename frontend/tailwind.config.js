@@ -53,7 +53,12 @@ export default {
         plan_bg_blue: '#E1F2F6',
         plan_blue: '#4EABC3',
         plan_bg_purple: '#7E02F61F',
-        plan_purple: '#8B24E2'
+        plan_purple: '#8B24E2',
+        badge_blue:'#00AFB5',
+        badge_blue_bg:'#E6FFFD',
+        badge_yellow:'#DDAF00FC',
+        badge_yellow_bg:'#F9F0D0FC',
+        badge_bg_green:'#CCFFCC'
       }
     }
   },

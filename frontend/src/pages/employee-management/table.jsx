@@ -27,6 +27,11 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
     }
   }
 
+   const statusVariantMap = {
+    active: 'active',
+    inactive: 'inactive',
+  }
+
   const columns = [
     {
       accessorKey: 'full_name',
@@ -57,15 +62,9 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-          <Badge
-            label={
-              row.original.status == 'active'
-                ? 'Active Member'
-                : 'Inactive Member'
-            }
-            variant={
-              row.original.status == 'Active Member' ? 'active' : 'inactive'
-            }
+         <Badge
+            label={row.original.status.replace('_', ' ').toUpperCase()}
+            variant={statusVariantMap[row.original.status] || 'inactive'}
           />
           <button
             onClick={() => {

@@ -41,7 +41,7 @@ const Members = ({ onView, onEdit }) => {
       mobile: '9988776655',
       status: 'active'
     }
-  ];
+  ]
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [editopen, setEditOpen] = useState(false)
@@ -56,6 +56,11 @@ const Members = ({ onView, onEdit }) => {
       setDeleteOpen(false)
       setDeleteId(null)
     }
+  }
+
+  const statusVariantMap = {
+    active: 'active',
+    inactive: 'inactive'
   }
 
   const columns = [
@@ -77,14 +82,8 @@ const Members = ({ onView, onEdit }) => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
-            label={
-              row.original.status == 'active'
-                ? 'Active Member'
-                : 'Inactive Member'
-            }
-            variant={
-              row.original.status == 'Active Member' ? 'active' : 'inactive'
-            }
+            label={row.original.status.replace('_', ' ').toUpperCase()}
+            variant={statusVariantMap[row.original.status] || 'inactive'}
           />
         </span>
       )
@@ -94,14 +93,10 @@ const Members = ({ onView, onEdit }) => {
       accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-          <button
-            onClick={() => onView(row.original.id)}
-          >
+          <button onClick={() => onView(row.original.id)}>
             <img src={view} alt='view' />
           </button>
-          <button
-            onClick={() => onEdit(row.original.id)}
-          >
+          <button onClick={() => onEdit(row.original.id)}>
             <img src={edit} alt='edit' />
           </button>
           <button
@@ -120,7 +115,7 @@ const Members = ({ onView, onEdit }) => {
 
   return (
     <>
-      <div className='flex flex-wrap gap-4 mb-6'>
+      <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6'>
         {memberType?.map(member => (
           <Card key={member.id} label={member.name} />
         ))}
