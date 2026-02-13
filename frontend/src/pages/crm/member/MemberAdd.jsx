@@ -2,8 +2,13 @@ import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
 import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
+import CustomeTab from '@common/CustomeTab'
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
+  const paidStatus = [
+    { id: 'paid', name: 'Paid' },
+    { id: 'unpaid', name: 'Unpaid' }
+  ]
   return (
     <div className='flex flex-col gap-4'>
       <CustomeBreadcrumb
@@ -71,6 +76,15 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           <div className='flex-1'>
             <CustomeSelect label='Set Password' name='center_id' />
           </div>
+        </div>
+
+        <div className='flex justify-end'>
+          <CustomeTab
+            tabList={paidStatus}
+            defaultVal='unpaid'
+            tabsListClass='w-40 p-[1px] rounded-full'
+            tabsTriggerClass='rounded-full'
+          />
         </div>
 
         <div className='flex justify-start mt-4 '>
