@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { Card, CardContent } from '@pages/components/ui/card'
 import {
   Carousel,
   CarouselContent,

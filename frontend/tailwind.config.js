@@ -60,6 +60,8 @@ export default {
         badge_yellow_bg:'#F9F0D0FC',
         badge_bg_green:'#CCFFCC',
         tabelsubtitle:'#504E4E',
+        barchartexpense:'#8A00FF',
+        revenue_other:'#A3AED0'
       }
     }
   },

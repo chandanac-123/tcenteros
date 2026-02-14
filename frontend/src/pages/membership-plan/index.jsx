@@ -5,7 +5,7 @@ import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
 import PlanCard from './PlanCard'
-import { CarouselSize } from '@common/CuatomeCarousel'
+import { CarouselSize } from '@common/CustomeCarousel'
 
 const MembershipPlan = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
