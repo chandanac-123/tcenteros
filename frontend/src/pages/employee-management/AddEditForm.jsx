@@ -226,11 +226,24 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               />
             </div>
             <div className='flex-1'>
-              <InputFile
+              {/* <InputFile
                 label='Upload Image'
                 name='profile_photo'
                 onChange={e => {
                   formik.setFieldValue('profile_photo', e.target.value)
+                }}
+              /> */}
+              <InputFile
+                label='Upload Image'
+                name='profile_photo'
+                value={formik.values.profile_photo}
+                onChange={e => {
+                  formik.setFieldValue('profile_photo', e.target.value)
+                  formik.setFieldTouched('profile_photo', true, false)
+                }}
+                onRemove={() => {
+                  formik.setFieldValue('profile_photo', null)
+                  formik.setFieldTouched('profile_photo', true, false)
                 }}
               />
             </div>
