@@ -4,7 +4,7 @@ import { routes } from './routes/Routes'
 import PageNotFound from '@common/PageNotFound'
 import PublicRoute from './routes/PublicRoute'
 import { v4 as uuidv4 } from 'uuid'
-import MasterLayout from './common/MasterLayout'
+import MasterLayout from './common/masterLayout'
 
 const App = () => {
   return (
