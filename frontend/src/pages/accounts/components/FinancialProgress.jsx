@@ -1,13 +1,19 @@
 import { Progress } from '@pages/components/ui/progress'
 
-const FinancialProgressBar = ({ segments, label, value }) => {
+const FinancialProgressBar = ({ label, value ,progressBg, progressBgLight}) => {
   return (
-    <div className='w-full bg-gray-200 rounded-full overflow-hidden flex my-4'>
-      <div className='flex justify-between'>
-        <span className='text-textgrey text-xs'>{label}</span>
-        <span className='text-textgrey text-xs'>100%</span>
+    <div className='flex w-full flex-col'>
+      <div className='flex justify-between items-center'>
+        <span className='text-textgrey text-xs flex'>{label}</span>
+        <span className='text-textgrey text-xs flex'>100%</span>
       </div>
-      <Progress value={value} />
+      <div className='w-full bg-gray-200 rounded-full overflow-hidden flex my-1'>
+          <Progress
+          value={50}
+          trackClassName={progressBgLight}
+          indicatorClassName={progressBg}
+        />
+      </div>
     </div>
   )
 }

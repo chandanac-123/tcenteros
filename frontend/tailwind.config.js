@@ -64,8 +64,12 @@ export default {
         revenue_other:'#A3AED0',
         memberprogress_light:'#4581FF45',
         inventory_light:'#FFCD0F45',
+        purchase:'#EB4925',
         purchase_light:'#EB492545',
-          
+        progress_light_green:'#34C75945',
+        Network:'#FF8548',
+        Network_light:'#FF854845',
+        payroll_light:'#8A00FF45',
       }
     }
   },

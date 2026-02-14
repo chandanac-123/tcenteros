@@ -3,7 +3,6 @@ import MonthlyFinanceChart from '@common/charts/MonthlyFinanceChart'
 import { Card } from '@pages/components/ui/card'
 import SummaryCard from './components/SummaryCard'
 import RevenuePieChart from '@common/charts/RevenuePieChart'
-import { Progress } from '@pages/components/ui/progress'
 import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
 
@@ -39,30 +38,40 @@ const Accounts = () => {
 
   const progresscolorPalette = [
     {
-      label: 'Membership Revenue',
+      label: 'Membership Sale',
       bg: 'bg-primary_light',
       bglight: 'bg-memberprogress_light'
     },
     {
-      label: 'Inventory Purchase',
+      label: 'Inventory Sale',
       bg: 'bg-progress_yellow',
       bglight: 'bg-inventory_light'
     },
     {
-      label: 'Operational Expense',
-      bg: 'bg-delete_red',
+      label: 'Inventory Purchase',
+      bg: 'bg-purchase',
       bglight: 'bg-purchase_light'
     },
     {
-      label: 'Other Revenue',
+      label: 'Payroll Processing',
       bg: 'bg-barchartexpense',
-      bglight: 'bg-plan_purple'
+      bglight: 'bg-payroll_light'
+    },
+    {
+      label: 'Trainer Charges',
+      bg: 'bg-green_text',
+      bglight: 'bg-progress_light_green'
+    },
+    {
+      label: 'Network Settlements',
+      bg: 'bg-Network',
+      bglight: 'bg-Network_light'
     }
   ]
 
   return (
     <ContentLayout>
-      <div className='flex justify-between gap-4 overflow-auto'>
+      <div className='flex flex-col lg:flex-row gap-4 h-full overflow-y-auto pr-2'>
         <div className='flex flex-col w-3/5 gap-4'>
           <Card>
             <div className='flex flex-col p-2'>
@@ -118,14 +127,26 @@ const Accounts = () => {
             </div>
           </Card>
 
-          {/* <Card label='Total Expenses'>
+          <Card label='Total Expenses'>
             <div className='flex flex-col p-2'>
               <span className='text-lg font-semibold text-textblack'>
                 End to End Financial Flows
               </span>
-              <FinancialProgressBar />
+
+              {progresscolorPalette.map((item, index) => (
+                <div key={index} className='flex flex-col gap-2 my-2 w-full'>
+                  <div className='flex justify-between items-center w-full'>
+                    <FinancialProgressBar
+                      label={item.label}
+                      value=''
+                      progressBg={item.bg}
+                      progressBgLight={item.bglight}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          </Card> */}
+          </Card>
         </div>
       </div>
     </ContentLayout>
