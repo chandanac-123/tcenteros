@@ -81,11 +81,27 @@ const TaxCategorySettings = () => {
     },
     {
       accessorKey: 'tax_type',
-      header: 'Tax Type'
+      header: 'Tax Type',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          {' '}
+          {row.original.tax_type.replace(/_/g, ' /').toUpperCase()}
+        </span>
+      )
     },
     {
       accessorKey: 'tax_percentage',
-      header: 'Tax Rate'
+      header: 'Tax Rate',
+      cell: ({ row }) => (
+        <span className='flex gap-3'> {row.original.tax_percentage}%</span>
+      )
+    },
+    {
+      accessorKey: 'tax_scope',
+      header: 'Tax Scope',
+      cell: ({ row }) => (
+        <span className='flex gap-3'> {row.original.tax_scope.replace(/_/g, '')}</span>
+      )
     },
     {
       header: 'Status',

@@ -1,5 +1,6 @@
 import bell from '@assets/header-icons/bell.svg'
 import user from '@assets/header-icons/user.svg'
+import map from '@assets/header-icons/map.svg'
 import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
@@ -29,6 +30,11 @@ const Header = () => {
       </div>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
+          <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
+            <img src={map} className='w-5 h-5 mr-2' />
+            Fitness center
+          </span>
+
           {/* ADD */}
           <Button onClick={handleOpen} size='addbutton'>
             + Add Employee

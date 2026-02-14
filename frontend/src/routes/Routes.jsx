@@ -33,6 +33,8 @@ import Network from '@pages/network/index.'
 import CRM from '@pages/crm'
 import MembershipPlan from '@pages/membership-plan'
 import EmployeeManagement from '@pages/employee-management'
+import Settings from '@pages/settings'
+import Accounts from '@pages/accounts'
 
 import dashboard from '../assets/sidebar-icons/dashboard.svg'
 import branding from '../assets/sidebar-icons/branding.svg'
@@ -45,6 +47,7 @@ import billing from '../assets/sidebar-icons/billing.svg'
 import wallet from '../assets/sidebar-icons/wallet.svg'
 import performance from '../assets/sidebar-icons/performance.svg'
 import crm from '../assets/sidebar-icons/crm.svg'
+import account from '../assets/sidebar-icons/account.svg'
 import active_dashboard from '../assets/sidebar-icons/active-dashboard.svg'
 import active_branding from '../assets/sidebar-icons/active-branding.svg'
 import active_attendance from '../assets/sidebar-icons/active-attendance.svg'
@@ -56,7 +59,8 @@ import active_billing from '../assets/sidebar-icons/active-billing.svg'
 import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
 import active_performance from '../assets/sidebar-icons/active-performance.svg'
 import active_crm from '../assets/sidebar-icons/active-crm.svg'
-import Settings from '@pages/settings'
+import active_account from '../assets/sidebar-icons/active-account.svg'
+
 
 export const routes = [
   {
@@ -439,6 +443,19 @@ export const routes = [
     component: Billing,
     icon: billing,
     iconActive: active_billing,
+    menubar: true,
+    permission: true
+  },
+  {
+    key: 1,
+    path: '/accounts',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Account',
+    component: Accounts,
+    icon: account,
+    iconActive: active_account,
     menubar: true,
     permission: true
   },

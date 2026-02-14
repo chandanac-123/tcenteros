@@ -1,6 +1,6 @@
 import { routes } from '../../routes/Routes'
 import MenuCard from './MenuCard'
-import logo from '@assets/sidebar-icons/sidebar-logo.svg'
+import logo from '@assets/header-icons/logo.svg'
 
 const Sidebar = () => (
   <div className='flex flex-col gap-5 w-72 bg-textblack min-h-screen items-center pt-4'>

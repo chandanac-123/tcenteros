@@ -35,7 +35,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   const columns = [
     {
       accessorKey: 'full_name',
-      header: 'Name'
+      header: 'Full Name'
     },
     {
       accessorKey: 'designation_name',
@@ -52,6 +52,10 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
     {
       accessorKey: 'center_name',
       header: 'Center'
+    },
+     {
+      accessorKey: '',
+      header: 'Customer Rating'
     },
     {
       accessorKey: 'joining_date',
