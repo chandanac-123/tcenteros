@@ -53,9 +53,12 @@ const MonthlyFinanceChart = () => {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // ✅ IMPORTANT
+    maintainAspectRatio: false, //  IMPORTANT
     plugins: {
-      legend: { display: false }
+      legend: { display: false },
+      datalabels: {
+        display: false //  disables value labels
+      }
     },
     scales: {
       x: { grid: { display: false } },

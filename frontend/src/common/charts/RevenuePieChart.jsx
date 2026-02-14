@@ -65,7 +65,7 @@ const RevenuePieChart = () => {
   return (
     <div className='w-full flex items-center gap-10'>
       {/* Pie Chart */}
-      <div className='h-72 w-72'>
+      <div className='h-40 w-72'>
         <Pie data={data} options={options} />
       </div>
 

@@ -61,7 +61,11 @@ export default {
         badge_bg_green:'#CCFFCC',
         tabelsubtitle:'#504E4E',
         barchartexpense:'#8A00FF',
-        revenue_other:'#A3AED0'
+        revenue_other:'#A3AED0',
+        memberprogress_light:'#4581FF45',
+        inventory_light:'#FFCD0F45',
+        purchase_light:'#EB492545',
+          
       }
     }
   },

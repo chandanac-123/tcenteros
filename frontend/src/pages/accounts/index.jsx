@@ -3,6 +3,8 @@ import MonthlyFinanceChart from '@common/charts/MonthlyFinanceChart'
 import { Card } from '@pages/components/ui/card'
 import SummaryCard from './components/SummaryCard'
 import RevenuePieChart from '@common/charts/RevenuePieChart'
+import { Progress } from '@pages/components/ui/progress'
+import FinancialProgressBar from './components/FinancialProgress'
 
 const Accounts = () => {
   const summaryData = [
@@ -31,6 +33,29 @@ const Accounts = () => {
       bg: 'bg-plan_bg_purple',
       text: 'text-plan_purple',
       border: 'border-plan_purple'
+    }
+  ]
+
+  const progresscolorPalette = [
+    {
+      label: 'Membership Revenue',
+      bg: 'bg-primary_light',
+      bglight: 'bg-memberprogress_light'
+    },
+    {
+      label: 'Inventory Purchase',
+      bg: 'bg-progress_yellow',
+      bglight: 'bg-inventory_light'
+    },
+    {
+      label: 'Operational Expense',
+      bg: 'bg-delete_red',
+      bglight: 'bg-purchase_light'
+    },
+    {
+      label: 'Other Revenue',
+      bg: 'bg-barchartexpense',
+      bglight: 'bg-plan_purple'
     }
   ]
 
@@ -65,17 +90,32 @@ const Accounts = () => {
           </Card>
 
           <Card>
-            <RevenuePieChart />{' '}
+            <div className='flex flex-col p-2'>
+              <div className='flex justify-between py-4'>
+                <span className='text-lg font-semibold text-textblack'>
+                  Revenue Breakdown
+                </span>
+                <span>filter</span>
+              </div>
+              <RevenuePieChart />{' '}
+            </div>
           </Card>
         </div>
 
         <div className='flex flex-col w-2/5 gap-4 '>
           <Card label='Total Revenue'> ahsv</Card>
-          <Card label='Total Expenses'> hjasdg </Card>
+
+
+          {/* <Card label='Total Expenses'>
+            <div className='flex flex-col p-2'>
+              <span className='text-lg font-semibold text-textblack'>
+                End to End Financial Flows
+              </span>
+              <FinancialProgressBar />
+            </div>
+          </Card> */}
         </div>
       </div>
-      {/* <Card>ashdahw</Card> */}
-      {/* <MonthlyFinanceChart /> */}
     </ContentLayout>
   )
 }
