@@ -5,6 +5,7 @@ import SummaryCard from './components/SummaryCard'
 import RevenuePieChart from '@common/charts/RevenuePieChart'
 import { Progress } from '@pages/components/ui/progress'
 import FinancialProgressBar from './components/FinancialProgress'
+import AccountSubCard from './components/AccountSubCard'
 
 const Accounts = () => {
   const summaryData = [
@@ -103,8 +104,19 @@ const Accounts = () => {
         </div>
 
         <div className='flex flex-col w-2/5 gap-4 '>
-          <Card label='Total Revenue'> ahsv</Card>
-
+          <Card>
+            <div className='flex flex-col p-2'>
+              <div className='flex justify-between py-2'>
+                <span className='text-lg font-semibold text-textblack'>
+                  Account Sub-modules
+                </span>
+                <button className='p-2 text-xs border border-tableborder rounded-2xl'>
+                  View All
+                </button>
+              </div>
+              <AccountSubCard />
+            </div>
+          </Card>
 
           {/* <Card label='Total Expenses'>
             <div className='flex flex-col p-2'>
