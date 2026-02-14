@@ -17,7 +17,7 @@ import {
   useCreateCenterTimeMutation,
   useUpdateCenterTimeMutation
 } from '@api-queries/center-time/Query'
-import { convertTo12Hour } from '@utils/helper'
+import { convert12To24WithSeconds, convertTo12Hour } from '@utils/helper'
 
 const CenterOperations = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -64,22 +64,31 @@ const CenterOperations = () => {
     }
   })
 
-  const centerTimeFormik = useFormik({
-    initialValues: centerTimeInitialValues,
-    enableReinitialize: true,
-    onSubmit: async values => {
-      
-      try {
-        if (centerTime) {
-          await updateCenterTime({ id: centerTime.id, data: values })
-        } else {
-          await createCenterTime(values)
-        }
-      } catch (error) {
-        console.error(error)
-      }
+ const centerTimeFormik = useFormik({
+  initialValues: centerTimeInitialValues,
+  enableReinitialize: true,
+ onSubmit: async values => {
+  const formattedValues = {
+    ...values,
+    opening_time: convert12To24WithSeconds(values.opening_time),
+    closing_time: convert12To24WithSeconds(values.closing_time)
+  }
+
+  try {
+    if (centerTime) {
+      await updateCenterTime({
+        id: centerTime.id,
+        data: formattedValues
+      })
+    } else {
+      await createCenterTime(formattedValues)
     }
-  })
+  } catch (error) {
+    console.error(error)
+  }
+}
+})
+
 
   const handleConfirmDelete = async () => {
     try {

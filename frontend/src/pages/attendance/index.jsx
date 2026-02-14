@@ -1,9 +1,21 @@
+import CustomeTab from '@common/CustomeTab'
+import ContentLayout from '@common/MasterLayout/ContentLayout'
+
 const Attendance = () => {
+  const employeeOrMember = [
+    { id: 1, name: 'Member' },
+    { id: 2, name: 'Employee' }
+  ]
   return (
-    <div>       
-        <h1 className="text-2xl font-bold mb-4">Attendance</h1>
-        {/* Attendance  content goes here */}
-    </div>
+    <ContentLayout>
+      <div className='flex '>
+        <CustomeTab
+          tabList={employeeOrMember}
+          defaultVal='Member'
+          tabsListClass='p-[1px]'
+        />
+      </div>
+    </ContentLayout>
   )
-}   
+}
 export default Attendance

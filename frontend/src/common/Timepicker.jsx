@@ -24,19 +24,26 @@ export default function TimePicker ({ label, value, onChange }) {
     setPeriod(newPeriod)
   }, [value])
 
-  const updateParent = (h, m, p) => {
-    if (h !== '' && m !== '') {
-      let hour24 = Number(h)
-      if (p === 'PM' && hour24 !== 12) hour24 += 12
-      if (p === 'AM' && hour24 === 12) hour24 = 0
-      const formatted = `${hour24.toString().padStart(2, '0')}:${m
-        .toString()
-        .padStart(2, '0')}`
-      onChange(formatted)
-    } else {
+const updateParent = (h, m, p) => {
+  if (h !== '' && m !== '') {
+    let hour24 = Number(h)
+    const minuteNum = Number(m)
+    if (isNaN(hour24) || isNaN(minuteNum)) {
       onChange('')
+      return
     }
+    if (p === 'PM' && hour24 !== 12) hour24 += 12
+    if (p === 'AM' && hour24 === 12) hour24 = 0
+    const formatted =
+      String(hour24).padStart(2, '0') +
+      ':' +
+      String(minuteNum).padStart(2, '0')
+    onChange(formatted)
+  } else {
+    onChange('')
   }
+}
+
 
   const handleHourChange = e => {
     const value = e.target.value

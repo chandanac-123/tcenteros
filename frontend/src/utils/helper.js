@@ -24,3 +24,17 @@ export const convertTo12Hour = time => {
   hour = hour % 12 || 12
   return `${hour.toString().padStart(2, '0')}:${minutes} ${period}`
 }
+
+export const convert12To24WithSeconds = (time) => {
+  if (!time) return null
+
+  const [timePart, period] = time.split(' ')
+  const [hours, minutes] = timePart.split(':')
+
+  let hour = parseInt(hours, 10)
+
+  if (period === 'PM' && hour !== 12) hour += 12
+  if (period === 'AM' && hour === 12) hour = 0
+
+  return `${hour.toString().padStart(2, '0')}:${minutes}:00`
+}

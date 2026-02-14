@@ -3,6 +3,8 @@ import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
 import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
 import CustomeTab from '@common/CustomeTab'
+import DaySelector from '@pages/settings/components/DaySelector'
+import { days } from '@constants/days'
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const paidStatus = [
@@ -85,6 +87,16 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             tabsListClass='w-40 p-[1px] rounded-full'
             tabsTriggerClass='rounded-full'
           />
+        </div>
+
+        <div className='flex flex-col'>
+          <span className='font-semibold text-textblack'>Select Time Slot</span>
+          <span className='text-sm text-textblack'>Morning Slots
+            <DaySelector
+            label=''
+            days={days}/>
+          </span>
+          <span className='text-sm text-textblack'>Evening Slots</span>
         </div>
 
         <div className='flex justify-start mt-4 '>
