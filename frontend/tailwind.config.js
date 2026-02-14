@@ -58,7 +58,8 @@ export default {
         badge_blue_bg:'#E6FFFD',
         badge_yellow:'#DDAF00FC',
         badge_yellow_bg:'#F9F0D0FC',
-        badge_bg_green:'#CCFFCC'
+        badge_bg_green:'#CCFFCC',
+        tabelsubtitle:'#504E4E',
       }
     }
   },
