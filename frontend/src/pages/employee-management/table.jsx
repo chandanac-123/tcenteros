@@ -99,8 +99,6 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   return (
     <>
       <DataTable
-        title='Products'
-        subTitle='Products'
         columns={columns}
         data={data}
         setTableParams={setTableParams}

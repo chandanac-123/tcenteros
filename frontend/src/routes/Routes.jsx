@@ -35,6 +35,7 @@ import MembershipPlan from '@pages/membership-plan'
 import EmployeeManagement from '@pages/employee-management'
 import Settings from '@pages/settings'
 import Accounts from '@pages/accounts'
+import AccountsSubModules from '@pages/accounts/sub-modules'
 
 import dashboard from '../assets/sidebar-icons/dashboard.svg'
 import branding from '../assets/sidebar-icons/branding.svg'
@@ -457,6 +458,19 @@ export const routes = [
     icon: account,
     iconActive: active_account,
     menubar: true,
+    permission: true
+  },
+  {
+    key: 1,
+    path: '/accounts/sub-modules',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Account',
+    component: AccountsSubModules,
+    icon: account,
+    iconActive: active_account,
+    menubar: false,
     permission: true
   },
   {

@@ -70,6 +70,10 @@ export default {
         Network:'#FF8548',
         Network_light:'#FF854845',
         payroll_light:'#8A00FF45',
+        overview_bg:'#1452D4',
+        payroll_bg:'#7DC20D',
+        inventory_bg:'#FF9E97',
+        taxes_bg:'#E33E10',
       }
     }
   },

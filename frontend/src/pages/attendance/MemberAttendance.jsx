@@ -62,8 +62,6 @@ const MemberAttendance = () => {
   return (
     <>
       <DataTable
-        title='Products'
-        subTitle='Products'
         columns={columns}
         data={[]}
         setTableParams={setTableParams}
