@@ -100,6 +100,7 @@ class Center(Base, AuditMixin):
     uselist=False,
     cascade="all, delete-orphan"
 )
+    terms_privacies = relationship("TermsPrivacy", back_populates="center", foreign_keys="[TermsPrivacy.center_id]")
 
 
 class CenterOnboardingTemp(Base, AuditMixin):

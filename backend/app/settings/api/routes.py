@@ -367,62 +367,64 @@ async def get_terms_privacy(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    # Fetch the global terms/privacy (just get the first one)
-    result = await session.execute(select(TermsPrivacy))
+    center_id = None
+    is_guest = False
+
+    if current_user["role"] == "guest":
+        is_guest = True
+    elif current_user["role"] == "centeradmin":
+        center_admin = await session.get(CenterAdmin, current_user["user_id"])
+        if not center_admin:
+            raise HTTPException(404, "CenterAdmin not found")
+        center_id = center_admin.center_id
+    elif current_user["role"] == "member":
+        from app.auth.models.models import Member, MemberStatusEnum
+        member = await session.get(Member, current_user["user_id"])
+        if not member:
+            raise HTTPException(404, "Member not found")
+        # Treat as guest if member_status is guest or home_center_id is None
+        member_status = getattr(member, "member_status", None)
+        if (
+            member_status == MemberStatusEnum.guest
+            or (isinstance(member_status, str) and member_status == "guest")
+            or not member.home_center_id
+        ):
+            is_guest = True
+        else:
+            center_id = member.home_center_id
+
+    # Fetch the correct TermsPrivacy object
+    if is_guest:
+        result = await session.execute(select(TermsPrivacy).where(TermsPrivacy.center_id == None))
+    else:
+        result = await session.execute(select(TermsPrivacy).where(TermsPrivacy.center_id == center_id))
     template = result.scalars().first()
     if not template:
         raise HTTPException(404, "Terms/Privacy not found")
 
-    center_data = {}
-    if current_user["role"] in ("centeradmin", "member"):
-        center_id = None
-        if current_user["role"] == "centeradmin":
-            center_admin = await session.get(CenterAdmin, current_user["user_id"])
-            if not center_admin:
-                raise HTTPException(404, "CenterAdmin not found")
-            center_id = center_admin.center_id
-        elif current_user["role"] == "member":
-            from app.auth.models.models import Member
-            member = await session.get(Member, current_user["user_id"])
-            if not member:
-                raise HTTPException(404, "Member not found")
-            member_status = getattr(member, "member_status", None)
-            # Robust guest check for enum or string
-            is_guest = (
-                member_status == MemberStatusEnum.guest or
-                (isinstance(member_status, str) and member_status.lower() == "guest")
-            )
-            if is_guest:
-                center_data = {
-                    "center_name": "tcenteros",
-                    "center_address": "tcenteros address"
-                }
-            elif hasattr(member, "home_center_id") and member.home_center_id:
-                center_id = member.home_center_id
-            else:
-                center_data = {
-                    "center_name": "tcenteros",
-                    "center_address": "tcenteros address"
-                }
-
-        if not center_data and center_id:
-            center = await session.get(Center, center_id)
-            if not center:
-                raise HTTPException(404, "Center not found")
-
-            # Explicitly fetch address using address_id to avoid MissingGreenlet
-            address = None
-            if center.address_id:
-                from app.settings.models.models import Address
-                address = await session.get(Address, center.address_id)
-
-            center_data = {
-                "center_name": center.center_name,
-                "center_address": (
-                    f"{address.address_line_1 or ''}, {address.address_line_2 or ''}, "
-                    f"{address.city or ''}, {address.state or ''}, {address.country or ''}, {address.postal_code or ''}"
-                ) if address else "",
-            }
+    # Prepare center_data for template rendering
+    if is_guest:
+        center_data = {
+            "center_name": "tcenteros",
+            "center_address": "tcenteros address"
+        }
+    else:
+        if not center_id:
+            raise HTTPException(404, "Center not found")
+        center = await session.get(Center, center_id)
+        if not center:
+            raise HTTPException(404, "Center not found")
+        address = None
+        if center.address_id:
+            from app.settings.models.models import Address
+            address = await session.get(Address, center.address_id)
+        center_data = {
+            "center_name": center.center_name,
+            "center_address": (
+                f"{address.address_line_1 or ''}, {address.address_line_2 or ''}, "
+                f"{address.city or ''}, {address.state or ''}, {address.country or ''}, {address.postal_code or ''}"
+            ) if address else "",
+        }
 
     rendered_content = Template(template.content).render(**center_data)
     return {
@@ -439,13 +441,28 @@ async def create_terms_privacy(
     title: str = Form(...),
     content: str = Form(...),
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(superadmin_required)
+    current_user=Depends(get_current_user)
 ):
+    center_id = None
+    if current_user["role"] == "centeradmin":
+        center_admin = await session.get(CenterAdmin, current_user["user_id"])
+        if not center_admin:
+            raise HTTPException(404, "CenterAdmin not found")
+        center_id = center_admin.center_id
+    elif current_user["role"] == "member":
+        from app.auth.models.models import Member
+        member = await session.get(Member, current_user["user_id"])
+        if not member:
+            raise HTTPException(404, "Member not found")
+        center_id = member.home_center_id
+    # For guest, center_id remains None
+
     terms = TermsPrivacy(
         title=title,
         content=content,
-        created_by=current_user["user_id"],
-        updated_by=current_user["user_id"],
+        center_id=center_id,
+        created_by=current_user["user_id"],   # <-- Set this
+        updated_by=current_user["user_id"],   # <-- Set this
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )

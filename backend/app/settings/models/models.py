@@ -215,11 +215,14 @@ class TermsPrivacy(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     content = Column(Text, nullable=False)  # Use placeholders like {{center_name}}
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
     created_by = Column(UUID(as_uuid=True), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = Column(UUID(as_uuid=True), nullable=False)
 
+
+    center = relationship("Center", back_populates="terms_privacies", foreign_keys=[center_id])
 
 
 class FAQ(Base):
