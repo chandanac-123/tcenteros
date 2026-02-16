@@ -13,6 +13,14 @@ const RevenuePieChart = () => {
     other: true
   })
 
+  const toggle = (key) => {
+  setVisible(prev => ({
+    ...prev,
+    [key]: !prev[key]
+  }))
+}
+
+
   const rawData = {
     membership: 5000,
     training: 3000,

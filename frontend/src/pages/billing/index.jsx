@@ -1,9 +1,11 @@
+import ContentLayout from "@common/masterLayout/ContentLayout"
+
 const Billing = () => {
   return (
-    <div>       
+    <ContentLayout>       
         <h1 className="text-2xl font-bold mb-4">Billing</h1>
         {/* Billing content goes here */}
-    </div>
+    </ContentLayout>
   )
 }   
 export default Billing
