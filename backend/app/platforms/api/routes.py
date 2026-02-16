@@ -32,7 +32,7 @@ async def list_features(db: AsyncSession = Depends(get_async_session)):
     result = await db.execute(select(PlatformFeature))
     return result.scalars().all()
 
-@router.get("/{feature_id}", response_model=PlatformFeatureOut, dependencies=[Depends(superadmin_required)])
+@router.get("/{feature_id}", response_model=PlatformFeatureOut)
 async def get_feature(feature_id: UUID, db: AsyncSession = Depends(get_async_session)):
     feature = await db.get(PlatformFeature, feature_id)
     if not feature:
@@ -62,3 +62,4 @@ async def delete_feature(feature_id: UUID, db: AsyncSession = Depends(get_async_
     await db.delete(feature)
     await db.commit()
     return {"detail": "Feature deleted"}
+
