@@ -6,8 +6,10 @@ import RevenuePieChart from '@common/charts/RevenuePieChart'
 import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
 import { DataTable } from '@common/DataTable'
+import { useNavigate } from 'react-router-dom'
 
 const Accounts = () => {
+  const navigate = useNavigate()
   const summaryData = [
     { title: 'Total Income', amount: 3000 },
     { title: 'Total Expense', amount: 1200 },
@@ -151,7 +153,7 @@ const Accounts = () => {
                 <span className='text-lg font-semibold text-textblack'>
                   Account Sub-modules
                 </span>
-                <button className='p-2 text-xs border border-tableborder rounded-2xl'>
+                <button  onClick={() => navigate(`/accounts/sub-modules/overview`)} className='p-2 text-xs border border-tableborder rounded-2xl'>
                   View All
                 </button>
               </div>

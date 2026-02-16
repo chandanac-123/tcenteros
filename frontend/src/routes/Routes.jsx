@@ -462,7 +462,7 @@ export const routes = [
   },
   {
     key: 1,
-    path: '/accounts/sub-modules',
+    path: '/accounts/sub-modules/:module',
     label: '',
     privetRoute: true,
     isSubRoute: false,
