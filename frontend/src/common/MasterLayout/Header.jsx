@@ -1,6 +1,7 @@
 import bell from '@assets/header-icons/bell.svg'
 import user from '@assets/header-icons/user.svg'
 import map from '@assets/header-icons/map.svg'
+import logout from '@assets/header-icons/logout.svg'
 import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
@@ -17,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
   const navigate = useNavigate()
 
   const handleOpen = () => {
@@ -98,10 +100,20 @@ const Header = () => {
                 <FileText className='w-5 h-5 text-primary' />
                 Legal & polices
               </button>
+              <button
+                onClick={() => setLogoutOpen(true)}
+                className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
+              >
+                <img src={logout} alt='' className='w-6 h-6 text-primary' />
+                Logout
+              </button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
+      {/* <CustomeModal open={logoutOpen} onOpenChange={setLogoutOpen} header='Logout'>
+        <div className='flex flex-col gap-4 p-4'></div>
+      </CustomeModal> */}
     </header>
   )
 }
