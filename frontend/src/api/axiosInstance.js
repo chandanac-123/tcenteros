@@ -33,7 +33,6 @@ axiosInstance.interceptors.response.use(
       // Clear auth store and redirect to login
       const state = useAuthStore.getState()
       if (state.clearAuth) state.clearAuth()
-      window.location.href = '/login'
     }
     return Promise.reject(error)
   }

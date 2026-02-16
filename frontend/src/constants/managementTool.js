@@ -20,12 +20,7 @@ export const managementTools = [
   { id: 'reports', label: 'Report & Insight', route: '/report-and-insight' }
 ]
 
-export const featureNameToStoreKey = {
-  'Member Management': 'member-management',
-  'Slot & Capacity Control': 'slot',
-  'Attendance Tracking': 'attendance',
-  'Payment & Billing': 'billing',
-  'Trainer & Staff Management': 'staffmanagement',
-  'Reports & Insights': 'reports',
-  'Sellable Itemss': 'sellable_items'
-}
+export const featureNameToStoreKey = managementTools.reduce((acc, tool) => {
+  acc[tool.label] = tool.route;
+  return acc;
+}, {});

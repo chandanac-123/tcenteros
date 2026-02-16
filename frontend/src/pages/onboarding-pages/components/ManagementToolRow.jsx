@@ -1,18 +1,9 @@
+import { featureNameToStoreKey } from "@constants/managementTool"
+
 const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
   console.log('tool: ', tool)
-
-  // Map feature_name to route
-  // Use route from tool if available, else fallback to routeMap
-  const routeMap = {
-    'Member Management': '/member-management',
-    'Slot & Capacity Control': '/slot-and-capacity',
-    'Attendance Tracking': '/attendance-tracking',
-    'Payment & Billing': '/payment-billing',
-    'Trainer & Staff Management': '/trainer-and-staff',
-    'Reports & Insights': '/report-and-insight',
-    'Sellable Itemss': '/sellable-item'
-  }
-  const route = tool?.route || routeMap[tool?.feature_name] || '/'
+  const route = tool?.route || featureNameToStoreKey[tool?.feature_name] || '/'
+  
 
   return (
     <div

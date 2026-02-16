@@ -17,7 +17,7 @@ const DeleteModal = ({ header, open, setOpen, description, onConfirm }) => {
           </Button>
           <Button
             size='addbutton'
-            variant='delete_button'
+            variant='default'
             type='button'
             onClick={onConfirm}
           >

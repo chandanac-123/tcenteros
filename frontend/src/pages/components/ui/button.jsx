@@ -1,7 +1,5 @@
 import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
 import { cva } from 'class-variance-authority'
-
 import { cn } from '@pages/lib/utils'
 
 const buttonVariants = cva(
@@ -18,11 +16,7 @@ const buttonVariants = cva(
         button_filled: 'bg-primary text-white',
         button_outlined: ' text-primary outline ',
         button_outlined_textleft: 'text-primary outline justify-start',
-        button_filter: 'text-textgrey border-2 border-filter_border',
-        delete_button: 'text-delete_red border-2 border-delete_red bg-delete_red text-white',
-
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline'
+        button_filter: 'text-textgrey border-2 border-filter_border'
       },
       size: {
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-20',
