@@ -1,4 +1,4 @@
-import logo from '@assets/images/logo.svg'
+import logo from '@assets/header-icons/logo_in_auth.svg'
 import dummy from '@assets/images/dummy.png'
 
 const AuthHeader = ({ title, description, children, logoTrue = true }) => {
