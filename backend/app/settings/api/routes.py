@@ -361,7 +361,6 @@ async def list_designations(session: AsyncSession = Depends(get_async_session)):
 
 
 
-
 @router.get("/terms-privacy", response_model=TermsPrivacyOut)
 async def get_terms_privacy(
     session: AsyncSession = Depends(get_async_session),
@@ -386,25 +385,33 @@ async def get_terms_privacy(
             member = await session.get(Member, current_user["user_id"])
             if not member:
                 raise HTTPException(404, "Member not found")
-            center_id = member.home_center_id
+            # Check for guest member
+            if getattr(member, "member_status", None) == "guest":
+                center_data = {
+                    "center_name": "tcenteros",
+                    "center_address": "tcenteros address"
+                }
+            else:
+                center_id = member.home_center_id
 
-        center = await session.get(Center, center_id)
-        if not center:
-            raise HTTPException(404, "Center not found")
+        if not center_data and center_id:
+            center = await session.get(Center, center_id)
+            if not center:
+                raise HTTPException(404, "Center not found")
 
-        # Explicitly fetch address using address_id to avoid MissingGreenlet
-        address = None
-        if center.address_id:
-            from app.settings.models.models import Address
-            address = await session.get(Address, center.address_id)
+            # Explicitly fetch address using address_id to avoid MissingGreenlet
+            address = None
+            if center.address_id:
+                from app.settings.models.models import Address
+                address = await session.get(Address, center.address_id)
 
-        center_data = {
-            "center_name": center.center_name,
-            "center_address": (
-                f"{address.address_line_1 or ''}, {address.address_line_2 or ''}, "
-                f"{address.city or ''}, {address.state or ''}, {address.country or ''}, {address.postal_code or ''}"
-            ) if address else "",
-        }
+            center_data = {
+                "center_name": center.center_name,
+                "center_address": (
+                    f"{address.address_line_1 or ''}, {address.address_line_2 or ''}, "
+                    f"{address.city or ''}, {address.state or ''}, {address.country or ''}, {address.postal_code or ''}"
+                ) if address else "",
+            }
 
     rendered_content = Template(template.content).render(**center_data)
     return {
