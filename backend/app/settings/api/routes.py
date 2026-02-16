@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
+from app.auth.models.models import MemberStatusEnum
 from app.settings.models.models import CenterCategory, TaxCategory, Designation
 from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut
 from app.settings.models.models import CenterOperationalSetting
@@ -385,14 +386,24 @@ async def get_terms_privacy(
             member = await session.get(Member, current_user["user_id"])
             if not member:
                 raise HTTPException(404, "Member not found")
-            # Check for guest member
-            if getattr(member, "member_status", None) == "guest":
+            member_status = getattr(member, "member_status", None)
+            # Robust guest check for enum or string
+            is_guest = (
+                member_status == MemberStatusEnum.guest or
+                (isinstance(member_status, str) and member_status.lower() == "guest")
+            )
+            if is_guest:
                 center_data = {
                     "center_name": "tcenteros",
                     "center_address": "tcenteros address"
                 }
-            else:
+            elif hasattr(member, "home_center_id") and member.home_center_id:
                 center_id = member.home_center_id
+            else:
+                center_data = {
+                    "center_name": "tcenteros",
+                    "center_address": "tcenteros address"
+                }
 
         if not center_data and center_id:
             center = await session.get(Center, center_id)
