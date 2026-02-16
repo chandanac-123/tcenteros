@@ -53,7 +53,7 @@ class TimeSlotOut(BaseModel):
 
 class MemberProfileOut(BaseModel):
     id: str
-    email: EmailStr
+    email: Optional[str] = None
     full_name: Optional[str] = None
     mobile: str
     profile_photo: Optional[str] = None

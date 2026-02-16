@@ -2,8 +2,8 @@ from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.database import get_async_session
-from app.auth.models.models import MemberStatusEnum
-from app.settings.models.models import CenterCategory, TaxCategory, Designation
+from app.auth.models.models import MemberStatusEnum, Member
+from app.settings.models.models import CenterCategory, TaxCategory, Designation, Address
 from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut
 from app.settings.models.models import CenterOperationalSetting
 from app.auth.models.models import CenterAdmin
@@ -362,7 +362,7 @@ async def list_designations(session: AsyncSession = Depends(get_async_session)):
 
 
 
-@router.get("/terms-privacy", response_model=TermsPrivacyOut)
+@router.get("/terms-privacy")
 async def get_terms_privacy(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
@@ -370,6 +370,7 @@ async def get_terms_privacy(
     center_id = None
     is_guest = False
 
+    # Determine user type and center
     if current_user["role"] == "guest":
         is_guest = True
     elif current_user["role"] == "centeradmin":
@@ -378,16 +379,12 @@ async def get_terms_privacy(
             raise HTTPException(404, "CenterAdmin not found")
         center_id = center_admin.center_id
     elif current_user["role"] == "member":
-        from app.auth.models.models import Member, MemberStatusEnum
         member = await session.get(Member, current_user["user_id"])
         if not member:
             raise HTTPException(404, "Member not found")
-        member_status = getattr(member, "member_status", None)
-        if (
-            member_status == MemberStatusEnum.guest
-            or (isinstance(member_status, str) and member_status == "guest")
-            or not member.home_center_id
-        ):
+        member_status = member.member_status.value if hasattr(member.member_status, "value") else str(member.member_status)
+        # Guest if member_status is guest and no home_center_id
+        if member_status == "guest" and not member.home_center_id:
             is_guest = True
         else:
             center_id = member.home_center_id
@@ -412,7 +409,6 @@ async def get_terms_privacy(
             raise HTTPException(404, "Center not found")
         address = None
         if center.address_id:
-            from app.settings.models.models import Address
             address = await session.get(Address, center.address_id)
         center_data = {
             "center_name": center.center_name,

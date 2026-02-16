@@ -288,7 +288,28 @@ async def get_own_member_profile(
     if not member:
         raise HTTPException(404, "Member not found")
 
-    # Get center city from center's address
+    member_status = member.member_status.value if hasattr(member.member_status, "value") else str(member.member_status)
+
+    # If guest and profile not updated (no full_name and no email), return only mobile
+    if (
+        member_status == "guest"
+        and not member.full_name
+        and not member.email
+    ):
+        return MemberProfileOut(
+            id=str(member.id),
+            email="",
+            full_name="",
+            mobile=member.mobile,
+            profile_photo="",
+            address=None,
+            member_status=member_status,
+            city="",
+            time_slot_id=None,
+            time_slot=None,
+        )
+
+    # Otherwise, return full profile (even if guest, but profile is updated)
     center_city = None
     if member.home_center_id:
         center = await session.get(Center, member.home_center_id)
@@ -297,7 +318,6 @@ async def get_own_member_profile(
             if center_address:
                 center_city = center_address.city
 
-    # Get time slot details
     time_slot_dict = None
     if member.time_slot_id:
         time_slot = await session.get(CenterTimeSlot, member.time_slot_id)
@@ -309,7 +329,6 @@ async def get_own_member_profile(
                 slot_capacity=time_slot.slot_capacity
             )
 
-    # Member's address (optional, for completeness)
     address_dict = None
     if member.address_id:
         address = await session.get(Address, member.address_id)
@@ -324,13 +343,13 @@ async def get_own_member_profile(
 
     return MemberProfileOut(
         id=str(member.id),
-        email=member.email,
-        full_name=member.full_name,
+        email=member.email or "",
+        full_name=member.full_name or "",
         mobile=member.mobile,
-        profile_photo=member.profile_photo,
+        profile_photo=member.profile_photo or "",
         address=address_dict,
-        member_status=member.member_status.value,
-        city=center_city,
+        member_status=member_status,
+        city=center_city or "",
         time_slot_id=str(member.time_slot_id) if member.time_slot_id else None,
         time_slot=time_slot_dict,
     )
