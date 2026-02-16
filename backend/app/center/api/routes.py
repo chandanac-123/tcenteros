@@ -924,6 +924,24 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
         longitude=float(address.longitude) if address.longitude is not None else None,
     )
 
+    # Fetch membership plans for the center
+    membership_result = await session.execute(
+        select(Membership).where(Membership.center_id == center_id)
+    )
+    memberships = membership_result.scalars().all()
+    membership_plans = [
+        {
+            "membership_id": str(membership.membership_id),
+            "membership_name": membership.membership_name,
+            "membership_code": membership.membership_code,
+            "description": membership.description,
+            "duration": membership.duration,
+            "default_price": float(membership.default_price),
+            "status": membership.status.value if hasattr(membership.status, "value") else str(membership.status),
+        }
+        for membership in memberships
+    ]
+
     return CenterOperationalInfoOut(
         center_id=str(center_id),
         center_name=center.center_name,
@@ -934,7 +952,8 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
         closing_time=op_setting.closing_time.strftime("%H:%M:%S"),
         current_day=datetime.now().strftime("%A"),
         trainers=trainers,
-        gallery=gallery
+        gallery=gallery,
+        membership_plans=membership_plans  # <-- Added here
     )
 
 

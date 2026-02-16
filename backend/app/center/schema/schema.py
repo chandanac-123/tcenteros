@@ -240,6 +240,19 @@ class AddressOut(BaseModel):
     latitude: Optional[float]
     longitude: Optional[float]
 
+class MembershipPlanOut(BaseModel):
+    membership_id: str
+    membership_name: str
+    membership_code: str
+    description: str
+    duration: str
+    default_price: float
+    status: str
+
+    class Config:
+        orm_mode = True
+
+
 class CenterOperationalInfoOut(BaseModel):
     center_id: str
     center_name: str
@@ -251,6 +264,7 @@ class CenterOperationalInfoOut(BaseModel):
     current_day: str
     trainers: List[TrainerOut]
     gallery: List[CenterGalleryImageOut]  
+    membership_plans: List[MembershipPlanOut] 
 
     class Config:
         orm_mode = True

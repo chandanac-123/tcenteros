@@ -382,7 +382,6 @@ async def get_terms_privacy(
         member = await session.get(Member, current_user["user_id"])
         if not member:
             raise HTTPException(404, "Member not found")
-        # Treat as guest if member_status is guest or home_center_id is None
         member_status = getattr(member, "member_status", None)
         if (
             member_status == MemberStatusEnum.guest
@@ -393,11 +392,8 @@ async def get_terms_privacy(
         else:
             center_id = member.home_center_id
 
-    # Fetch the correct TermsPrivacy object
-    if is_guest:
-        result = await session.execute(select(TermsPrivacy).where(TermsPrivacy.center_id == None))
-    else:
-        result = await session.execute(select(TermsPrivacy).where(TermsPrivacy.center_id == center_id))
+    # Always fetch the global TermsPrivacy (center_id is NULL)
+    result = await session.execute(select(TermsPrivacy).where(TermsPrivacy.center_id == None))
     template = result.scalars().first()
     if not template:
         raise HTTPException(404, "Terms/Privacy not found")
