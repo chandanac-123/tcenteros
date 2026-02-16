@@ -69,6 +69,11 @@ const Accounts = () => {
       label: 'Network Settlements',
       bg: 'bg-Network',
       bglight: 'bg-Network_light'
+    },
+    {
+      label: 'General Expenses',
+      bg: 'bg-progress_blue',
+      bglight: 'bg-general_bg'
     }
   ]
 
@@ -105,10 +110,10 @@ const Accounts = () => {
 
   return (
     <ContentLayout>
-      <div className='flex flex-col lg:flex-row gap-4 overflow-y-auto items-stretch min-h-[88vh] '>
-        <div className='flex flex-col w-3/5 gap-4 h-full'>
-          <Card>
-            <div className='flex flex-col p-2'>
+      <div className='flex flex-col lg:flex-row gap-4 items-stretch lg:min-h-[88vh] '>
+        <div className='flex flex-col w-full lg:w-3/5 gap-4'>
+          <Card className='lg:flex-1'>
+            <div className='flex flex-col p-4 h-full'>
               <span className='text-lg font-semibold text-textblack'>
                 Account Overview
               </span>
@@ -133,8 +138,8 @@ const Accounts = () => {
             </div>
           </Card>
 
-          <Card>
-            <div className='flex flex-col p-2'>
+          <Card className='lg:flex-1'>
+            <div className='flex flex-col p-4 h-full'>
               <div className='flex justify-between py-2'>
                 <span className='text-lg font-semibold text-textblack'>
                   Revenue Breakdown
@@ -146,14 +151,17 @@ const Accounts = () => {
           </Card>
         </div>
 
-        <div className='flex flex-col w-2/5 gap-4 h-full'>
-          <Card>
-            <div className='flex flex-col p-2'>
+        <div className='flex flex-col w-full lg:w-2/5 gap-4'>
+          <Card className='lg:flex-1'>
+            <div className='flex flex-col p-4 h-full'>
               <div className='flex justify-between py-2'>
                 <span className='text-lg font-semibold text-textblack'>
                   Account Sub-modules
                 </span>
-                <button  onClick={() => navigate(`/accounts/sub-modules/overview`)} className='p-2 text-xs border border-tableborder rounded-2xl'>
+                <button
+                  onClick={() => navigate(`/accounts/sub-modules/overview`)}
+                  className='p-2 text-xs border border-tableborder rounded-2xl'
+                >
                   View All
                 </button>
               </div>
@@ -161,8 +169,8 @@ const Accounts = () => {
             </div>
           </Card>
 
-          <Card label='Total Expenses'>
-            <div className='flex flex-col p-2'>
+          <Card label='Total Expenses' className='lg:flex-1'>
+            <div className='flex flex-col p-4 h-full'>
               <span className='text-lg font-semibold text-textblack'>
                 End to End Financial Flows
               </span>
@@ -184,12 +192,14 @@ const Accounts = () => {
         </div>
       </div>
 
-      <DataTable
-        title='Products'
-        subTitle='Products'
-        columns={columns}
-        data={[]}
-      />
+      <div className='my-4'>
+        <DataTable
+          title='Products'
+          subTitle='Products'
+          columns={columns}
+          data={[]}
+        />
+      </div>
     </ContentLayout>
   )
 }

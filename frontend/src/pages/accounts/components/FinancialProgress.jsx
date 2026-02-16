@@ -7,7 +7,7 @@ const FinancialProgressBar = ({ label, value ,progressBg, progressBgLight}) => {
         <span className='text-textgrey text-xs flex'>{label}</span>
         <span className='text-textgrey text-xs flex'>100%</span>
       </div>
-      <div className='w-full bg-gray-200 rounded-full overflow-hidden flex my-1'>
+      <div className='w-full bg-gray-200 rounded-full overflow-hidden flex'>
           <Progress
           value={50}
           trackClassName={progressBgLight}

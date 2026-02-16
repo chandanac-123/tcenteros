@@ -74,6 +74,7 @@ export default {
         payroll_bg:'#7DC20D',
         inventory_bg:'#FF9E97',
         taxes_bg:'#E33E10',
+        general_bg:'#55EFC245',
       }
     }
   },
