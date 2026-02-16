@@ -53,10 +53,6 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
       accessorKey: 'center_name',
       header: 'Center'
     },
-     {
-      accessorKey: '',
-      header: 'Customer Rating'
-    },
     {
       accessorKey: 'joining_date',
       header: 'Join Date'

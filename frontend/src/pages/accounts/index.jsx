@@ -5,6 +5,7 @@ import SummaryCard from './components/SummaryCard'
 import RevenuePieChart from '@common/charts/RevenuePieChart'
 import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
+import { DataTable } from '@common/DataTable'
 
 const Accounts = () => {
   const summaryData = [
@@ -69,17 +70,48 @@ const Accounts = () => {
     }
   ]
 
+  const columns = [
+    {
+      accessorKey: 'full_name',
+      header: 'Center Name'
+    },
+    {
+      accessorKey: 'designation_name',
+      header: 'Transaction Date'
+    },
+    {
+      accessorKey: 'email',
+      header: 'Description'
+    },
+    {
+      accessorKey: 'mobile',
+      header: 'Debit'
+    },
+    {
+      accessorKey: 'center_name',
+      header: 'Credit'
+    },
+    {
+      accessorKey: 'joining_date',
+      header: 'Payroll Date'
+    },
+    {
+      accessorKey: 'joining_date',
+      header: 'Action'
+    }
+  ]
+
   return (
     <ContentLayout>
-      <div className='flex flex-col lg:flex-row gap-4 h-full overflow-y-auto pr-2'>
-        <div className='flex flex-col w-3/5 gap-4'>
+      <div className='flex flex-col lg:flex-row gap-4 overflow-y-auto items-stretch min-h-[88vh] '>
+        <div className='flex flex-col w-3/5 gap-4 h-full'>
           <Card>
             <div className='flex flex-col p-2'>
               <span className='text-lg font-semibold text-textblack'>
                 Account Overview
               </span>
 
-              <div className='flex gap-4 flex-wrap'>
+              <div className='flex gap-4 flex-wrap '>
                 {summaryData.map((item, index) => (
                   <SummaryCard
                     key={index}
@@ -101,7 +133,7 @@ const Accounts = () => {
 
           <Card>
             <div className='flex flex-col p-2'>
-              <div className='flex justify-between py-4'>
+              <div className='flex justify-between py-2'>
                 <span className='text-lg font-semibold text-textblack'>
                   Revenue Breakdown
                 </span>
@@ -112,7 +144,7 @@ const Accounts = () => {
           </Card>
         </div>
 
-        <div className='flex flex-col w-2/5 gap-4 '>
+        <div className='flex flex-col w-2/5 gap-4 h-full'>
           <Card>
             <div className='flex flex-col p-2'>
               <div className='flex justify-between py-2'>
@@ -149,6 +181,13 @@ const Accounts = () => {
           </Card>
         </div>
       </div>
+
+      <DataTable
+        title='Products'
+        subTitle='Products'
+        columns={columns}
+        data={[]}
+      />
     </ContentLayout>
   )
 }
