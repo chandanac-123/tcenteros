@@ -3,6 +3,7 @@ import axiosInstance from './axiosInstance'
 export const classTypeApiCall = () =>
   axiosInstance.get('/settings/superadmin/center-categories/')
 export const platformApiCall = () => axiosInstance.get('/platforms/')
+export const getPlatformApiCall = (id) => axiosInstance.get(`/platforms/${id}`)
 export const onboardCreateApiCall = details =>
   axiosInstance.post('/center/onboarding/temp', details)
 export const pricingPageApiCall = id =>

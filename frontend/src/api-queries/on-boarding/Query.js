@@ -4,7 +4,8 @@ import {
   createOnboardCenter,
   getPricingPage,
   calculateGst,
-  finalizeOnboardCenter
+  finalizeOnboardCenter,
+  getPlatformById
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -12,6 +13,15 @@ export const useAllClassTypesQuery = () => {
   return useQuery({
     queryKey: ['classtypes'],
     queryFn: getAllClassTypes,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const usePlatformByIdQuery = (id) => {
+  return useQuery({
+    queryKey: ['platforms', id],
+    queryFn: () => getPlatformById(id),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

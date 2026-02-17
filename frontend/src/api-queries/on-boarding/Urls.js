@@ -4,12 +4,22 @@ import {
   onboardCreateApiCall,
   pricingPageApiCall,
   gsteApiCall,
-  onboardFinalizeApiCall
+  onboardFinalizeApiCall,
+  getPlatformApiCall
 } from '../../api/index'
 
 export const getAllClassTypes = async () => {
   try {
     const response = await classTypeApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getPlatformById = async (id) => {
+  try {
+    const response = await getPlatformApiCall(id)
     return response.data
   } catch (error) {
     throw error
