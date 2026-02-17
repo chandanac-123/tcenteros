@@ -51,15 +51,15 @@ const InvoiceSummary = () => {
           {isFetching ? (
             <Loader />
           ) : (
-            <div className='bg-white rounded-3xl shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] p-8 w-full max-w-lg  '>
+            <div className='bg-white rounded-3xl shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] p-4 w-full max-w-lg  '>
               {/* Header */}
-              <h2 className='text-xl font-semibold text-center mb-6'>
+              <h2 className='text-xl font-semibold text-center mb-4'>
                 Billing Summary
               </h2>
 
               {/* Center Details */}
               <section className='mb-6'>
-                <h3 className='font-semibold mb-3'>Center Details</h3>
+                <h3 className='font-semibold mb-1'>Center Details</h3>
 
                 <div className='space-y-1 text-sm'>
                   <div className='flex justify-between'>
