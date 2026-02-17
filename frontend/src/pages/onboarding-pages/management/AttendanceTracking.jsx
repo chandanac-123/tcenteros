@@ -6,24 +6,40 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { useLocation, useNavigate } from 'react-router-dom'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
-import SelectionCardTick from '../components/SelectionCardTick'
-import { attendanceTrackingType } from '@constants/attendanceTrack'
-import { useEffect } from 'react'
+import RadioGroup from '@common/RadioGroup'
 
 const AttendanceTracking = () => {
   const navigate = useNavigate()
-  const { setTool, attendanceType, setAttendanceType } = useOnboardingStore()
+  const { centerTools, setTool} = useOnboardingStore()
   const { state } = useLocation()
   const tool = state?.tool
 
-  useEffect(() => {
-    // Update CenterManagement attendance checkbox whenever selection changes
-    if (attendanceType === 'no-tracking') {
-      setTool('attendance', false)
-    } else {
-      setTool('attendance', true)
-    }
-  }, [attendanceType, setTool])
+  const toolState = centerTools['attendance']
+
+  // useEffect(() => {
+  //   // Update CenterManagement attendance checkbox whenever selection changes
+  //   if (attendanceType === 'no-tracking') {
+  //     setTool('attendance', false)
+  //   } else {
+  //     setTool('attendance', true)
+  //   }
+  // }, [attendanceType, setTool])
+
+   const selectedValue =
+    toolState?.enabled === true
+      ? true
+      : toolState?.enabled === false
+      ? false
+      : null
+
+   const handleAnswer = value => {
+    setTool(
+      'attendance',
+      value === 'yes',
+      toolState?.feature_id // keep existing ID
+    )
+  }
+
 
   return (
     <SecondaryLayout>
@@ -35,19 +51,26 @@ const AttendanceTracking = () => {
             {tool?.feature_name}
           </h2>
           <p className='text-sm text-grey'>{tool?.description}</p>
-          <p className='font-medium text-sm text-secondary'>
+           <p className='font-medium text-sm text-secondary'>
             Do you need attendance tracking for your members?
           </p>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center'>
-            {attendanceTrackingType.map(item => (
+            <RadioGroup
+            name='member_management'
+            options={[
+              { label: 'Yes', value: true },
+              { label: 'No', value: false }
+            ]}
+            value={selectedValue}
+            onChange={val => handleAnswer(val ? 'yes' : 'no')}
+          />
+            {/* {attendanceTrackingType.map(item => (
               <SelectionCardTick
                 key={item.id}
                 item={item}
                 selected={attendanceType === item.id}
                 onSelect={setAttendanceType}
               />
-            ))}
-          </div>
+            ))} */}
         </div>
       </div>
 

@@ -29,7 +29,7 @@ export const useOnboardingStore = create(
 
       //  OTHER ONBOARDING STATE
 
-      attendanceType: 'manual',
+      attendanceType: null,
       setAttendanceType: type => set({ attendanceType: type }),
 
       sellableItem: 'merchandise',

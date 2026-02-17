@@ -17,7 +17,6 @@ const SmartRecommandation = () => {
     { label: 'Class Mode', value: store.classMode },
     { label: 'Class Size', value: store.memberCount },
     { label: 'Trainers', value: store.trainerCount },
-    { label: 'Attendance', value: store.attendanceType },
     {
       label: 'Management',
       value: store.centerTools

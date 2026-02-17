@@ -17,10 +17,13 @@ const TypeSelection = () => {
 
   // Set default selection to first item from API if not already selected
   useEffect(() => {
-    if (classTypes && classTypes.length > 0 && !typeSelectionId) {
-      setTypeSelection(classTypes[0].id, classTypes[0].name)
+    if (!classTypes || classTypes.length === 0) return
+    const alreadyExists = classTypes.some(item => item.id === typeSelectionId)
+    if (!alreadyExists) {
+      const first = classTypes[0]
+      setTypeSelection(first.id, first.name)
     }
-  }, [classTypes, typeSelectionId, setTypeSelection])
+  }, [classTypes])
 
   return (
     <SecondaryLayout>

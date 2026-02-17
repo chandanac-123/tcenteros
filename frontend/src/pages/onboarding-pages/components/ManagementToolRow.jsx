@@ -1,20 +1,11 @@
-const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
-  console.log('tool: ', tool)
-
-  // Map feature_name to route
-  // Use route from tool if available, else fallback to routeMap
-  const routeMap = {
-    'Member Management': '/member-management',
-    'Slot & Capacity Control': '/slot-and-capacity',
-    'Attendance Tracking': '/attendance-tracking',
-    'Payment & Billing': '/payment-billing',
-    'Trainer & Staff Management': '/trainer-and-staff',
-    'Reports & Insights': '/report-and-insight',
-    'Sellable Itemss': '/sellable-item'
-  }
-  const route = tool?.route || routeMap[tool?.feature_name] || '/'
-  
-
+const ManagementToolRow = ({
+  tool,
+  checked,
+  onToggle,
+  onNavigate,
+  route,
+  isMandatory
+}) => {
   return (
     <div
       className={`
@@ -27,17 +18,29 @@ const ManagementToolRow = ({ tool, checked, onToggle, onNavigate }) => {
       `}
     >
       <span
-        className='flex-1 cursor-pointer'
-        onClick={() => onNavigate(route, tool)}
+        className={`flex-1 ${
+          isMandatory ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+        }`}
+        onClick={() =>
+          !isMandatory && onNavigate && onNavigate(route, tool)
+        }
       >
         {tool.feature_name}
+        {isMandatory && (
+          <span className="ml-2 text-xs text-secondary">
+           
+          </span>
+        )}
       </span>
 
       <input
         type='checkbox'
         checked={checked}
+        disabled={isMandatory}
         onChange={e => onToggle(tool.id, e.target.checked)}
-        className='w-4 h-4 cursor-pointer accent-secondary'
+        className={`w-4 h-4 accent-secondary ${
+          isMandatory ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+        }`}
       />
     </div>
   )
