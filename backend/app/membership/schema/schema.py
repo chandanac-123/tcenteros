@@ -12,11 +12,11 @@ class MembershipFeatureIn(BaseModel):
 
 class MembershipCreate(BaseModel):
     membership_name: str
-    membership_code: str
-    description: str = ""
-    duration: str
+    description: Optional[str] = None
+    duration_count: int
+    duration_unit: str  # likely an Enum: "day", "month", "year", etc.
     default_price: float
-    membership_features: List[MembershipFeatureIn] = []
+    membership_features: List[str]  # List of feature names
 
 
 class MembershipFeatureOut(BaseModel):
@@ -25,15 +25,16 @@ class MembershipFeatureOut(BaseModel):
     feature_description: Optional[str] = None
 
 class MembershipOut(BaseModel):
-    membership_id: UUID
-    center_id: UUID
+    membership_id: str
+    center_id: str
     membership_name: str
     membership_code: str
-    description: str
-    duration: str
+    description: Optional[str]
+    duration_count: int
+    duration_unit: str
     default_price: float
     status: str
-    membership_features: List[MembershipFeatureOut] = []
+    membership_features: List[MembershipFeatureOut]
 
 
 class MemberCreate(BaseModel):

@@ -935,7 +935,8 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
             "membership_name": membership.membership_name,
             "membership_code": membership.membership_code,
             "description": membership.description,
-            "duration": membership.duration,
+            "duration_count": membership.duration_count,
+            "duration_unit": membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
             "default_price": float(membership.default_price),
             "status": membership.status.value if hasattr(membership.status, "value") else str(membership.status),
         }

@@ -19,6 +19,7 @@ from sqlalchemy import select, func
 from app.membership.schema.schema import MembershipOut, MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
+from random import randint
 from app.center.models.models import CenterTimeSlot, TimeSlotChangeRequest,  TimeSlotChangeStatus, TimeSlotChangeType, Center
 router = APIRouter()
 
@@ -77,8 +78,8 @@ async def create_membership_plan(
     await db.refresh(membership)
 
     return MembershipOut(
-        membership_id=membership.membership_id,
-        center_id=membership.center_id,
+        membership_id=str(membership.membership_id),
+        center_id=str(membership.center_id),
         membership_name=membership.membership_name,
         membership_code=membership.membership_code,
         description=membership.description,
@@ -88,7 +89,7 @@ async def create_membership_plan(
         status=membership.status.value,
         membership_features=[
             MembershipFeatureOut(
-                id=feat.id,
+                id=str(feat.id),
                 feature_name=feat.feature_name,
                 feature_description=feat.feature_description,
             ) for feat in features
@@ -105,17 +106,18 @@ async def list_membership_plans(
     memberships = result.scalars().all()
     return [
         MembershipOut(
-            membership_id=m.membership_id,
-            center_id=m.center_id,
+            membership_id=str(m.membership_id),
+            center_id=str(m.center_id),
             membership_name=m.membership_name,
             membership_code=m.membership_code,
             description=m.description,
-            duration=m.duration,
+            duration_count=m.duration_count,
+            duration_unit=m.duration_unit.value if hasattr(m.duration_unit, "value") else m.duration_unit,
             default_price=float(m.default_price),
             status=m.status.value,
             membership_features=[
                 MembershipFeatureOut(
-                    id=f.id,
+                    id=str(f.id),
                     feature_name=f.feature_name,
                     feature_description=f.feature_description
                 ) for f in m.membership_features
@@ -323,15 +325,14 @@ async def create_member(
     db.add(member)
     await db.flush()
 
-    # 6. Calculate end_date based on membership duration
+    # 6. Calculate end_date based on membership duration_count and duration_unit
     start_date = date.today()
-    duration = membership.duration.lower()
-    if "month" in duration:
-        months = int(duration.split("-")[0])
-        end_date = start_date + relativedelta(months=months)
-    elif "year" in duration:
-        years = int(duration.split("-")[0])
-        end_date = start_date + relativedelta(years=years)
+    if membership.duration_unit.value == "month":
+        end_date = start_date + relativedelta(months=membership.duration_count)
+    elif membership.duration_unit.value == "year":
+        end_date = start_date + relativedelta(years=membership.duration_count)
+    elif membership.duration_unit.value == "day":
+        end_date = start_date + relativedelta(days=membership.duration_count)
     else:
         end_date = None  # or handle as needed
 

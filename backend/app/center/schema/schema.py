@@ -244,8 +244,9 @@ class MembershipPlanOut(BaseModel):
     membership_id: str
     membership_name: str
     membership_code: str
+    duration_count: int
+    duration_unit: str
     description: str
-    duration: str
     default_price: float
     status: str
 

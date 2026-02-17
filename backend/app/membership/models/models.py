@@ -8,6 +8,7 @@ import enum
 
 
 class DurationUnitEnum(enum.Enum):
+    day = "day"
     month = "month"
     year = "year"
 
