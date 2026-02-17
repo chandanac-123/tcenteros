@@ -6,6 +6,8 @@ import DeleteModal from '@common/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
 import PlanCard from './PlanCard'
 import { CarouselSize } from '@common/CustomeCarousel'
+import { membershipPlanColorPalette } from '@constants/membership-color-palette'
+
 
 const MembershipPlan = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -14,29 +16,6 @@ const MembershipPlan = () => {
     { id: 1, name: 'All' },
     { id: 2, name: 'Active' },
     { id: 3, name: 'Inactive' }
-  ]
-
-  const colorPalette = [
-    {
-      bg: 'bg-plan_bg_grey',
-      footer_bg: 'bg-plan_grey',
-      text: 'text-plan_grey'
-    },
-    {
-      footer_bg: 'bg-plan_green',
-      bg: 'bg-plan_bg_green',
-      text: 'text-plan_green'
-    },
-    {
-      footer_bg: 'bg-plan_blue',
-      bg: 'bg-plan_bg_blue',
-      text: 'text-plan_blue'
-    },
-    {
-      footer_bg: 'bg-plan_purple',
-      bg: 'bg-plan_bg_purple',
-      text: 'text-plan_purple'
-    }
   ]
 
   const dummyPlans = [
@@ -136,7 +115,7 @@ const MembershipPlan = () => {
           <PlanCard
             key={index}
             {...plan}
-            colors={colorPalette[index % colorPalette.length]}
+            colors={membershipPlanColorPalette[index % membershipPlanColorPalette.length]}
           />
         ))}
       </CarouselSize>
@@ -154,82 +133,3 @@ const MembershipPlan = () => {
   )
 }
 export default MembershipPlan
-
-// tabsListClass =
-//   'inline-flex h-10 w-[400px] p-[1px] overflow-hidden bg-transparent border-none outline-none'
-// tabsTriggerClass =
-//   'text-textblack rounded-2xl border-none outline-none focus:outline-none focus:border-none w-1/3 min-w-[120px] data-[state=inactive]:bg-transparent data-[state=active]:bg-white data-[state=active]:text-black justify-center'
-// tabsClass = 'bg-tab_bg  rounded-2xl border-none outline-none'
-
-{
-  /* <div className='w-full flex border border-primary  rounded-lg px-3 py-5 justify-between items-center gap-2'>
-        <div>
-          <img src={memberimg} alt='Member' className='w-40 h-40' />
-        </div>
-
-        <div className='flex flex-col gap-4'>
-          <span className='text-primary font-semibold text-xl'>Base Plan</span>
-          <div className='flex flex-col'>
-            <span className='text-grey_text text-sm'>membership id</span>
-            <span className='text-primary_light font-medium text-lg'>
-              8744544
-            </span>
-          </div>
-          <div className='flex justify-center items-center gap-2'>
-            <span className='font-semibold'>₹5999 /</span>
-            <span className='font-thin text-xs text-grey_text justify-center'>
-              3 months
-            </span>
-          </div>
-        </div>
-
-        <div className='w-80 text-sm text-left text-grey_text'>
-          Experience exclusive access to personal training sessions, advanced
-          nutrition plans, and priority support. Elevate your fitness journey
-          with customized strategies tailored specifically to your needs.
-        </div>
-
-        <div className='flex flex-col gap-2'>
-          <div className='flex gap-1 justify-center text-sm items-center'>
-            <img src={tick} alt='Tick' className='w-3 ' />
-            <span className='text-sm text-pricing_text'>
-              Dedicated Nutrition App (iOS & Android)
-            </span>
-          </div>
-          <div className='flex gap-1 justify-center text-sm items-center'>
-            <img src={tick} alt='Tick' className='w-3 ' />
-            <span className='text-sm text-pricing_text'>
-              Dedicated Nutrition App (iOS & Android)
-            </span>
-          </div>
-          <div className='flex gap-1 justify-center text-sm items-center'>
-            <img src={tick} alt='Tick' className='w-3 ' />
-            <span className='text-sm text-pricing_text'>
-              Dedicated Nutrition App (iOS & Android)
-            </span>
-          </div>
-        </div>
-
-        <div className='flex flex-col gap-4 justify-end items-end'>
-          <div className='flex gap-4 justify-center'>
-            <span className='text-pricing_text text-sm'>Active</span>
-            <Switch />
-          </div>
-
-          <div className='flex gap-4 justify-center items-center'>
-            <span className='text-pricing_text text-sm'>Edit</span>
-            <button>
-              <img src={edit} alt='delete' className='w-8' />
-            </button>
-          </div>
-
-          <div className='flex gap-4 justify-center items-center'>
-            <span className='text-pricing_text text-sm'>Delete</span>
-
-            <button onClick={() => setDeleteOpen(!deleteOpen)}>
-              <img src={deleteicon} alt='delete' className='w-8' />
-            </button>
-          </div>
-        </div>
-      </div> */
-}

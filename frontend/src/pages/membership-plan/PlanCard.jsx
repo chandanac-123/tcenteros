@@ -46,7 +46,7 @@ const PlanCard = ({
         <div className='mt-2 space-y-1 h-32'>
           {features?.map((item, index) => (
             <div key={index} className='flex items-center gap-2'>
-              <CircleCheck className='w-4 h-4' />
+              <img src={`${colors?.tick}`} className='w-3 h-3' />
               <span className='text-sm text-textblack break-words whitespace-break-spaces'>
                 {item}
               </span>
