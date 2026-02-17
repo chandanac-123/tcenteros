@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, String, Boolean, Numeric, Enum, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -6,6 +6,10 @@ from app.core.models.base import AuditMixin, Base
 from app.core.models.models import StatusEnum
 import enum
 
+
+class DurationUnitEnum(enum.Enum):
+    month = "month"
+    year = "year"
 
 class MembershipFeature(Base, AuditMixin):
     __tablename__ = "membership_features"
@@ -30,7 +34,8 @@ class Membership(Base, AuditMixin):
     membership_name = Column(String, nullable=False)
     membership_code = Column(String, nullable=False, unique=True)
     description = Column(String)
-    duration = Column(String, nullable=False)
+    duration_count = Column(Integer, nullable=False)  
+    duration_unit = Column(Enum(DurationUnitEnum), nullable=False)
     default_price = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 

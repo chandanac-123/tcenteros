@@ -29,12 +29,10 @@ async def create_membership_plan(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    # 1. Get user from User table
+    # 1. Get user and center
     user = await db.get(User, current_user["user_id"])
     if not user or user.role != "centeradmin":
         raise HTTPException(status_code=403, detail="Not a center admin")
-
-    # 2. Get center_id directly from CenterAdmin table
     result = await db.execute(
         select(CenterAdmin.center_id).where(CenterAdmin.id == user.id)
     )
@@ -42,29 +40,33 @@ async def create_membership_plan(
     if not center_id:
         raise HTTPException(status_code=403, detail="CenterAdmin record not found or no center assigned")
 
+    # 2. Generate unique membership_code (e.g., centerid + random 4 digits)
+    membership_code = f"{str(center_id)[:8].upper()}-{randint(1000, 9999)}"
+
     # 3. Create the membership
     membership = Membership(
         membership_id=uuid4(),
         center_id=center_id,
         membership_name=payload.membership_name,
-        membership_code=payload.membership_code,
+        membership_code=membership_code,
         description=payload.description,
-        duration=payload.duration,
+        duration_count=payload.duration_count,
+        duration_unit=payload.duration_unit,
         default_price=payload.default_price,
         status=StatusEnum.active,
         created_by=user.id,
         updated_by=user.id,
     )
     db.add(membership)
-    await db.flush()  # So membership.membership_id is available
+    await db.flush()
 
-    # 4. Add membership features
+    # 4. Add membership features (only for this center)
     features = []
-    for feature in payload.membership_features:
+    for feature_name in payload.membership_features:
         feat = MembershipFeature(
             membership_id=membership.membership_id,
-            feature_name=feature.feature_name,
-            feature_description=feature.feature_description,
+            feature_name=feature_name,
+            feature_description=None,
             created_by=user.id,
             updated_by=user.id,
         )
@@ -74,14 +76,14 @@ async def create_membership_plan(
     await db.commit()
     await db.refresh(membership)
 
-    # 5. Return membership data with features
     return MembershipOut(
         membership_id=membership.membership_id,
         center_id=membership.center_id,
         membership_name=membership.membership_name,
         membership_code=membership.membership_code,
         description=membership.description,
-        duration=membership.duration,
+        duration_count=membership.duration_count,
+        duration_unit=membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
         default_price=float(membership.default_price),
         status=membership.status.value,
         membership_features=[
@@ -269,7 +271,18 @@ async def create_member(
         raise HTTPException(status_code=403, detail="Not a center admin")
     center_id = center_admin.center_id
 
-    # 2. Create Address
+    # 2. Validate Membership Plan belongs to this center
+    membership = await db.get(Membership, payload.membership_id)
+    if not membership or membership.center_id != center_id:
+        raise HTTPException(status_code=400, detail="Selected membership plan does not belong to your center")
+
+    # 3. Validate Time Slot belongs to this center (if provided)
+    if payload.time_slot_id:
+        time_slot = await db.get(CenterTimeSlot, payload.time_slot_id)
+        if not time_slot or time_slot.center_id != center_id:
+            raise HTTPException(status_code=400, detail="Selected time slot does not belong to your center")
+
+    # 4. Create Address
     address = Address(
         id=uuid4(),
         address_line_1=payload.address_line_1,
@@ -286,7 +299,7 @@ async def create_member(
     db.add(address)
     await db.flush()
 
-    # 3. Create Member (User + Member fields)
+    # 5. Create Member (User + Member fields)
     member = Member(
         id=uuid4(),
         email=payload.email,
@@ -310,13 +323,8 @@ async def create_member(
     db.add(member)
     await db.flush()
 
-    # 4. Fetch Membership to get duration
-    membership = await db.get(Membership, payload.membership_id)
-    if not membership:
-        raise HTTPException(status_code=404, detail="Membership plan not found")
-
+    # 6. Calculate end_date based on membership duration
     start_date = date.today()
-    # Parse duration and calculate end_date
     duration = membership.duration.lower()
     if "month" in duration:
         months = int(duration.split("-")[0])
@@ -327,8 +335,7 @@ async def create_member(
     else:
         end_date = None  # or handle as needed
 
-
-    # 5. Create MemberMembership
+    # 7. Create MemberMembership
     member_membership = MemberMembership(
         id=uuid4(),
         member_id=member.id,
@@ -356,7 +363,7 @@ async def create_member(
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
         "membership_id": str(payload.membership_id),
         "address_id": str(address.id),
-        "member_status": member.member_status.value,  # <-- NEW FIELD IN RESPONSE
+        "member_status": member.member_status.value,
     }
 
 
