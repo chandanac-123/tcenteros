@@ -7,6 +7,7 @@ class PlatformFeatureBase(BaseModel):
     feature_name: str
     description: Optional[str] = None
     base_price: condecimal(max_digits=10, decimal_places=2)
+    mandatory: bool = False
 
 class PlatformFeatureCreate(PlatformFeatureBase):
     pass

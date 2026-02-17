@@ -41,6 +41,7 @@ class Center(Base, AuditMixin):
     __table_args__ = {"schema": "center"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    parent_center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
     center_name = Column(String, nullable=False, index=True)
     
     about = Column(Text, nullable=True)
@@ -81,6 +82,7 @@ class Center(Base, AuditMixin):
 
 
     # Relationships (optional, for easy ORM access)
+    parent_center = relationship("Center", remote_side="Center.id", backref="sub_centers", foreign_keys=[parent_center_id])
     category = relationship("CenterCategory", back_populates="centers", foreign_keys=[center_category_id])
     address = relationship("Address", back_populates="centers", foreign_keys=[address_id])
     admins = relationship(

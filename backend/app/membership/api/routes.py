@@ -142,21 +142,22 @@ async def get_membership_plan(
     if not membership:
         raise HTTPException(status_code=404, detail="Membership plan not found")
     return MembershipOut(
-        membership_id=membership.membership_id,
-        center_id=membership.center_id,
-        membership_name=membership.membership_name,
-        membership_code=membership.membership_code,
-        description=membership.description,
-        duration=membership.duration,
-        default_price=float(membership.default_price),
-        status=membership.status.value,
-        membership_features=[
-            MembershipFeatureOut(
-                id=f.id,
-                feature_name=f.feature_name,
-                feature_description=f.feature_description
-            ) for f in membership.membership_features
-        ]
+        membership_id=str(membership.membership_id),
+            center_id=str(membership.center_id),
+            membership_name=membership.membership_name,
+            membership_code=membership.membership_code,
+            description=membership.description,
+            duration_count=membership.duration_count,
+            duration_unit=membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
+            default_price=float(membership.default_price),
+            status=membership.status.value,
+            membership_features=[
+                MembershipFeatureOut(
+                    id=str(f.id),
+                    feature_name=f.feature_name,
+                    feature_description=f.feature_description
+                ) for f in membership.membership_features
+            ]
     )
 
 

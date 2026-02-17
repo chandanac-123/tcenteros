@@ -26,7 +26,7 @@ class PlatformFeature(Base, AuditMixin):
     description = Column(Text)
     base_price = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum(StatusEnum), default=StatusEnum.active, nullable=False)
-
+    mandatory = Column(Boolean, default=False, nullable=False)
 
 
 class CenterFeatureSubscription(Base, AuditMixin):
