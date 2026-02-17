@@ -88,7 +88,7 @@ export const getMembershipPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans`)
 export const createMembershipPlanApiCall = details =>
   axiosInstance.post(
-    '/membership/memberships-plans/',
+    '/membership/memberships-plans',
     details
   )
 export const deleteMembershipPlanApiCall = id =>

@@ -73,7 +73,7 @@ const PlanCard = ({ data, colors }) => {
               <div key={index} className='flex items-center gap-2'>
                 <img src={colors?.tick} className='w-3 h-3' />
                 <span className='text-sm text-textblack break-words'>
-                  {item?.feature_description}
+                  {item?.feature_name}
                 </span>
               </div>
             ))}
