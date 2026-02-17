@@ -1,9 +1,10 @@
 import axiosInstance from './axiosInstance'
 
+//ONBOARDING
 export const classTypeApiCall = () =>
   axiosInstance.get('/settings/superadmin/center-categories/')
 export const platformApiCall = () => axiosInstance.get('/platforms/')
-export const getPlatformApiCall = (id) => axiosInstance.get(`/platforms/${id}`)
+export const getPlatformApiCall = id => axiosInstance.get(`/platforms/${id}`)
 export const onboardCreateApiCall = details =>
   axiosInstance.post('/center/onboarding/temp', details)
 export const pricingPageApiCall = id =>
@@ -70,8 +71,32 @@ export const deleteSlotApiCall = id =>
 export const getCenterTimeApiCall = () =>
   axiosInstance.get(`/settings/superadmin/center-operational-settings/`)
 export const createCenterTimeApiCall = details =>
-  axiosInstance.post('/settings/superadmin/center-operational-settings/', details)
+  axiosInstance.post(
+    '/settings/superadmin/center-operational-settings/',
+    details
+  )
 export const deleteCenterTimeApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-operational-settings/${id}`)
 export const updateCenterTimeApiCall = (details, id) =>
-  axiosInstance.put(`/settings/superadmin/center-operational-settings/${id}`, details)
+  axiosInstance.put(
+    `/settings/superadmin/center-operational-settings/${id}`,
+    details
+  )
+
+//MEMBERSHIP PLAN API
+export const getMembershipPlanApiCall = () =>
+  axiosInstance.get(`/membership/memberships-plans`)
+export const createMembershipPlanApiCall = details =>
+  axiosInstance.post(
+    '/membership/memberships-plans/',
+    details
+  )
+export const deleteMembershipPlanApiCall = id =>
+  axiosInstance.delete(`/membership/memberships-plans/${id}`)
+export const updateMembershipPlanApiCall = (details, id) =>
+  axiosInstance.put(
+    `/membership/memberships-plans/${id}`,
+    details
+  )
+  export const getMembershipPlanByIdApiCall = id =>
+  axiosInstance.get(`/membership/memberships-plans/${id}`)

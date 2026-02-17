@@ -23,7 +23,6 @@ import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
 import PricingPage from '@pages/onboarding-pages/PricingPage'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import TypeSelection from '@pages/onboarding-pages/TypeSelection'
-import PerformanceAnalytics from '@pages/performance-analytics'
 import Branding from '@pages/branding'
 import Billing from '@pages/billing'
 import Inventories from '@pages/iventories'
@@ -46,7 +45,6 @@ import membership from '../assets/sidebar-icons/membership.svg'
 import network from '../assets/sidebar-icons/network.svg'
 import billing from '../assets/sidebar-icons/billing.svg'
 import wallet from '../assets/sidebar-icons/wallet.svg'
-import performance from '../assets/sidebar-icons/performance.svg'
 import crm from '../assets/sidebar-icons/crm.svg'
 import account from '../assets/sidebar-icons/account.svg'
 import active_dashboard from '../assets/sidebar-icons/active-dashboard.svg'
@@ -58,7 +56,6 @@ import active_membership from '../assets/sidebar-icons/active-membership.svg'
 import active_network from '../assets/sidebar-icons/active-network.svg'
 import active_billing from '../assets/sidebar-icons/active-billing.svg'
 import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
-import active_performance from '../assets/sidebar-icons/active-performance.svg'
 import active_crm from '../assets/sidebar-icons/active-crm.svg'
 import active_account from '../assets/sidebar-icons/active-account.svg'
 
@@ -483,19 +480,6 @@ export const routes = [
     component: Branding,
     icon: branding,
     iconActive: active_branding,
-    menubar: true,
-    permission: true
-  },
-  {
-    key: 1,
-    path: '/performance-analytics',
-    label: '',
-    privetRoute: true,
-    isSubRoute: false,
-    pageTitle: 'Performance Analytics',
-    component: PerformanceAnalytics,
-    icon: performance,
-    iconActive: active_performance,
     menubar: true,
     permission: true
   },

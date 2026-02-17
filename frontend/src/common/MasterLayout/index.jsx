@@ -3,11 +3,11 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 
 const MasterLayout = () => (
-  <div className='fixed inset-0 min-h-screen flex  bg-color-light-gray overflow-hidden'>
+  <div className='fixed inset-0 flex bg-color-light-gray overflow-hidden'>
     <Sidebar />
-    <div className='flex flex-col h-full w-full'>
+    <div className='flex flex-col flex-1 min-w-0'>
       <Header />
-      <main className='flex-1 w-full h-full flex justify-center items-center bg-textblack'>
+      <main className='flex-1 min-w-0 overflow-hidden bg-textblack'>
         <Outlet />
       </main>
     </div>
