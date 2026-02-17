@@ -11,21 +11,22 @@ import {
 } from '@api-queries/membership-plan/Query'
 import { membershipValidationSchema } from '@utils/validations'
 
-const CreateMembershipForm = ({ open, setOpen, editData = null }) => {
-  const { data: planData } = usePlanGetByIdQuery(editData?.id, {
-    enabled: !!editData?.id
+const CreateMembershipForm = ({ open, setOpen, editId }) => {
+  const { data: planData } = usePlanGetByIdQuery(editId, {
+    enabled: !!editId
   })
+
   const { mutateAsync: createPlan, isLoading } = useCreatePlanMutation()
   const { mutateAsync: updatePlan, isLoading: isUpdating } =
     useUpdatePlanMutation()
 
   const initialValues = {
-    membership_name: editData?.membership_name || '',
-    duration_count: editData?.duration_count || '',
-    duration_unit: editData?.duration_unit || 'month',
-    default_price: editData?.default_price || '',
-    description: editData?.description || '',
-    membership_features: editData?.membership_features || []
+    membership_name: planData?.membership_name || '',
+    duration_count: planData?.duration_count || '',
+    duration_unit: planData?.duration_unit || 'month',
+    default_price: planData?.default_price || '',
+    description: planData?.description || '',
+    membership_features: planData?.membership_features?.map(f => f.feature_name) || []
   }
 
   const formik = useFormik({
@@ -44,8 +45,8 @@ const CreateMembershipForm = ({ open, setOpen, editData = null }) => {
             f => f.trim() !== ''
           )
         }
-        if (editData?.id) {
-          await updatePlan({ id: editData.id, ...payload })
+        if (planData?.id) {
+          await updatePlan({ id: planData.id, ...payload })
         } else {
           await createPlan(payload)
         }
@@ -87,7 +88,7 @@ const CreateMembershipForm = ({ open, setOpen, editData = null }) => {
       <CustomeModal
         open={open}
         onOpenChange={setOpen}
-        header={editData ? 'Update Membership Plan' : 'Create Membership Plan'}
+        header={planData ? 'Update Membership Plan' : 'Create Membership Plan'}
       >
         <form className='space-y-4 w-full' onSubmit={formik.handleSubmit}>
           {/* Row 1: Membership Name & Duration */}
@@ -229,10 +230,10 @@ const CreateMembershipForm = ({ open, setOpen, editData = null }) => {
               disabled={isLoading || isUpdating}
             >
               {isLoading || isUpdating
-                ? editData
+                ? planData
                   ? 'Updating...'
                   : 'Creating...'
-                : editData
+                : planData
                 ? 'Update Plan'
                 : 'Create Plan'}
             </Button>

@@ -5,8 +5,12 @@ import { Switch } from '@pages/components/ui/switch'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeletePlanMutation } from '@api-queries/membership-plan/Query'
+import CreateMembershipForm from './CreateForm'
 
 const PlanCard = ({ data, colors }) => {
+  const [open, setOpen] = useState(false)
+  const [editId, setEditId] = useState(null)
+
   const [isActive, setIsActive] = useState(data?.status === 'active')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const { mutateAsync: delete_plan, isPending } = useDeletePlanMutation(
@@ -97,7 +101,12 @@ const PlanCard = ({ data, colors }) => {
             </div>
 
             <div className='flex items-center gap-2'>
-              <button>
+              <button
+                onClick={() => {
+                  setEditId(data?.membership_id)
+                  setOpen(true)
+                }}
+              >
                 <img src={edit} alt='edit' />
               </button>
               <button onClick={() => setDeleteOpen(true)}>
@@ -110,6 +119,11 @@ const PlanCard = ({ data, colors }) => {
 
       {/* Footer Accent Always at Bottom */}
       <div className={`h-2 w-full ${colors.footer_bg}`}></div>
+      <CreateMembershipForm
+        open={open}
+        setOpen={setOpen}
+        editId={editId}
+      />
       <DeleteModal
         open={deleteOpen}
         setOpen={setDeleteOpen}
