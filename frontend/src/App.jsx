@@ -15,7 +15,7 @@ import SlotAndCapacity from '@pages/onboarding-pages/management/SlotAndCapacity'
 import TrainerAndStaff from '@pages/onboarding-pages/management/TrainerAndStaff'
 import SmartRecommandation from '@pages/onboarding-pages/SmartRecommandation'
 import MarketingSupport from '@pages/onboarding-pages/MarketingSupport'
-
+//ff
 const App = () => {
   return (
     <Routes>
