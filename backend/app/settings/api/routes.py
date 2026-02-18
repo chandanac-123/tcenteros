@@ -521,11 +521,24 @@ async def create_center_holiday(
         raise HTTPException(403, "Not a center admin")
     center_id = center_admin.center_id
 
+    # Prevent duplicate holiday for the same center and date
+    existing = await session.execute(
+        select(CenterHoliday).where(
+            CenterHoliday.center_id == center_id,
+            and_(
+                CenterHoliday.start_date <= data.end_date,
+                CenterHoliday.end_date >= data.start_date
+            )
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(400, "A holiday already exists for the given date range.")
+
     # Calculate total_days and week_days
     total_days = (data.end_date - data.start_date).days + 1
     week_days = []
     for i in range(total_days):
-        day = (data.start_date + timedelta(days=i)).strftime("%A").lower()  # <-- lowercase!
+        day = (data.start_date + timedelta(days=i)).strftime("%A").lower()
         week_days.append(day)
 
     holiday = CenterHoliday(
