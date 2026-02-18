@@ -103,7 +103,7 @@ const CenterOperations = () => {
 
   return (
     <div className='flex flex-col gap-6 py-2'>
-      <span className='text-lg font-semibold'>Center Timings</span>
+      <span className='text-lg font-semibold'>Create  Center Timing</span>
 
       <form
         className='space-y-4'
