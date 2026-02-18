@@ -19,17 +19,20 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   const [viewId, setViewId] = useState(null)
   const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
 
-  const handleDelete = () => {
-    if (deleteId) {
-      deleteEmployee(deleteId)
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteEmployee(deleteId)
       setDeleteOpen(false)
       setDeleteId(null)
+    } catch (error) {
+      console.error('Delete failed:', error)
     }
   }
 
-   const statusVariantMap = {
+  const statusVariantMap = {
     active: 'active',
-    inactive: 'inactive',
+    inactive: 'inactive'
   }
 
   const columns = [
@@ -62,7 +65,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-         <Badge
+          <Badge
             label={row.original.status.replace('_', ' ').toUpperCase()}
             variant={statusVariantMap[row.original.status] || 'inactive'}
           />
