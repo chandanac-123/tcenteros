@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from app.core.database import get_async_session
 from app.auth.models.models import MemberStatusEnum, Member
 from app.settings.models.models import CenterCategory, TaxCategory, Designation, Address
