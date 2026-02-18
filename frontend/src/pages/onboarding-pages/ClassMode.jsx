@@ -1,26 +1,27 @@
-import SecondaryLayout from '@components/onboardlayouts/SecondaryLayout'
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
-import rightcolorarrow from '@assets/images/rightcolorarrow.svg'
-import backarrow from '@assets/images/backarrow.svg'
+import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
 import SelectionCard from './components/SelectionCard'
 import { classModes } from '@constants/classMode'
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useOnboardingStore } from '@store/onboardingStore'
 
 const ClassSelectionMode = () => {
-  const [selectedMode, setSelectedMode] = useState('in-person')
+  const navigate = useNavigate()
+  const { classMode, setClassMode } = useOnboardingStore()
 
   return (
     <SecondaryLayout>
       <OnboardHeader />
 
       <OnboardProgress
-        step={1}
-        total={5}
-        value={40}
+        step={2}
+        value={32}
         title='How do you conduct your classes?'
-        description='Choose the mode that best describes how your classes are delivered.'
+        description='Choose the class mode you prefer so we can recommend the best package for your needs.'
       />
 
       <div className='flex gap-6 px-4 sm:px-10 mt-10 justify-center'>
@@ -28,17 +29,26 @@ const ClassSelectionMode = () => {
           <SelectionCard
             key={item.id}
             item={item}
-            selected={selectedMode === item.id}
-            onSelect={setSelectedMode}
+            selected={classMode === item.id}
+            onSelect={setClassMode}
           />
         ))}
       </div>
 
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/type-selection')}
+        >
           Back
         </Button>
-        <Button variant='outline_primary' rightIcon={rightcolorarrow}>
+        <Button
+          variant='outline_primary'
+          rightIcon={rightcolorarrow}
+          onClick={() => navigate('/center-size-scale')}
+        >
           Next
         </Button>
       </div>

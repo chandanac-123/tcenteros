@@ -1,7 +1,5 @@
 import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
 import { cva } from 'class-variance-authority'
-
 import { cn } from '@pages/lib/utils'
 
 const buttonVariants = cva(
@@ -15,18 +13,17 @@ const buttonVariants = cva(
           'border border-input  text-primary border-primary bg-primarybglight font-medium justify-between',
         outline_secondary:
           'border border-input text-grey border-grey  font-medium justify-between',
-        destructive:
-          'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
-        secondary:
-          'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline'
+        button_filled: 'bg-primary text-white',
+        button_outlined: ' text-primary outline ',
+        button_outlined_textleft: 'text-primary outline justify-start',
+        button_filter: 'text-textgrey border-2 border-filter_border'
       },
       size: {
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-20',
         landing: 'h-10 pl-4 pr-1 rounded-xl text-md gap-40',
-        sm: 'h-10 rounded-xl pr-4 pl-1  text-md gap-20',
-        lg: 'h-10 rounded-md px-8',
+        sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
+        filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
+        addbutton: 'h-10 px-6 rounded-lg text-sm gap-2',
         icon: 'h-9 w-9'
       }
     },
@@ -39,7 +36,16 @@ const buttonVariants = cva(
 
 const Button = React.forwardRef(
   (
-    { className, variant, size, leftIcon, rightIcon, children, onClick, ...props },
+    {
+      className,
+      variant,
+      size,
+      leftIcon,
+      rightIcon,
+      children,
+      onClick,
+      ...props
+    },
     ref
   ) => {
     return (
@@ -49,7 +55,15 @@ const Button = React.forwardRef(
         onClick={onClick}
         {...props}
       >
-        {leftIcon && <img src={leftIcon} className='flex items-center w-8' />}
+        {leftIcon && (
+          <img
+            src={leftIcon}
+            className={cn(
+              'flex items-center',
+              size === 'googlebutton' ? 'w-6' : 'w-8'
+            )}
+          />
+        )}
         {children}
         {rightIcon && <img src={rightIcon} className='flex items-center w-8' />}
       </button>

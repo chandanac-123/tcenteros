@@ -55,7 +55,7 @@ const CenterDesignations = () => {
 
   return (
     <div>
-      <div className='text-lg font-semibold mb-6'>Added Designations</div>
+      <div className='text-lg font-semibold mb-6'>Add Designation</div>
       <form className='space-y-4 w-full py-4' onSubmit={formik.handleSubmit}>
         <Input
           className='w-full'
