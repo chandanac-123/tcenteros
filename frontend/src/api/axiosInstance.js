@@ -32,7 +32,7 @@ axiosInstance.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Clear auth store and redirect to login
       const state = useAuthStore.getState()
-      // if (state.clearAuth) state.clearAuth()
+      if (state.clearAuth) state.clearAuth()
     }
     return Promise.reject(error)
   }
