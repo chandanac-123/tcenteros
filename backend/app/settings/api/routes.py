@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, status
+from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from app.core.database import get_async_session
 from app.auth.models.models import MemberStatusEnum, Member
 from app.settings.models.models import CenterCategory, TaxCategory, Designation, Address
-from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut
-from app.settings.models.models import CenterOperationalSetting
+from app.settings.schema.schema import CenterCategoryOut, TaxCategoryCreate, TaxCategoryOut, TaxCategoryUpdate, CenterOperationalSettingCreate, CenterOperationalSettingUpdate, CenterOperationalSettingOut, DesignationCreate, DesignationOut, DesignationUpdate, TermsPrivacyOut, CenterHolidayCreate,  CenterHolidayOut
+from app.settings.models.models import CenterOperationalSetting, CenterHoliday, WeekDayEnum
 from app.auth.models.models import CenterAdmin
 from app.center.models.models import Center, CenterTimeSlot
 from app.center.schema.schema import CenterTimeSlotOut
@@ -18,8 +19,8 @@ from app.core.dependencies import centeradmin_required, superadmin_required
 from app.s3.service import upload_file
 from app.core.dependencies import get_current_user
 from jinja2 import Template
+from datetime import timedelta
 import uuid
-from datetime import time
 from app.s3.service import get_file_url
 import random
 import re
@@ -504,3 +505,102 @@ async def list_all_time_slots(
 
 
 
+#-----------------------------------------
+#Holiday crud apis
+#-----------------------------------------
+
+#Create Holiday
+@router.post("/center-holidays/", response_model=CenterHolidayOut, status_code=201)
+async def create_center_holiday(
+    data: CenterHolidayCreate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(403, "Not a center admin")
+    center_id = center_admin.center_id
+
+    # Calculate total_days and week_days
+    total_days = (data.end_date - data.start_date).days + 1
+    week_days = []
+    for i in range(total_days):
+        day = (data.start_date + timedelta(days=i)).strftime("%A").lower()
+        week_days.append(getattr(WeekDayEnum, day))
+
+    holiday = CenterHoliday(
+        center_id=center_id,
+        holiday_name=data.holiday_name,
+        start_date=data.start_date,
+        end_date=data.end_date,
+        total_days=total_days,
+        week_days=week_days
+    )
+    session.add(holiday)
+    await session.commit()
+    await session.refresh(holiday)
+    return CenterHolidayOut(
+        id=holiday.id,
+        holiday_name=holiday.holiday_name,
+        start_date=holiday.start_date,
+        end_date=holiday.end_date,
+        day=[d.value for d in holiday.week_days]
+    )
+
+#List Holidays (with pagination)
+@router.get("/center-holidays/", response_model=dict)
+async def list_center_holidays(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(403, "Not a center admin")
+    center_id = center_admin.center_id
+
+    total = await session.execute(
+        select(func.count()).select_from(CenterHoliday).where(CenterHoliday.center_id == center_id)
+    )
+    total_count = total.scalar()
+
+    result = await session.execute(
+        select(CenterHoliday)
+        .where(CenterHoliday.center_id == center_id)
+        .order_by(CenterHoliday.start_date.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    holidays = result.scalars().all()
+    data = [
+        {
+            "id": h.id,
+            "holiday_name": h.holiday_name,
+            "start_date": h.start_date,
+            "end_date": h.end_date,
+            "day": [d.value for d in h.week_days]
+        }
+        for h in holidays
+    ]
+    return {"total": total_count, "data": data}
+
+
+#Delete Holiday
+@router.delete("/center-holidays/{holiday_id}", status_code=204)
+async def delete_center_holiday(
+    holiday_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(403, "Not a center admin")
+    center_id = center_admin.center_id
+
+    holiday = await session.get(CenterHoliday, holiday_id)
+    if not holiday or holiday.center_id != center_id:
+        raise HTTPException(404, "Holiday not found")
+    await session.delete(holiday)
+    await session.commit()
+    return

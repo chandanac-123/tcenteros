@@ -1,5 +1,5 @@
 from pydantic import BaseModel, UUID4, conint, validator, HttpUrl
-from datetime import time
+from datetime import time, date
 from typing import Optional, List
 import uuid
 from datetime import datetime
@@ -139,3 +139,23 @@ class FAQOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+#------------------------
+#Holiday schema
+#------------------------
+class CenterHolidayCreate(BaseModel):
+    holiday_name: str
+    start_date: date
+    end_date: date
+
+class CenterHolidayOut(BaseModel):
+    id: UUID4
+    holiday_name: str
+    start_date: date
+    end_date: date
+    day: List[str]  # List of weekday names
+
+    class Config:
+        orm_mode = True
