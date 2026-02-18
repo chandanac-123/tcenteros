@@ -12,21 +12,21 @@ export const setting_tabs = [
   },
   {
     id: 2,
-    name: 'Center Operations',
-    heading: 'Operational Settings',
+    name: ' Operations',
+    heading: '',
     component_view: <CenterOperations />
   },
 
   {
     id: 4,
-    name: 'Center Holidays',
-    heading: 'Center Holidays',
+    name: ' Holidays',
+    heading: '',
     component_view: <CenterHolidays />
   },
   {
     id: 3,
-    name: 'Centers Designation',
-    heading: 'Center Designations',
+    name: ' Designation',
+    heading: '',
     component_view: <CenterDesignations />
   }
 ]

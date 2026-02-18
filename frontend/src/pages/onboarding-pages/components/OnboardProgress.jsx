@@ -1,4 +1,4 @@
-import moveicon from '@assets/images/moveicon.svg'
+import moveicon from '@assets/navigate-icons/moveicon.svg'
 import { Slider } from '@pages/components/ui/slider'
 
 const OnboardProgress = ({

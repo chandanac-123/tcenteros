@@ -11,9 +11,10 @@ const SelectionCard = ({ item, selected, onSelect }) => {
         ${selected ? 'scale-110 shadow-xl' : 'border-bordergrey border-dotted'}
       `}
     >
+      
       <img
-        src={item.image}
-        alt={item.label}
+        src={item?.image_url}
+        alt={item?.name}
         className='w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] lg:w-[222px] lg:h-[220px] object-cover rounded-lg'
       />
 
@@ -26,7 +27,7 @@ const SelectionCard = ({ item, selected, onSelect }) => {
       </div>
 
       <div className='absolute bottom-3 left-1/2 -translate-x-1/2 w-5/6 px-2 py-1 rounded-xl text-center bg-black/30 backdrop-blur-sm text-white'>
-        {item.label}
+        {item?.name}
       </div>
     </div>
   )

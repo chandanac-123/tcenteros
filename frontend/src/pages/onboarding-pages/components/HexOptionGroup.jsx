@@ -8,7 +8,7 @@ const HexOptionGroup = ({
 }) => {
   return (
     <div className='text-center space-y-4'>
-      <p className='font-medium'>{title}</p>
+      <p className='font-medium items-start flex justify-start'>{title}</p>
 
       <div className='flex gap-4 justify-center flex-wrap'>
         {options.map(option => (

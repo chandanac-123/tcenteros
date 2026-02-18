@@ -3,7 +3,7 @@ import sellalltype from '@assets/images/sellalltype.svg'
 import suppliments from '@assets/images/suppliments.svg'
 import nothing_to_sell from '@assets/images/no-tracking.svg'
 
-export const sellableItem = [
+export const sellableItems = [
   {
     id: 'merchandise',
     label: 'Merchandise',

@@ -1,9 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom"
-import { useAuth } from "@/context/AuthContext"
+import { Navigate, Outlet } from 'react-router-dom'
+import { useAuthStore } from '@store/authStore'
 
 const PublicRoute = () => {
-  const { user } = useAuth()
-  return user ? <Navigate to="/dashboard" replace /> : <Outlet />
+  const accessToken = useAuthStore(state => state.accessToken)
+  return accessToken ? <Navigate to='/dashboard' replace /> : <Outlet />
 }
 
 export default PublicRoute

@@ -1,7 +1,7 @@
 import { cn } from '@pages/lib/utils'
 
 const hexClip =
-  'polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%)'
+  'polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)'
 
 const HexButton = ({ label, active, onClick }) => {
   return (
@@ -9,29 +9,31 @@ const HexButton = ({ label, active, onClick }) => {
       onClick={onClick}
       className={cn(
         'relative w-28 h-24 flex items-center justify-center',
-        'transition-all duration-300 ',
+        'transition-transform duration-300',
         active ? 'scale-105' : 'hover:scale-105'
       )}
       style={{ clipPath: hexClip }}
     >
-      {/* BORDER LAYER */}
+      {/* Border Layer */}
       <div
         className={cn(
           'absolute inset-0',
           active
-            ? 'border-2 border-violet-600'
-            : 'border ring border-primary'
+            ? 'bg-secondary'
+            : 'bg-[#8B24E242]'
         )}
         style={{ clipPath: hexClip }}
       />
 
-      {/* INNER BACKGROUND */}
+      {/* Inner Layer */}
       <div
-        className='absolute inset-[3px] bg-secondary/20'
+        className={cn(
+          'absolute inset-[3px] bg-white'
+        )}
         style={{ clipPath: hexClip }}
       />
 
-      {/* TEXT */}
+      {/* Text */}
       <span
         className={cn(
           'relative z-10 font-semibold',

@@ -4,9 +4,12 @@ import calender from '@assets/header-icons/calender.svg'
 import { useState } from 'react'
 import MemberAttendance from './MemberAttendance'
 import EmployeeAttendance from './EmployeeAttendance'
+import { Button } from '@pages/components/ui/button'
+import AddEmployeeAttendance from './AddEmployeeAttendace'
 
 const Attendance = () => {
-  const [activeTab, setActiveTab] = useState(1)
+  const [activeTab, setActiveTab] = useState('Members')
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   console.log('activeTab: ', activeTab)
   const employeeOrMember = [
     { id: 1, name: 'Members' },
@@ -19,25 +22,31 @@ const Attendance = () => {
       <div className='flex justify-between items-center mb-4'>
         <CustomeTab
           tabList={employeeOrMember}
-          defaultVal={1}
+          defaultVal='Members'
           tabsListClass='p-[1px]'
-          onChange={id => setActiveTab(id)}
+          onChange={value => setActiveTab(value)}
         />
-        <button>
-          <img
-            src={calender}
-            alt='calender'
-            className='bg-primary p-2 rounded-md'
-          />
-        </button>
+        <div className='flex gap-2'>
+          <button>
+            <img
+              src={calender}
+              alt='calender'
+              className='bg-primary p-2 rounded-md'
+            />
+          </button>
+          {activeTab === 'Employees' && (
+            <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>+ Add Attendance</Button>
+          )}
+        </div>
       </div>
       <div className='text-tabelsubtitle font-semibold text-lg mb-3'>
-        {activeTab === 1
+        {activeTab === 'Members'
           ? 'Member Attendance History'
           : 'Employee Attendance History'}
       </div>
-      {activeTab === 1 && <MemberAttendance />}
-      {activeTab === 2 && <EmployeeAttendance />}
+      {activeTab === 'Members' && <MemberAttendance />}
+      {activeTab === 'Employees' && <EmployeeAttendance />}
+      <AddEmployeeAttendance open={isAddModalOpen} setOpen={setIsAddModalOpen} />
     </ContentLayout>
   )
 }

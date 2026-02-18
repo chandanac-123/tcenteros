@@ -1,5 +1,5 @@
-import google from '@assets/formicons/google.svg'
-import meta from '@assets/formicons/meta.svg'
+import google from '@assets/form-icons/google.svg'
+import meta from '@assets/form-icons/meta.svg'
 
 export const marketingSupport = [
   { id: 'metacampaign', label: 'Meta Campaign', image: meta },

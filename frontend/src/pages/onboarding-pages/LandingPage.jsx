@@ -1,4 +1,4 @@
-import PrimaryLayout from '@components/onboardlayouts/PrimaryLayout'
+import PrimaryLayout from '@common/onboardlayouts/PrimaryLayout'
 import HeroContent from './components/HeroContent'
 import HeroImage from './components/HeroImage'
 import Header from './components/Header'
