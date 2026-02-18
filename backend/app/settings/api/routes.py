@@ -525,8 +525,8 @@ async def create_center_holiday(
     total_days = (data.end_date - data.start_date).days + 1
     week_days = []
     for i in range(total_days):
-        day = (data.start_date + timedelta(days=i)).strftime("%A").lower()
-        week_days.append(getattr(WeekDayEnum, day))
+        day = (data.start_date + timedelta(days=i)).strftime("%A").lower()  # <-- lowercase!
+        week_days.append(day)
 
     holiday = CenterHoliday(
         center_id=center_id,
@@ -544,7 +544,7 @@ async def create_center_holiday(
         holiday_name=holiday.holiday_name,
         start_date=holiday.start_date,
         end_date=holiday.end_date,
-        day=[d.value for d in holiday.week_days]
+        day=holiday.week_days
     )
 
 #List Holidays (with pagination)
@@ -587,7 +587,7 @@ async def list_center_holidays(
 
 
 #Delete Holiday
-@router.delete("/center-holidays/{holiday_id}", status_code=204)
+@router.delete("/center-holidays/{holiday_id}", status_code=200)
 async def delete_center_holiday(
     holiday_id: str,
     session: AsyncSession = Depends(get_async_session),
@@ -603,4 +603,4 @@ async def delete_center_holiday(
         raise HTTPException(404, "Holiday not found")
     await session.delete(holiday)
     await session.commit()
-    return
+    return {"message": "Data deleted", "deleted_id": holiday_id}
