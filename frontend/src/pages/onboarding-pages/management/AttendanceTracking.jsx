@@ -14,7 +14,8 @@ const AttendanceTracking = () => {
   const { state } = useLocation()
   const tool = state?.tool
 
-  const toolState = centerTools['attendance']
+  const toolId = state?.tool?.id
+const toolState = centerTools?.[toolId]
 
   // useEffect(() => {
   //   // Update CenterManagement attendance checkbox whenever selection changes
@@ -33,11 +34,8 @@ const AttendanceTracking = () => {
       : null
 
    const handleAnswer = value => {
-    setTool(
-      'attendance',
-      value === 'yes',
-      toolState?.feature_id // keep existing ID
-    )
+   setTool(toolId, value === 'yes', toolId)
+
   }
 
 

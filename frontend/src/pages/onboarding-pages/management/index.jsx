@@ -8,46 +8,24 @@ import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 import { useAllPlatformsQuery } from '@api-queries/on-boarding/Query'
 import { useEffect } from 'react'
-import { featureNameToStoreKey } from '@constants/managementTool'
 import ManagementToolRow from '../components/ManagementToolRow'
 
 const CenterManagement = () => {
-  const routes = [
-    '/member-management',
-    '/slot-and-capacity',
-    '/attendance-tracking',
-    '/payment-billing',
-    '/trainer-and-staff',
-    '/report-and-insight',
-    '/sellable-item'
-  ]
-
+  const routes = ['/attendance-tracking', '/sellable-item']
   const navigate = useNavigate()
   const { centerTools, setTool } = useOnboardingStore()
   const { data: platforms } = useAllPlatformsQuery()
-  const { setFeatureIdMap } = useOnboardingStore()
 
   useEffect(() => {
     if (!platforms) return
 
-    const map = {}
-
     platforms.forEach(tool => {
-      const key = featureNameToStoreKey[tool.feature_name]
+      const isMandatory = tool.mandatory === true
 
-      if (key) {
-        map[key] = tool.id
-
-        const isMandatory = tool.mandatory === true
-
-        // ✅ Auto enable mandatory only if not already stored
-        if (isMandatory && !centerTools?.[key]?.enabled) {
-          setTool(key, true, tool.id)
-        }
+      if (isMandatory && !centerTools?.[tool.id]?.enabled) {
+        setTool(tool.id, true, tool.id)
       }
     })
-
-    setFeatureIdMap(map)
   }, [platforms])
 
   const handleNavigate = (route, tool) => {
@@ -67,8 +45,8 @@ const CenterManagement = () => {
             </h2>
 
             <p className='text-sm text-grey'>
-              Center Management helps you organize your trainers,
-              manage members, and use the network efficiently.
+              Center Management helps you organize your trainers, manage
+              members, and use the network efficiently.
             </p>
 
             {platforms &&
@@ -86,8 +64,8 @@ const CenterManagement = () => {
                   }
                 })
 
-                const renderTool = ({ tool, index }) => {
-                  const storeKey = featureNameToStoreKey[tool.feature_name]
+                const renderTool = (tool, routeIndex = null) => {
+                  const storeKey = tool.id
                   const toolState = centerTools?.[storeKey]
                   const isMandatory = tool.mandatory === true
 
@@ -95,26 +73,27 @@ const CenterManagement = () => {
                     <ManagementToolRow
                       key={tool.id}
                       tool={tool}
-                      route={routes[index]}
+                      route={routeIndex !== null ? routes[routeIndex] : null}
                       isMandatory={isMandatory}
-                      checked={
-                        isMandatory
-                          ? true
-                          : toolState?.enabled === true
-                      }
+                      checked={isMandatory ? true : toolState?.enabled === true}
                       onToggle={(id, value) =>
-                        !isMandatory &&
-                        setTool(storeKey, value, tool.id)
+                        !isMandatory && setTool(tool.id, value, tool.id)
                       }
-                      onNavigate={!isMandatory ? handleNavigate : null}
+                      onNavigate={routeIndex !== null ? handleNavigate : null}
                     />
                   )
                 }
 
+                const orderedOptionalTools = [...optionalTools].sort((a, b) =>
+                  a.tool.feature_name.localeCompare(b.tool.feature_name)
+                )
+
                 return (
                   <>
-                    {mandatoryTools.map(renderTool)}
-                    {optionalTools.map(renderTool)}
+                    {mandatoryTools.map(({ tool }) => renderTool(tool))}
+                    {orderedOptionalTools.map(({ tool }, index) =>
+                      renderTool(tool, index)
+                    )}
                   </>
                 )
               })()}
@@ -143,6 +122,5 @@ const CenterManagement = () => {
     </SecondaryLayout>
   )
 }
-
 
 export default CenterManagement

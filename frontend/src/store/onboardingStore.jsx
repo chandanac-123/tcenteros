@@ -18,11 +18,7 @@ export const useOnboardingStore = create(
             ...state.centerTools,
             [toolKey]: {
               enabled,
-              feature_id:
-                featureId ??
-                state.featureIdMap?.[toolKey] ??
-                state.centerTools?.[toolKey]?.feature_id ??
-                null
+              feature_id: featureId ?? toolKey
             }
           }
         })),

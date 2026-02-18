@@ -14,16 +14,20 @@ const SellableItem = () => {
   const navigate = useNavigate()
   const { state } = useLocation()
   const tool = state?.tool
+  const toolId = tool?.id
+
   const { setTool, sellableItem, setSellableItem } = useOnboardingStore()
 
+  // 🔥 Update checkbox when selection changes
   useEffect(() => {
-    // Update CenterManagement attendance checkbox whenever selection changes
+    if (!toolId) return
+
     if (sellableItem === 'nothing-to-sell') {
-      setTool('sellable_items', false)
+      setTool(toolId, false, toolId)
     } else {
-      setTool('sellable_items', true)
+      setTool(toolId, true, toolId)
     }
-  }, [sellableItem, setTool])
+  }, [sellableItem, toolId, setTool])
 
   return (
     <SecondaryLayout>
@@ -35,11 +39,14 @@ const SellableItem = () => {
           <h2 className='font-semibold text-xl text-secondary'>
             {tool?.feature_name}
           </h2>
+
           <p className='text-sm text-grey'>{tool?.description}</p>
+
           <p className='font-medium text-sm text-secondary'>
             Manage stock, avoid shortages, and connect item sales directly to
             billing — no spreadsheets needed
           </p>
+
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 justify-items-center'>
             {sellableItems.map(item => (
               <SelectionCardTick
@@ -62,6 +69,7 @@ const SellableItem = () => {
         >
           Back
         </Button>
+
         <Button
           variant='outline_primary'
           rightIcon={rightcolorarrow}
@@ -73,4 +81,5 @@ const SellableItem = () => {
     </SecondaryLayout>
   )
 }
+
 export default SellableItem
