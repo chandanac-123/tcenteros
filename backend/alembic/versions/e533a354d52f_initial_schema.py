@@ -312,3 +312,13 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_shared_users_email'), table_name='users', schema='shared')
     op.drop_table('users', schema='shared')
     # ### end Alembic commands ###
+
+
+
+
+
+
+
+
+
+
