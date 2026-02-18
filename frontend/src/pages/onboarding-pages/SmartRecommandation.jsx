@@ -18,13 +18,16 @@ const SmartRecommandation = () => {
     { label: 'Class Size', value: store.memberCount },
     { label: 'Trainers', value: store.trainerCount },
     {
-      label: 'Management',
-      value: store.centerTools
-        ? Object.keys(store.centerTools)
-            .filter(k => store.centerTools[k])
-            .join(', ')
-        : ''
-    }
+  label: 'Management',
+  value: store.centerTools
+    ? Object.values(store.centerTools)
+        .filter(tool => tool.enabled)
+        .map(tool => tool.feature_name)
+        .filter(Boolean)
+        .join(', ')
+    : ''
+}
+
   ]
 
   return (

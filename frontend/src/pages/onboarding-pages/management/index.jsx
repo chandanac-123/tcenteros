@@ -18,15 +18,20 @@ const CenterManagement = () => {
 
   useEffect(() => {
     if (!platforms) return
-
     platforms.forEach(tool => {
       const isMandatory = tool.mandatory === true
-
-      if (isMandatory && !centerTools?.[tool.id]?.enabled) {
-        setTool(tool.id, true, tool.id)
+      const existing = centerTools?.[tool.id]
+      if (isMandatory) {
+        if (
+          !existing ||
+          !existing.enabled ||
+          existing.feature_name !== tool.feature_name
+        ) {
+          setTool(tool.id, true, tool.id, tool.feature_name)
+        }
       }
     })
-  }, [platforms])
+  }, [platforms, centerTools])
 
   const handleNavigate = (route, tool) => {
     navigate(route, { state: { tool } })
@@ -77,7 +82,8 @@ const CenterManagement = () => {
                       isMandatory={isMandatory}
                       checked={isMandatory ? true : toolState?.enabled === true}
                       onToggle={(id, value) =>
-                        !isMandatory && setTool(tool.id, value, tool.id)
+                        !isMandatory &&
+                        setTool(tool.id, value, tool.id, tool.feature_name)
                       }
                       onNavigate={routeIndex !== null ? handleNavigate : null}
                     />

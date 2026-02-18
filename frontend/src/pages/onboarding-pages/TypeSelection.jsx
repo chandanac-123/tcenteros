@@ -23,7 +23,7 @@ const TypeSelection = () => {
       const first = classTypes[0]
       setTypeSelection(first.id, first.name)
     }
-  }, [classTypes])
+  }, [classTypes, typeSelectionId, setTypeSelection])
 
   return (
     <SecondaryLayout>

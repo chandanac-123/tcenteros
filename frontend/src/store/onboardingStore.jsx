@@ -12,13 +12,14 @@ export const useOnboardingStore = create(
       setOnboardId: id => set({ onboardId: id }),
 
       // UPDATED: store enabled + feature_id
-      setTool: (toolKey, enabled, featureId) =>
+      setTool: (toolKey, enabled, featureId, featureName) =>
         set(state => ({
           centerTools: {
             ...state.centerTools,
             [toolKey]: {
               enabled,
-              feature_id: featureId ?? toolKey
+              feature_id: featureId ?? toolKey,
+              feature_name: featureName
             }
           }
         })),
