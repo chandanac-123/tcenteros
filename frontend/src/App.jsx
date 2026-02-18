@@ -5,7 +5,7 @@ import PageNotFound from '@common/PageNotFound'
 import PublicRoute from './routes/PublicRoute'
 import { v4 as uuidv4 } from 'uuid'
 import MasterLayout from './common/masterLayout'
-
+//gyt
 const App = () => {
   return (
     <Routes>
@@ -23,7 +23,7 @@ const App = () => {
               )
             }
           })}
-        </Route>
+        </Route> 
       </Route>
       <Route element={<PublicRoute />}>
         {routes.map(item => {
