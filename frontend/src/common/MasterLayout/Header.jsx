@@ -1,14 +1,19 @@
 import bell from '@assets/header-icons/bell.svg'
-import user from '@assets/header-icons/user.svg'
 import map from '@assets/header-icons/map.svg'
-import logout from '@assets/header-icons/logout.svg'
 import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
   PopoverTrigger,
   PopoverContent
 } from '@pages/components/ui/popover'
-import { ChevronDown, FileText, Key, Settings } from 'lucide-react'
+import {
+  ChevronDown,
+  FileText,
+  Key,
+  LogOut,
+  Settings,
+  UserRound
+} from 'lucide-react'
 import CustomeSearch from '../CustomeSearch'
 import CustomeModal from '../CustomeModal'
 import AddEditForm from '../../pages/employee-management/AddEditForm'
@@ -82,7 +87,7 @@ const Header = () => {
           <PopoverContent className='w-auto'>
             <div className='flex flex-col gap-2'>
               <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <img src={user} alt='' className='w-6 h-6 text-primary' />
+                <UserRound className='w-5 h-5 text-primary' />
                 Profile
               </button>
               <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
@@ -104,7 +109,7 @@ const Header = () => {
                 onClick={() => setLogoutOpen(true)}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
-                <img src={logout} alt='' className='w-6 h-6 text-primary' />
+                <LogOut className='w-5 h-5 text-primary' />
                 Logout
               </button>
             </div>
