@@ -64,3 +64,7 @@ class TimeSlotChangeRequestIn(BaseModel):
     start_date: date
     end_date: date | None = None
     reason: str | None = None
+
+
+class GuestRegisterIn(BaseModel):
+    full_name: str

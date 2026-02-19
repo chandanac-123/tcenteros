@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile,
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership, MembershipFeature
-from app.membership.schema.schema import MembershipCreate, MemberCreate
+from app.membership.schema.schema import MembershipCreate, MemberCreate, GuestRegisterIn
 from app.auth.models.models import Member, MemberStatusEnum
 from app.core.security import get_password_hash
 from app.membership.models.models import MemberMembership, Membership
@@ -753,6 +753,7 @@ async def get_expired_member_memberships(
 @router.post("/member/register-guest/{center_id}")
 async def register_guest_member_to_center(
     center_id: str = Path(..., description="ID of the center to register the guest in"),
+    payload: GuestRegisterIn = Depends(),
     session: AsyncSession = Depends(get_async_session),
     current_member=Depends(member_required)
 ):
@@ -768,7 +769,8 @@ async def register_guest_member_to_center(
     if not center:
         raise HTTPException(404, "Center not found")
 
-    # Register the guest to the center (set home_center_id or similar logic)
+    # Update full name and register the guest to the center
+    member.full_name = payload.full_name
     member.home_center_id = center.id
     member.updated_at = datetime.utcnow()
     await session.commit()
@@ -778,8 +780,45 @@ async def register_guest_member_to_center(
         "id": str(member.id),
         "email": member.email,
         "mobile": member.mobile,
+        "full_name": member.full_name,
         "member_status": member.member_status.value,
         "home_center_id": str(center.id),
         "center_name": center.center_name,
         "detail": "Guest member registered to center"
     }
+
+
+#list guest members assigned to the logged-in center admin’s center
+@router.get("/center/guests", response_model=list[dict])
+async def list_guests_in_center(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    # Get the center admin and their center_id
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    # Query for guest members assigned to this center
+    result = await session.execute(
+        select(Member)
+        .where(
+            Member.home_center_id == center_id,
+            Member.member_status == MemberStatusEnum.guest
+        )
+    )
+    guests = result.scalars().all()
+
+    # Return guest info
+    return [
+        {
+            "id": str(guest.id),
+            "email": guest.email,
+            "mobile": guest.mobile,
+            "full_name": guest.full_name,
+            "member_status": guest.member_status.value,
+            "home_center_id": str(guest.home_center_id),
+        }
+        for guest in guests
+    ]
