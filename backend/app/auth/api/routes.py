@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException, Depends, Form
+from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException, Depends, Form, status
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
@@ -17,7 +17,7 @@ from datetime import datetime
 from uuid import uuid4
 from app.auth.models.models import MemberStatusEnum
 from app.settings.models.models import Address, AddressType
-from app.core.models.models import StatusEnum
+from app.core.models.models import StatusEnum, SuperadminInfo
 from app.core.dependencies import member_required, get_current_user
 from passlib.context import CryptContext
 from app.settings.models.models import Designation
@@ -734,3 +734,25 @@ async def list_employees(
     return 
 
 
+@router.get("/superadmin-info")
+async def list_superadmin_info(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    if current_user.get("role") != "superadmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized"
+        )
+    result = await session.execute(select(SuperadminInfo).order_by(SuperadminInfo.searched_at.desc()))
+    infos = result.scalars().all()
+    data = [
+        {
+            "id": str(info.id),
+            "searched_location": info.searched_location,
+            "searched_by": info.searched_by,
+            "searched_at": info.searched_at.isoformat() if info.searched_at else None
+        }
+        for info in infos
+    ]
+    return {"superadmin_info": data}

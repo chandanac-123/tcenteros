@@ -95,3 +95,15 @@ class SKU(Base, AuditMixin):
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
 
     category = relationship("SKUCategory", back_populates="skus")
+
+
+
+
+class SuperadminInfo(Base):
+    __tablename__ = "superadmin_info"
+    __table_args__ = {"schema": "shared"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    searched_location = Column(String, nullable=False)
+    searched_by = Column(String, nullable=True)  # Optionally store user email or id
+    searched_at = Column(DateTime, default=datetime.utcnow)

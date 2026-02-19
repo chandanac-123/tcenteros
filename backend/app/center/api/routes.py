@@ -15,7 +15,7 @@ from app.settings.models.models import CenterCategory,Designation, Address, TaxC
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
 from app.auth.models.models import CenterAdmin, User, Employee
-from app.core.models.models import StatusEnum
+from app.core.models.models import StatusEnum, SuperadminInfo
 from app.center.schema.schema import *
 from datetime import datetime
 from sqlalchemy.future import select
@@ -1090,13 +1090,13 @@ async def list_centers(
     name: Optional[str] = Query(None),
     location: Optional[str] = Query(None),
     category_id: Optional[str] = Query(None),
-    facilities: Optional[List[str]] = Query(None),  # e.g. ?facilities=wifi&facilities=parking
+    facilities: Optional[List[str]] = Query(None),
     time_slot_id: Optional[str] = Query(None),
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
-    latitude: Optional[float] = Query(None),  # User's current latitude
-    longitude: Optional[float] = Query(None), # User's current longitude
-    range_km: Optional[float] = Query(None),  # Range in km
+    latitude: Optional[float] = Query(None),
+    longitude: Optional[float] = Query(None),
+    range_km: Optional[float] = Query(None),
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
@@ -1169,6 +1169,16 @@ async def list_centers(
             "facilities": center.facilities,
             # Add more fields as needed
         })
+
+    # If a member searched a location and no centers found, save to superadmin_info
+    user_role = current_user.get("role")
+    if user_role == "member" and location and len(centers_out) == 0:
+        info = SuperadminInfo(
+            searched_location=location,
+            searched_by=current_user.get("email")
+        )
+        session.add(info)
+        await session.commit()
 
     return {
         "total": len(centers_out) if latitude and longitude and range_km else total,
