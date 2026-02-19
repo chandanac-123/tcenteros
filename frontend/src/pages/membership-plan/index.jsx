@@ -8,6 +8,7 @@ import PlanCard from './PlanCard'
 import { CarouselSize } from '@common/CustomeCarousel'
 import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/membership-plan/Query'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const MembershipPlan = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -22,7 +23,10 @@ const MembershipPlan = () => {
 
   return (
     <ContentLayout>
-      <div className='text-xl font-semibold text-textblack'> Available Membership Plans</div>
+      <div className='text-xl font-semibold text-textblack'>
+        {' '}
+        Available Membership Plans
+      </div>
       <div className='flex justify-between items-center my-4'>
         <div>
           <CustomeTab
@@ -38,20 +42,25 @@ const MembershipPlan = () => {
           </Button>
         </div>
       </div>
-
-      <CarouselSize>
-        {data?.map((plan, index) => (
-          <PlanCard
-            key={index}
-            data={plan}
-            colors={
-              membershipPlanColorPalette[
-                index % membershipPlanColorPalette.length
-              ]
-            }
-          />
-        ))}
-      </CarouselSize>
+      {isFetching ? (
+        <div className='flex justify-center items-center py-10'>
+          <Spinner />
+        </div>
+      ) : (
+        <CarouselSize>
+          {data?.map((plan, index) => (
+            <PlanCard
+              key={index}
+              data={plan}
+              colors={
+                membershipPlanColorPalette[
+                  index % membershipPlanColorPalette.length
+                ]
+              }
+            />
+          ))}
+        </CarouselSize>
+      )}
 
       <CreateMembershipForm open={open} setOpen={setOpen} />
       <DeleteModal
