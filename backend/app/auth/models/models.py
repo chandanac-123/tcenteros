@@ -19,6 +19,13 @@ class MemberStatusEnum(enum.Enum):
     visitor = "visitor"
     network_member = "network_member"
 
+
+class NetworkingStatusEnum(enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    paid = "paid"
+
+
 class SuperAdmin(User):
     __tablename__ = "superadmins"
     __table_args__ = {"schema": "auth"}
@@ -177,9 +184,17 @@ class UserCenterMembership(Base, AuditMixin):
     network_eligible = Column(Boolean, default=True, nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+    network_status = Column(
+        Enum(NetworkingStatusEnum, name="networking_status_enum", schema="public"),
+        nullable=False,
+        default=NetworkingStatusEnum.pending
+    )
     # Add other membership-specific fields as needed
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
     center = relationship("Center", foreign_keys=[center_id])
     time_slot = relationship("CenterTimeSlot", foreign_keys=[time_slot_id])
+
+
+

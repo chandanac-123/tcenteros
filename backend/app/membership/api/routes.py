@@ -491,10 +491,8 @@ async def list_time_slots(
 ):
     role = current_user["role"]
 
-    if role == "superadmin":
-        if not center_id:
-            raise HTTPException(status_code=400, detail="center_id is required for superadmin")
-    elif role == "centeradmin":
+    if role == "centeradmin":
+        # Always use the centeradmin's own center
         result = await session.execute(
             select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
         )
@@ -503,6 +501,7 @@ async def list_time_slots(
             raise HTTPException(status_code=404, detail="CenterAdmin not found")
         center_id = str(center_admin.center_id)
     elif role == "member":
+        # Use provided center_id, or fallback to member's home_center_id
         if not center_id:
             result = await session.execute(
                 select(Member).where(Member.id == current_user["user_id"])
@@ -511,7 +510,6 @@ async def list_time_slots(
             if not member:
                 raise HTTPException(status_code=404, detail="Member not found")
             center_id = str(member.home_center_id)
-        # else: use provided center_id
     else:
         raise HTTPException(status_code=403, detail="Not authorized")
 
