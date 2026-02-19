@@ -1,10 +1,10 @@
 import React from 'react'
 import CustomeModal from '@common/CustomeModal'
-import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 
 
-const AmountForm = ({ open, setOpen }) => {
+
+const ApproveModal = ({ open, setOpen,data }) => {
     return (
         <>
             <CustomeModal
@@ -12,13 +12,9 @@ const AmountForm = ({ open, setOpen }) => {
                 onOpenChange={setOpen}
                 header={''}
             >
-                <form className='space-y-4'>
-                    <h2 className='text-[20px] leading-[30px]'>Please set your Network amount per day for a user</h2>
-                    <Input
-                        className='flex-1'
-                        placeholder='250'
-
-                    />
+                <form className='space-y-5 '>
+                    <h2 className='text-[20px] leading-[30px]'>Do you sure you want to Approve this request?</h2>
+                    <p>Accepting this request will grant <span className='font-semibold'> {data.full_name}</span> temporary access to work out at this center. </p>
                     <div className="flex justify-end gap-3">
                         <Button
                             size='addbutton'
@@ -32,15 +28,15 @@ const AmountForm = ({ open, setOpen }) => {
                             size='addbutton'
                             type='submit'
                         >
-                            submit
+                            Approve
                         </Button>
                     </div>
                 </form>
+
             </CustomeModal>
+
         </>
-
-
     )
 }
 
-export default AmountForm
+export default ApproveModal

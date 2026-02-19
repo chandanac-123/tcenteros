@@ -29,6 +29,7 @@ import Inventories from '@pages/iventories'
 import Wallet from '@pages/wallet'
 import Attendance from '@pages/attendance'
 import Network from '@pages/network/index.'
+import CenterView from '@pages/network/centerDetails/index'
 import CRM from '@pages/crm'
 import MembershipPlan from '@pages/membership-plan'
 import EmployeeManagement from '@pages/employee-management'
@@ -390,6 +391,19 @@ export const routes = [
     icon: network,
     iconActive: active_network,
     menubar: true,
+    permission: true
+  },
+   {
+    key: 1,
+    path: '/centerview',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'CenterView',
+    component: CenterView,
+    icon: network,
+    iconActive: active_network,
+    menubar: false,
     permission: true
   },
   {
