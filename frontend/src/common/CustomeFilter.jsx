@@ -1,70 +1,82 @@
-import { useState } from 'react'
-import { Button } from '@pages/components/ui/button'
-import { Checkbox } from '@pages/components/ui/checkbox'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@pages/components/ui/popover'
+import { useState, useRef, useEffect } from 'react'
+import { X } from 'lucide-react'
 import filter from '@assets/form-icons/filter.svg'
 
-const ROLES = [
-  { label: 'Trainee', value: 'trainee' },
-  { label: 'Employee', value: 'employee' },
-  { label: 'Staff', value: 'staff' }
-]
+const CustomFilter = ({ onApply, options }) => {
+  const [selectedRole, setSelectedRole] = useState('')
+  const [open, setOpen] = useState(false)
+  const wrapperRef = useRef(null)
 
-export default function CustomFilter ({ onApply }) {
-  const [status, setStatus] = useState('')
-  const [roles, setRoles] = useState([])
-
-  const toggleRole = role => {
-    setRoles(prev =>
-      prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
-    )
+  const handleSelect = role => {
+    setSelectedRole(role)
+    onApply({ role })
+    setOpen(false) // ✅ closes instantly
   }
 
-  const clearFilter = () => {
-    setStatus('')
-    setRoles([])
+  const handleClear = e => {
+    e.stopPropagation()
+    setSelectedRole('')
     onApply({})
+    setOpen(false)
   }
 
-  const applyFilter = () => {
-    onApply({ status, roles })
-  }
+  const selectedLabel =
+    options?.find(r => r.value === selectedRole)?.label || 'Filter'
+
+  // ✅ Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
-    <div className='flex items-center gap-3'>
-      {/* Role Filter */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant='button_filter' size='filterbutton'>
-            <img src={filter} alt='Filter Icon' className='w-5 h-5 ' />
-            Filter
-          </Button>
-        </PopoverTrigger>
+    <div ref={wrapperRef} className='relative w-32'>
+      {/* Input Box */}
+      <div
+        onClick={() => setOpen(true)}
+        className='flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 cursor-pointer bg-white'
+      >
+        <div className='flex items-center gap-2'>
+          <img src={filter} alt='Filter' className='w-4 h-4' />
+          <span className='text-sm'>{selectedLabel}</span>
+        </div>
 
-        <PopoverContent className='w-48 space-y-2'>
-          {ROLES.map(role => (
-            <div key={role.value} className='flex items-center gap-2'>
-              <Checkbox
-                checked={roles.includes(role.value)}
-                onCheckedChange={() => toggleRole(role.value)}
-              />
-              <span className='text-sm text-filter_border'>{role.label}</span>
+        {selectedRole && (
+          <X
+            size={14}
+            onClick={handleClear}
+            className='text-gray-500 cursor-pointer'
+          />
+        )}
+      </div>
+
+      {/* Custom Dropdown */}
+      {open && (
+        <div className='absolute mt-2 w-full bg-white rounded-2xl shadow-lg py-2 z-50'>
+          {options?.map(role => (
+            <div
+              key={role.value}
+              onClick={() => handleSelect(role.value)}
+              className={`px-4 py-2 text-sm cursor-pointer rounded-lg mx-2
+                ${
+                  selectedRole === role.value
+                    ? 'bg-blue-100 text-blue-600 font-medium'
+                    : 'hover:bg-gray-100'
+                }`}
+            >
+              {role.label}
             </div>
           ))}
-          <div className='flex justify-center items-center gap-4'>
-            <button onClick={applyFilter} className='bg-textwhite text-primary border border-primary text-sm rounded-xl px-3 py-1'>Apply</button>
-            <button className='bg-textwhite text-textgrey border border-textgrey text-sm rounded-xl px-3 py-1' onClick={clearFilter}>
-              Clear
-            </button>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {/* Actions */}
+        </div>
+      )}
     </div>
   )
 }
+
+export default CustomFilter

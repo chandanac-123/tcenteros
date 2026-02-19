@@ -7,6 +7,7 @@ import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
 import { DataTable } from '@common/DataTable'
 import { useNavigate } from 'react-router-dom'
+import CustomDatePicker from '@common/CustomeDatepicker'
 
 const Accounts = () => {
   const navigate = useNavigate()
@@ -118,7 +119,7 @@ const Accounts = () => {
                 Account Overview
               </span>
 
-              <div className='flex gap-4 flex-wrap '>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4'>
                 {summaryData.map((item, index) => (
                   <SummaryCard
                     key={index}
@@ -132,7 +133,9 @@ const Accounts = () => {
                 <span className='text-lg font-semibold text-textblack'>
                   Monthly Income Vs Expenses
                 </span>
-                <span>filter</span>
+                <span>
+                <CustomDatePicker pickerType="year"/>
+                </span>
               </div>
               <MonthlyFinanceChart />
             </div>
@@ -144,7 +147,7 @@ const Accounts = () => {
                 <span className='text-lg font-semibold text-textblack'>
                   Revenue Breakdown
                 </span>
-                <span>filter</span>
+                <span> <CustomDatePicker pickerType="year"/></span>
               </div>
               <RevenuePieChart />{' '}
             </div>
