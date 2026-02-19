@@ -11,6 +11,14 @@ const EditPublicUrl = ({ open, setOpen }) => {
     >
       <Input label='Website URL' placeholder='Enter your Website URL' />
       <div className='flex gap-2 justify-end pt-4'>
+        <Button
+          onClick={() => setOpen(false)}
+          size='addbutton'
+          variant='outline_secondary'
+          type='submit'
+        >
+          Cancel
+        </Button>
         <Button size='addbutton' variant='default' type='submit'>
           Update
         </Button>

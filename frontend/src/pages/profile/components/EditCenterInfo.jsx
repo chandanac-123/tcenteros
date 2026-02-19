@@ -71,9 +71,17 @@ const EditCenterInformation = ({ open, setOpen }) => {
         <Input label='Address 2' name='address' />
         <Textarea label='Description' name='description' />
 
-        <div className='flex justify-end mt-4 '>
+        <div className='flex justify-end mt-4 gap-4'>
+          <Button
+            onClick={() => setOpen(false)}
+            size='addbutton'
+            variant='outline_secondary'
+            type='submit'
+          >
+            Cancel
+          </Button>
           <Button size='addbutton' variant='default' type='submit'>
-            'Add Employee
+            Update
           </Button>
         </div>
       </form>

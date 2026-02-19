@@ -48,6 +48,9 @@ const UpdateProfile = ({ open, setOpen }) => {
         </div>
 
         <div className='flex gap-2 justify-end pt-4'>
+          <Button  onClick={() => setOpen(false)} size='addbutton' variant='outline_secondary' type='button'>
+            Cancel
+          </Button>
           <Button size='addbutton' variant='default' type='submit'>
             Upload Photo
           </Button>
