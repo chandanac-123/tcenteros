@@ -188,7 +188,7 @@ const TaxCategorySettings = () => {
         </div>
         <div className='flex justify-end mt-4 '>
           <Button size='addbutton' variant='default' type='submit'>
-            {editId ? 'Update Tax Category' : '+ Create Tax Category'}
+            {editId ? 'Update Tax Category' : ' Create Tax Category'}
           </Button>
         </div>
       </form>
