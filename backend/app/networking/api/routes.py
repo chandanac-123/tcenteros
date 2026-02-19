@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.core.dependencies import get_current_user, centeradmin_required, member_required
@@ -337,3 +337,23 @@ async def list_networking_by_member_id(
         })
 
     return {"networking_memberships": result}
+
+
+@router.put("/center/networking/toggle")
+async def toggle_networking(
+    enabled: bool = Body(..., embed=True, description="Enable or disable networking"),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    center.network_enabled = enabled
+    await session.commit()
+    await session.refresh(center)
+    return {
+        "center_id": str(center.id),
+        "network_enabled": center.network_enabled,
+        "detail": f"Networking {'enabled' if enabled else 'disabled'} successfully."
+    }
