@@ -2,11 +2,13 @@ import { Button } from '@pages/components/ui/button'
 import profile_edit from '@assets/form-icons/profile-edit.svg'
 import { useState } from 'react'
 import { Files } from 'lucide-react'
+import EditPublicUrl from './EditPublicUrl'
 
 const PublicWebUrl = () => {
   const url = 'https://fitrec//ghhsbsmcom/app/3d6d4be9fb218e5c#fd3ad6ed6390f1b0'
 
   const [copied, setCopied] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -42,11 +44,13 @@ const PublicWebUrl = () => {
             variant='button_filter'
             rightIcon={profile_edit}
             size='editbutton'
+            onClick={() => setOpen(true)}
           >
             Edit
           </Button>
         </div>
       </div>
+      <EditPublicUrl open={open} setOpen={setOpen} />
     </div>
   )
 }

@@ -101,7 +101,7 @@ const updateParent = (h, m, p) => {
         <div className='flex items-center justify-between border rounded-lg pl-9 pr-3 py-2 h-9  bg-white shadow-sm'>
           <div className='flex items-center'>
             <input
-              type='number'
+              // type='number'
               placeholder='HH'
               value={hour}
               onChange={handleHourChange}
@@ -111,7 +111,7 @@ const updateParent = (h, m, p) => {
             <span className='mx-1'>:</span>
 
             <input
-              type='number'
+              // type='number'
               placeholder='MM'
               value={minute}
               onChange={handleMinuteChange}

@@ -1,8 +1,12 @@
 import profile from '@assets/dummy/profile.png'
 import profile_edit from '@assets/form-icons/profile-edit.svg'
 import { Button } from '@pages/components/ui/button'
+import EditCenterInformation from './EditCenterInfo'
+import { useState } from 'react'
 
 const CenterInformation = () => {
+  const [open, setOpen] = useState(false)
+
   return (
     <div className='flex flex-col p-2'>
       <span className='text-lg font-semibold mb-4'>Center Information 1</span>
@@ -11,6 +15,7 @@ const CenterInformation = () => {
         {/* Edit Button */}
         <div className='absolute top-6 right-6'>
           <Button
+            onClick={() => setOpen(true)}
             variant='button_filter'
             rightIcon={profile_edit}
             size='editbutton'
@@ -20,7 +25,7 @@ const CenterInformation = () => {
         </div>
 
         {/* Top Section */}
-        <div className='flex items-center justify-center gap-6 mb-8'>
+        <div className='flex items-center justify-center gap-6 mb-4'>
           <img
             src={profile}
             alt='Center'
@@ -39,7 +44,7 @@ const CenterInformation = () => {
         </div>
 
         {/* Details Grid */}
-        <div className='grid grid-cols-3 gap-y-4 gap-x-12'>
+        <div className='grid grid-cols-3 gap-y-2 gap-x-6'>
           <div>
             <p className='text-pricing_text text-sm'>Center Code</p>
             <p className='text-textblack text-base'>GYM001</p>
@@ -77,12 +82,16 @@ const CenterInformation = () => {
 
           <div>
             <p className='text-pricing_text text-sm'>Address 1</p>
-            <p className='text-textblack text-base'>MG Road,ahgfhasdvfashfn cnsacvashdvscsmnchdvch</p>
+            <p className='text-textblack text-base'>
+              MG Road,ahgfhasdvfashfn cnsacvashdvscsmnchdvch
+            </p>
           </div>
 
           <div>
             <p className='text-pricing_text text-sm'>Address 2</p>
-            <p className='text-textblack text-base'>Near Metro Statio n asvdhgasghcdghcgfcfghsfghsvcghsvchx hzv</p>
+            <p className='text-textblack text-base'>
+              Near Metro Statio n asvdhgasghcdghcgfcfghsfghsvcghsvchx hzv
+            </p>
           </div>
         </div>
 
@@ -94,6 +103,7 @@ const CenterInformation = () => {
           </p>
         </div>
       </div>
+      <EditCenterInformation open={open} setOpen={setOpen} />
     </div>
   )
 }
