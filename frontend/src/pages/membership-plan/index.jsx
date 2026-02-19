@@ -22,7 +22,7 @@ const MembershipPlan = () => {
 
   return (
     <ContentLayout>
-      <div className='font-medium text-2xl'> Available Membership Plans</div>
+      <div className='text-xl font-semibold text-textblack'> Available Membership Plans</div>
       <div className='flex justify-between items-center my-4'>
         <div>
           <CustomeTab

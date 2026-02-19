@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -61,8 +62,8 @@ const Header = () => {
           </CustomeModal>
         </div>
         <img src={bell} alt='logo' className='mr-2' />
-        <Popover>
-          <PopoverTrigger asChild>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
             <div className='flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer'>
               <div className='flex items-center'>
                 <div className='flex items-center gap-0'>
@@ -86,7 +87,13 @@ const Header = () => {
           </PopoverTrigger>
           <PopoverContent className='w-auto'>
             <div className='flex flex-col gap-2'>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
+              <button
+                onClick={() => {
+                  navigate('/profile')
+                  setPopoverOpen(false)
+                }}
+                className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
+              >
                 <UserRound className='w-5 h-5 text-primary' />
                 Profile
               </button>
@@ -95,7 +102,10 @@ const Header = () => {
                 Reset Password
               </button>
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => {
+                  navigate('/settings')
+                  setPopoverOpen(false)
+                }}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
                 <Settings className='w-5 h-5 text-primary' />

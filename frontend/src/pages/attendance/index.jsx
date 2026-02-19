@@ -25,7 +25,7 @@ const Attendance = () => {
 
   return (
     <ContentLayout>
-      <h1 className='text-2xl font-bold mb-4'>Attendance</h1>
+      <h1 className='text-xl font-semibold text-textblack mb-4'>Attendance</h1>
       <div className='flex justify-between items-center mb-4'>
         <CustomeTab
           tabList={employeeOrMember}
@@ -47,7 +47,7 @@ const Attendance = () => {
           <CustomFilter onApply={filter => console.log(filter)} options={ROLES} />
         </div>
       </div>
-      <div className='text-tabelsubtitle font-semibold text-lg mb-3'>
+      <div className='text-tabelsubtitle font-semibold text-md mb-3'>
         {activeTab === 'Members'
           ? 'Member Attendance History'
           : 'Employee Attendance History'}
