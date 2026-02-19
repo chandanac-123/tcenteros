@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react'
 import EmployeeTable from './table'
 import MultiColorProgressBar from '@common/MulticolorProgressBar'
@@ -52,7 +53,7 @@ const EmployeeManagement = () => {
         </div>
         <div className='flex items-center gap-2'>
           <span className='rounded-full w-3 h-3 bg-progress_green'></span>
-          <span className='text-textgrey text-xs'>Physiotherapist </span>
+          <span className='text-textgrey text-xs'>Physiotherapist</span>
         </div>
         <div className='flex items-center gap-2'>
           <span className='rounded-full w-3 h-3 bg-progress_blue'></span>
