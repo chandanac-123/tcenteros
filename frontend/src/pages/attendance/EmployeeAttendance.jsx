@@ -1,21 +1,18 @@
 import { DataTable } from '@common/DataTable'
-import view from '@assets/form-icons/view.svg'
-import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
-import { useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
+import { useEffect, useState } from 'react'
 import { useAllEmployeesAttendanceQuery } from '@api-queries/attendance/Query'
 
-const EmployeeAttendance = ({categoryId}) => {
-  console.log('categoryId: ', categoryId);
+const EmployeeAttendance = ({ categoryId }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
     search: ''
   })
   const { data: employees, isLoading: isEmployeesLoading } =
     useAllEmployeesAttendanceQuery(tableParams, categoryId)
-  
+
+  useEffect(() => {
+    setTableParams(prev => ({ ...prev, page: 1 }))
+  }, [categoryId])
 
   const columns = [
     {
@@ -52,6 +49,8 @@ const EmployeeAttendance = ({categoryId}) => {
         data={employees?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={employees}
+        loading={isEmployeesLoading}
         paginationVisibile={true}
       />
     </>

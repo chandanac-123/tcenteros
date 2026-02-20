@@ -1,6 +1,5 @@
 import { DataTable } from '@common/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import {
@@ -11,9 +10,6 @@ import {
 const MemberAttendance = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
-    search: ''
   })
   const { data: members, isLoading: isMembersLoading } =
     useAllMemberAttendanceQuery()
@@ -78,6 +74,8 @@ const MemberAttendance = () => {
         data={members?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={members}
+        loading={isMembersLoading}
         paginationVisibile={true}
       />
       <DeleteModal
