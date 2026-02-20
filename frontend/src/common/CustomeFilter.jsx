@@ -7,18 +7,18 @@ const CustomFilter = ({ onApply, options }) => {
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef(null)
 
-  const handleSelect = role => {
-    setSelectedRole(role)
-    onApply({ role })
-    setOpen(false) // ✅ closes instantly
-  }
+  const handleSelect = value => {
+  setSelectedRole(value)
+  onApply(value)   // 🔥 send id directly
+  setOpen(false)
+}
 
-  const handleClear = e => {
-    e.stopPropagation()
-    setSelectedRole('')
-    onApply({})
-    setOpen(false)
-  }
+const handleClear = e => {
+  e.stopPropagation()
+  setSelectedRole('')
+  onApply(null)   // 🔥 reset
+  setOpen(false)
+}
 
   const selectedLabel =
     options?.find(r => r.value === selectedRole)?.label || 'Filter'

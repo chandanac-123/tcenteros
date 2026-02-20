@@ -30,6 +30,7 @@ const AddEmployeeAttendance = ({ open, setOpen }) => {
     onSubmit: async values => {
       try {
         await createAttendance(values)
+        setOpen(false)
         formik.resetForm()
       } catch (error) {
         console.error(error)

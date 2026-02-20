@@ -7,22 +7,18 @@ import EmployeeAttendance from './EmployeeAttendance'
 import { Button } from '@pages/components/ui/button'
 import AddEmployeeAttendance from './AddEmployeeAttendace'
 import CustomFilter from '@common/CustomeFilter'
+import { useCategoriesQuery } from '@api-queries/employee-management/Query'
 
 const Attendance = () => {
   const [activeTab, setActiveTab] = useState('Members')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-
-
+  const { data, isLoading } = useCategoriesQuery()
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+  console.log('data: ', data)
   console.log('activeTab: ', activeTab)
   const employeeOrMember = [
     { id: 1, name: 'Members' },
     { id: 2, name: 'Employees' }
-  ]
-
-  const ROLES = [
-    { label: 'Trainee', value: 'trainee' },
-    { label: 'Employee', value: 'employee' },
-    { label: 'Staff', value: 'staff' }
   ]
 
   return (
@@ -44,14 +40,20 @@ const Attendance = () => {
             />
           </button>
           {activeTab === 'Employees' && (
-            <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
-              + Add Attendance
-            </Button>
+            <>
+              <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
+                + Add Attendance
+              </Button>
+
+              <CustomFilter
+                 onApply={id => setSelectedCategoryId(id)}
+                options={data?.map(category => ({
+                  label: category.name,
+                  value: category.id
+                }))}
+              />
+            </>
           )}
-          <CustomFilter
-            onApply={filter => console.log(filter)}
-            options={ROLES}
-          />
         </div>
       </div>
       <div className='text-tabelsubtitle font-semibold text-md mb-3'>
@@ -60,7 +62,7 @@ const Attendance = () => {
           : 'Employee Attendance History'}
       </div>
       {activeTab === 'Members' && <MemberAttendance />}
-      {activeTab === 'Employees' && <EmployeeAttendance />}
+      {activeTab === 'Employees' && <EmployeeAttendance categoryId={selectedCategoryId}/>}
       <AddEmployeeAttendance
         open={isAddModalOpen}
         setOpen={setIsAddModalOpen}

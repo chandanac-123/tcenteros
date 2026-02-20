@@ -87,21 +87,15 @@ export const updateCenterTimeApiCall = (details, id) =>
 export const getMembershipPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans`)
 export const createMembershipPlanApiCall = details =>
-  axiosInstance.post(
-    '/membership/memberships-plans',
-    details
-  )
+  axiosInstance.post('/membership/memberships-plans', details)
 export const deleteMembershipPlanApiCall = id =>
   axiosInstance.delete(`/membership/memberships-plans/${id}`)
 export const updateMembershipPlanApiCall = (details, id) =>
-  axiosInstance.put(
-    `/membership/memberships-plans/${id}`,
-    details
-  )
-  export const getMembershipPlanByIdApiCall = id =>
+  axiosInstance.put(`/membership/memberships-plans/${id}`, details)
+export const getMembershipPlanByIdApiCall = id =>
   axiosInstance.get(`/membership/memberships-plans/${id}`)
 
-  //HOLIDAY API
+//HOLIDAY API
 export const getHolidayApiCall = () =>
   axiosInstance.get(`/settings/superadmin/center-holidays/`)
 export const createHolidayApiCall = details =>
@@ -109,8 +103,22 @@ export const createHolidayApiCall = details =>
 export const deleteHolidayApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-holidays/${id}`)
 
-  //ATTENDANCE API
+//ATTENDANCE API
 export const getAllEmployeesApiCall = () =>
   axiosInstance.get(`auth/centeradmin/employees`)
 export const createAttendanceApiCall = details =>
   axiosInstance.post('/attendance/centeradmin/attendance/add', details)
+export const getAllMemberAttendanceApiCall = data =>
+  axiosInstance.get(
+    `attendance/centeradmin/attendance/list?page=${data?.page || 1}&page_size=${
+      data?.pageSize || 10
+    }&role=member`
+  )
+export const getAllEmployeeAttendanceApiCall = (data, id) =>
+  axiosInstance.get(
+    `attendance/centeradmin/attendance/list?page=${data?.page || 1}&page_size=${
+      data?.pageSize || 10
+    }&role=employee&employee_designation=${id || ''}`
+  )
+export const deleteAttendanceApiCall = id =>
+  axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)

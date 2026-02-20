@@ -4,64 +4,44 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
+import { useAllEmployeesAttendanceQuery } from '@api-queries/attendance/Query'
 
-const EmployeeAttendance = () => {
+const EmployeeAttendance = ({categoryId}) => {
+  console.log('categoryId: ', categoryId);
   const [tableParams, setTableParams] = useState({
     page: 1,
     pageSize: 10,
-    totalCount: 3,
     search: ''
   })
+  const { data: employees, isLoading: isEmployeesLoading } =
+    useAllEmployeesAttendanceQuery(tableParams, categoryId)
+  
+
   const columns = [
     {
       accessorKey: 'full_name',
       header: 'Member  Name'
     },
     {
-      accessorKey: 'designation_name',
+      accessorKey: 'date',
       header: 'Date'
     },
 
     {
-      accessorKey: 'designation_name',
+      accessorKey: 'designation',
       header: 'Designation'
     },
     {
-      accessorKey: 'email',
+      accessorKey: 'check_in_time',
       header: 'Check In Time'
     },
     {
-      accessorKey: 'mobile',
+      accessorKey: 'check_out_time',
       header: 'Check Out Time '
     },
     {
-      accessorKey: 'center_name',
+      accessorKey: 'duration',
       header: 'Duration'
-    },
-    {
-      header: 'Actions',
-      accessorKey: 'status',
-      cell: ({ row }) => (
-        <span className='flex gap-3'>
-          <button
-            onClick={() => {
-              setViewId(row.original.id)
-              setViewOpen(true)
-            }}
-          >
-            <img src={view} alt='view' />
-          </button>
-          <button
-            onClick={() => {
-              setDeleteId(row.original.id)
-              setDeleteOpen(true)
-            }}
-          >
-            <img src={deleteicon} alt='delete' />
-          </button>
-          <Switch />
-        </span>
-      )
     }
   ]
 
@@ -69,20 +49,11 @@ const EmployeeAttendance = () => {
     <>
       <DataTable
         columns={columns}
-        data={[]}
+        data={employees?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}
       />
-      {/*   
-          <ViewForm id={viewId} open={viewopen} setOpen={setViewOpen} />
-          // <DeleteModal
-          //   open={deleteOpen}
-          //   setOpen={setDeleteOpen}
-          //   header='Delete Employee'
-          //   description='Are you sure you want to delete this employee?'
-          //   onConfirm={handleDelete}
-          // /> */}
     </>
   )
 }
