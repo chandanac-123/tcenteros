@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr, UUID4
 from pydantic import BaseModel, EmailStr
 from app.auth.models import MemberStatusEnum
 from datetime import date
+from pydantic import BaseModel, EmailStr, constr
 
 #center admin login request and response schemas
 class CenterAdminLoginRequest(BaseModel):
@@ -113,3 +114,29 @@ class EmployeeOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+#set password
+
+class CenterAdminChangePasswordIn(BaseModel):
+    email: EmailStr
+    password: constr(min_length=8)
+    confirm_password: constr(min_length=8)
+
+
+#forgot password schemas
+
+class CenterAdminForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class CenterAdminVerifyOtpIn(BaseModel):
+    email: EmailStr
+    otp: str
+
+#Set New Password
+class CenterAdminSetPasswordIn(BaseModel):
+    email: EmailStr
+    otp: str
+    password: constr(min_length=8)
+    confirm_password: constr(min_length=8)
