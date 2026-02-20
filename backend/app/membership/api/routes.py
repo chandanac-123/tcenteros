@@ -102,7 +102,26 @@ async def list_membership_plans(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
-    result = await db.execute(select(Membership).options(selectinload(Membership.membership_features)))
+    from app.auth.models.models import CenterAdmin, Member
+
+    role = current_user["role"]
+    query = select(Membership).options(selectinload(Membership.membership_features))
+
+    if role == "centeradmin":
+        # Get center_id for this centeradmin
+        center_admin = await db.get(CenterAdmin, current_user["user_id"])
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+        query = query.where(Membership.center_id == center_admin.center_id)
+    elif role == "member":
+        # Get home_center_id for this member
+        member = await db.get(Member, current_user["user_id"])
+        if not member:
+            raise HTTPException(status_code=403, detail="Not a member")
+        query = query.where(Membership.center_id == member.home_center_id)
+    # else: superadmin or other roles get all
+
+    result = await db.execute(query)
     memberships = result.scalars().all()
     return [
         MembershipOut(
