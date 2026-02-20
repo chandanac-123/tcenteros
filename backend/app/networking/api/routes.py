@@ -21,19 +21,21 @@ router = APIRouter()
 @router.get("/centers/network-enabled-cities")
 async def list_all_center_cities(
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)  # Require authentication
+    current_user=Depends(get_current_user)
 ):
     """
-    List distinct cities of all centers (network_enabled True or False).
-    Accessible to all authenticated users.
+    List distinct cities of all centers (network_enabled True or False), case-insensitive.
     """
     result = await session.execute(
         select(Address.city)
         .join(Center, Center.address_id == Address.id)
         .distinct()
     )
-    cities = [row[0] for row in result.all() if row[0]]
-    return {"cities": cities}
+    # Normalize to title case and deduplicate
+    cities = [row[0].strip().title() for row in result.all() if row[0]]
+    unique_cities = sorted(set(cities))
+    return {"cities": unique_cities}
+
 
 @router.get("/centers/network-enabled")
 async def list_network_enabled_centers(
