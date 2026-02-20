@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from app.core.dependencies import get_current_user, centeradmin_required, member_required
 from app.billing.models.models import PaymentOrder, PaymentOrderStatus,  PayerType, PayeeType, OrderType, ReferenceSchema, Currency
 from app.networking.schema.schema import NetworkingAccessRequest
@@ -321,59 +321,54 @@ async def request_networking_access(
     if not network_center or not network_center.network_enabled:
         raise HTTPException(404, "Networking center not found or not enabled")
 
-    # Calculate fee (same as before)
-    per_day = Decimal(str(network_center.networking_amount or 0))
+    # Parse dates
     try:
         d1 = datetime.strptime(payload.start_date, "%Y-%m-%d").date()
         d2 = datetime.strptime(payload.end_date, "%Y-%m-%d").date()
     except Exception:
         raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD.")
 
-    total_days = (d2 - d1).days + 1
-    if total_days < 1:
+    if (d2 - d1).days < 0:
         raise HTTPException(400, "End date must be after or equal to start date")
 
     member = await session.get(Member, current_member["user_id"])
 
-    # Check for existing membership with same user, center, dates, and time slot
-    existing_membership = await session.execute(
-        select(UserCenterMembership).where(
-            UserCenterMembership.user_id == member.id,
-            UserCenterMembership.center_id == network_center_id,
-            UserCenterMembership.start_date == d1,
-            UserCenterMembership.end_date == d2,
-            UserCenterMembership.time_slot_id == payload.time_slot_id
-        )
+    # Check for any existing membership for this user with overlapping dates
+    overlap_query = select(UserCenterMembership).where(
+        UserCenterMembership.user_id == member.id,
+        UserCenterMembership.start_date <= d2,
+        UserCenterMembership.end_date >= d1
     )
-    existing_membership = existing_membership.scalar_one_or_none()
-
-    if existing_membership:
-        # If an exact match exists, update it (optional, or you can just return a message)
-        existing_membership.member_status = MemberStatusEnum.network_member
-        existing_membership.network_status = NetworkingStatusEnum.pending
-        existing_membership.updated_by = member.id
-        existing_membership.updated_at = datetime.utcnow()
-        network_membership_id = existing_membership.id
-    else:
-        # Create new membership record for this unique combination
-        network_membership = UserCenterMembership(
-            id=uuid4(),
-            user_id=member.id,
-            center_id=network_center_id,
-            time_slot_id=payload.time_slot_id,
-            member_status=MemberStatusEnum.network_member,
-            network_eligible=True,
-            start_date=d1,
-            end_date=d2,
-            network_status=NetworkingStatusEnum.pending,
-            created_by=member.id,
-            updated_by=member.id,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+    overlap_result = await session.execute(overlap_query)
+    overlapping_membership = overlap_result.scalar_one_or_none()
+    if overlapping_membership:
+        raise HTTPException(
+            400,
+            "You already have a networking request for one or more of these dates."
         )
-        session.add(network_membership)
-        await session.flush()
-        network_membership_id = network_membership.id
+
+    # Calculate fee (same as before)
+    per_day = Decimal(str(network_center.networking_amount or 0))
+    total_days = (d2 - d1).days + 1
+
+    network_membership = UserCenterMembership(
+        id=uuid4(),
+        user_id=member.id,
+        center_id=network_center_id,
+        time_slot_id=payload.time_slot_id,
+        member_status=MemberStatusEnum.network_member,
+        network_eligible=True,
+        start_date=d1,
+        end_date=d2,
+        network_status=NetworkingStatusEnum.pending,
+        created_by=member.id,
+        updated_by=member.id,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    session.add(network_membership)
+    await session.flush()
+    network_membership_id = network_membership.id
 
     await session.commit()
     return {
@@ -589,3 +584,195 @@ async def toggle_networking(
         "network_enabled": center.network_enabled,
         "detail": f"Networking {'enabled' if enabled else 'disabled'} successfully."
     }
+
+@router.get("/center/network-enabled/me")
+async def get_my_center_network_enabled(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.center.models.models import Center
+    from app.settings.models.models import Address
+
+    center = await session.get(Center, current_admin["center_id"])
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    address = await session.get(Address, center.address_id)
+    address_data = {
+        "address_line_1": address.address_line_1,
+        "address_line_2": address.address_line_2,
+        "city": address.city,
+        "district": address.district,
+        "state": address.state,
+        "country": address.country,
+        "postal_code": address.postal_code,
+    } if address else {}
+
+    return {
+        "center_id": str(center.id),
+        "center_name": center.center_name,
+        "network_enabled": center.network_enabled,
+        "address": address_data
+    }
+
+
+@router.get("/networking/bookings")
+async def list_network_bookings(
+    status: str = Query(None, description="Filter by status: pending, approved, paid, completed"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import UserCenterMembership, Member, NetworkingStatusEnum
+    from app.center.models.models import Center
+    from sqlalchemy import func, and_
+    from datetime import datetime
+
+    now = datetime.utcnow().date()
+    status_filter = []
+    if status == "pending":
+        status_filter.append(UserCenterMembership.network_status == NetworkingStatusEnum.pending)
+    elif status == "approved":
+        status_filter.append(UserCenterMembership.network_status == NetworkingStatusEnum.approved)
+    elif status == "paid":
+        status_filter.append(UserCenterMembership.network_status == NetworkingStatusEnum.paid)
+    elif status == "completed":
+        status_filter.append(
+            and_(
+                UserCenterMembership.network_status == NetworkingStatusEnum.paid,
+                UserCenterMembership.end_date < now
+            )
+        )
+
+    # Base query: bookings for this center
+    query = (
+    select(UserCenterMembership, Member, Center)
+    .outerjoin(Member, UserCenterMembership.user_id == Member.id)
+    .outerjoin(Center, Member.home_center_id == Center.id)
+    .where(UserCenterMembership.center_id == current_admin["center_id"])
+  )
+
+    # Only apply status filter if provided
+    if status_filter:
+        query = query.where(*status_filter)
+
+    # Pagination
+    total_query = select(func.count()).select_from(query.subquery())
+    total = (await session.execute(total_query)).scalar()
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    results = (await session.execute(query)).all()
+
+    bookings = []
+    for membership, member, home_center in results:
+        bookings.append({
+            "network_membership_id": str(membership.id),
+            "member_full_name": member.full_name,
+            "home_center_name": home_center.center_name if home_center else None,
+            "home_center_mobile": member.mobile,
+            "start_date": membership.start_date,
+            "end_date": membership.end_date,
+            "network_status": membership.network_status.value,
+        })
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "bookings": bookings
+    }
+
+
+
+@router.get("/networking/bookings/debug")
+async def debug_network_bookings(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import UserCenterMembership
+
+    query = select(UserCenterMembership).where(
+        UserCenterMembership.center_id == current_admin["center_id"]
+    )
+    results = (await session.execute(query)).scalars().all()
+    return [
+        {
+            "id": str(m.id),
+            "network_status": m.network_status.value,
+            "start_date": m.start_date,
+            "end_date": m.end_date,
+        }
+        for m in results
+    ]
+
+
+
+@router.get("/networking/booking/{network_membership_id}")
+async def get_networking_booking_by_id(
+    network_membership_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import UserCenterMembership, Member
+    from app.center.models.models import Center
+    from app.settings.models.models import Address
+    from app.center.models.models import CenterTimeSlot
+
+    # Get the networking membership
+    membership = await session.get(UserCenterMembership, network_membership_id)
+    if not membership or str(membership.center_id) != str(current_admin["center_id"]):
+        raise HTTPException(404, "Booking not found or not your center")
+
+    # Get member details
+    member = await session.get(Member, membership.user_id)
+    if not member:
+        raise HTTPException(404, "Member not found")
+
+    # Get home center details
+    home_center = await session.get(Center, member.home_center_id)
+    if not home_center:
+        raise HTTPException(404, "Home center not found")
+
+    # Get home center address
+    address = await session.get(Address, home_center.address_id)
+    address_data = {
+        "address_line_1": address.address_line_1,
+        "address_line_2": address.address_line_2,
+        "city": address.city,
+        "district": address.district,
+        "state": address.state,
+        "country": address.country,
+        "postal_code": address.postal_code,
+    } if address else {}
+
+    # Get selected time slot (optional)
+    time_slot = None
+    if membership.time_slot_id:
+        time_slot_obj = await session.get(CenterTimeSlot, membership.time_slot_id)
+        if time_slot_obj:
+            time_slot = {
+                "time_slot_id": str(time_slot_obj.id),
+                "start_time": str(time_slot_obj.start_time),
+                "end_time": str(time_slot_obj.end_time),
+            }
+
+    return {
+        "network_membership_id": str(membership.id),
+        "member": {
+            "full_name": member.full_name,
+            "mobile": member.mobile,
+            "start_date": membership.start_date,
+            "end_date": membership.end_date,
+            "time_slot": time_slot,
+        },
+        "home_center": {
+            "center_id": str(home_center.id),
+            "center_name": home_center.center_name,
+            "center_category": home_center.center_category,
+            "center_email": home_center.center_email,
+            "center_number": home_center.center_number,
+            "address": address_data,
+        }
+    }
+
