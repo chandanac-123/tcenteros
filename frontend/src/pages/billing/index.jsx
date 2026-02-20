@@ -3,7 +3,7 @@ import ContentLayout from "@common/masterLayout/ContentLayout"
 const Billing = () => {
   return (
     <ContentLayout>       
-        <h1 className="text-2xl font-bold mb-4">Billing</h1>
+        <div className="text-xl font-semibold text-textblack">Billing / Overview</div>
         {/* Billing content goes here */}
     </ContentLayout>
   )

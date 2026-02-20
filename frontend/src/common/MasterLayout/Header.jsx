@@ -20,6 +20,7 @@ import AddEditForm from '../../pages/employee-management/AddEditForm'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@store/authStore'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
@@ -29,6 +30,13 @@ const Header = () => {
 
   const handleOpen = () => {
     setOpen(true)
+  }
+
+  const handleLogout = () => {
+    const state = useAuthStore.getState()
+    if (state.clearAuth) state.clearAuth()
+    // Implement logout logic here
+    setLogoutOpen(false)
   }
 
   return (
@@ -126,9 +134,31 @@ const Header = () => {
           </PopoverContent>
         </Popover>
       </div>
-      {/* <CustomeModal open={logoutOpen} onOpenChange={setLogoutOpen} header='Logout'>
-        <div className='flex flex-col gap-4 p-4'></div>
-      </CustomeModal> */}
+      <CustomeModal
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        header='Logout'
+      >
+        Are you sure you want to logout?
+        <div className='flex justify-end  gap-4'>
+          <Button
+            onClick={() => setLogoutOpen(false)}
+            size='addbutton'
+            variant='outline_secondary'
+            type='button'
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleLogout}
+            size='addbutton'
+            variant='default'
+            type='button'
+          >
+            Logout
+          </Button>
+        </div>
+      </CustomeModal>
     </header>
   )
 }
