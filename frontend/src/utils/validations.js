@@ -72,3 +72,10 @@ export const holidayValidationSchema = Yup.object().shape({
   start_date: Yup.string().required('Enter start date'),
   end_date: Yup.string().required('Enter end date')
 })
+
+export const attendanceValidationSchema = Yup.object().shape({
+  employee_id: Yup.string().required('Select full name'),
+  date: Yup.string().required('Enter date'),
+  check_in_time: Yup.string().required('Enter check-in time'),
+  check_out_time: Yup.string().required('Enter check-out time'),
+})

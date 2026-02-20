@@ -108,3 +108,9 @@ export const createHolidayApiCall = details =>
   axiosInstance.post('/settings/superadmin/center-holidays/', details)
 export const deleteHolidayApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-holidays/${id}`)
+
+  //ATTENDANCE API
+export const getAllEmployeesApiCall = () =>
+  axiosInstance.get(`auth/centeradmin/employees`)
+export const createAttendanceApiCall = details =>
+  axiosInstance.post('/attendance/centeradmin/attendance/add', details)

@@ -11,6 +11,8 @@ import CustomFilter from '@common/CustomeFilter'
 const Attendance = () => {
   const [activeTab, setActiveTab] = useState('Members')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
+
   console.log('activeTab: ', activeTab)
   const employeeOrMember = [
     { id: 1, name: 'Members' },
@@ -18,10 +20,10 @@ const Attendance = () => {
   ]
 
   const ROLES = [
-  { label: 'Trainee', value: 'trainee' },
-  { label: 'Employee', value: 'employee' },
-  { label: 'Staff', value: 'staff' }
-]
+    { label: 'Trainee', value: 'trainee' },
+    { label: 'Employee', value: 'employee' },
+    { label: 'Staff', value: 'staff' }
+  ]
 
   return (
     <ContentLayout>
@@ -42,9 +44,14 @@ const Attendance = () => {
             />
           </button>
           {activeTab === 'Employees' && (
-            <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>+ Add Attendance</Button>
+            <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
+              + Add Attendance
+            </Button>
           )}
-          <CustomFilter onApply={filter => console.log(filter)} options={ROLES} />
+          <CustomFilter
+            onApply={filter => console.log(filter)}
+            options={ROLES}
+          />
         </div>
       </div>
       <div className='text-tabelsubtitle font-semibold text-md mb-3'>
@@ -54,7 +61,10 @@ const Attendance = () => {
       </div>
       {activeTab === 'Members' && <MemberAttendance />}
       {activeTab === 'Employees' && <EmployeeAttendance />}
-      <AddEmployeeAttendance open={isAddModalOpen} setOpen={setIsAddModalOpen} />
+      <AddEmployeeAttendance
+        open={isAddModalOpen}
+        setOpen={setIsAddModalOpen}
+      />
     </ContentLayout>
   )
 }

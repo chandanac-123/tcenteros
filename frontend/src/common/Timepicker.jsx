@@ -1,7 +1,7 @@
 import { Clock, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-export default function TimePicker ({ label, value, onChange }) {
+export default function TimePicker ({ label, value, onChange ,error}) {
   console.log('value: ', value)
   const [hour, setHour] = useState('')
   const [minute, setMinute] = useState('')
@@ -139,6 +139,7 @@ const updateParent = (h, m, p) => {
           </div>
         </div>
       </div>
+      {error && <p className='text-red-500 text-sm mt-1'>{error}</p>}
     </div>
   )
 }
