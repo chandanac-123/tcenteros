@@ -263,49 +263,105 @@ async def list_center_attendance(
     page_size: int = Query(10, ge=1, le=100),
     date_from: date = Query(None, description="Start date (YYYY-MM-DD)"),
     date_to: date = Query(None, description="End date (YYYY-MM-DD)"),
+    role: str = Query(None, description="Filter by role: member or employee"),
+    employee_designation: str = Query(None, description="Filter by employee designation"),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    from app.auth.models.models import Member
+    from app.auth.models.models import Member, Employee
+    from app.settings.models.models import Designation
     from app.attendance.models.models import Attendance
     from sqlalchemy import func
+    from sqlalchemy.sql import literal_column
 
     center_id = current_admin["center_id"]
 
-    # Build base query
-    query = (
-        select(Attendance, Member.full_name)
-        .join(Member, Attendance.user_id == Member.id)
-        .where(Attendance.center_id == center_id)
-    )
-
-    # Apply date filters if provided
-    if date_from:
-        query = query.where(Attendance.date >= date_from)
-    if date_to:
-        query = query.where(Attendance.date <= date_to)
-
-    query = query.order_by(Attendance.date.desc())
-
-    total_query = select(func.count()).select_from(query.subquery())
-    total = (await session.execute(total_query)).scalar()
-    query = query.offset((page - 1) * page_size).limit(page_size)
-
-    results = (await session.execute(query)).all()
-
     attendance_list = []
-    for att, full_name in results:
-        duration = None
-        if att.check_in_time and att.check_out_time:
-            duration_td = att.check_out_time - att.check_in_time
-            duration = str(duration_td)
-        attendance_list.append({
-            "full_name": full_name,
-            "date": att.date,
-            "check_in_time": att.check_in_time,
-            "check_out_time": att.check_out_time,
-            "duration": duration,
-        })
+    total = 0
+
+    if role == "employee":
+        # Query for employees
+        query = (
+            select(
+                Attendance.id,
+                Employee.full_name,
+                Attendance.date,
+                Attendance.check_in_time,
+                Attendance.check_out_time,
+                Designation.name.label("designation")
+            )
+            .join(Employee, Attendance.user_id == Employee.id)
+            .outerjoin(Designation, Employee.designation_id == Designation.id)
+            .where(Attendance.center_id == center_id)
+        )
+        if employee_designation:
+            query = query.where(Designation.name.ilike(f"%{employee_designation}%"))
+        if date_from:
+            query = query.where(Attendance.date >= date_from)
+        if date_to:
+            query = query.where(Attendance.date <= date_to)
+        query = query.order_by(Attendance.date.desc())
+        total_query = select(func.count()).select_from(query.subquery())
+        total = (await session.execute(total_query)).scalar()
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        results = (await session.execute(query)).all()
+        for att_id, full_name, att_date, check_in, check_out, designation in results:
+            duration = None
+            if check_in and check_out:
+                duration_td = check_out - check_in
+                duration = str(duration_td)
+            attendance_list.append({
+                "id": str(att_id),
+                "full_name": full_name,
+                "date": att_date,
+                "check_in_time": check_in,
+                "check_out_time": check_out,
+                "duration": duration,
+                "designation": designation
+            })
+    elif role == "member":
+        # Query for members
+        query = (
+                select(
+                    Attendance.id,
+                    Member.full_name,
+                    Attendance.date,
+                    Attendance.check_in_time,
+                    Attendance.check_out_time,
+                    literal_column("NULL").label("designation")
+                )
+                .join(Member, Attendance.user_id == Member.id)
+                .where(Attendance.center_id == center_id)
+            )
+        if date_from:
+            query = query.where(Attendance.date >= date_from)
+        if date_to:
+            query = query.where(Attendance.date <= date_to)
+        query = query.order_by(Attendance.date.desc())
+        total_query = select(func.count()).select_from(query.subquery())
+        total = (await session.execute(total_query)).scalar()
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        results = (await session.execute(query)).all()
+        for att_id, full_name, att_date, check_in, check_out, designation in results:
+            duration = None
+            if check_in and check_out:
+                duration_td = check_out - check_in
+                duration = str(duration_td)
+            attendance_list.append({
+                "id": str(att_id),
+                "full_name": full_name,
+                "date": att_date,
+                "check_in_time": check_in,
+                "check_out_time": check_out,
+                "duration": duration,
+                "designation": designation
+            })
+    else:
+        # If no role filter, return both
+        # (You can union both queries if you want, or just return empty)
+        return {
+            "detail": "Please specify role=member or role=employee for filtering."
+        }
 
     return {
         "total": total,
@@ -379,3 +435,23 @@ async def add_employee_attendance(
             "check_out_time": att.check_out_time,
         }
     }
+
+
+# Centeradmin Deletes Attendance Records of Their Own Employees
+@router.delete("/centeradmin/attendance/{attendance_id}")
+async def delete_attendance(
+    attendance_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.attendance.models.models import Attendance
+
+    att = await session.get(Attendance, attendance_id)
+    if not att:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    # Optional: Only allow delete if attendance belongs to this center
+    if str(att.center_id) != str(current_admin["center_id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to delete this attendance record")
+    await session.delete(att)
+    await session.commit()
+    return {"detail": "Attendance record deleted successfully"}

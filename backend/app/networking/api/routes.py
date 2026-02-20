@@ -615,7 +615,7 @@ async def get_my_center_network_enabled(
         "address": address_data
     }
 
-
+# List networking bookings for a center (CenterAdmin)
 @router.get("/networking/bookings")
 async def list_network_bookings(
     status: str = Query(None, description="Filter by status: pending, approved, paid, completed"),
@@ -685,29 +685,7 @@ async def list_network_bookings(
 
 
 
-@router.get("/networking/bookings/debug")
-async def debug_network_bookings(
-    session: AsyncSession = Depends(get_async_session),
-    current_admin=Depends(centeradmin_required)
-):
-    from app.auth.models.models import UserCenterMembership
-
-    query = select(UserCenterMembership).where(
-        UserCenterMembership.center_id == current_admin["center_id"]
-    )
-    results = (await session.execute(query)).scalars().all()
-    return [
-        {
-            "id": str(m.id),
-            "network_status": m.network_status.value,
-            "start_date": m.start_date,
-            "end_date": m.end_date,
-        }
-        for m in results
-    ]
-
-
-
+#get details of a specific networking booking (CenterAdmin)
 @router.get("/networking/booking/{network_membership_id}")
 async def get_networking_booking_by_id(
     network_membership_id: str,
@@ -781,4 +759,23 @@ async def get_networking_booking_by_id(
             "address": address_data,
         }
     }
+
+
+@router.delete("/networking/booking/{network_membership_id}")
+async def delete_networking_booking(
+    network_membership_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import UserCenterMembership
+
+    membership = await session.get(UserCenterMembership, network_membership_id)
+    if not membership:
+        raise HTTPException(status_code=404, detail="Networking booking not found")
+    if str(membership.center_id) != str(current_admin["center_id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to delete this networking booking")
+    await session.delete(membership)
+    await session.commit()
+    return {"detail": "Networking booking deleted successfully"}
+
 
