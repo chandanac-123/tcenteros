@@ -6,11 +6,19 @@ import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import { usePricingPageQuery } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
+import CustomeTab from '@common/CustomeTab'
+import { useState } from 'react'
 
 const PricingPage = () => {
   const navigate = useNavigate()
   const store = useOnboardingStore()
+  const [activeTab, setActiveTab] = useState('Yearly')
   const { data, isFetching } = usePricingPageQuery(store?.onboardId)
+
+  const packageOptions = [
+    { id: 1, name: 'Monthly' },
+    { id: 2, name: 'Yearly' }
+  ]
 
   return (
     <SecondaryLayout>
@@ -27,7 +35,16 @@ const PricingPage = () => {
           {/* Pricing Card */}
           <div className='bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto overflow-hidden'>
             {/* CONTENT WITH PADDING */}
-            <div className='py-6 px-20'>
+
+            <div className='py-6 px-20 '>
+              <div className='flex justify-start py-2'>
+                <CustomeTab
+                  tabList={packageOptions}
+                  defaultVal='Yearly'
+                  tabsListClass=' w-44 p-[1px]'
+                  onChange={value => setActiveTab(value)}
+                />
+              </div>
               {/* Subtitle */}
               <p className='text-center text-sm text-gray-500 mb-3'>
                 Recommended package White-Label Offline + Live Classes
@@ -42,7 +59,7 @@ const PricingPage = () => {
                 </span>
                 <span className='text-base font-medium text-purple-600'>
                   {' '}
-                  / year
+                  / {activeTab}
                 </span>
                 <span className='ml-2 text-sm text-gray-400 line-through'>
                   ₹42,999.00
