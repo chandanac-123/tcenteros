@@ -4,13 +4,10 @@ import PasswordInput from '@common/PasswordInput'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
-import { useAuthStore } from '@store/authStore'
 import { useLoginMutation } from '@api-queries/authentication/Query'
-import { showError, showSuccess } from '@utils/toast'
 
 const Login = () => {
   const { mutateAsync: login, isPending } = useLoginMutation()
-  const setAuth = useAuthStore(state => state.setAuth)
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -25,11 +22,8 @@ const Login = () => {
     setError('')
     try {
       await login(form)
-      showSuccess ('Login successful')
       navigate('/dashboard')
     } catch (err) {
-      setError(err?.response?.data?.message || 'Login failed')
-      showError(error)
     }
   }
 
@@ -53,9 +47,6 @@ const Login = () => {
           onChange={handleChange}
           disabled={isPending}
         />
-
-        {error && <div className='text-red-500 text-sm'>{error}</div>}
-
         <div className='flex justify-end'>
           <Link
             to='/forgot-password'

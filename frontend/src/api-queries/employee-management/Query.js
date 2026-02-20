@@ -11,6 +11,7 @@ import {
   updateCategory,
   getEmployeeById
 } from './Urls'
+import { showError, showSuccess } from '@utils/toast'
 
 export const useCategoriesQuery = () => {
   return useQuery({
@@ -27,8 +28,10 @@ export const useCreateCategoryMutation = () => {
     mutationFn: data => createCategory(data),
     onSuccess: async data => {
       query.invalidateQueries('categories')
+      showSuccess('Category created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create category')
       return err
     }
   })
@@ -40,8 +43,10 @@ export const useUpdateCategoryMutation = () => {
     mutationFn: ({ id, data }) => updateCategory(data, id),
     onSuccess: async data => {
       query.invalidateQueries('categories')
+      showSuccess('Category updated successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update category')
       return err
     }
   })
@@ -53,8 +58,10 @@ export const useDeleteCategoryMutation = () => {
     mutationFn: id => deleteCategory(id),
     onSuccess: async data => {
       query.invalidateQueries('categories')
+      showSuccess('Category deleted successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to delete category')
       return err
     }
   })
@@ -70,7 +77,7 @@ export const useCategoriesGetByIdQuery = id => {
   })
 }
 
-export const useEmployeeQuery = (data) => {
+export const useEmployeeQuery = data => {
   return useQuery({
     queryKey: ['employees', data],
     queryFn: () => getAllEmployees(data),
@@ -85,8 +92,10 @@ export const useCreateEmployeeMutation = () => {
     mutationFn: data => createEmployee(data),
     onSuccess: async data => {
       query.invalidateQueries('employees')
+      showSuccess('Employee created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create employee')
       return err
     }
   })
@@ -98,8 +107,10 @@ export const useUpdateEmployeeMutation = () => {
     mutationFn: ({ id, data }) => updateEmployee(data, id),
     onSuccess: async data => {
       query.invalidateQueries('employees')
+      showSuccess('Employee updated successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update employee')
       return err
     }
   })
@@ -111,8 +122,10 @@ export const useDeleteEmployeeMutation = () => {
     mutationFn: id => deleteEmployee(id),
     onSuccess: async data => {
       query.invalidateQueries('employees')
+      showSuccess('Employee deleted successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to delete employee')
       return err
     }
   })

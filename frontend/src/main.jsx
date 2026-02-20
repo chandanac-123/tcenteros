@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
-        <Toaster position='top-center' duration={1000} richColors />
+        <Toaster position='top-center' duration={1000} />
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>

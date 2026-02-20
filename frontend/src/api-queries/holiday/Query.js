@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createHoliday, deleteHoliday, getAllHoliday } from './Urls'
+import { showError, showSuccess } from '@utils/toast'
 
 export const useAllHolidayQuery = () => {
   return useQuery({
@@ -15,8 +16,10 @@ export const usecreateHolidayMutation = () => {
     mutationFn: data => createHoliday(data),
     onSuccess: async data => {
       query.invalidateQueries('holiday')
+      showSuccess('Holiday created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create holiday')
       return err
     }
   })
@@ -28,8 +31,10 @@ export const usedeleteHolidayMutation = () => {
     mutationFn: id => deleteHoliday(id),
     onSuccess: async data => {
       query.invalidateQueries('holiday')
+      showSuccess('Holiday deleted successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to delete holiday')
       return err
     }
   })
