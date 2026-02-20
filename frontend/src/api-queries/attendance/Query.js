@@ -43,12 +43,13 @@ export const useAllMemberAttendanceQuery = data => {
 
 export const useAllEmployeesAttendanceQuery = (data, id) => {
   return useQuery({
-    queryKey: ['attendance'],
-    queryFn: () => getAllEmployeeAttendance(data,id),
+    queryKey: ['attendance', data, id], // 🔥 include id
+    queryFn: () => getAllEmployeeAttendance(data, id),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
+
 
 export const useDeleteAttendanceMutation = () => {
   const query = useQueryClient()
