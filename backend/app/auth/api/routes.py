@@ -18,7 +18,7 @@ from uuid import uuid4
 from app.auth.models.models import MemberStatusEnum
 from app.settings.models.models import Address, AddressType
 from app.core.models.models import StatusEnum, SuperadminInfo
-from app.core.dependencies import member_required, get_current_user
+from app.core.dependencies import member_required, get_current_user, centeradmin_required
 from passlib.context import CryptContext
 from app.settings.models.models import Designation
 import uuid
@@ -756,3 +756,34 @@ async def list_superadmin_info(
         for info in infos
     ]
     return {"superadmin_info": data}
+
+
+# List Employees of the Logged-in Centeradmin's Center
+@router.get("/centeradmin/employees")
+async def list_center_employees(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import Employee
+    from app.settings.models.models import Designation
+
+    center_id = current_admin["center_id"]
+    # Join Employee and Designation to get designation name
+    result = await session.execute(
+        select(
+            Employee.id,
+            Employee.full_name,
+            Designation.name.label("designation_name")
+        )
+        .outerjoin(Designation, Employee.designation_id == Designation.id)
+        .where(Employee.center_id == center_id)
+    )
+    employees = [
+        {
+            "id": str(eid),
+            "full_name": fname,
+            "designation": dname
+        }
+        for eid, fname, dname in result.all()
+    ]
+    return {"employees": employees}

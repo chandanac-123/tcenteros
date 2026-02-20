@@ -30,3 +30,11 @@ class AttendanceOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+
+class EmployeeAttendanceIn(BaseModel):
+    employee_id: str
+    date: date
+    check_in_time: str
+    check_out_time: Optional[str] = None

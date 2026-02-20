@@ -715,9 +715,8 @@ async def get_networking_booking_by_id(
     current_admin=Depends(centeradmin_required)
 ):
     from app.auth.models.models import UserCenterMembership, Member
-    from app.center.models.models import Center
-    from app.settings.models.models import Address
-    from app.center.models.models import CenterTimeSlot
+    from app.center.models.models import Center, CenterTimeSlot
+    from app.settings.models.models import Address, CenterCategory
 
     # Get the networking membership
     membership = await session.get(UserCenterMembership, network_membership_id)
@@ -733,6 +732,12 @@ async def get_networking_booking_by_id(
     home_center = await session.get(Center, member.home_center_id)
     if not home_center:
         raise HTTPException(404, "Home center not found")
+
+    # Get home center category
+    center_category_name = None
+    if home_center.center_category_id:
+        category = await session.get(CenterCategory, home_center.center_category_id)
+        center_category_name = category.name if category else None
 
     # Get home center address
     address = await session.get(Address, home_center.address_id)
@@ -753,6 +758,7 @@ async def get_networking_booking_by_id(
         if time_slot_obj:
             time_slot = {
                 "time_slot_id": str(time_slot_obj.id),
+                "slot_name": getattr(time_slot_obj, "slot_name", None),
                 "start_time": str(time_slot_obj.start_time),
                 "end_time": str(time_slot_obj.end_time),
             }
@@ -769,9 +775,9 @@ async def get_networking_booking_by_id(
         "home_center": {
             "center_id": str(home_center.id),
             "center_name": home_center.center_name,
-            "center_category": home_center.center_category,
+            "center_category": center_category_name,
             "center_email": home_center.center_email,
-            "center_number": home_center.center_number,
+            "center_number": home_center.center_phone,
             "address": address_data,
         }
     }

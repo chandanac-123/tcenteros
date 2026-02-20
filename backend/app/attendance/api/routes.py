@@ -5,11 +5,12 @@ from typing import List
 from datetime import date, datetime, timedelta
 from app.core.database import get_async_session
 from app.attendance.models.models import Attendance, AttendanceStatus
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, centeradmin_required
 from calendar import monthrange
 from app.center.models.models import CenterTimeSlot
 from app.settings.models.models import CenterOperationalSetting, CenterHoliday
 from app.auth.models.models import Member
+from app.attendance.schema.schema import  EmployeeAttendanceIn
 
 
 router = APIRouter()
@@ -254,3 +255,127 @@ async def member_monthly_attendance(
         "attendance_summary": summary
     }
 
+
+# List Attendance for Centeradmin’s Members and Employees
+@router.get("/centeradmin/attendance/list")
+async def list_center_attendance(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    date_from: date = Query(None, description="Start date (YYYY-MM-DD)"),
+    date_to: date = Query(None, description="End date (YYYY-MM-DD)"),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import Member
+    from app.attendance.models.models import Attendance
+    from sqlalchemy import func
+
+    center_id = current_admin["center_id"]
+
+    # Build base query
+    query = (
+        select(Attendance, Member.full_name)
+        .join(Member, Attendance.user_id == Member.id)
+        .where(Attendance.center_id == center_id)
+    )
+
+    # Apply date filters if provided
+    if date_from:
+        query = query.where(Attendance.date >= date_from)
+    if date_to:
+        query = query.where(Attendance.date <= date_to)
+
+    query = query.order_by(Attendance.date.desc())
+
+    total_query = select(func.count()).select_from(query.subquery())
+    total = (await session.execute(total_query)).scalar()
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    results = (await session.execute(query)).all()
+
+    attendance_list = []
+    for att, full_name in results:
+        duration = None
+        if att.check_in_time and att.check_out_time:
+            duration_td = att.check_out_time - att.check_in_time
+            duration = str(duration_td)
+        attendance_list.append({
+            "full_name": full_name,
+            "date": att.date,
+            "check_in_time": att.check_in_time,
+            "check_out_time": att.check_out_time,
+            "duration": duration,
+        })
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "attendance": attendance_list
+    }
+
+
+#Centeradmin Adds Attendance for Their Own Employees
+@router.post("/centeradmin/attendance/add")
+async def add_employee_attendance(
+    payload: EmployeeAttendanceIn,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import Employee
+    from app.attendance.models.models import Attendance, AttendanceStatus
+
+    # Parse check_in_time and check_out_time as datetime
+    check_in_dt = datetime.combine(
+        payload.date,
+        datetime.strptime(payload.check_in_time, "%H:%M").time()
+    )
+    check_out_dt = None
+    if payload.check_out_time:
+        check_out_dt = datetime.combine(
+            payload.date,
+            datetime.strptime(payload.check_out_time, "%H:%M").time()
+        )
+
+    # Verify employee belongs to this center
+    employee = await session.get(Employee, payload.employee_id)
+    if not employee or str(employee.center_id) != str(current_admin["center_id"]):
+        raise HTTPException(403, "Employee does not belong to your center")
+
+    # Check if attendance already exists for this date
+    att_result = await session.execute(
+        select(Attendance).where(
+            Attendance.user_id == payload.employee_id,
+            Attendance.center_id == current_admin["center_id"],
+            Attendance.date == payload.date
+        )
+    )
+    att = att_result.scalar_one_or_none()
+    if att:
+        raise HTTPException(400, "Attendance already recorded for this date")
+
+    att = Attendance(
+        user_id=payload.employee_id,
+        center_id=current_admin["center_id"],
+        date=payload.date,
+        check_in_time=check_in_dt,
+        check_out_time=check_out_dt,
+        status=AttendanceStatus.present,
+        created_at=datetime.utcnow(),
+        created_by=current_admin["user_id"],
+        updated_at=datetime.utcnow(),
+        updated_by=current_admin["user_id"]
+    )
+    session.add(att)
+    await session.commit()
+    await session.refresh(att)
+    return {
+        "message": "Attendance added successfully.",
+        "attendance": {
+            "id": str(att.id),
+            "employee_id": str(att.user_id),
+            "date": att.date,
+            "check_in_time": att.check_in_time,
+            "check_out_time": att.check_out_time,
+        }
+    }
