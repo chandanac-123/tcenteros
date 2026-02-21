@@ -2,20 +2,27 @@ import { CircleCheck } from 'lucide-react'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeletePlanMutation } from '@api-queries/membership-plan/Query'
 import CreateMembershipForm from './CreateForm'
+import { useUpdatePlanStatusMutation } from '@api-queries/membership-plan/Query'
 
 const PlanCard = ({ data, colors }) => {
+  console.log('data: ', data);
   const [open, setOpen] = useState(false)
   const [editId, setEditId] = useState(null)
-
+  const { mutateAsync: updateMembershipStatus, isPending: isStatusUpdating } =
+    useUpdatePlanStatusMutation()
   const [isActive, setIsActive] = useState(data?.status === 'active')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const { mutateAsync: delete_plan, isPending } = useDeletePlanMutation(
     data?.membership_id
   )
+
+  useEffect(() => {
+    setIsActive(data?.status === 'active')
+  }, [data?.status])
 
   const handleStatusChange = async value => {
     const newStatus = value ? 'active' : 'inactive'
@@ -93,9 +100,24 @@ const PlanCard = ({ data, colors }) => {
               <span className='text-primary font-medium'>Activate</span>
               <Switch
                 checked={isActive}
-                onCheckedChange={value => {
+                disabled={isStatusUpdating}
+                onCheckedChange={async value => {
+                  const newStatus = value ? 'active' : 'inactive'
+
+                  // Optimistic UI update
                   setIsActive(value)
-                  handleStatusChange(value)
+
+                  try {
+                    await updateMembershipStatus({
+                      membership_id: data.membership_id,
+                      status: newStatus
+                    })
+                  } catch (error) {
+                    console.error('Status update failed')
+
+                    // Revert if API fails
+                    setIsActive(!value)
+                  }
                 }}
               />
             </div>
@@ -119,11 +141,7 @@ const PlanCard = ({ data, colors }) => {
 
       {/* Footer Accent Always at Bottom */}
       <div className={`h-2 w-full ${colors.footer_bg}`}></div>
-      <CreateMembershipForm
-        open={open}
-        setOpen={setOpen}
-        editId={editId}
-      />
+      <CreateMembershipForm open={open} setOpen={setOpen} editId={editId} />
       <DeleteModal
         open={deleteOpen}
         setOpen={setDeleteOpen}

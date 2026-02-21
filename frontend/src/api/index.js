@@ -94,6 +94,8 @@ export const updateMembershipPlanApiCall = (details, id) =>
   axiosInstance.put(`/membership/memberships-plans/${id}`, details)
 export const getMembershipPlanByIdApiCall = id =>
   axiosInstance.get(`/membership/memberships-plans/${id}`)
+export const updateMembershipStatusApiCall = (details, id) =>
+  axiosInstance.patch(`/membership/memberships-plans/${id}/status`, details)
 
 //HOLIDAY API
 export const getHolidayApiCall = () =>

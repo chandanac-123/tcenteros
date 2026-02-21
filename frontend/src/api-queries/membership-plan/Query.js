@@ -4,7 +4,8 @@ import {
   deletePlan,
   getAllPlans,
   getPlanById,
-  updatePlan
+  updatePlan,
+  updateStatusPlan
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -69,5 +70,20 @@ export const usePlanGetByIdQuery = id => {
     enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useUpdatePlanStatusMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => updateStatusPlan(data, id),
+    onSuccess: async data => {
+      query.invalidateQueries('plans')
+      showSuccess('Plan updated successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update plan')
+      return err
+    }
   })
 }
