@@ -98,7 +98,7 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
         data={employees?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
-        pagination={employees}
+        pagination={employees?.total}
         loading={isEmployeesLoading}
         paginationVisibile={true}
       />

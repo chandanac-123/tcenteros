@@ -9,8 +9,11 @@ import AddEditForm from './AddEditForm'
 import ViewForm from './View'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
+import useTableSelection from '@common/UseTableSelection'
 
-const EmployeeTable = ({ data, tableParams, setTableParams }) => {
+const EmployeeTable = ({ data, tableParams, setTableParams ,pagination}) => {
+  const { selectedIds, selectionColumn, setSelectedIds } =
+    useTableSelection(data)
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [editopen, setEditOpen] = useState(false)
@@ -36,6 +39,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   }
 
   const columns = [
+    selectionColumn,
     {
       accessorKey: 'full_name',
       header: 'Full Name'
@@ -51,10 +55,6 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
     {
       accessorKey: 'mobile',
       header: 'Phone Number'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Center'
     },
     {
       accessorKey: 'joining_date',
@@ -101,11 +101,22 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
 
   return (
     <>
+      {selectedIds.length > 0 && (
+        <div className='mb-2'>
+          <button
+            className='bg-red-500 text-white px-3 py-1 rounded'
+            onClick={() => setDeleteOpen(true)}
+          >
+            Delete Selected ({selectedIds.length})
+          </button>
+        </div>
+      )}
       <DataTable
         columns={columns}
         data={data}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={pagination}
         paginationVisibile={true}
       />
       <AddEditForm

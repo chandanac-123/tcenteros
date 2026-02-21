@@ -36,7 +36,7 @@ export const GetEmployeeCategoriesByIdApiCall = id =>
 
 export const getEmployeeApiCall = data =>
   axiosInstance.get(
-    `/auth/employee?page=${data?.page}&page_size=${data?.pageSize}`
+    `/auth/employee?page=${data?.page}&page_size=${10}`
   )
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)

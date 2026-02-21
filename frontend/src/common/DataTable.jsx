@@ -45,7 +45,7 @@ export function DataTable ({
     }))
   }
 
-  const totalRecords = pagination?.total || 0
+  const totalRecords = pagination || 0
   const totalPageCount = Math.ceil(totalRecords / rowsPerPage)
 
   const paginationItems = []
@@ -166,7 +166,7 @@ export function DataTable ({
         </Table>
       </div>
       <div className='py-2 flex justify-between items-center w-full px-2'>
-        {paginationVisibile && (
+        {paginationVisibile && totalRecords > 10 && (
           <div className='flex justify-between items-center w-full mt-4'>
             <div className='text-grey text-sm '>
               Showing {(page - 1) * rowsPerPage + 1} -

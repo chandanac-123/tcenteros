@@ -95,7 +95,7 @@ export const useCreateEmployeeMutation = () => {
       showSuccess('Employee created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create employee')
+      showError(err?.response?.data?.detail || 'Failed to create employee')
       return err
     }
   })
@@ -110,7 +110,7 @@ export const useUpdateEmployeeMutation = () => {
       showSuccess('Employee updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update employee')
+      showError(err?.response?.data?.detail || 'Failed to update employee')
       return err
     }
   })

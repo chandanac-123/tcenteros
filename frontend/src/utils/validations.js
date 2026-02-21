@@ -39,13 +39,24 @@ export const categoryValidationSchema = Yup.object().shape({
     )
 })
 
-export const employeeValidationSchema = Yup.object().shape({
-  full_name: Yup.string().required('Enter full name'),
-  email: Yup.string().required('Enter email'),
-  mobile: Yup.string().required('Enter mobile number'),
-  password: Yup.string().required('Enter password'),
-  designation_id: Yup.string().required('Enter designation category')
-})
+export const employeeValidationSchema = (isEdit) =>
+  Yup.object().shape({
+    full_name: Yup.string().required('Full name is required'),
+    email: Yup.string().email().required('Email is required'),
+    mobile: Yup.string().required('Mobile is required'),
+    designation_id: isEdit
+      ? Yup.string()
+      : Yup.string().required('Designation is required'),
+    password: isEdit
+      ? Yup.string()
+      : Yup.string().required('Password is required'),
+    profile_photo: isEdit
+      ? Yup.mixed()
+      : Yup.mixed().required('Image is required'),
+    joining_date: isEdit
+      ? Yup.string()
+      : Yup.string().required('Joining date is required')
+  })
 
 export const membershipValidationSchema = Yup.object().shape({
   membership_name: Yup.string()

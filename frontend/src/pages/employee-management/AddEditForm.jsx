@@ -16,6 +16,8 @@ import InputFile from '@common/CustomeFileUpload'
 import { useAuthStore } from '@store/authStore'
 import { useFormik } from 'formik'
 import { employeeValidationSchema } from '@utils/validations'
+import CustomDatePicker from '@common/CustomeDatepicker'
+import { format } from 'date-fns'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const state = useAuthStore.getState()
@@ -41,30 +43,53 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     password: '',
     designation_id: employeeData?.designation_id || '',
     center_id: state?.auth?.center_id || '',
-    joining_date: employeeData?.joining_date || '2026-02-10',
+    joining_date: employeeData?.joining_date || '',
     profile_photo: employeeData?.profile_photo || null
   }
 
   const formik = useFormik({
     initialValues,
-    validationSchema: employeeValidationSchema,
+    validationSchema: employeeValidationSchema(!!id),
     enableReinitialize: true,
     onSubmit: async values => {
-      const fd = new FormData()
-      // Append all fields except profile_photo
-      Object.entries(values).forEach(([key, value]) => {
-        if (key !== 'profile_photo' && value !== undefined && value !== null) {
-          fd.append(key, value)
-        }
-      })
-      // Append file only once
-      if (values.profile_photo) {
-        fd.append('profile_photo', values.profile_photo)
-      }
       try {
+        const fd = new FormData()
         if (id) {
-          await updateEmployee({ id, ...values })
+          // 🔥 EDIT MODE
+          // append only editable fields
+          const allowedFields = [
+            'full_name',
+            'email',
+            'mobile',
+            'qualification',
+            'experience',
+            'country',
+            'state',
+            'city',
+            'pin',
+            'address'
+          ]
+
+          allowedFields.forEach(field => {
+            if (values[field] !== undefined && values[field] !== null) {
+              fd.append(field, values[field])
+            }
+          })
+          // only append image if user selected new file
+          if (values.profile_photo instanceof File) {
+            fd.append('profile_photo', values.profile_photo)
+          }
+          await updateEmployee({ id, data: fd })
         } else {
+          // 🔥 CREATE MODE
+          Object.entries(values).forEach(([key, value]) => {
+            if (key !== 'profile_photo' && value) {
+              fd.append(key, value)
+            }
+          })
+          if (values.profile_photo) {
+            fd.append('profile_photo', values.profile_photo)
+          }
           await createEmployee(fd)
         }
         closeModal()
@@ -80,6 +105,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     formik.setFieldTouched('designation_id', true, false)
   }
 
+  const handleDateChange = (field, val) => {
+    formik.setFieldValue(field, val ? format(val, 'yyyy-MM-dd') : '')
+  }
+
   return (
     <>
       <CustomeModal
@@ -88,38 +117,39 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
         header={id ? 'Edit Employee' : 'Create Employee'}
       >
         <form className='space-y-2' onSubmit={formik.handleSubmit}>
-          <span>Select Category</span>
-          <div className='w-full'>
-            <div className='grid grid-cols-2 md:grid-cols-5 gap-2'>
-              {data?.map(item => (
-                <SelectCategory
-                  key={item.id}
-                  item={item}
-                  selected={formik.values.designation_id === item.id}
-                  onSelect={() => handleSelect(item.id)}
-                />
-              ))}
-              {id ? (
-                ''
-              ) : (
-                <label
-                  onClick={() => setCategoryOpen(true)}
-                  className='flex flex-col items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
-                >
-                  <Plus className='w-6 h-6 text-secondary' />
-                  <span className='flex-1 text-sm text-secondary'>
-                    Add Designation
-                  </span>
-                </label>
-              )}
-            </div>
-            {formik.touched.designation_id && formik.errors.designation_id && (
-              <div className='text-xs text-red-500 mt-1'>
-                {formik.errors.designation_id}
-              </div>
-            )}{' '}
-          </div>
+          {!id && (
+            <>
+              <span>Select Category</span>
+              <div className='w-full'>
+                <div className='grid grid-cols-2 md:grid-cols-5 gap-2'>
+                  {data?.map(item => (
+                    <SelectCategory
+                      key={item.id}
+                      item={item}
+                      selected={formik.values.designation_id === item.id}
+                      onSelect={() => handleSelect(item.id)}
+                    />
+                  ))}
 
+                  <label
+                    onClick={() => setCategoryOpen(true)}
+                    className='flex flex-col items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
+                  >
+                    <Plus className='w-6 h-6 text-secondary' />
+                    <span className='flex-1 text-sm text-secondary'>
+                      Add Designation
+                    </span>
+                  </label>
+                </div>
+                {formik.touched.designation_id &&
+                  formik.errors.designation_id && (
+                    <div className='text-xs text-red-500 mt-1'>
+                      {formik.errors.designation_id}
+                    </div>
+                  )}{' '}
+              </div>
+            </>
+          )}
           <div className='flex gap-4'>
             <div className='flex-1'>
               <Input
@@ -221,53 +251,62 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               />
             </div>
           </div>
-          <div className='flex gap-4 '>
-            <div className='flex-1'>
-              <Input
-                label='Password'
-                name='password'
-                type='password'
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                // onBlur={formik.handleBlur}
-                error={formik.touched.password && formik.errors.password}
-              />
-            </div>
-            <div className='flex-1'>
-              <InputFile
-                label='Upload Image'
-                name='profile_photo'
-                value={formik.values.profile_photo}
-                onChange={e => {
-                  const file = e.target.files[0]
-                  formik.setFieldValue('profile_photo', file)
-                }}
-                onRemove={() => {
-                  formik.setFieldValue('profile_photo', null)
-                  formik.setFieldTouched('profile_photo', true, false)
-                }}
-              />
-            </div>
-          </div>
-          <div className='flex gap-4 '>
-            <div className='flex-1'>
-              <CustomeSelect
-                label='Choose Center'
-                name='center_id'
-                value={formik.values.center_id}
-                onChange={formik.handleChange}
-                placeholder='Choose Center'
-              />
-            </div>
-            <div className='flex-1'>
-              <Input
-                label='Joining Date'
-                name='joining_date'
-                value={formik.values.joining_date}
-                onChange={formik.handleChange}
-              />
-            </div>
-          </div>
+          {!id && (
+            <>
+              <div className='flex gap-4 '>
+                <div className='flex-1'>
+                  <Input
+                    label='Password'
+                    name='password'
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    // onBlur={formik.handleBlur}
+                    error={formik.touched.password && formik.errors.password}
+                  />
+                </div>
+                <div className='flex-1'>
+                  <InputFile
+                    label='Upload Image'
+                    name='profile_photo'
+                    value={formik.values.profile_photo}
+                    onChange={formik.handleChange}
+                    onRemove={() => {
+                      formik.setFieldValue('profile_photo', null)
+                      formik.setFieldTouched('profile_photo', true, false)
+                    }}
+                    error={
+                      formik.touched.profile_photo &&
+                      formik.errors.profile_photo
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className='flex gap-4 '>
+                <div className='flex-1'>
+                  <CustomeSelect
+                    label='Choose Center'
+                    name='center_id'
+                    value={formik.values.center_id}
+                    onChange={formik.handleChange}
+                    placeholder='Choose Center'
+                  />
+                </div>
+                <div className='flex-1'>
+                  <CustomDatePicker
+                    label='Joining Date'
+                    name='joining_date'
+                    value={
+                      formik.values.joining_date
+                        ? new Date(formik.values.joining_date)
+                        : null
+                    }
+                    onChange={val => handleDateChange('joining_date', val)}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <div className='flex justify-center mt-4 '>
             <Button size='addbutton' variant='default' type='submit'>
@@ -275,11 +314,6 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             </Button>
           </div>
         </form>
-        {/* {process.env.NODE_ENV === 'development' && (
-          <pre className='text-xs text-red-500'>
-            {JSON.stringify(formik.errors, null, 2)}
-          </pre>
-        )} */}
       </CustomeModal>
       <AddCategory
         categoryOpen={categoryOpen}

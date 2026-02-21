@@ -85,7 +85,7 @@ const MemberAttendance = ({ dateRange }) => {
         data={members?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
-        pagination={members}
+        pagination={members?.total}
         loading={isMembersLoading}
         paginationVisibile={true}
       />
