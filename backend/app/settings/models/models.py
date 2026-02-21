@@ -98,6 +98,7 @@ class Designation(Base, AuditMixin):
     __table_args__ = {"schema": "settings"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
     name = Column(String, unique=True, nullable=False)
     code = Column(String, unique=True, nullable=False)
     description = Column(Text)
@@ -105,6 +106,8 @@ class Designation(Base, AuditMixin):
     is_managerial = Column(Boolean, default=False)
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
     image_url = Column(String, nullable=True)  # S3 image URL
+
+    center = relationship("Center", backref="designations", foreign_keys=[center_id])
 
 
 # ------------------------

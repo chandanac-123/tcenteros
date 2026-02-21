@@ -377,6 +377,11 @@ async def create_employee(
     profile_photo: Optional[UploadFile] = File(None),
     session: AsyncSession = Depends(get_async_session)
 ):
+    # Check for duplicate email
+    existing_user = await session.execute(select(User).where(User.email == email))
+    if existing_user.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Email already exists.")
+
     # Handle S3 image upload
     profile_photo_url = None
     if profile_photo:
@@ -385,6 +390,22 @@ async def create_employee(
         key = f"employee_photos/{uuid4()}.{file_ext}"
         await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
         profile_photo_url = await run_in_threadpool(get_file_url, key)
+
+    # Create Address if address fields are provided
+    address_obj = None
+    if any([address, city, state, country, pin]):
+        address_obj = Address(
+            id=uuid4(),
+            address_line_1=address,
+            city=city,
+            state=state,
+            country=country,
+            postal_code=pin,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        session.add(address_obj)
+        await session.flush()  # To get address_obj.id
 
     # Create Employee (inherits from User)
     employee = Employee(
@@ -399,16 +420,37 @@ async def create_employee(
         center_id=center_id,
         joining_date=joining_date,
         profile_photo=profile_photo_url,
-        # Add other fields as needed
+        address_id=address_obj.id if address_obj else None,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
+        status=StatusEnum.active,  # Set status if your model supports it
     )
     session.add(employee)
     await session.commit()
     await session.refresh(employee)
 
-    # Prepare address dict if needed (not shown here)
+    # Fetch related fields for response
+    designation_name = None
+    if employee.designation_id:
+        desig = await session.get(Designation, employee.designation_id)
+        designation_name = desig.name if desig else None
+
+    center_name = None
+    if employee.center_id:
+        center = await session.get(Center, employee.center_id)
+        center_name = center.center_name if center else None
+
     address_dict = None
+    if employee.address_id:
+        addr = await session.get(Address, employee.address_id)
+        if addr:
+            address_dict = {
+                "address": addr.address_line_1,
+                "city": addr.city,
+                "state": addr.state,
+                "country": addr.country,
+                "pin": addr.postal_code,
+            }
 
     return EmployeeOut(
         id=employee.id,
@@ -418,11 +460,14 @@ async def create_employee(
         qualification=employee.qualification,
         experience=employee.experience_years,
         designation_id=employee.designation_id,
-        designation_name=None,  # Fill if you join Designation
+        designation_name=designation_name,
         address_id=employee.address_id,
         address=address_dict,
         center_id=employee.center_id,
+        center_name=center_name,
         joining_date=employee.joining_date,
+        status=employee.status.value if hasattr(employee, "status") and employee.status else None,
+        profile_photo=employee.profile_photo,
     )
 
 
@@ -656,7 +701,7 @@ async def delete_employee(
     return {"detail": "Employee deleted"}
 
 
-@router.get("/employee", response_model=List[EmployeeOut])
+@router.get("/employee")
 async def list_employees(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
@@ -674,10 +719,9 @@ async def list_employees(
     if mobile:
         filters.append(Employee.mobile.ilike(f"%{mobile}%"))
 
-    # If designation_name filter is used, join Designation table
     query = select(Employee)
     if designation_name:
-        from sqlalchemy.orm import aliased, joinedload
+        from sqlalchemy.orm import aliased
         DesignationAlias = aliased(Designation)
         query = query.join(DesignationAlias, Employee.designation_id == DesignationAlias.id)
         filters.append(DesignationAlias.name.ilike(f"%{designation_name}%"))
@@ -685,24 +729,26 @@ async def list_employees(
     if filters:
         query = query.where(and_(*filters))
 
+    # Get total count (corrected usage)
+    count_query = query.with_only_columns(Employee.id).order_by(None)
+    total_count_result = await session.execute(count_query)
+    total_count = len(total_count_result.scalars().all())
+
     # Pagination
     query = query.offset((page - 1) * page_size).limit(page_size)
-
     result = await session.execute(query)
     employees = result.scalars().all()
+
     employee_list = []
     for emp in employees:
-        # Fetch designation name if needed
         designation_name_val = None
         if emp.designation_id:
             desig = await session.get(Designation, emp.designation_id)
             designation_name_val = desig.name if desig else None
-        # Fetch center name if needed
         center_name = None
         if emp.center_id:
             center = await session.get(Center, emp.center_id)
             center_name = center.center_name if center else None
-        # Fetch address details if needed
         address_dict = None
         if emp.address_id:
             address = await session.get(Address, emp.address_id)
@@ -731,7 +777,23 @@ async def list_employees(
             status=emp.status.value if hasattr(emp, "status") else None,
             profile_photo=emp.profile_photo,
         ))
-    return 
+
+    # Get all designations
+    designation_result = await session.execute(select(Designation))
+    designations = designation_result.scalars().all()
+
+    # Designation wise employee count
+    designation_counts = {}
+    for d in designations:
+        count_stmt = select(Employee.id).where(Employee.designation_id == d.id)
+        count_result = await session.execute(count_stmt)
+        designation_counts[d.name] = len(count_result.scalars().all())
+
+    return {
+        "employees": employee_list,
+        "total_count": total_count,
+        "designation_counts": designation_counts
+    }
 
 
 @router.get("/superadmin-info")
