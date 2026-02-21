@@ -1,6 +1,5 @@
 import CustomeTab from '@common/CustomeTab'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import calender from '@assets/header-icons/calender.svg'
 import { useState } from 'react'
 import MemberAttendance from './MemberAttendance'
 import EmployeeAttendance from './EmployeeAttendance'
@@ -83,7 +82,7 @@ const Attendance = () => {
       {activeTab === 'Employees' && (
         <EmployeeAttendance
           categoryId={selectedCategoryId}
-           dateRange={formatRange(dateRanges.Employees)}
+          dateRange={formatRange(dateRanges.Employees)}
         />
       )}
       <AddEmployeeAttendance

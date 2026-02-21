@@ -22,12 +22,10 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
-  //   console.log('employeeData: ', employeeData)
   const { mutateAsync: createEmployee, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateEmployee, isPending: updatePending } =
     useUpdateEmployeeMutation()
   const [categoryOpen, setCategoryOpen] = useState(false)
-  //   console.log('state?.auth?.center_id: ', state?.auth?.center_id)
 
   const initialValues = {
     full_name: employeeData?.full_name || '',
@@ -53,13 +51,16 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     enableReinitialize: true,
     onSubmit: async values => {
       const fd = new FormData()
+      // Append all fields except profile_photo
       Object.entries(values).forEach(([key, value]) => {
-        if (values.profile_photo)
-          fd.append('profile_photo', values.profile_photo)
-        if (value !== undefined && value !== null) {
+        if (key !== 'profile_photo' && value !== undefined && value !== null) {
           fd.append(key, value)
         }
       })
+      // Append file only once
+      if (values.profile_photo) {
+        fd.append('profile_photo', values.profile_photo)
+      }
       try {
         if (id) {
           await updateEmployee({ id, ...values })
@@ -74,7 +75,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   })
 
   const handleSelect = id => {
-    formik.setFieldValue('designation_id', id)
+    formik.setFieldValue('designation_id', id, true)
+    // third argument = shouldValidate (IMPORTANT)
+    formik.setFieldTouched('designation_id', true, false)
   }
 
   return (
@@ -110,6 +113,11 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 </label>
               )}
             </div>
+            {formik.touched.designation_id && formik.errors.designation_id && (
+              <div className='text-xs text-red-500 mt-1'>
+                {formik.errors.designation_id}
+              </div>
+            )}{' '}
           </div>
 
           <div className='flex gap-4'>
@@ -119,7 +127,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 name='full_name'
                 value={formik.values.full_name}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={formik.touched.full_name && formik.errors.full_name}
                 placeholder='Enter Your Full Name'
               />
@@ -130,7 +138,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 name='email'
                 value={formik.values.email}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={formik.touched.email && formik.errors.email}
                 placeholder='Enter Your Email ID'
               />
@@ -143,7 +151,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 name='mobile'
                 value={formik.values.mobile}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={formik.touched.mobile && formik.errors.mobile}
                 placeholder='Enter Your Mobile Number'
               />
@@ -221,25 +229,18 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 type='password'
                 value={formik.values.password}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={formik.touched.password && formik.errors.password}
               />
             </div>
             <div className='flex-1'>
-              {/* <InputFile
-                label='Upload Image'
-                name='profile_photo'
-                onChange={e => {
-                  formik.setFieldValue('profile_photo', e.target.value)
-                }}
-              /> */}
               <InputFile
                 label='Upload Image'
                 name='profile_photo'
                 value={formik.values.profile_photo}
                 onChange={e => {
-                  formik.setFieldValue('profile_photo', e.target.value)
-                  formik.setFieldTouched('profile_photo', true, false)
+                  const file = e.target.files[0]
+                  formik.setFieldValue('profile_photo', file)
                 }}
                 onRemove={() => {
                   formik.setFieldValue('profile_photo', null)

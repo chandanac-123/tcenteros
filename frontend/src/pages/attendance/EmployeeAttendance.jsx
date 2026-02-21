@@ -1,6 +1,8 @@
 import { DataTable } from '@common/DataTable'
 import { useEffect, useState } from 'react'
-import { useAllEmployeesAttendanceQuery } from '@api-queries/attendance/Query'
+import deleteicon from '@assets/form-icons/delete.svg'
+import { useAllEmployeesAttendanceQuery ,useDeleteAttendanceMutation} from '@api-queries/attendance/Query'
+import DeleteModal from '@common/CustomeDelete'
 
 const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
@@ -10,6 +12,8 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
     from: null,
     to: null
   })
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
 
   useEffect(() => {
     setTableParams(prev => ({
@@ -30,6 +34,7 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
 
   const { data: employees, isLoading: isEmployeesLoading } =
     useAllEmployeesAttendanceQuery(tableParams)
+  const { mutate: deleteAttendance } = useDeleteAttendanceMutation()
 
   const columns = [
     {
@@ -56,8 +61,35 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
     {
       accessorKey: 'duration',
       header: 'Duration'
+    },
+    {
+      header: 'Actions',
+      accessorKey: 'status',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          <button
+            onClick={() => {
+              setDeleteId(row.original.id)
+              setDeleteOpen(true)
+            }}
+          >
+            <img src={deleteicon} alt='delete' />
+          </button>
+        </span>
+      )
     }
   ]
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteAttendance(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
+  }
 
   return (
     <>
@@ -69,6 +101,13 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
         pagination={employees}
         loading={isEmployeesLoading}
         paginationVisibile={true}
+      />
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Attendance Record'
+        description='Are you sure you want to delete this attendance record?'
+        onConfirm={handleDelete}
       />
     </>
   )

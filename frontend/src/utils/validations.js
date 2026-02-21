@@ -52,10 +52,9 @@ export const membershipValidationSchema = Yup.object().shape({
     .required('Membership name is required')
     .min(2, 'Name must be at least 2 characters'),
   duration_count: Yup.number()
-    .required('Duration count is required')
+    .required('Duration required')
     .positive('Duration must be positive')
     .integer('Duration must be a whole number'),
-  duration_unit: Yup.string().required('Duration unit is required'),
   default_price: Yup.number()
     .required('Price is required')
     .positive('Price must be positive'),

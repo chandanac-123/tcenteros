@@ -10,6 +10,7 @@ import {
   usePlanGetByIdQuery
 } from '@api-queries/membership-plan/Query'
 import { membershipValidationSchema } from '@utils/validations'
+import { Checkbox } from '@pages/components/ui/checkbox'
 
 const CreateMembershipForm = ({ open, setOpen, editId }) => {
   const { data: planData } = usePlanGetByIdQuery(editId, {
@@ -26,7 +27,8 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
     duration_unit: planData?.duration_unit || 'month',
     default_price: planData?.default_price || '',
     description: planData?.description || '',
-    membership_features: planData?.membership_features?.map(f => f.feature_name) || []
+    membership_features:
+      planData?.membership_features?.map(f => f.feature_name) || []
   }
 
   const formik = useFormik({
@@ -100,7 +102,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 placeholder='Enter membership name'
                 value={formik.values.membership_name}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={
                   formik.touched.membership_name &&
                   formik.errors.membership_name
@@ -121,7 +123,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                     placeholder='Enter value'
                     value={formik.values.duration_count}
                     onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    // onBlur={formik.handleBlur}
                     error={
                       formik.touched.duration_count &&
                       formik.errors.duration_count
@@ -152,14 +154,14 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 step='0.01'
                 value={formik.values.default_price}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                // onBlur={formik.handleBlur}
                 error={
                   formik.touched.default_price && formik.errors.default_price
                 }
               />
             </div>
-            <div className='flex-1'>
-              {/* <InputFile label='Upload Image' onChange={handleImageChange} /> */}
+            <div className='flex-1 flex items-center gap-2 justify-end'>
+              <Checkbox checked={true} /> Networking
             </div>
           </div>
 

@@ -36,7 +36,7 @@ const handleClear = e => {
   }, [])
 
   return (
-    <div ref={wrapperRef} className='relative w-32'>
+    <div ref={wrapperRef} className='relative w-36'>
       {/* Input Box */}
       <div
         onClick={() => setOpen(true)}
