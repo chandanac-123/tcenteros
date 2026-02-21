@@ -27,6 +27,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
     duration_unit: planData?.duration_unit || 'month',
     default_price: planData?.default_price || '',
     description: planData?.description || '',
+    network_enabled: planData?.network_enabled || false,
     membership_features:
       planData?.membership_features?.map(f => f.feature_name) || []
   }
@@ -45,7 +46,8 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
           default_price: parseFloat(values.default_price),
           membership_features: values.membership_features.filter(
             f => f.trim() !== ''
-          )
+          ),
+          network_enabled: values.network_enabled
         }
         if (planData?.id) {
           await updatePlan({ id: planData.id, ...payload })
@@ -160,15 +162,15 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 }
               />
             </div>
-            
+
             <div className='flex-1 justify-end flex items-end'>
-              <div
-                className=' border border-gray-300 rounded-md p-2 flex  items-center gap-2 h-9 cursor-pointer'
-                onClick={() =>
-                  formik.setFieldValue('networking', !formik.values.networking)
-                }
-              >
-                <Checkbox checked={formik.values.networking} />
+              <div className='border border-gray-300 rounded-md p-2 flex items-center gap-2 h-9'>
+                <Checkbox
+                  checked={!!formik.values.network_enabled}
+                  onCheckedChange={val =>
+                    formik.setFieldValue('network_enabled', !!val)
+                  }
+                />
                 <span className='text-sm text-textblack'>Networking</span>
               </div>
             </div>
