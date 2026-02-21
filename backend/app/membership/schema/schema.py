@@ -17,6 +17,7 @@ class MembershipCreate(BaseModel):
     duration_unit: str  # likely an Enum: "day", "month", "year", etc.
     default_price: float
     membership_features: List[str]  # List of feature names
+    network_enabled: Optional[bool] = False
 
 
 class MembershipFeatureOut(BaseModel):
@@ -34,6 +35,7 @@ class MembershipOut(BaseModel):
     duration_unit: str
     default_price: float
     status: str
+    network_enabled: bool
     membership_features: List[MembershipFeatureOut]
 
 

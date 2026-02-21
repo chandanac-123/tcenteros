@@ -30,7 +30,6 @@ async def create_membership_plan(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    # 1. Get user and center
     user = await db.get(User, current_user["user_id"])
     if not user or user.role != "centeradmin":
         raise HTTPException(status_code=403, detail="Not a center admin")
@@ -41,10 +40,8 @@ async def create_membership_plan(
     if not center_id:
         raise HTTPException(status_code=403, detail="CenterAdmin record not found or no center assigned")
 
-    # 2. Generate unique membership_code (e.g., centerid + random 4 digits)
     membership_code = f"{str(center_id)[:8].upper()}-{randint(1000, 9999)}"
 
-    # 3. Create the membership
     membership = Membership(
         membership_id=uuid4(),
         center_id=center_id,
@@ -55,13 +52,13 @@ async def create_membership_plan(
         duration_unit=payload.duration_unit,
         default_price=payload.default_price,
         status=StatusEnum.active,
+        network_enabled=payload.network_enabled if hasattr(payload, "network_enabled") else False,
         created_by=user.id,
         updated_by=user.id,
     )
     db.add(membership)
     await db.flush()
 
-    # 4. Add membership features (only for this center)
     features = []
     for feature_name in payload.membership_features:
         feat = MembershipFeature(
@@ -87,6 +84,7 @@ async def create_membership_plan(
         duration_unit=membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
         default_price=float(membership.default_price),
         status=membership.status.value,
+        network_enabled=membership.network_enabled,
         membership_features=[
             MembershipFeatureOut(
                 id=str(feat.id),
@@ -95,6 +93,8 @@ async def create_membership_plan(
             ) for feat in features
         ]
     )
+
+
 
 # #List Membership Plans (superadmin, centeradmin, member)
 @router.get("/memberships-plans", response_model=List[MembershipOut])
@@ -134,6 +134,7 @@ async def list_membership_plans(
             duration_unit=m.duration_unit.value if hasattr(m.duration_unit, "value") else m.duration_unit,
             default_price=float(m.default_price),
             status=m.status.value,
+            network_enabled=m.network_enabled,
             membership_features=[
                 MembershipFeatureOut(
                     id=str(f.id),
@@ -170,6 +171,7 @@ async def get_membership_plan(
             duration_unit=membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
             default_price=float(membership.default_price),
             status=membership.status.value,
+            network_enabled=membership.network_enabled,
             membership_features=[
                 MembershipFeatureOut(
                     id=str(f.id),
@@ -201,18 +203,21 @@ async def update_membership_plan(
     membership.updated_by = current_user["user_id"]
     membership.updated_at = datetime.utcnow()
 
-    # Update features: remove old, add new
-    # Remove all existing features
-    for f in list(membership.membership_features):
-        await db.delete(f)
+    # Remove all existing features (async-safe)
+    await db.execute(
+        MembershipFeature.__table__.delete().where(
+            MembershipFeature.membership_id == membership.membership_id
+        )
+    )
     await db.flush()
+
     # Add new features
     features = []
-    for feature in payload.membership_features:
+    for feature_name in payload.membership_features:
         feat = MembershipFeature(
             membership_id=membership.membership_id,
-            feature_name=feature.feature_name,
-            feature_description=feature.feature_description,
+            feature_name=feature_name,
+            feature_description=None,
             created_by=current_user["user_id"],
             updated_by=current_user["user_id"],
         )
@@ -221,18 +226,27 @@ async def update_membership_plan(
 
     await db.commit()
     await db.refresh(membership)
+
+    # Query features again to get their IDs (if needed)
+    result = await db.execute(
+        select(MembershipFeature).where(MembershipFeature.membership_id == membership.membership_id)
+    )
+    features = result.scalars().all()
+
     return MembershipOut(
-        membership_id=membership.membership_id,
-        center_id=membership.center_id,
+        membership_id=str(membership.membership_id),
+        center_id=str(membership.center_id),
         membership_name=membership.membership_name,
         membership_code=membership.membership_code,
         description=membership.description,
-        duration=membership.duration,
+        duration_count=membership.duration_count,
+        duration_unit=membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit,
         default_price=float(membership.default_price),
         status=membership.status.value,
+        network_enabled=membership.network_enabled,
         membership_features=[
             MembershipFeatureOut(
-                id=f.id,
+                id=str(f.id),
                 feature_name=f.feature_name,
                 feature_description=f.feature_description
             ) for f in features

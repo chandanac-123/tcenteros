@@ -38,6 +38,7 @@ class Membership(Base, AuditMixin):
     duration_count = Column(Integer, nullable=False)  
     duration_unit = Column(Enum(DurationUnitEnum), nullable=False)
     default_price = Column(Numeric(10, 2), nullable=False)
+    network_enabled = Column(Boolean, nullable=False, default=False)
     status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
