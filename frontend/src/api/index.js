@@ -108,17 +108,36 @@ export const getAllEmployeesApiCall = () =>
   axiosInstance.get(`auth/centeradmin/employees`)
 export const createAttendanceApiCall = details =>
   axiosInstance.post('/attendance/centeradmin/attendance/add', details)
-export const getAllMemberAttendanceApiCall = data =>
-  axiosInstance.get(
-    `attendance/centeradmin/attendance/list?page=${data?.page || 1}&page_size=${
-      data?.pageSize || 10
-    }&role=member`
-  )
-export const getAllEmployeeAttendanceApiCall = (data, id) =>
-  axiosInstance.get(
-    `attendance/centeradmin/attendance/list?page=${data?.page || 1}&page_size=${
-      data?.pageSize || 10
-    }&role=employee&employee_designation=${id || ''}`
-  )
+export const getAllMemberAttendanceApiCall = data => {
+  const params = {
+    page: data?.page || 1,
+    page_size: data?.pageSize || 10,
+    role: 'member'
+  }
+  if (data?.from) {
+    params.date_from = data.from
+  }
+  if (data?.to) {
+    params.date_to = data.to
+  }
+  return axiosInstance.get('attendance/centeradmin/attendance/list', { params })
+}
+export const getAllEmployeeAttendanceApiCall = data => {
+  const params = {
+    page: data?.page || 1,
+    page_size: data?.pageSize || 10,
+    role: 'employee'
+  }
+  if (data?.categoryId) {
+    params.employee_designation = data.categoryId
+  }
+  if (data?.from) {
+    params.date_from = data.from
+  }
+  if (data?.to) {
+    params.date_to = data.to
+  }
+  return axiosInstance.get('attendance/centeradmin/attendance/list', { params })
+}
 export const deleteAttendanceApiCall = id =>
   axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)

@@ -34,17 +34,17 @@ export const useCreateAttendanceMutation = () => {
 
 export const useAllMemberAttendanceQuery = data => {
   return useQuery({
-    queryKey: ['attendance'],
+    queryKey: ['member-attendance', data], // 🔥 include data in key
     queryFn: () => getAllMemberAttendance(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
 
-export const useAllEmployeesAttendanceQuery = (data, id) => {
+export const useAllEmployeesAttendanceQuery = (data) => {
   return useQuery({
-    queryKey: ['attendance', data, id], // 🔥 include id
-    queryFn: () => getAllEmployeeAttendance(data, id),
+    queryKey: ['employee-attendance', data],
+    queryFn: () => getAllEmployeeAttendance(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

@@ -33,9 +33,9 @@ export const getAllMemberAttendance = async details => {
   }
 }
 
-export const getAllEmployeeAttendance = async (details, id) => {
+export const getAllEmployeeAttendance = async (details) => {
   try {
-    const response = await getAllEmployeeAttendanceApiCall(details, id)
+    const response = await getAllEmployeeAttendanceApiCall(details)
     return response.data
   } catch (error) {
     throw error

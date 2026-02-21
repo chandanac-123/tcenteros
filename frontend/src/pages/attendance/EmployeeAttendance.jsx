@@ -2,17 +2,34 @@ import { DataTable } from '@common/DataTable'
 import { useEffect, useState } from 'react'
 import { useAllEmployeesAttendanceQuery } from '@api-queries/attendance/Query'
 
-const EmployeeAttendance = ({ categoryId }) => {
+const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    search: ''
+    search: '',
+    categoryId: null,
+    from: null,
+    to: null
   })
-  const { data: employees, isLoading: isEmployeesLoading } =
-    useAllEmployeesAttendanceQuery(tableParams, categoryId)
 
   useEffect(() => {
-    setTableParams(prev => ({ ...prev, page: 1 }))
+    setTableParams(prev => ({
+      ...prev,
+      categoryId,
+      page: 1
+    }))
   }, [categoryId])
+
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      from: dateRange?.from,
+      to: dateRange?.to,
+      page: 1
+    }))
+  }, [dateRange])
+
+  const { data: employees, isLoading: isEmployeesLoading } =
+    useAllEmployeesAttendanceQuery(tableParams)
 
   const columns = [
     {

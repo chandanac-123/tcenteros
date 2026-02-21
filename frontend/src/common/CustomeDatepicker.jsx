@@ -14,38 +14,86 @@ const CustomDatePicker = ({
   value,
   onChange,
   error,
-  pickerType = 'date' // 🔥 new prop
+  pickerType = 'date' // default = single date
 }) => {
   const [open, setOpen] = useState(false)
 
-  const [date, setDate] = useState(value ? new Date(value) : null)
-  const [startYear, setStartYear] = useState(new Date().getFullYear() - 4)
-  useEffect(() => {
-    setDate(value ? new Date(value) : null)
-  }, [value])
+  // 🔥 State handling for all modes
+  const [date, setDate] = useState(() => {
+    if (pickerType === 'range') {
+      return {
+        from: value?.from ? new Date(value.from) : null,
+        to: value?.to ? new Date(value.to) : null
+      }
+    }
+    return value ? new Date(value) : null
+  })
 
-  const handleSelect = selectedDate => {
-    if (!selectedDate) return
+  const [startYear, setStartYear] = useState(new Date().getFullYear() - 4)
+
+  // 🔥 Sync with external value
+  useEffect(() => {
+    if (pickerType === 'range') {
+      setDate({
+        from: value?.from ? new Date(value.from) : null,
+        to: value?.to ? new Date(value.to) : null
+      })
+    } else {
+      setDate(value ? new Date(value) : null)
+    }
+  }, [value, pickerType])
+
+  // 🔥 Handle Select
+  const handleSelect = selected => {
+    if (!selected) return
 
     if (pickerType === 'year') {
-      const year = selectedDate.getFullYear()
+      const year = selected.getFullYear()
       const firstDayOfYear = new Date(year, 0, 1)
       setDate(firstDayOfYear)
       onChange?.(year)
-    } else {
-      setDate(selectedDate)
-      onChange?.(selectedDate)
+      setOpen(false)
+      return
     }
 
-    setOpen(false) // 🔥 close popover
+    // ✅ FIXED RANGE LOGIC
+    if (pickerType === 'range') {
+      setDate(selected)
+      onChange?.(selected)
+
+      // close only when both dates selected AND they are different
+      if (selected?.from && selected?.to) {
+        if (selected.from.getTime() !== selected.to.getTime()) {
+          setOpen(false)
+        }
+      }
+      return
+    }
+    // single date
+    setDate(selected)
+    onChange?.(selected)
+    setOpen(false)
   }
 
+  // 🔥 Clear
   const handleClear = () => {
-    setDate(null)
-    onChange?.(null)
+    if (pickerType === 'range') {
+      const cleared = { from: null, to: null }
+      setDate(cleared)
+      onChange?.(cleared)
+    } else {
+      setDate(null)
+      onChange?.(null)
+    }
   }
 
+  // 🔥 Display Value
   const displayValue = () => {
+    if (pickerType === 'range') {
+      if (!date?.from) return 'Pick date range'
+      if (!date?.to) return `${format(date.from, 'PPP')} - ...`
+      return `${format(date.from, 'PPP')} - ${format(date.to, 'PPP')}`
+    }
     if (!date) return pickerType === 'year' ? 'Year' : 'Pick a date'
     return pickerType === 'year' ? format(date, 'yyyy') : format(date, 'PPP')
   }
@@ -57,23 +105,27 @@ const CustomDatePicker = ({
           {label}
         </label>
       )}
-
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild onClick={() => setOpen(true)}>
-          <div className='relative cursor-pointer'>
+        <PopoverTrigger asChild>
+          <div
+            className='relative cursor-pointer'
+            onClick={() => setOpen(true)}
+          >
             <CalendarIcon
               size={18}
               className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'
             />
-
             <div className='flex items-center justify-between border border-gray-300 rounded-md pl-9 pr-3 py-2 bg-white shadow-sm'>
               <span
-                className={`text-sm ${date ? 'text-black' : 'text-gray-400'}`}
+                className={`text-sm ${
+                  date && (pickerType !== 'range' || date?.from)
+                    ? 'text-black'
+                    : 'text-gray-400'
+                }`}
               >
                 {displayValue()}
               </span>
-
-              {date && (
+              {(pickerType === 'range' ? date?.from || date?.to : date) && (
                 <X
                   size={16}
                   onClick={e => {
@@ -90,7 +142,7 @@ const CustomDatePicker = ({
         <PopoverContent className='w-64 p-4' align='start'>
           {pickerType === 'year' ? (
             <>
-              {/* Header with Arrows */}
+              {/* Year Header */}
               <div className='flex justify-between items-center mb-3'>
                 <ChevronLeft
                   className='cursor-pointer'
@@ -109,7 +161,6 @@ const CustomDatePicker = ({
               <div className='grid grid-cols-3 gap-2'>
                 {Array.from({ length: 9 }, (_, i) => {
                   const year = startYear + i
-
                   return (
                     <div
                       key={year}
@@ -117,14 +168,14 @@ const CustomDatePicker = ({
                         const selectedDate = new Date(year, 0, 1)
                         setDate(selectedDate)
                         onChange?.(year)
-                        setOpen(false) // 🔥 close popover
+                        setOpen(false)
                       }}
                       className={`px-3 py-2 text-sm rounded-md cursor-pointer text-center
-                ${
-                  date?.getFullYear() === year
-                    ? 'bg-primary text-white'
-                    : 'hover:bg-gray-100'
-                }`}
+                        ${
+                          date?.getFullYear?.() === year
+                            ? 'bg-primary text-white'
+                            : 'hover:bg-gray-100'
+                        }`}
                     >
                       {year}
                     </div>
@@ -134,10 +185,14 @@ const CustomDatePicker = ({
             </>
           ) : (
             <Calendar
-              mode='single'
+              mode={pickerType === 'range' ? 'range' : 'single'}
               selected={date}
               onSelect={handleSelect}
-              defaultMonth={date}
+              defaultMonth={
+                pickerType === 'range'
+                  ? date?.from || new Date()
+                  : date || new Date()
+              }
             />
           )}
         </PopoverContent>

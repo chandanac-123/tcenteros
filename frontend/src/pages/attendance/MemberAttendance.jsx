@@ -1,21 +1,32 @@
 import { DataTable } from '@common/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
 import {
   useAllMemberAttendanceQuery,
   useDeleteAttendanceMutation
 } from '@api-queries/attendance/Query'
 
-const MemberAttendance = () => {
+const MemberAttendance = ({ dateRange }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
+    from: null,
+    to: null
   })
   const { data: members, isLoading: isMembersLoading } =
-    useAllMemberAttendanceQuery()
+    useAllMemberAttendanceQuery(tableParams)
   const { mutate: deleteAttendance } = useDeleteAttendanceMutation()
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+
+   useEffect(() => {
+      setTableParams(prev => ({
+        ...prev,
+        from: dateRange?.from,
+        to: dateRange?.to,
+        page: 1
+      }))
+    }, [dateRange])
 
   const columns = [
     {
@@ -51,7 +62,7 @@ const MemberAttendance = () => {
           >
             <img src={deleteicon} alt='delete' />
           </button>
-          </span>
+        </span>
       )
     }
   ]
