@@ -160,8 +160,17 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 }
               />
             </div>
-            <div className='flex-1 flex items-center gap-2 justify-end'>
-              <Checkbox checked={true} /> Networking
+            
+            <div className='flex-1 justify-end flex items-end'>
+              <div
+                className=' border border-gray-300 rounded-md p-2 flex  items-center gap-2 h-9 cursor-pointer'
+                onClick={() =>
+                  formik.setFieldValue('networking', !formik.values.networking)
+                }
+              >
+                <Checkbox checked={formik.values.networking} />
+                <span className='text-sm text-textblack'>Networking</span>
+              </div>
             </div>
           </div>
 
