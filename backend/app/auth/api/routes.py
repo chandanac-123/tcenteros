@@ -790,6 +790,8 @@ async def list_employees(
         designation_counts[d.name] = len(count_result.scalars().all())
 
     return {
+        "page": page,
+        "page_size": page_size,
         "total_count": total_count,
         "designation_counts": designation_counts,
         "employees": employee_list
