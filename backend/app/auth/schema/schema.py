@@ -131,12 +131,9 @@ class CenterAdminForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 class CenterAdminVerifyOtpIn(BaseModel):
-    email: EmailStr
     otp: str
 
 #Set New Password
-class CenterAdminSetPasswordIn(BaseModel):
-    email: EmailStr
-    otp: str
-    password: constr(min_length=8)
-    confirm_password: constr(min_length=8)
+class CenterAdminSetPasswordOnlyIn(BaseModel):
+    password: str
+    confirm_password: str

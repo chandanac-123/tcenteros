@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from app.auth.models.models import User
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
-from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, EmployeeOut, TimeSlotOut, AddressOut, CenterAdminChangePasswordIn, CenterAdminForgotPasswordRequest, CenterAdminVerifyOtpIn,  CenterAdminSetPasswordIn
+from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, EmployeeOut, TimeSlotOut, AddressOut, CenterAdminChangePasswordIn, CenterAdminForgotPasswordRequest, CenterAdminVerifyOtpIn,  CenterAdminSetPasswordOnlyIn
 from app.core.dependencies import superadmin_required
 from app.auth.models.models import Member, Employee
 from app.center.models.models import Center, CenterTimeSlot
@@ -820,64 +820,63 @@ async def centeradmin_change_password(
 #`-------------------------------------------`
 
 #Request OTP (send to email)
-# Store OTPs in memory for demo (use Redis or DB in production)
-centeradmin_otp_store = {}
+# In-memory stores for demo
+centeradmin_otp_store = {}         # email: otp
+centeradmin_verified_email = None  # Store the email of the last OTP-verified user
 
+# 1. Request OTP
 @router.post("/centeradmin/forgot-password/request-otp")
 async def centeradmin_forgot_password_request_otp(
     payload: CenterAdminForgotPasswordRequest,
     session: AsyncSession = Depends(get_async_session)
 ):
     from app.auth.models.models import CenterAdmin
-
     result = await session.execute(
         select(CenterAdmin).where(CenterAdmin.email == payload.email)
     )
     admin = result.scalar_one_or_none()
     if not admin:
         raise HTTPException(status_code=404, detail="Center admin not found")
-
-    # In production, send OTP to email here
-    centeradmin_otp_store[payload.email] = "000000"
+    otp = "000000"  # In production, generate a random OTP
+    centeradmin_otp_store[payload.email] = otp
     return {"detail": "OTP sent to email (always 000000 in dev mode)"}
 
-
-#. Verify OTP
+# 2. Verify OTP
 @router.post("/centeradmin/forgot-password/verify-otp")
 async def centeradmin_forgot_password_verify_otp(
     payload: CenterAdminVerifyOtpIn
 ):
-    otp = centeradmin_otp_store.get(payload.email)
-    if not otp or payload.otp != otp:
+    global centeradmin_verified_email
+    # Find email by OTP
+    email = next((e for e, o in centeradmin_otp_store.items() if o == payload.otp), None)
+    if not email:
         raise HTTPException(status_code=400, detail="Invalid OTP")
-    # Mark as verified (could set a flag or just allow next step)
+    centeradmin_verified_email = email
     return {"detail": "OTP verified. You can now set a new password."}
 
-
+# 3. Set Password
 @router.post("/centeradmin/forgot-password/set-password")
 async def centeradmin_forgot_password_set_password(
-    payload: CenterAdminSetPasswordIn,
+    payload: CenterAdminSetPasswordOnlyIn,
     session: AsyncSession = Depends(get_async_session)
 ):
-    from app.auth.models.models import CenterAdmin
-    from app.core.security import get_password_hash
-
-    otp = centeradmin_otp_store.get(payload.email)
-    if not otp or payload.otp != otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
+    global centeradmin_verified_email
+    if not centeradmin_verified_email:
+        raise HTTPException(status_code=400, detail="No OTP verified for password reset")
     if payload.password != payload.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
-
+    from app.auth.models.models import CenterAdmin
+    from app.core.security import get_password_hash
     result = await session.execute(
-        select(CenterAdmin).where(CenterAdmin.email == payload.email)
+        select(CenterAdmin).where(CenterAdmin.email == centeradmin_verified_email)
     )
     admin = result.scalar_one_or_none()
     if not admin:
         raise HTTPException(status_code=404, detail="Center admin not found")
-
     admin.password_hash = get_password_hash(payload.password)
     admin.updated_at = datetime.utcnow()
     await session.commit()
-    # Optionally, remove OTP after use
-    centeradmin_otp_store.pop(payload.email, None)
+    # Clean up
+    centeradmin_otp_store.pop(centeradmin_verified_email, None)
+    centeradmin_verified_email = None
     return {"detail": "Password has been reset successfully."}
