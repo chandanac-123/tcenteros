@@ -115,7 +115,9 @@ class EmployeeOut(BaseModel):
     class Config:
         from_attributes = True
 
-
+#employee multiple delete request schema
+class EmployeeDeleteRequest(BaseModel):
+    employee_ids: list[str]
 
 #set password
 
@@ -137,3 +139,5 @@ class CenterAdminVerifyOtpIn(BaseModel):
 class CenterAdminSetPasswordOnlyIn(BaseModel):
     password: str
     confirm_password: str
+
+

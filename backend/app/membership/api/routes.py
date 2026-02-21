@@ -99,27 +99,31 @@ async def create_membership_plan(
 # #List Membership Plans (superadmin, centeradmin, member)
 @router.get("/memberships-plans", response_model=List[MembershipOut])
 async def list_membership_plans(
+    status: str = Query(None, pattern="^(active|inactive)$"),
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user)
 ):
     from app.auth.models.models import CenterAdmin, Member
+    from app.core.models.models import StatusEnum
 
     role = current_user["role"]
     query = select(Membership).options(selectinload(Membership.membership_features))
 
     if role == "centeradmin":
-        # Get center_id for this centeradmin
         center_admin = await db.get(CenterAdmin, current_user["user_id"])
         if not center_admin:
             raise HTTPException(status_code=403, detail="Not a center admin")
         query = query.where(Membership.center_id == center_admin.center_id)
     elif role == "member":
-        # Get home_center_id for this member
         member = await db.get(Member, current_user["user_id"])
         if not member:
             raise HTTPException(status_code=403, detail="Not a member")
         query = query.where(Membership.center_id == member.home_center_id)
     # else: superadmin or other roles get all
+
+    if status:
+        # Convert string to enum for correct comparison
+        query = query.where(Membership.status == StatusEnum[status])
 
     result = await db.execute(query)
     memberships = result.scalars().all()
@@ -145,6 +149,7 @@ async def list_membership_plans(
         )
         for m in memberships
     ]
+
 
 # # #Get Membership Plan by ID (superadmin, centeradmin, member)
 @router.get("/memberships-plans/{membership_id}", response_model=MembershipOut)
@@ -288,10 +293,6 @@ async def set_membership_plan_status(
     await db.commit()
     await db.refresh(membership)
     return {"detail": f"Membership plan status set to {status}"}
-
-
-
-
 
 
 

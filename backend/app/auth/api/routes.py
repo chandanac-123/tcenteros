@@ -1,9 +1,9 @@
 
-from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException, Depends, Form, status
+from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException, Depends, Form, status, Path
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
-from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse
+from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, EmployeeDeleteRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.auth.models.models import User
@@ -128,6 +128,7 @@ async def request_otp(data: OTPRequest, session: AsyncSession = Depends(get_asyn
         await session.refresh(new_member)
     otp_store[data.phone] = "0000"
     return {"detail": "OTP sent to phone (always 0000 in dev mode)"}
+
 
 @router.post("/member/login/verify-otp", response_model=MemberLoginResponse)
 async def verify_otp(data: OTPVerify, session: AsyncSession = Depends(get_async_session)):
@@ -688,17 +689,17 @@ async def update_employee(
     )
 
 
-@router.delete("/employee/{employee_id}")
-async def delete_employee(
-    employee_id: str,
-    session: AsyncSession = Depends(get_async_session)
-):
-    emp = await session.get(Employee, employee_id)
-    if not emp:
-        raise HTTPException(404, "Employee not found")
-    await session.delete(emp)
-    await session.commit()
-    return {"detail": "Employee deleted"}
+# @router.delete("/employee/{employee_id}")
+# async def delete_employee(
+#     employee_id: str,
+#     session: AsyncSession = Depends(get_async_session)
+# ):
+#     emp = await session.get(Employee, employee_id)
+#     if not emp:
+#         raise HTTPException(404, "Employee not found")
+#     await session.delete(emp)
+#     await session.commit()
+#     return {"detail": "Employee deleted"}
 
 
 @router.get("/employee")
@@ -798,7 +799,68 @@ async def list_employees(
         
     }
 
+#Centeradmin: Activate/Deactivate Employee Status
+@router.patch("/employee/{employee_id}/status")
+async def set_employee_status(
+    employee_id: str = Path(..., description="Employee ID"),
+    status: str = Query(..., pattern="^(active|inactive|suspended)$"),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    emp = await session.get(Employee, employee_id)
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    # Ensure centeradmin can only update employees in their center
+    if emp.center_id != current_admin["center_id"]:
+        raise HTTPException(status_code=403, detail="Not allowed to update this employee")
+    emp.status = StatusEnum(status)
+    emp.updated_at = datetime.utcnow()
+    await session.commit()
+    await session.refresh(emp)
+    return {"detail": f"Employee status set to {status}"}
 
+
+
+
+
+#Delete Multiple Selected Employees
+@router.post("/employee/delete-multiple")
+async def delete_multiple_employees(
+    payload: EmployeeDeleteRequest,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Only delete employees belonging to the centeradmin's center
+    stmt = select(Employee).where(Employee.id.in_(payload.employee_ids), Employee.center_id == current_admin["center_id"])
+    result = await session.execute(stmt)
+    employees = result.scalars().all()
+    for emp in employees:
+        await session.delete(emp)
+    await session.commit()
+    return {"detail": f"Deleted {len(employees)} employees"}
+
+
+#Delete All Employees of Centeradmin's Center
+@router.delete("/employee/delete-all")
+async def delete_all_employees(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    stmt = select(Employee).where(Employee.center_id == current_admin["center_id"])
+    result = await session.execute(stmt)
+    employees = result.scalars().all()
+    count = 0
+    for emp in employees:
+        await session.delete(emp)
+        count += 1
+    await session.commit()
+    return {"detail": f"Deleted all {count} employees of your center"}
+
+
+
+
+
+#superadmin endpoint to list all search info (for analytics)
 @router.get("/superadmin-info")
 async def list_superadmin_info(
     session: AsyncSession = Depends(get_async_session),
