@@ -30,6 +30,7 @@ class SuperAdmin(User):
     __tablename__ = "superadmins"
     __table_args__ = {"schema": "auth"}
     id = Column(UUID(as_uuid=True), ForeignKey("shared.users.id", ondelete="CASCADE"), primary_key=True)
+    
     __mapper_args__ = {
         "polymorphic_identity": "superadmin",
     }

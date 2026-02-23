@@ -1,5 +1,6 @@
 # app/platforms/api/routes.py
 
+from app.auth.models.models import SuperAdmin
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,6 +10,7 @@ from app.platforms.schema.schema import (
     PlatformFeatureCreate, PlatformFeatureUpdate, PlatformFeatureOut
 )
 from app.core.dependencies import superadmin_required
+from app.core.models.models import User
 from app.core.database import get_async_session
 from app.core.dependencies import get_current_user  # Adjust import as needed
 
@@ -63,3 +65,34 @@ async def delete_feature(feature_id: UUID, db: AsyncSession = Depends(get_async_
     await db.commit()
     return {"detail": "Feature deleted"}
 
+
+
+#whatsapp number apis for superadmin
+@router.post("/create-whatsapp_number")
+async def create_whatsapp_number(
+    number: str,
+    db: AsyncSession = Depends(get_async_session),
+    user=Depends(get_current_user)
+):
+    if user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="Superadmin privileges required")
+    result = await db.execute(select(User).where(User.id == user["user_id"]))
+    superadmin_user = result.scalar_one_or_none()
+    if not superadmin_user:
+        raise HTTPException(status_code=404, detail="Superadmin not found")
+    if superadmin_user.whatsapp_number:
+        raise HTTPException(status_code=400, detail="WhatsApp number already exists")
+    superadmin_user.whatsapp_number = number
+    await db.commit()
+    return {"whatsapp_number": superadmin_user.whatsapp_number}
+
+@router.get("/superadmin/get-whatsapp_number")
+async def get_superadmin_whatsapp_number(
+    db: AsyncSession = Depends(get_async_session),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(select(User).where(User.role == "superadmin"))
+    superadmin_user = result.scalars().first()
+    if not superadmin_user:
+        raise HTTPException(status_code=404, detail="Superadmin not found")
+    return {"whatsapp_number": superadmin_user.whatsapp_number}

@@ -42,6 +42,7 @@ class User(Base, AuditMixin):
     email = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
     mobile = Column(String, nullable=True)
+    whatsapp_number = Column(String, nullable=True)
     profile_photo = Column(String, nullable=True)
     gender = Column(Enum(GenderEnum, name="gender_enum"), nullable=True)
 

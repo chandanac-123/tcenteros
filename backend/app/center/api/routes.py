@@ -14,7 +14,7 @@ from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlo
 from app.settings.models.models import CenterCategory,Designation, Address, TaxCategory, CenterOperationalSetting
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
-from app.auth.models.models import CenterAdmin, User, Employee
+from app.auth.models.models import CenterAdmin, Member, User, Employee
 from app.core.models.models import StatusEnum, SuperadminInfo
 from app.center.schema.schema import *
 from datetime import datetime
@@ -22,7 +22,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.core.database import get_async_session
 from uuid import uuid4
-from app.core.dependencies import centeradmin_required, get_db, get_current_user
+from app.core.dependencies import centeradmin_required, get_db, get_current_user, member_required
 from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
@@ -625,19 +625,20 @@ async def create_center_wallet(
     }
 
 #Get Center Wallet
-@router.get("/center/{center_id}/wallet")
-async def get_center_wallet(
-    center_id: str,
-    session: AsyncSession = Depends(get_async_session)
+@router.get("/center/wallet")
+async def get_my_center_wallet(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
 ):
-    wallet = await session.execute(
+    center_id = current_admin["center_id"]
+    wallet_result = await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == center_id)
     )
-    wallet = wallet.scalar_one_or_none()
+    wallet = wallet_result.scalar_one_or_none()
     if not wallet:
         raise HTTPException(404, "Wallet not found")
     return {
-        "center_id": center_id,
+        "center_id": str(center_id),
         "balance": float(wallet.balance),
         "deposit": float(wallet.deposit),
         "min_balance": float(wallet.min_balance),
@@ -659,35 +660,68 @@ async def get_platform_wallet(
 
 
 #List Wallet Transactions (Admin Only)
-@router.get("/center/{center_id}/wallet/transactions")
-async def list_wallet_transactions(
-    center_id: str,
-    session: AsyncSession = Depends(get_async_session)
+@router.get("/center/wallet/transactions")
+async def list_my_wallet_transactions(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
 ):
-    wallet = await session.execute(
+    center_id = current_admin["center_id"]
+    wallet_result = await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == center_id)
     )
-    wallet = wallet.scalar_one_or_none()
+    wallet = wallet_result.scalar_one_or_none()
     if not wallet:
         raise HTTPException(404, "Wallet not found")
-    txs = await session.execute(
+
+    txs_result = await session.execute(
         select(WalletTransaction)
-        .where((WalletTransaction.from_wallet_id == wallet.id) | (WalletTransaction.to_wallet_id == wallet.id))
+        .where(
+            (WalletTransaction.from_wallet_id == wallet.id) |
+            (WalletTransaction.to_wallet_id == wallet.id)
+        )
         .order_by(WalletTransaction.created_at.desc())
     )
-    return [
-        {
-            "id": str(tx.id),
-            "from_wallet_id": str(tx.from_wallet_id) if tx.from_wallet_id else None,
-            "to_wallet_id": str(tx.to_wallet_id) if tx.to_wallet_id else None,
-            "platform_wallet_id": str(tx.platform_wallet_id) if tx.platform_wallet_id else None,
-            "amount": float(tx.amount),
-            "transaction_type": tx.transaction_type,
-            "description": tx.description,
-            "created_at": tx.created_at
-        }
-        for tx in txs.scalars().all()
-    ]
+    txs = txs_result.scalars().all()
+
+    balance = float(wallet.balance)
+    tx_list = []
+    for tx in txs:
+        is_credit = tx.to_wallet_id == wallet.id
+        is_debit = tx.from_wallet_id == wallet.id
+        credit = float(tx.amount) if is_credit else None
+        debit = float(tx.amount) if is_debit else None
+
+        transaction_center = None
+        if is_credit and tx.from_wallet_id:
+            from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
+            if from_wallet:
+                from_center = await session.get(Center, from_wallet.center_id)
+                transaction_center = from_center.center_name if from_center else None
+        elif is_debit and tx.to_wallet_id:
+            to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
+            if to_wallet:
+                to_center = await session.get(Center, to_wallet.center_id)
+                transaction_center = to_center.center_name if to_center else None
+
+        tx_list.append({
+            "tax_id": str(tx.tax_id),  # <-- Include tax_id
+            "txn_id": str(tx.id),
+            "date": tx.created_at.strftime("%Y-%m-%d"),
+            "type": "Credit" if is_credit else "Debit",
+            "category": tx.transaction_type,
+            "transaction_center": transaction_center or "-",
+            "credit": f"₹{credit}" if credit else "-",
+            "debit": f"₹{debit}" if debit else "-",
+            "balance_after": f"₹{balance}",
+            "status": "Completed"
+        })
+
+        if is_credit:
+            balance -= float(tx.amount)
+        elif is_debit:
+            balance += float(tx.amount)
+
+    return tx_list
 
 
 @router.get("/center/me")
@@ -1269,3 +1303,67 @@ async def list_centers_by_location(
     # Sort by distance ascending
     centers_with_distance.sort(key=lambda x: x["distance_km"])
     return centers_with_distance
+
+
+
+#center admin whatsapp number apis
+@router.post("/whatsapp/set")
+async def set_whatsapp_number(
+    number: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    if current_user["role"] != "centeradmin":
+        raise HTTPException(status_code=403, detail="Only centeradmin can set WhatsApp number")
+    # Fetch the CenterAdmin to get center_id
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=404, detail="CenterAdmin not found")
+    center = await db.get(Center, center_admin.center_id)
+    if not center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    if center.whatsapp_number:
+        raise HTTPException(status_code=400, detail="WhatsApp number already set")
+    center.whatsapp_number = number
+    await db.commit()
+    return {"detail": "WhatsApp number set successfully"}
+
+
+
+@router.get("/center/whatsapp")
+async def get_center_whatsapp_number(
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    role = current_user["role"]
+    user_id = current_user["user_id"]
+
+    if role == "centeradmin":
+        # Get the center for the centeradmin
+        center_admin = await db.get(CenterAdmin, user_id)
+        if not center_admin:
+            raise HTTPException(status_code=404, detail="CenterAdmin not found")
+        center = await db.get(Center, center_admin.center_id)
+        if not center:
+            raise HTTPException(status_code=404, detail="Center not found")
+        return {
+            "whatsapp_number": center.whatsapp_number
+        }
+
+    elif role == "member":
+        # Get the member's center
+        member = await db.get(Member, user_id)
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
+        center = await db.get(Center, member.home_center_id)
+        if not center:
+            raise HTTPException(status_code=404, detail="Center not found")
+        return {
+            "whatsapp_number": center.whatsapp_number,
+            "center_phone": center.center_phone
+        }
+
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+

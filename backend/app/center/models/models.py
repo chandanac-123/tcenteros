@@ -76,6 +76,7 @@ class Center(Base, AuditMixin):
     contact_person = Column(String)
     center_email = Column(String)
     center_phone = Column(String)
+    whatsapp_number = Column(String, nullable=True)
     gst_number = Column(String, nullable=True)
     live_class_enable = Column(Boolean, default=False)
 
