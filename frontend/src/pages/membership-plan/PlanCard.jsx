@@ -9,7 +9,6 @@ import CreateMembershipForm from './CreateForm'
 import { useUpdatePlanStatusMutation } from '@api-queries/membership-plan/Query'
 
 const PlanCard = ({ data, colors }) => {
-  console.log('data: ', data);
   const [open, setOpen] = useState(false)
   const [editId, setEditId] = useState(null)
   const { mutateAsync: updateMembershipStatus, isPending: isStatusUpdating } =
@@ -26,16 +25,13 @@ const PlanCard = ({ data, colors }) => {
 
   const handleStatusChange = async value => {
     const newStatus = value ? 'active' : 'inactive'
+    setIsActive(value)
     try {
-      // Call your API mutation here
       await updateMembershipStatus({
-        membership_id: data.membership_id,
-        status: newStatus
+        id: data.membership_id,
+        data: { status: newStatus }
       })
     } catch (error) {
-      console.error('Failed to update status')
-
-      // revert switch if API fails
       setIsActive(!value)
     }
   }
@@ -73,12 +69,10 @@ const PlanCard = ({ data, colors }) => {
         </p>
 
         <hr className='my-4 border-textgrey' />
-
         <div className='mt-2 flex-1 overflow-y-auto'>
           <p className='text-sm text-grey_text leading-relaxed'>
             {data?.description}
           </p>
-
           <div className='mt-3 space-y-1'>
             {data?.membership_features?.map((item, index) => (
               <div key={index} className='flex items-center gap-2'>
@@ -94,34 +88,15 @@ const PlanCard = ({ data, colors }) => {
         {/* Push bottom to end */}
         <div className='mt-auto'>
           <hr className='my-5 border-gray-300' />
-
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <span className='text-primary font-medium'>Activate</span>
               <Switch
                 checked={isActive}
                 disabled={isStatusUpdating}
-                onCheckedChange={async value => {
-                  const newStatus = value ? 'active' : 'inactive'
-
-                  // Optimistic UI update
-                  setIsActive(value)
-
-                  try {
-                    await updateMembershipStatus({
-                      membership_id: data.membership_id,
-                      status: newStatus
-                    })
-                  } catch (error) {
-                    console.error('Status update failed')
-
-                    // Revert if API fails
-                    setIsActive(!value)
-                  }
-                }}
+                onCheckedChange={handleStatusChange}
               />
             </div>
-
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => {

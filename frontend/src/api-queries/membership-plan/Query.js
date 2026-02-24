@@ -78,8 +78,9 @@ export const useUpdatePlanStatusMutation = () => {
   return useMutation({
     mutationFn: ({ id, data }) => updateStatusPlan(data, id),
     onSuccess: async data => {
-      query.invalidateQueries('plans')
-      showSuccess('Plan updated successfully')
+      console.log('data: ', data.detail );
+      query.invalidateQueries({ queryKey: ['plans'] })
+      showSuccess(data.detail || 'Plan status updated successfully')
     },
     onError: err => {
       showError(err?.response?.data?.message || 'Failed to update plan')
