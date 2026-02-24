@@ -11,7 +11,7 @@ import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 import useTableSelection from '@common/UseTableSelection'
 
-const EmployeeTable = ({ data, tableParams, setTableParams ,pagination}) => {
+const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
   const { selectedIds, selectionColumn, setSelectedIds } =
     useTableSelection(data)
   const [viewopen, setViewOpen] = useState(false)
@@ -64,18 +64,23 @@ const EmployeeTable = ({ data, tableParams, setTableParams ,pagination}) => {
       header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => (
-        <span className='flex gap-3'>
-          <Badge
-            label={row.original.status.replace('_', ' ').toUpperCase()}
-            variant={statusVariantMap[row.original.status] || 'inactive'}
-          />
+        <Badge
+          label={row.original.status.replace('_', ' ').toUpperCase()}
+          variant={statusVariantMap[row.original.status] || 'inactive'}
+        />
+      )
+    },
+    {
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
           <button
             onClick={() => {
               setViewId(row.original.id)
               setViewOpen(true)
             }}
           >
-            <img src={view} alt='view' />
+            <img src={view} alt='view' className='w-6 h-6' />
           </button>
           <button
             onClick={() => {
@@ -83,7 +88,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams ,pagination}) => {
               setEditOpen(true)
             }}
           >
-            <img src={edit} alt='edit' />
+            <img src={edit} alt='edit' className='w-6 h-6' />
           </button>
           <button
             onClick={() => {
@@ -91,10 +96,10 @@ const EmployeeTable = ({ data, tableParams, setTableParams ,pagination}) => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' />
+            <img src={deleteicon} alt='delete' className='w-6 h-6' />
           </button>
           <Switch />
-        </span>
+        </div>
       )
     }
   ]

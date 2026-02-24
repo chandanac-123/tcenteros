@@ -1,9 +1,9 @@
-import Memberships from '@pages/billing/component/Memberships'
-import Network from '@pages/billing/component/Networks'
-import Overview from '@pages/billing/component/Overview'
-import Reports from '@pages/billing/component/Reports'
-import Sales from '@pages/billing/component/Sales'
-import Settlements from '@pages/billing/component/Settlements'
+import Memberships from '@pages/billing/tab-modules/Memberships'
+import Network from '@pages/billing/tab-modules/Networks'
+import Overview from '@pages/billing/tab-modules/Overview'
+import Reports from '@pages/billing/tab-modules/Reports'
+import Sales from '@pages/billing/tab-modules/Sales'
+import Settlements from '@pages/billing/tab-modules/Settlements'
 
 export const billing_modules = [
   {

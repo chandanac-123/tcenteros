@@ -1,8 +1,8 @@
 import LineChart from '@common/charts/LineChart'
 import CustomDatePicker from '@common/CustomeDatepicker'
-import StatusDisplayCard from './statusDisplayCard'
 import { Card } from '@pages/components/ui/card'
-import DisplayActionCard from './displayActionCard'
+import StatusDisplayCard from '../component/StatusDisplayCard'
+import DisplayActionCard from '../component/DisplayActionCard'
 
 const Overview = () => {
   return (

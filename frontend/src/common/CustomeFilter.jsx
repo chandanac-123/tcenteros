@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
 import filter from '@assets/form-icons/filter.svg'
 
-const CustomFilter = ({ onApply, options }) => {
+const CustomFilter = ({ onApply, options ,filterName}) => {
   const [selectedRole, setSelectedRole] = useState('')
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef(null)
@@ -21,7 +21,7 @@ const handleClear = e => {
 }
 
   const selectedLabel =
-    options?.find(r => r.value === selectedRole)?.label || 'Filter'
+    options?.find(r => r.value === selectedRole)?.label || filterName || 'Filter'
 
   // ✅ Close when clicking outside
   useEffect(() => {
