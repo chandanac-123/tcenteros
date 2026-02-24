@@ -390,65 +390,40 @@ async def approve_networking_access(
     current_admin=Depends(centeradmin_required)
 ):
     from datetime import datetime
-    from app.auth.models.models import UserCenterMembership, NetworkingStatusEnum
+    from decimal import Decimal
+    from uuid import uuid4
+    from app.auth.models.models import UserCenterMembership, NetworkingStatusEnum, Member
+    from app.center.models.models import Center, CenterWallet, WalletTransaction
+    from app.platforms.models.models import PlatformWallet
 
+    # 1. Get membership and validate
     membership = await session.get(UserCenterMembership, network_membership_id)
     if not membership or str(membership.center_id) != str(current_admin["center_id"]):
         raise HTTPException(404, "Request not found or not your center")
     if membership.network_status != NetworkingStatusEnum.pending:
         raise HTTPException(400, "Request is not pending")
-    membership.network_status = NetworkingStatusEnum.approved
-    membership.updated_by = current_admin["user_id"]
-    membership.updated_at = datetime.utcnow()
-    await session.commit()
-    return {
-        "detail": "Request approved",
-        "network_membership_id": str(membership.id),
-        "network_status": "approved"
-    }
 
-
-#Member: Pay for Approved Networking Access
-@router.post("/networking/access/pay")
-async def pay_networking_access(
-    network_membership_id: str = Query(..., description="Networking membership UUID"),
-    session: AsyncSession = Depends(get_async_session),
-    current_member=Depends(member_required)
-):
-    from decimal import Decimal
-    from datetime import datetime
-    from app.auth.models.models import UserCenterMembership, NetworkingStatusEnum, Member, MemberStatusEnum
-    from app.center.models.models import CenterWallet, CenterTimeSlot
-    from app.platforms.models.models import PlatformWallet
-    from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PayerType, PayeeType, OrderType, ReferenceSchema, Currency
-    from app.center.models.models import Center
-    from uuid import uuid4
-
-    membership = await session.get(UserCenterMembership, network_membership_id)
-    if not membership or str(membership.user_id) != str(current_member["user_id"]):
-        raise HTTPException(404, "Request not found or not your request")
-    if membership.network_status != NetworkingStatusEnum.approved:
-        raise HTTPException(400, "Request is not approved for payment")
-
-    # Get network center and member
+    # 2. Get network center and member
     network_center = await session.get(Center, membership.center_id)
-    member = await session.get(Member, current_member["user_id"])
+    member = await session.get(Member, membership.user_id)
+    if not network_center or not member:
+        raise HTTPException(404, "Center or member not found")
 
-    # Calculate fee
+    # 3. Calculate networking fee
     per_day = Decimal(str(network_center.networking_amount or 0))
     d1 = membership.start_date
     d2 = membership.end_date
     total_days = (d2 - d1).days + 1
     total_amount = per_day * Decimal(total_days)
-    platform_share = total_amount * Decimal("0.15")
-    center_share = total_amount - platform_share
+    platform_share = (total_amount * Decimal("0.15")).quantize(Decimal("0.01"))
+    center_share = (total_amount - platform_share).quantize(Decimal("0.01"))
 
-    # Wallet operations
+    # 4. Get wallets
     network_wallet = await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == network_center.id)
     )
     network_wallet = network_wallet.scalar_one_or_none()
-    if not network_wallet or network_wallet.deposit < 2000 or network_wallet.balance < 10000:
+    if not network_wallet or network_wallet.deposit < 20000 or network_wallet.balance < 10000:
         raise HTTPException(400, "Network center wallet does not meet requirements")
 
     home_wallet = await session.execute(
@@ -457,77 +432,76 @@ async def pay_networking_access(
     home_wallet = home_wallet.scalar_one_or_none()
     if not home_wallet or home_wallet.balance < center_share:
         raise HTTPException(400, "Insufficient home center wallet balance")
-    home_wallet.balance -= center_share
-    network_wallet.balance += center_share
 
+    # Ensure platform wallet exists, create if not
     platform_wallet = await session.execute(select(PlatformWallet))
     platform_wallet = platform_wallet.scalar_one_or_none()
-    if platform_wallet:
-        platform_wallet.balance += platform_share
+    if not platform_wallet:
+        platform_wallet = PlatformWallet(
+            id=uuid4(),
+            balance=Decimal("0.00"),
+            last_updated=datetime.utcnow(),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            created_by=current_admin["user_id"],
+            updated_by=current_admin["user_id"],
+        )
+        session.add(platform_wallet)
+        await session.flush()  # Make sure it's available for update
 
-    # Create PaymentOrder
-    payment_order = PaymentOrder(
-        payment_order_id=uuid4(),
-        payer_user_id=member.id,
-        payer_type=PayerType.user,
-        payee_type=PayeeType.center,
-        center_id=network_center.id,
-        order_type=OrderType.center_subscription,
-        reference_schema=ReferenceSchema.center,
-        reference_id=network_center.id,
-        subtotal_amount=total_amount,
-        tax_amount=Decimal("0"),
-        total_amount=total_amount,
-        currency=Currency.INR,
-        status=PaymentOrderStatus.paid,
-        created_by=member.id,
-        updated_by=member.id,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-    )
-    session.add(payment_order)
+    # 5. Update wallet balances
+    home_wallet.balance -= center_share
+    network_wallet.balance += center_share
+    platform_wallet.balance += platform_share
+    platform_wallet.last_updated = datetime.utcnow()
+    platform_wallet.updated_at = datetime.utcnow()
+    platform_wallet.updated_by = current_admin["user_id"]
 
-    # Log transactions
-    from app.center.models.models import WalletTransaction
+    # 6. Log WalletTransaction (one for home center, one for network center)
+    # Outgoing from home center (network-out, debit)
     session.add(WalletTransaction(
         id=uuid4(),
+        txn_id=uuid4(),
         from_wallet_id=home_wallet.id,
         to_wallet_id=network_wallet.id,
         amount=center_share,
-        transaction_type="networking_transfer",
-        description="Networking access transfer"
+        transaction_type="network-out",
+        description="Networking access transfer (outgoing)",
+        balance=home_wallet.balance,
+        type="debit",
+        status="completed",
+        created_at=datetime.utcnow()
     ))
-    if platform_wallet:
-        session.add(WalletTransaction(
-            id=uuid4(),
-            platform_wallet_id=platform_wallet.id,
-            amount=platform_share,
-            transaction_type="platform_income",
-            description="Platform income from networking"
-        ))
+    # Incoming to network center (network-in, credit)
+    session.add(WalletTransaction(
+        id=uuid4(),
+        txn_id=uuid4(),
+        from_wallet_id=home_wallet.id,
+        to_wallet_id=network_wallet.id,
+        amount=center_share,
+        transaction_type="network-in",
+        description="Networking access transfer (incoming)",
+        balance=network_wallet.balance,
+        type="credit",
+        status="completed",
+        created_at=datetime.utcnow()
+    ))
+    # Note: Platform share is only tracked in PlatformWallet, not in WalletTransaction
 
-    # Set status to paid
-    membership.network_status = NetworkingStatusEnum.paid
-    membership.updated_by = member.id
+    # 7. Update membership status
+    membership.network_status = NetworkingStatusEnum.approved
+    membership.updated_by = current_admin["user_id"]
     membership.updated_at = datetime.utcnow()
-
-    # Reduce time slot capacity
-    time_slot = await session.get(CenterTimeSlot, membership.time_slot_id)
-    if time_slot and time_slot.slot_capacity > 0:
-        time_slot.slot_capacity -= 1
 
     await session.commit()
     return {
-        "detail": "Networking booking successful",
+        "detail": "Request approved and networking payment processed",
         "network_membership_id": str(membership.id),
-        "network_status": "paid",
+        "network_status": "approved",
         "amount": float(total_amount),
         "platform_income": float(platform_share),
-        "transferred_to_network_center": float(center_share),
-        "payment_order_id": str(payment_order.payment_order_id)
+        "transferred_to_network_center": float(center_share)
     }
-
-
 
 
 

@@ -662,6 +662,9 @@ async def get_platform_wallet(
 #List Wallet Transactions (Admin Only)
 @router.get("/center/wallet/transactions")
 async def list_my_wallet_transactions(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    type: Optional[str] = Query(None, description="credit or debit"),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
@@ -673,55 +676,118 @@ async def list_my_wallet_transactions(
     if not wallet:
         raise HTTPException(404, "Wallet not found")
 
-    txs_result = await session.execute(
-        select(WalletTransaction)
-        .where(
-            (WalletTransaction.from_wallet_id == wallet.id) |
-            (WalletTransaction.to_wallet_id == wallet.id)
+    # Filter for credit or debit
+    if type == "credit":
+        stmt = select(WalletTransaction).where(
+            WalletTransaction.to_wallet_id == wallet.id,
+            WalletTransaction.transaction_type == "network-in"
         )
-        .order_by(WalletTransaction.created_at.desc())
-    )
+    elif type == "debit":
+        stmt = select(WalletTransaction).where(
+            WalletTransaction.from_wallet_id == wallet.id,
+            WalletTransaction.transaction_type == "network-out"
+        )
+    else:
+        # Show both (optional)
+        stmt = select(WalletTransaction).where(
+            (WalletTransaction.to_wallet_id == wallet.id) & (WalletTransaction.transaction_type == "network-in") |
+            (WalletTransaction.from_wallet_id == wallet.id) & (WalletTransaction.transaction_type == "network-out")
+        )
+
+    stmt = stmt.order_by(WalletTransaction.created_at.desc())
+
+    # Pagination
+    total_result = await session.execute(stmt.with_only_columns(sa.func.count()).order_by(None))
+    total = total_result.scalar_one()
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    txs_result = await session.execute(stmt)
     txs = txs_result.scalars().all()
 
-    balance = float(wallet.balance)
     tx_list = []
     for tx in txs:
-        is_credit = tx.to_wallet_id == wallet.id
-        is_debit = tx.from_wallet_id == wallet.id
+        is_credit = tx.to_wallet_id == wallet.id and tx.transaction_type == "network-in"
+        is_debit = tx.from_wallet_id == wallet.id and tx.transaction_type == "network-out"
         credit = float(tx.amount) if is_credit else None
         debit = float(tx.amount) if is_debit else None
 
-        transaction_center = None
+        # Get transaction center name
+        transaction_center_name = "-"
         if is_credit and tx.from_wallet_id:
             from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
-            if from_wallet:
+            if from_wallet and from_wallet.center_id:
                 from_center = await session.get(Center, from_wallet.center_id)
-                transaction_center = from_center.center_name if from_center else None
+                transaction_center_name = from_center.center_name if from_center else "-"
         elif is_debit and tx.to_wallet_id:
             to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
-            if to_wallet:
+            if to_wallet and to_wallet.center_id:
                 to_center = await session.get(Center, to_wallet.center_id)
-                transaction_center = to_center.center_name if to_center else None
+                transaction_center_name = to_center.center_name if to_center else "-"
 
         tx_list.append({
-            "tax_id": str(tx.tax_id),  # <-- Include tax_id
-            "txn_id": str(tx.id),
+            "id": str(tx.id),
+            "txn_id": str(getattr(tx, "txn_id", tx.id)),
             "date": tx.created_at.strftime("%Y-%m-%d"),
             "type": "Credit" if is_credit else "Debit",
             "category": tx.transaction_type,
-            "transaction_center": transaction_center or "-",
+            "transaction_center_name": transaction_center_name,
             "credit": f"₹{credit}" if credit else "-",
             "debit": f"₹{debit}" if debit else "-",
-            "balance_after": f"₹{balance}",
-            "status": "Completed"
+            "balance_after": f"₹{float(tx.balance)}",
+            "status": tx.status.capitalize() if tx.status else "Completed",
         })
 
-        if is_credit:
-            balance -= float(tx.amount)
-        elif is_debit:
-            balance += float(tx.amount)
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "transactions": tx_list
+    }
 
-    return tx_list
+#wallet card api
+@router.get("/center/wallet/summary")
+async def get_wallet_summary(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+    wallet_result = await session.execute(
+        select(CenterWallet).where(CenterWallet.center_id == center_id)
+    )
+    wallet = wallet_result.scalar_one_or_none()
+    if not wallet:
+        raise HTTPException(404, "Wallet not found")
+
+    # Get current month range
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_end = now
+
+    # Total credit (network-in) for this month
+    credit_stmt = select(sa.func.sum(WalletTransaction.amount)).where(
+        WalletTransaction.to_wallet_id == wallet.id,
+        WalletTransaction.transaction_type == "network-in",
+        WalletTransaction.created_at >= month_start,
+        WalletTransaction.created_at <= month_end
+    )
+    credit_result = await session.execute(credit_stmt)
+    month_credit = credit_result.scalar() or 0
+
+    # Total debit (network-out) for this month
+    debit_stmt = select(sa.func.sum(WalletTransaction.amount)).where(
+        WalletTransaction.from_wallet_id == wallet.id,
+        WalletTransaction.transaction_type == "network-out",
+        WalletTransaction.created_at >= month_start,
+        WalletTransaction.created_at <= month_end
+    )
+    debit_result = await session.execute(debit_stmt)
+    month_debit = debit_result.scalar() or 0
+
+    return {
+        "center_id": str(center_id),
+        "available_balance": float(wallet.balance),
+        "month_credit": float(month_credit),
+        "month_debit": float(month_debit)
+    }
 
 
 @router.get("/center/me")
