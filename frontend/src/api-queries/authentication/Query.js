@@ -1,5 +1,5 @@
 import { useAuthStore } from '@store/authStore'
-import { login, requestOTPforgotPassword, resetPassword, verifyOTPforgotPassword } from './Urls'
+import { createCenterAccount, login, requestOTPforgotPassword, resetPassword, verifyOTPforgotPassword } from './Urls'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const useLoginMutation = () => {
@@ -36,6 +36,16 @@ export const useVerifyOTPforgotPasswordMutation = () => {
   return useMutation({
     mutationFn: verifyOTPforgotPassword,
      onSuccess:()=>{
+      query.invalidateQueries({ queryKey: ['auth'] })
+    }
+  })
+}
+
+export const useCreateCenterAccountMutation = () => {
+  const query=useQueryClient()    
+  return useMutation({
+    mutationFn: createCenterAccount,
+      onSuccess:()=>{
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })

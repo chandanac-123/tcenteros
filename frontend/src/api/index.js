@@ -24,6 +24,10 @@ export const verifyOTPforgotPasswordApiCall = details =>
 export const resetPasswordApiCall = details => {
   return axiosInstance.post('/auth/centeradmin/forgot-password/set-password', details)
 }
+export const createCenterAccountApiCall = details =>
+  axiosInstance.post('/auth/centeradmin/change-password', details)
+
+  
 
 
 // EmployeeManagement
