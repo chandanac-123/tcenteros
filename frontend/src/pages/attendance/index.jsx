@@ -36,13 +36,6 @@ const Attendance = () => {
           onChange={value => setActiveTab(value)}
         />
         <div className='flex gap-2'>
-          {/* <button>
-            <img
-              src={calender}
-              alt='calender'
-              className='bg-primary p-2 rounded-md'
-            />
-          </button> */}
           <CustomDatePicker
             pickerType='range'
             value={dateRanges[activeTab]}

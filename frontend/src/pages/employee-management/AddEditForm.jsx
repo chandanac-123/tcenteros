@@ -302,6 +302,9 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                         : null
                     }
                     onChange={val => handleDateChange('joining_date', val)}
+                    error={
+                      formik.touched.joining_date && formik.errors.joining_date
+                    }
                   />
                 </div>
               </div>

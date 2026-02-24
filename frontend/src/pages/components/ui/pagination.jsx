@@ -58,7 +58,7 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn("gap-1 border border-secondary text-secondary flex text-center items-center justify-center w-auto px-4", className)}
+    className={cn("gap-1 border cursor-pointer border-secondary text-secondary flex text-center items-center justify-center w-auto px-4", className)}
     {...props}>
     <img src={left_arrow} className="h-4 w-4 text-secondary" />
     <span className="">Previous</span>
@@ -73,7 +73,7 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn("gap-1 border border-secondary text-secondary flex items-center justify-center w-auto px-4", className)}
+    className={cn("gap-1 border cursor-pointer border-secondary text-secondary flex items-center justify-center w-auto px-4", className)}
     {...props}>
     <span className="mr-1">Next</span>
     <img src={right_arrow} className="h-4 w-4 text-secondary" />

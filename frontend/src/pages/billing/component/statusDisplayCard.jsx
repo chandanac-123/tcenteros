@@ -4,10 +4,10 @@ import networkicon from '@assets/billing/network.svg'
 import monthicon from '@assets/billing/month.svg'
 
 const cardValue = [
-  { title: 'Today Revenue  ', value: '₹12,540', image: revenueicon },
-  { title: 'Pending Payments  ', value: '₹8,320', image: payment },
-  { title: 'Network Earnings  ', value: '₹5,210', image: networkicon },
-  { title: 'This Month Total  ', value: '₹26,070', image: monthicon }
+  { title: 'Today Revenue  ', value: '12,540', image: revenueicon },
+  { title: 'Pending Payments  ', value: '8,320', image: payment },
+  { title: 'Network Earnings  ', value: '5,210', image: networkicon },
+  { title: 'This Month Total  ', value: '26,070', image: monthicon }
 ]
 
 const StatusDisplayCard = () => {
@@ -29,7 +29,7 @@ const StatusDisplayCard = () => {
           <div className='flex flex-col'>
             <span className='text-xs text-gray-500'>{card.title}</span>
             <span className='text-lg font-semibold text-textblack'>
-              {card.value}
+              {card.value ? `₹ ${card.value}` : '₹ 0'}
             </span>
           </div>
         </div>

@@ -184,7 +184,7 @@ export function DataTable ({
                       onClick={() => handlePageChange(Math.max(page - 1, 1))}
                     />
                   </PaginationItem>
-                  <div className='flex border border-secondary rounded-md overflow-hidden'>
+                  <div className='flex border cursor-pointer border-secondary rounded-md overflow-hidden'>
                     {paginationItems}
                   </div>
                   <PaginationItem>

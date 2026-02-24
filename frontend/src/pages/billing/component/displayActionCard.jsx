@@ -1,13 +1,13 @@
-import revenueicon from '@assets/billing/revenue.svg'
-import payment from '@assets/billing/payment.svg'
-import networkicon from '@assets/billing/network.svg'
-import monthicon from '@assets/billing/month.svg'
+import new_sale from '@assets/billing/new-sale.svg'
+import renew_membership from '@assets/billing/renew-membership.svg'
+import add_charge from '@assets/billing/add-charge.svg'
+import record_payment from '@assets/billing/record-payment.svg'
 
 const cardValue = [
-  { title: '+ New Sale  ', value: '₹12,540', image: revenueicon },
-  { title: '+ Renew  Membership  ', value: '₹8,320', image: payment },
-  { title: '+ Add Charge ', value: '₹5,210', image: networkicon },
-  { title: '+ Record Payment  ', value: '₹26,070', image: monthicon }
+  { title: '+ New Sale', value: '₹12,540', image: new_sale },
+  { title: '+ Renew  Membership', value: '₹8,320', image: renew_membership },
+  { title: '+ Add Charge', value: '₹5,210', image: add_charge },
+  { title: '+ Record Payment', value: '₹26,070', image: record_payment }
 ]
 
 const DisplayActionCard = () => {
