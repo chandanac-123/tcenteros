@@ -48,7 +48,7 @@ export const GetEmployeeCategoriesByIdApiCall = id =>
 
 export const getEmployeeApiCall = data =>
   axiosInstance.get(
-    `/auth/employee?page=${data?.page}&page_size=${data?.pageSize}`
+    `/auth/employee?page=${data?.page}&page_size=${10}`
   )
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)
@@ -75,7 +75,7 @@ export const getTaxByIdApiCall = id =>
 export const getSlotApiCall = () =>
   axiosInstance.get(`/center/center/time-slots`)
 export const createSlotApiCall = details =>
-  axiosInstance.post('/center/center/time-slots/', details)
+  axiosInstance.post('/center/center/time-slots', details)
 export const deleteSlotApiCall = id =>
   axiosInstance.delete(`/center/center/time-slots/${id}`)
 
@@ -99,19 +99,15 @@ export const updateCenterTimeApiCall = (details, id) =>
 export const getMembershipPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans`)
 export const createMembershipPlanApiCall = details =>
-  axiosInstance.post(
-    '/membership/memberships-plans',
-    details
-  )
+  axiosInstance.post('/membership/memberships-plans', details)
 export const deleteMembershipPlanApiCall = id =>
   axiosInstance.delete(`/membership/memberships-plans/${id}`)
 export const updateMembershipPlanApiCall = (details, id) =>
-  axiosInstance.put(
-    `/membership/memberships-plans/${id}`,
-    details
-  )
+  axiosInstance.put(`/membership/memberships-plans/${id}`, details)
 export const getMembershipPlanByIdApiCall = id =>
   axiosInstance.get(`/membership/memberships-plans/${id}`)
+export const updateMembershipStatusApiCall = (details, id) =>
+  axiosInstance.patch(`/membership/memberships-plans/${id}/status?status=${details.status}`, details)
 
 //HOLIDAY API
 export const getHolidayApiCall = () =>
@@ -143,3 +139,41 @@ export const createWalletApiCall = (details) =>
   axiosInstance.post('/center/center/wallet/create', null, {
     params: details,
   });
+//ATTENDANCE API
+export const getAllEmployeesApiCall = () =>
+  axiosInstance.get(`auth/centeradmin/employees`)
+export const createAttendanceApiCall = details =>
+  axiosInstance.post('/attendance/centeradmin/attendance/add', details)
+export const getAllMemberAttendanceApiCall = data => {
+  const params = {
+    page: data?.page || 1,
+    page_size: data?.pageSize || 10,
+    role: 'member'
+  }
+  if (data?.from) {
+    params.date_from = data.from
+  }
+  if (data?.to) {
+    params.date_to = data.to
+  }
+  return axiosInstance.get('attendance/centeradmin/attendance/list', { params })
+}
+export const getAllEmployeeAttendanceApiCall = data => {
+  const params = {
+    page: data?.page || 1,
+    page_size: data?.pageSize || 10,
+    role: 'employee'
+  }
+  if (data?.categoryId) {
+    params.employee_designation = data.categoryId
+  }
+  if (data?.from) {
+    params.date_from = data.from
+  }
+  if (data?.to) {
+    params.date_to = data.to
+  }
+  return axiosInstance.get('attendance/centeradmin/attendance/list', { params })
+}
+export const deleteAttendanceApiCall = id =>
+  axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)

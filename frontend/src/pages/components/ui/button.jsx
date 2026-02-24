@@ -24,6 +24,7 @@ const buttonVariants = cva(
         sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
         filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
         addbutton: 'h-10 px-6 rounded-lg text-sm gap-2',
+        editbutton: 'h-9 w-20 px-4 rounded-2xl text-sm gap-2',
         icon: 'h-9 w-9'
       }
     },
@@ -55,17 +56,14 @@ const Button = React.forwardRef(
         onClick={onClick}
         {...props}
       >
-        {leftIcon && (
+        {leftIcon && <img src={leftIcon} className='flex items-center w-8' />}
+        {children}
+        {rightIcon && (
           <img
-            src={leftIcon}
-            className={cn(
-              'flex items-center',
-              size === 'googlebutton' ? 'w-6' : 'w-8'
-            )}
+            src={rightIcon}
+            className='flex items-center w-8'
           />
         )}
-        {children}
-        {rightIcon && <img src={rightIcon} className='flex items-center w-8' />}
       </button>
     )
   }

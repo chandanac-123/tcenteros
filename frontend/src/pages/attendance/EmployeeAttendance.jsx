@@ -1,41 +1,65 @@
 import { DataTable } from '@common/DataTable'
-import view from '@assets/form-icons/view.svg'
+import { useEffect, useState } from 'react'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
-import { useState } from 'react'
+import { useAllEmployeesAttendanceQuery ,useDeleteAttendanceMutation} from '@api-queries/attendance/Query'
 import DeleteModal from '@common/CustomeDelete'
 
-const EmployeeAttendance = () => {
+const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
-    search: ''
+    search: '',
+    categoryId: null,
+    from: null,
+    to: null
   })
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
+
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      categoryId,
+      page: 1
+    }))
+  }, [categoryId])
+
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      from: dateRange?.from,
+      to: dateRange?.to,
+      page: 1
+    }))
+  }, [dateRange])
+
+  const { data: employees, isLoading: isEmployeesLoading } =
+    useAllEmployeesAttendanceQuery(tableParams)
+  const { mutate: deleteAttendance } = useDeleteAttendanceMutation()
+
   const columns = [
     {
       accessorKey: 'full_name',
       header: 'Member  Name'
     },
     {
-      accessorKey: 'designation_name',
+      accessorKey: 'date',
       header: 'Date'
     },
 
     {
-      accessorKey: 'designation_name',
+      accessorKey: 'designation',
       header: 'Designation'
     },
     {
-      accessorKey: 'email',
+      accessorKey: 'check_in_time',
       header: 'Check In Time'
     },
     {
-      accessorKey: 'mobile',
+      accessorKey: 'check_out_time',
       header: 'Check Out Time '
     },
     {
-      accessorKey: 'center_name',
+      accessorKey: 'duration',
       header: 'Duration'
     },
     {
@@ -45,44 +69,46 @@ const EmployeeAttendance = () => {
         <span className='flex gap-3'>
           <button
             onClick={() => {
-              setViewId(row.original.id)
-              setViewOpen(true)
-            }}
-          >
-            <img src={view} alt='view' />
-          </button>
-          <button
-            onClick={() => {
               setDeleteId(row.original.id)
               setDeleteOpen(true)
             }}
           >
             <img src={deleteicon} alt='delete' />
           </button>
-          <Switch />
         </span>
       )
     }
   ]
 
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteAttendance(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
+  }
+
   return (
     <>
       <DataTable
         columns={columns}
-        data={[]}
+        data={employees?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={employees?.total}
+        loading={isEmployeesLoading}
         paginationVisibile={true}
       />
-      {/*   
-          <ViewForm id={viewId} open={viewopen} setOpen={setViewOpen} />
-          // <DeleteModal
-          //   open={deleteOpen}
-          //   setOpen={setDeleteOpen}
-          //   header='Delete Employee'
-          //   description='Are you sure you want to delete this employee?'
-          //   onConfirm={handleDelete}
-          // /> */}
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Attendance Record'
+        description='Are you sure you want to delete this attendance record?'
+        onConfirm={handleDelete}
+      />
     </>
   )
 }

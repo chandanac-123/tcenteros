@@ -59,6 +59,7 @@ import active_billing from '../assets/sidebar-icons/active-billing.svg'
 import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
 import active_crm from '../assets/sidebar-icons/active-crm.svg'
 import active_account from '../assets/sidebar-icons/active-account.svg'
+import ProfilePage from '@pages/profile'
 
 
 export const routes = [
@@ -505,6 +506,17 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Settings',
     component: Settings,
+    menubar: false,
+    permission: true
+  },
+  {
+    key: 1,
+    path: '/profile',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Profile',
+    component: ProfilePage,
     menubar: false,
     permission: true
   }

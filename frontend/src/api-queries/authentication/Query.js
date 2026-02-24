@@ -1,6 +1,7 @@
 import { useAuthStore } from '@store/authStore'
 import { createCenterAccount, login, requestOTPforgotPassword, resetPassword, verifyOTPforgotPassword } from './Urls'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { showError, showSuccess } from '@utils/toast'
 
 export const useLoginMutation = () => {
   const query = useQueryClient()
@@ -10,6 +11,15 @@ export const useLoginMutation = () => {
     onSuccess: data => {
       setAuth(data)
       query.invalidateQueries({ queryKey: ['auth'] })
+      showSuccess('Login successful')
+    },
+    onError: error => {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        'Invalid credentials'
+      showError(message)
+      throw new Error(message)
     }
   })
 }

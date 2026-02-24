@@ -2,26 +2,26 @@ import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
 import filter from '@assets/form-icons/filter.svg'
 
-const CustomFilter = ({ onApply, options }) => {
+const CustomFilter = ({ onApply, options ,filterName}) => {
   const [selectedRole, setSelectedRole] = useState('')
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef(null)
 
-  const handleSelect = role => {
-    setSelectedRole(role)
-    onApply({ role })
-    setOpen(false) // ✅ closes instantly
-  }
+  const handleSelect = value => {
+  setSelectedRole(value)
+  onApply(value)   // 🔥 send id directly
+  setOpen(false)
+}
 
-  const handleClear = e => {
-    e.stopPropagation()
-    setSelectedRole('')
-    onApply({})
-    setOpen(false)
-  }
+const handleClear = e => {
+  e.stopPropagation()
+  setSelectedRole('')
+  onApply(null)   // 🔥 reset
+  setOpen(false)
+}
 
   const selectedLabel =
-    options?.find(r => r.value === selectedRole)?.label || 'Filter'
+    options?.find(r => r.value === selectedRole)?.label || filterName || 'Filter'
 
   // ✅ Close when clicking outside
   useEffect(() => {
@@ -36,7 +36,7 @@ const CustomFilter = ({ onApply, options }) => {
   }, [])
 
   return (
-    <div ref={wrapperRef} className='relative w-32'>
+    <div ref={wrapperRef} className='relative w-36'>
       {/* Input Box */}
       <div
         onClick={() => setOpen(true)}

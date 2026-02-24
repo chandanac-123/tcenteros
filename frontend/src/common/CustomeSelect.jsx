@@ -11,7 +11,8 @@ export default function CustomeSelect({
   placeholder,
   options,
   value,
-  onChange
+  onChange,
+  error
 }) {
   return (
     <div>
@@ -29,11 +30,12 @@ export default function CustomeSelect({
         <SelectContent>
           {options?.map((item, index) => (
             <SelectItem key={index} value={item?.id}>
-              {item?.label || item?.name}
+              {item?.label || item?.name || item?.full_name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+      {error && <p className='text-red-500 text-sm mt-1'>{error}</p>}
     </div>
   )
 }

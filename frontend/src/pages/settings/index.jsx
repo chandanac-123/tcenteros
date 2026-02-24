@@ -1,23 +1,27 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
-import { useSettingsTabStore } from '@store/settingsTabStore'
 import { setting_tabs } from '@constants/settingsTabs'
+import { useSettingsTabStore } from '@store/tabStore'
 
 const Settings = () => {
-  const selected = useSettingsTabStore(state => state.selectedTab)
-  const setSelected = useSettingsTabStore(state => state.setSelectedTab)
-  const selectedCategory = setting_tabs?.find(c => c?.id === selected)
+  const {
+    selectedTab: settingsSelectedTab,
+    setSelectedTab: setSettingsSelectedTab
+  } = useSettingsTabStore()
+  const selectedSettingsCategory = setting_tabs?.find(
+    c => c?.id === settingsSelectedTab
+  )
 
   return (
     <ContentLayout>
       <span className='text-lg font-semibold text-textblack '>Settings</span>
       <CustomeVerticalSelect
         options={setting_tabs}
-        selected={selected}
-        onSelect={setSelected}
-        heading={selectedCategory?.heading}
+        selected={settingsSelectedTab}
+        onSelect={setSettingsSelectedTab}
+        heading={selectedSettingsCategory?.heading}
       >
-        {selectedCategory?.component_view}
+        {selectedSettingsCategory?.component_view}
       </CustomeVerticalSelect>
     </ContentLayout>
   )

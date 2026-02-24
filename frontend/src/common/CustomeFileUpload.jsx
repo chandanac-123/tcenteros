@@ -131,7 +131,7 @@ const InputFile = ({
 
       {/* PREVIEW */}
       {preview ? (
-        <div className='relative w-16 h-16 rounded-md border overflow-hidden'>
+        <div className='relative w-16 h-16 rounded-xl border overflow-hidden'>
           <img
             src={preview}
             alt='Preview'
@@ -140,9 +140,9 @@ const InputFile = ({
           <button
             type='button'
             onClick={handleRemove}
-            className='absolute top-0 right-0 bg-white rounded-full p-1 shadow'
+            className='absolute top-0 right-0 bg-white rounded-full p-1 shadow-2xl'
           >
-            <X className='h-3 w-3 text-red-500' />
+            <X className='h-3 w-3 text-textblack' />
           </button>
         </div>
       ) : (

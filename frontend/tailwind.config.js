@@ -74,6 +74,15 @@ export default {
         inventory_bg:'#FF9E97',
         taxes_bg:'#E33E10',
         general_bg:'#55EFC245',
+        profile_blue:'#B6EECB',
+        profile_green:'#A9E88B',
+        profile_brown:'#DAE1A0',
+        profile_pink:'#FFC8C4',
+        profile_bg_blue:'#DAF6E4',
+        profile_bg_green:'#D3F3C4',
+        profile_bg_brown:'#ECF0CE',
+        profile_bg_pink:'#FFE3E1',
+
       }
     }
   },

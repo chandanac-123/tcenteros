@@ -1,3 +1,5 @@
+import { format } from "date-fns"
+
 export const hexToRgb = hex => {
   const h = hex.replace('#', '')
   let rgbColor = `${parseInt(h.substring(0, 2), 16)} ${parseInt(
@@ -38,3 +40,8 @@ export const convert12To24WithSeconds = (time) => {
 
   return `${hour.toString().padStart(2, '0')}:${minutes}:00`
 }
+
+export const formatRange = (range) => ({
+  from: range?.from ? format(range.from, 'yyyy-MM-dd') : null,
+  to: range?.to ? format(range.to, 'yyyy-MM-dd') : null
+})

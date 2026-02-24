@@ -1,28 +1,42 @@
 import bell from '@assets/header-icons/bell.svg'
-import user from '@assets/header-icons/user.svg'
 import map from '@assets/header-icons/map.svg'
-import logout from '@assets/header-icons/logout.svg'
 import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
   PopoverTrigger,
   PopoverContent
 } from '@pages/components/ui/popover'
-import { ChevronDown, FileText, Key, Settings } from 'lucide-react'
+import {
+  ChevronDown,
+  FileText,
+  Key,
+  LogOut,
+  Settings,
+  UserRound
+} from 'lucide-react'
 import CustomeSearch from '../CustomeSearch'
 import CustomeModal from '../CustomeModal'
 import AddEditForm from '../../pages/employee-management/AddEditForm'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@store/authStore'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const navigate = useNavigate()
 
   const handleOpen = () => {
     setOpen(true)
+  }
+
+  const handleLogout = () => {
+    const state = useAuthStore.getState()
+    if (state.clearAuth) state.clearAuth()
+    // Implement logout logic here
+    setLogoutOpen(false)
   }
 
   return (
@@ -56,8 +70,8 @@ const Header = () => {
           </CustomeModal>
         </div>
         <img src={bell} alt='logo' className='mr-2' />
-        <Popover>
-          <PopoverTrigger asChild>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
             <div className='flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer'>
               <div className='flex items-center'>
                 <div className='flex items-center gap-0'>
@@ -81,8 +95,14 @@ const Header = () => {
           </PopoverTrigger>
           <PopoverContent className='w-auto'>
             <div className='flex flex-col gap-2'>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <img src={user} alt='' className='w-6 h-6 text-primary' />
+              <button
+                onClick={() => {
+                  navigate('/profile')
+                  setPopoverOpen(false)
+                }}
+                className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
+              >
+                <UserRound className='w-5 h-5 text-primary' />
                 Profile
               </button>
               <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
@@ -90,7 +110,10 @@ const Header = () => {
                 Reset Password
               </button>
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => {
+                  navigate('/settings')
+                  setPopoverOpen(false)
+                }}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
                 <Settings className='w-5 h-5 text-primary' />
@@ -104,16 +127,38 @@ const Header = () => {
                 onClick={() => setLogoutOpen(true)}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
-                <img src={logout} alt='' className='w-6 h-6 text-primary' />
+                <LogOut className='w-5 h-5 text-primary' />
                 Logout
               </button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
-      {/* <CustomeModal open={logoutOpen} onOpenChange={setLogoutOpen} header='Logout'>
-        <div className='flex flex-col gap-4 p-4'></div>
-      </CustomeModal> */}
+      <CustomeModal
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        header='Logout'
+      >
+        Are you sure you want to logout?
+        <div className='flex justify-end  gap-4'>
+          <Button
+            onClick={() => setLogoutOpen(false)}
+            size='addbutton'
+            variant='outline_secondary'
+            type='button'
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleLogout}
+            size='addbutton'
+            variant='default'
+            type='button'
+          >
+            Logout
+          </Button>
+        </div>
+      </CustomeModal>
     </header>
   )
 }

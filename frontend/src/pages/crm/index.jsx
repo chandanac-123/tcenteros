@@ -2,17 +2,17 @@ import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { crm_tabs } from '@constants/crmTabs'
 import { Button } from '@pages/components/ui/button'
-import { useCrmStore } from '@store/crmTabStore'
 import { useState } from 'react'
 import Members from './member'
 import MemberView from './member/MemberView'
 import MemberAdd from './member/MemberAdd'
 import { SquarePen } from 'lucide-react'
+import { useCrmStore } from '@store/tabStore'
 
 const CRM = () => {
-  const selected = useCrmStore(state => state.selectedTab)
-  const setSelected = useCrmStore(state => state.setSelectedTab)
-  const selectedCategory = crm_tabs.find(c => c.id === selected)
+  const { selectedTab: crmSelectedTab, setSelectedTab: setCrmSelectedTab } =
+    useCrmStore()
+  const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
   const [memberView, setMemberView] = useState('list')
   const [selectedMemberId, setSelectedMemberId] = useState(null)
 
@@ -23,13 +23,13 @@ const CRM = () => {
           Customer Relationship Management
         </span>
         <div>
-          {selected === 1 && memberView === 'list' && (
+          {crmSelectedTab === 1 && memberView === 'list' && (
             <Button size='addbutton' onClick={() => setMemberView('add')}>
               + Add Member
             </Button>
           )}
 
-          {selected === 1 && memberView === 'view' && (
+          {crmSelectedTab === 1 && memberView === 'view' && (
             <Button size='addbutton' onClick={() => setMemberView('edit')}>
               <SquarePen />
               Edit
@@ -40,13 +40,13 @@ const CRM = () => {
 
       <CustomeVerticalSelect
         options={crm_tabs}
-        selected={selected}
+        selected={crmSelectedTab}
         onSelect={id => {
-          setSelected(id)
+          setCrmSelectedTab(id)
           setMemberView('list')
         }}
         heading={
-          selected === 1
+          crmSelectedTab === 1
             ? memberView === 'add'
               ? 'Add Member'
               : memberView === 'view'
@@ -54,10 +54,10 @@ const CRM = () => {
               : memberView === 'edit'
               ? 'Edit Member'
               : 'Members'
-            : selectedCategory?.heading
+            : selectedCrmCategory?.heading
         }
       >
-        {selected === 1 ? (
+        {crmSelectedTab === 1 ? (
           memberView === 'add' ? (
             <MemberAdd goBack={() => setMemberView('list')} />
           ) : memberView === 'view' ? (
@@ -84,7 +84,7 @@ const CRM = () => {
             />
           )
         ) : (
-          selectedCategory?.component_view
+          selectedCrmCategory?.component_view
         )}
       </CustomeVerticalSelect>
     </ContentLayout>

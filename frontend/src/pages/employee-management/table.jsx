@@ -9,8 +9,11 @@ import AddEditForm from './AddEditForm'
 import ViewForm from './View'
 import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
+import useTableSelection from '@common/UseTableSelection'
 
-const EmployeeTable = ({ data, tableParams, setTableParams }) => {
+const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
+  const { selectedIds, selectionColumn, setSelectedIds } =
+    useTableSelection(data)
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [editopen, setEditOpen] = useState(false)
@@ -36,6 +39,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
   }
 
   const columns = [
+    selectionColumn,
     {
       accessorKey: 'full_name',
       header: 'Full Name'
@@ -53,10 +57,6 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
       header: 'Phone Number'
     },
     {
-      accessorKey: 'center_name',
-      header: 'Center'
-    },
-    {
       accessorKey: 'joining_date',
       header: 'Join Date'
     },
@@ -64,18 +64,23 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
       header: 'Status',
       accessorKey: 'status',
       cell: ({ row }) => (
-        <span className='flex gap-3'>
-          <Badge
-            label={row.original.status.replace('_', ' ').toUpperCase()}
-            variant={statusVariantMap[row.original.status] || 'inactive'}
-          />
+        <Badge
+          label={row.original.status.replace('_', ' ').toUpperCase()}
+          variant={statusVariantMap[row.original.status] || 'inactive'}
+        />
+      )
+    },
+    {
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className='flex items-center gap-2'>
           <button
             onClick={() => {
               setViewId(row.original.id)
               setViewOpen(true)
             }}
           >
-            <img src={view} alt='view' />
+            <img src={view} alt='view' className='w-6 h-6' />
           </button>
           <button
             onClick={() => {
@@ -83,7 +88,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
               setEditOpen(true)
             }}
           >
-            <img src={edit} alt='edit' />
+            <img src={edit} alt='edit' className='w-6 h-6' />
           </button>
           <button
             onClick={() => {
@@ -91,21 +96,32 @@ const EmployeeTable = ({ data, tableParams, setTableParams }) => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' />
+            <img src={deleteicon} alt='delete' className='w-6 h-6' />
           </button>
           <Switch />
-        </span>
+        </div>
       )
     }
   ]
 
   return (
     <>
+      {selectedIds.length > 0 && (
+        <div className='mb-2'>
+          <button
+            className='bg-red-500 text-white px-3 py-1 rounded'
+            onClick={() => setDeleteOpen(true)}
+          >
+            Delete Selected ({selectedIds.length})
+          </button>
+        </div>
+      )}
       <DataTable
         columns={columns}
         data={data}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={pagination}
         paginationVisibile={true}
       />
       <AddEditForm

@@ -30,7 +30,6 @@ const CenterOperations = () => {
 
   const { data: centerTime, isFetching: isFetchingCenterTime } =
     useAllCenterTimeQuery()
-  console.log('centerTime: ', centerTime)
   const { mutateAsync: createCenterTime, isPending: isCreatingCenterTime } =
     useCreateCenterTimeMutation()
   const { mutateAsync: updateCenterTime, isPending: isUpdatingCenterTime } =
@@ -42,7 +41,7 @@ const CenterOperations = () => {
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
     attendance_allowed_radius_meters:
-      centerTime?.attendance_allowed_radius_meters || ''
+      parseInt(centerTime?.attendance_allowed_radius_meters) || ''
   }
 
   const initialValues = {
@@ -64,31 +63,33 @@ const CenterOperations = () => {
     }
   })
 
- const centerTimeFormik = useFormik({
-  initialValues: centerTimeInitialValues,
-  enableReinitialize: true,
- onSubmit: async values => {
-  const formattedValues = {
-    ...values,
-    opening_time: convert12To24WithSeconds(values.opening_time),
-    closing_time: convert12To24WithSeconds(values.closing_time)
-  }
+  const centerTimeFormik = useFormik({
+    initialValues: centerTimeInitialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      const formattedValues = {
+        ...values,
+        opening_time: convert12To24WithSeconds(values.opening_time),
+        closing_time: convert12To24WithSeconds(values.closing_time),
+        attendance_allowed_radius_meters: parseInt(
+          values.attendance_allowed_radius_meters
+        )
+      }
 
-  try {
-    if (centerTime) {
-      await updateCenterTime({
-        id: centerTime.id,
-        data: formattedValues
-      })
-    } else {
-      await createCenterTime(formattedValues)
+      try {
+        if (centerTime) {
+          await updateCenterTime({
+            id: centerTime.id,
+            data: formattedValues
+          })
+        } else {
+          await createCenterTime(formattedValues)
+        }
+      } catch (error) {
+        console.error(error)
+      }
     }
-  } catch (error) {
-    console.error(error)
-  }
-}
-})
-
+  })
 
   const handleConfirmDelete = async () => {
     try {
@@ -103,7 +104,7 @@ const CenterOperations = () => {
 
   return (
     <div className='flex flex-col gap-6 py-2'>
-      <span className='text-lg font-semibold'>Create  Center Timing</span>
+      <span className='text-lg font-semibold'>Create Center Timing</span>
 
       <form
         className='space-y-4'

@@ -3,7 +3,8 @@ import {
   createMembershipPlanApiCall,
   deleteMembershipPlanApiCall,
   updateMembershipPlanApiCall,
-  getMembershipPlanByIdApiCall
+  getMembershipPlanByIdApiCall,
+  updateMembershipStatusApiCall
 } from '../../api'
 
 export const getAllPlans = async () => {
@@ -24,14 +25,14 @@ export const createPlan = async details => {
   }
 }
 
-export const updatePlan = async (details, id) => {
-  try {
-    const response = await updateMembershipPlanApiCall(details, id)
-    return response.data
-  } catch (error) {
-    throw error
+  export const updatePlan = async (details, id) => {
+    try {
+      const response = await updateMembershipPlanApiCall(details, id)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
-}
 export const deletePlan = async id => {
   try {
     const response = await deleteMembershipPlanApiCall(id)
@@ -44,6 +45,15 @@ export const deletePlan = async id => {
 export const getPlanById = async id => {
   try {
     const response = await getMembershipPlanByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateStatusPlan = async (details, id) => {
+  try {
+    const response = await updateMembershipStatusApiCall(details, id)
     return response.data
   } catch (error) {
     throw error

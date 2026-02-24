@@ -8,12 +8,12 @@ import SelectionCard from './components/SelectionCard'
 import { useNavigate } from 'react-router-dom'
 import { useAllClassTypesQuery } from '@api-queries/on-boarding/Query'
 import { useEffect } from 'react'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const TypeSelection = () => {
   const navigate = useNavigate()
   const { typeSelectionId, setTypeSelection } = useOnboardingStore()
-  const { data: classTypes, isFetching: classTypesFetch } =
-    useAllClassTypesQuery()
+  const { data: classTypes, isFetching } = useAllClassTypesQuery()
 
   // Set default selection to first item from API if not already selected
   useEffect(() => {
@@ -36,15 +36,19 @@ const TypeSelection = () => {
         description='Choose the class type you prefer so we can recommend the best package for your needs.'
       />
 
-      <div className='flex gap-4 px-4 sm:px-10 mt-10 flex-wrap lg:flex-nowrap justify-center lg:justify-between'>
-        {classTypes?.map(item => (
-          <SelectionCard
-            key={item.id}
-            item={item}
-            selected={typeSelectionId === item.id}
-            onSelect={() => setTypeSelection(item.id, item.name)}
-          />
-        ))}
+      <div className='flex gap-8 px-4 sm:px-10 mt-10 flex-wrap lg:flex-nowrap justify-center'>
+        {isFetching ? (
+          <Spinner />
+        ) : (
+          classTypes?.map(item => (
+            <SelectionCard
+              key={item.id}
+              item={item}
+              selected={typeSelectionId === item.id}
+              onSelect={() => setTypeSelection(item.id, item.name)}
+            />
+          ))
+        )}
       </div>
 
       <div className='mt-auto flex justify-end px-4 sm:px-10 pb-6 sm:pb-8'>
