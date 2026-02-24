@@ -42,6 +42,7 @@ async def get_current_user(
 
     user_id = payload.get("sub")
     role = payload.get("role")
+    center_id = payload.get("center_id")  # <-- Extract center_id if present
 
     if not user_id or not role:
         raise HTTPException(
@@ -49,10 +50,14 @@ async def get_current_user(
             detail="Invalid token payload",
         )
 
-    return {
+    user = {
         "user_id": user_id,
         "role": role,
     }
+    if center_id:
+        user["center_id"] = center_id
+
+    return user
 
 
 

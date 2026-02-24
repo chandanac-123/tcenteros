@@ -710,9 +710,31 @@ async def list_employees(
     email: Optional[str] = Query(None),
     mobile: Optional[str] = Query(None),
     designation_name: Optional[str] = Query(None),
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
 ):
-    filters = []
+    # Determine center_id from user context
+    center_id = None
+    if current_user.get("role") == "centeradmin":
+        center_id = current_user.get("center_id")
+        if not center_id:
+            # Fallback: fetch from DB
+            from app.auth.models.models import CenterAdmin
+            result = await session.execute(
+                select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
+            )
+            center_admin = result.scalar_one_or_none()
+            if center_admin and center_admin.center_id:
+                center_id = str(center_admin.center_id)
+    elif current_user.get("role") == "member":
+        from app.auth.models.models import Member
+        member = await session.get(Member, current_user["user_id"])
+        center_id = str(member.home_center_id) if member and member.home_center_id else None
+
+    if not center_id:
+        raise HTTPException(403, "No center assigned to this user.")
+
+    filters = [Employee.center_id == center_id]
     if full_name:
         filters.append(Employee.full_name.ilike(f"%{full_name}%"))
     if email:
@@ -730,7 +752,7 @@ async def list_employees(
     if filters:
         query = query.where(and_(*filters))
 
-    # Get total count (corrected usage)
+    # Get total count
     count_query = query.with_only_columns(Employee.id).order_by(None)
     total_count_result = await session.execute(count_query)
     total_count = len(total_count_result.scalars().all())
@@ -779,25 +801,13 @@ async def list_employees(
             profile_photo=emp.profile_photo,
         ))
 
-    # Get all designations
-    designation_result = await session.execute(select(Designation))
-    designations = designation_result.scalars().all()
-
-    # Designation wise employee count
-    designation_counts = {}
-    for d in designations:
-        count_stmt = select(Employee.id).where(Employee.designation_id == d.id)
-        count_result = await session.execute(count_stmt)
-        designation_counts[d.name] = len(count_result.scalars().all())
-
     return {
         "page": page,
         "page_size": page_size,
         "total_count": total_count,
-        "designation_counts": designation_counts,
         "employees": employee_list
-        
     }
+
 
 #Centeradmin: Activate/Deactivate Employee Status
 @router.patch("/employee/{employee_id}/status")
@@ -810,8 +820,8 @@ async def set_employee_status(
     emp = await session.get(Employee, employee_id)
     if not emp:
         raise HTTPException(status_code=404, detail="Employee not found")
-    # Ensure centeradmin can only update employees in their center
-    if emp.center_id != current_admin["center_id"]:
+    # Ensure centeradmin can only update employees in their center (compare as strings)
+    if str(emp.center_id) != str(current_admin["center_id"]):
         raise HTTPException(status_code=403, detail="Not allowed to update this employee")
     emp.status = StatusEnum(status)
     emp.updated_at = datetime.utcnow()
