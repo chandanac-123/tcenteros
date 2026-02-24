@@ -1,5 +1,5 @@
 import Memberships from '@pages/billing/tab-modules/Memberships'
-import Network from '@pages/billing/tab-modules/Networks'
+import Network from '@pages/billing/tab-modules/network'
 import Overview from '@pages/billing/tab-modules/Overview'
 import Reports from '@pages/billing/tab-modules/Reports'
 import Sales from '@pages/billing/tab-modules/Sales'
