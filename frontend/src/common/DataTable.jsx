@@ -107,7 +107,7 @@ export function DataTable ({
   return (
     <div className='overflow-hidden rounded-md border '>
       <div className='max-h-[380px] overflow-y-auto'>
-        <Table className='table-fixed w-full'>
+        <Table className=''>
           <TableHeader>
             {table?.getHeaderGroups()?.map(headerGroup => (
               <TableRow key={headerGroup?.id}>
