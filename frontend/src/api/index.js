@@ -17,6 +17,14 @@ export const onboardFinalizeApiCall = (details, id) =>
 //Authentication
 export const loginApiCall = details =>
   axiosInstance.post('/auth/centeradmin/login', details)
+export const requestOTPforgotPasswordApiCall = details =>
+  axiosInstance.post('/auth/centeradmin/forgot-password/request-otp', details)
+export const verifyOTPforgotPasswordApiCall = details =>
+  axiosInstance.post('/auth/centeradmin/forgot-password/verify-otp', details)
+export const resetPasswordApiCall = details => {
+  return axiosInstance.post('/auth/centeradmin/forgot-password/set-password', details)
+}
+
 
 // EmployeeManagement
 export const getEmployeeCategoriesApiCall = () =>
@@ -98,13 +106,36 @@ export const updateMembershipPlanApiCall = (details, id) =>
     `/membership/memberships-plans/${id}`,
     details
   )
-  export const getMembershipPlanByIdApiCall = id =>
+export const getMembershipPlanByIdApiCall = id =>
   axiosInstance.get(`/membership/memberships-plans/${id}`)
 
-  //HOLIDAY API
+//HOLIDAY API
 export const getHolidayApiCall = () =>
   axiosInstance.get(`/settings/superadmin/center-holidays/`)
 export const createHolidayApiCall = details =>
   axiosInstance.post('/settings/superadmin/center-holidays/', details)
 export const deleteHolidayApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-holidays/${id}`)
+
+// NETWORK API
+export const addNetworkAmountApiCall = (amount) =>
+  axiosInstance.put('/networking/center/networking-amount', null, { params: { amount } })
+export const networkToggleButtonApiCall = (enabled) =>
+  axiosInstance.put("/networking/center/networking/toggle", { enabled })
+export const getNetworkToggleStatusApiCall = () =>
+  axiosInstance.get("/networking/center/network-enabled/me")
+export const getUserNetworkListApiCall = (data) =>
+  axiosInstance.get(`/networking/networking/bookings?page=${data?.page}&page_size=${data?.pageSize}`)
+export const editApproveNetworkApiCall = (id) =>
+  axiosInstance.put(`/networking/networking/access/approve`, null, { params: { network_membership_id: id } });
+export const getNetworkingBookingByIdApiCall = (id) =>
+  axiosInstance.get(`/networking/networking/booking/${id}`)
+export const deleteNetworkBookingApiCall = (id) =>
+  axiosInstance.delete(`/networking/networking/booking/${id}`)
+
+
+// Wallet
+export const createWalletApiCall = (details) =>  
+  axiosInstance.post('/center/center/wallet/create', null, {
+    params: details,
+  });

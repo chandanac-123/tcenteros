@@ -395,7 +395,7 @@ export const routes = [
   },
    {
     key: 1,
-    path: '/centerview',
+    path: '/centerview/:id',
     label: '',
     privetRoute: true,
     isSubRoute: false,

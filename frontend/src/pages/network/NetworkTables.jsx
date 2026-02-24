@@ -4,63 +4,99 @@ import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import ApproveModal from './ApproveModal'
 import { useNavigate } from 'react-router-dom'
+import { Button } from '@pages/components/ui/button'
+import DeleteModal from './DeleteModal'
 
 
 
-const NetworkTables = ({ activeTab }) => {
 
-    const [approveOpen, setApproveOpen] = useState(false)
-    const navigate = useNavigate();
+const NetworkTables = ({ activeTab, data }) => {
 
-  
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  console.log("Pararra", activeTab);
+  const navigate = useNavigate();
+
 
   const renderActions = (data) => {
     switch (activeTab) {
       case "Network":
         return (
           <span className="flex gap-3">
-            <button>
+            <button onClick={() =>
+              navigate(`/centerview/${data.network_membership_id}`)
+            }>
               <img src={view} alt="view" />
             </button>
-            <button>
+            <button onClick={() => {
+              setSelectedRow(data);
+              setDeleteOpen(true);
+            }}>
               <img src={deleteicon} alt="delete" />
             </button>
           </span>
         );
       case "Requests":
-        if (data.action === "Pending") {
+        if (data.network_status?.toLowerCase() === "pending") {
           return (
             <span className="flex items-center gap-2 w-full">
-              <button className="flex-[1] shrink-0">
+              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
                 <img src={view} alt="view" />
               </button>
 
-              <button className="flex-[4] border py-1 rounded-md font-medium">
-                Deny
-              </button>
+              {/* <Button
+                size='addbutton'
+                variant='outline_secondary'
+                type='button'
+              > Deny</Button> */}
 
-              <button  onClick={() => setApproveOpen(true)}
-               className="flex-[4] border py-1 bg-primary text-white rounded-md font-medium">
-                Approve
-              </button>
-               <ApproveModal open={approveOpen} setOpen={setApproveOpen} data={data} />
+              <Button
+                onClick={() => {
+                  setSelectedRow(data);
+                  setApproveOpen(true);
+                }} size='addbutton'
+                variant='button_filled'
+                type='button'
+              > Approve</Button>
             </span>
 
           );
         }
 
-        if (data.action === "Approved") {
+        if (data.network_status?.toLowerCase() === "approved") {
           return (
-            <span className="flex items-center gap-2 w-full">
-              <button className="flex-[1] shrink-0">
+            <span className="flex items-center gap-2 ">
+              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
                 <img src={view} alt="view" />
               </button>
 
-              <span className="flex-[8] text-center border border-[#1452D4] py-1 bg-[#D9E5FF] text-[#1452D4] rounded-md font-medium">
-                Approved
-              </span>
+              <Button
+
+                size='addbutton'
+                variant='outline_primary'
+                type='button'
+
+              > Approved</Button>
+            </span>
+
+          );
+        }
+
+        if (data.network_status === "paid") {
+          return (
+            <span className="flex items-center gap-2 ">
+              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
+                <img src={view} alt="view" />
+              </button>
+
+              <Button
+
+                size='addbutton'
+                variant='outline_primary'
+                type='button'
+
+              > Paid</Button>
             </span>
 
           );
@@ -72,10 +108,13 @@ const NetworkTables = ({ activeTab }) => {
       default:
         return (
           <span className="flex gap-3">
-            <button onClick={() => navigate("/centerview")} >
+            <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} >
               <img src={view} alt="view" />
             </button>
-            <button>
+            <button onClick={() => {
+              setSelectedRow(data);
+              setDeleteOpen(true);
+            }}>
               <img src={deleteicon} alt="delete" />
             </button>
           </span>
@@ -86,15 +125,15 @@ const NetworkTables = ({ activeTab }) => {
 
   const columns = [
     {
-      accessorKey: 'full_name',
+      accessorKey: 'member_full_name',
       header: 'Name'
     },
     {
-      accessorKey: 'home_center',
+      accessorKey: 'home_center_name',
       header: 'Home  Center '
     },
     {
-      accessorKey: 'center_number',
+      accessorKey: 'home_center_mobile',
       header: 'Center Number'
     },
     {
@@ -102,7 +141,7 @@ const NetworkTables = ({ activeTab }) => {
       header: 'Start Date'
     },
     {
-      accessorKey: 'end_Date',
+      accessorKey: 'end_date',
       header: 'End Date'
     },
     {
@@ -113,70 +152,26 @@ const NetworkTables = ({ activeTab }) => {
 
   ]
 
-
-  const allData = [
-    {
-      id: 1,
-      full_name: "Rahul Nair",
-      home_center: "Kochi Central",
-      center_number: "CN-1021",
-      start_date: "01 Jan 2025",
-      end_Date: "—",
-      action: "Active",
-      status: "Network"
-    },
-    {
-      id: 2,
-      full_name: "Anjali Menon",
-      home_center: "Ernakulam Hub",
-      center_number: "CN-1022",
-      start_date: "10 Feb 2025",
-      end_Date: "—",
-      action: "Active",
-      status: "Network"
-    },
-    {
-      id: 3,
-      full_name: "Arjun Pillai",
-      home_center: "Trivandrum Center",
-      center_number: "CN-1101",
-      start_date: "05 Mar 2025",
-      end_Date: "—",
-      action: "Pending",
-      status: "Requests"
-    },
-    {
-      id: 6,
-      full_name: "Sarath Vasu",
-      home_center: "Malappuram Center",
-      center_number: "MP-2442",
-      start_date: "19 Apr 2025",
-      end_Date: "—",
-      action: "Approved",
-      status: "Requests"
-    },
-    {
-      id: 4,
-      full_name: "Meera Joseph",
-      home_center: "Kottayam Branch",
-      center_number: "CN-1201",
-      start_date: "01 Dec 2024",
-      end_Date: "31 Dec 2024",
-      action: "Completed",
-      status: "Completed"
-    }
-  ]
-
-
-  const tableData = allData.filter(item => item.status === activeTab)
-
-
   return (
-    <DataTable
-      columns={columns}
-      data={tableData}
-      paginationVisibile={true}
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={data}
+        paginationVisibile={true}
+      />
+
+      {selectedRow && (
+        <ApproveModal
+          open={approveOpen}
+          setOpen={setApproveOpen}
+          data={selectedRow}
+        />
+      )}
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        data={selectedRow} />
+    </>
   )
 }
 
