@@ -36,31 +36,21 @@ import EmployeeManagement from '@pages/employee-management'
 import Settings from '@pages/settings'
 import Accounts from '@pages/accounts'
 import AccountsSubModules from '@pages/accounts/sub-modules'
-
-import dashboard from '../assets/sidebar-icons/dashboard.svg'
-import branding from '../assets/sidebar-icons/branding.svg'
-import attendace from '../assets/sidebar-icons/attendance.svg'
-import employee from '../assets/sidebar-icons/employee.svg'
-import inventory from '../assets/sidebar-icons/inventory.svg'
-import membership from '../assets/sidebar-icons/membership.svg'
-import network from '../assets/sidebar-icons/network.svg'
-import billing from '../assets/sidebar-icons/billing.svg'
-import wallet from '../assets/sidebar-icons/wallet.svg'
-import crm from '../assets/sidebar-icons/crm.svg'
-import account from '../assets/sidebar-icons/account.svg'
-import active_dashboard from '../assets/sidebar-icons/active-dashboard.svg'
-import active_branding from '../assets/sidebar-icons/active-branding.svg'
-import active_attendance from '../assets/sidebar-icons/active-attendance.svg'
-import active_employee from '../assets/sidebar-icons/active-employee.svg'
-import active_inventory from '../assets/sidebar-icons/active-inventory.svg'
-import active_membership from '../assets/sidebar-icons/active-membership.svg'
-import active_network from '../assets/sidebar-icons/active-network.svg'
-import active_billing from '../assets/sidebar-icons/active-billing.svg'
-import active_wallet from '../assets/sidebar-icons/active-wallet.svg'
-import active_crm from '../assets/sidebar-icons/active-crm.svg'
-import active_account from '../assets/sidebar-icons/active-account.svg'
 import ProfilePage from '@pages/profile'
 
+import {
+  CrownIcon,
+  FileUserIcon,
+  LayoutDashboard,
+  ListChecks,
+  NetworkIcon,
+  NotebookText,
+  Receipt,
+  ShapesIcon,
+  Tickets,
+  UserCog,
+  WalletIcon
+} from 'lucide-react'
 
 export const routes = [
   {
@@ -337,8 +327,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Dashboard',
     component: Dashboard,
-    icon: dashboard,
-    iconActive: active_dashboard,
+    icon: <LayoutDashboard />,
     menubar: true,
     permission: true
   },
@@ -350,8 +339,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Employee Management',
     component: EmployeeManagement,
-    icon: employee,
-    iconActive: active_employee,
+    icon: <UserCog />,
     menubar: true,
     permission: true
   },
@@ -363,8 +351,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Membership Plans',
     component: MembershipPlan,
-    icon: membership,
-    iconActive: active_membership,
+    icon: <NotebookText />,
     menubar: true,
     permission: true
   },
@@ -376,8 +363,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'CRM',
     component: CRM,
-    icon: crm,
-    iconActive: active_crm,
+    icon: <FileUserIcon />,
     menubar: true,
     permission: true
   },
@@ -389,12 +375,11 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Network',
     component: Network,
-    icon: network,
-    iconActive: active_network,
+    icon: <NetworkIcon />,
     menubar: true,
     permission: true
   },
-   {
+  {
     key: 1,
     path: '/centerview/:id',
     label: '',
@@ -402,8 +387,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'CenterView',
     component: CenterView,
-    icon: network,
-    iconActive: active_network,
+    icon: <NetworkIcon />,
     menubar: false,
     permission: true
   },
@@ -415,8 +399,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Attendance',
     component: Attendance,
-    icon: attendace,
-    iconActive: active_attendance,
+    icon:  <ListChecks />,
     menubar: true,
     permission: true
   },
@@ -428,8 +411,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Wallet',
     component: Wallet,
-    icon: wallet,
-    iconActive: active_wallet,
+    icon:  <WalletIcon />,
     menubar: true,
     permission: true
   },
@@ -441,8 +423,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Inventories',
     component: Inventories,
-    icon: inventory,
-    iconActive: active_inventory,
+    icon:  <ShapesIcon />,
     menubar: true,
     permission: true
   },
@@ -454,8 +435,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Billing',
     component: Billing,
-    icon: billing,
-    iconActive: active_billing,
+    icon: <Receipt />,
     menubar: true,
     permission: true
   },
@@ -467,8 +447,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Account',
     component: Accounts,
-    icon: account,
-    iconActive: active_account,
+    icon:  <Tickets />,
     menubar: true,
     permission: true
   },
@@ -480,8 +459,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Account',
     component: AccountsSubModules,
-    icon: account,
-    iconActive: active_account,
+    icon: <Tickets />,
     menubar: false,
     permission: true
   },
@@ -493,8 +471,7 @@ export const routes = [
     isSubRoute: false,
     pageTitle: 'Branding',
     component: Branding,
-    icon: branding,
-    iconActive: active_branding,
+    icon:   <CrownIcon />,
     menubar: true,
     permission: true
   },

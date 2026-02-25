@@ -5,8 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        roboto: ['Roboto', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],
-        roboto: ['Roboto', 'sans-serif']
+        stick: ['"Stick No Bills"', 'sans-serif']
       },
       backgroundImage: {
         'primary-bg': "url('/src/assets/images/landingprimary.svg')",
