@@ -58,6 +58,10 @@ export const deleteEmployeeApiCall = id =>
   axiosInstance.delete(`/auth/employee/${id}`)
 export const GetEmployeeByIdApiCall = id =>
   axiosInstance.get(`/auth/employee/${id}`)
+export const updateEmployeeStatusApiCall = (details, id) =>
+  axiosInstance.patch(`/auth/employee/${id}/status?status=${details.status}`, details)
+export const deleteMultipleEmployeeApiCall = details =>
+  axiosInstance.post('/auth/employee/delete-multiple', details)
 
 // TAX API
 export const getTaxApiCall = () =>

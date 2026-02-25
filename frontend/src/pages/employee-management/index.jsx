@@ -4,7 +4,10 @@ import EmployeeTable from './table'
 import MultiColorProgressBar from '@common/MulticolorProgressBar'
 import CustomFilter from '@common/CustomeFilter'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import { useEmployeeQuery } from '@api-queries/employee-management/Query'
+import {
+  useEmployeeQuery,
+  useDeleteMultipleEmployeeMutation
+} from '@api-queries/employee-management/Query'
 
 const EmployeeManagement = () => {
   const [tableParams, setTableParams] = useState({
@@ -12,7 +15,8 @@ const EmployeeManagement = () => {
     search: ''
   })
   const { data, isFetching } = useEmployeeQuery(tableParams)
-  console.log('data: ', data);
+
+ 
 
   return (
     <ContentLayout>
@@ -36,7 +40,7 @@ const EmployeeManagement = () => {
       </div>
 
       <div>
-       <MultiColorProgressBar data={data?.designation_counts} />
+        <MultiColorProgressBar data={data?.employee_counts} />
       </div>
 
       <EmployeeTable

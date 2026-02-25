@@ -9,7 +9,9 @@ import {
   updateEmployee,
   getCategoryById,
   updateCategory,
-  getEmployeeById
+  getEmployeeById,
+  updateEmployeeStatus,
+  deleteMultipleEmployees
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -138,5 +140,39 @@ export const useEmployeeGetByIdQuery = id => {
     enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useUpdateEmployeeStatusMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => updateEmployeeStatus(data, id),
+    onSuccess: async data => {
+      query.invalidateQueries('employees')
+      showSuccess(data.detail || 'Plan status updated successfully')
+    },
+    onError: err => {
+      showError(
+        err?.response?.data?.message || 'Failed to update employee status'
+      )
+      return err
+    }
+  })
+}
+
+export const useDeleteMultipleEmployeeMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: details => deleteMultipleEmployees(details),
+    onSuccess: async data => {
+      query.invalidateQueries('employees')
+      showSuccess('Selected employees deleted successfully')
+    },
+    onError: err => {
+      showError(
+        err?.response?.data?.message || 'Failed to delete selected employees'
+      )
+      return err
+    }
   })
 }
