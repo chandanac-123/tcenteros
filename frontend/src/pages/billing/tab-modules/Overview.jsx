@@ -3,10 +3,25 @@ import CustomDatePicker from '@common/CustomeDatepicker'
 import { Card } from '@pages/components/ui/card'
 import StatusDisplayCard from '../component/StatusDisplayCard'
 import DisplayActionCard from '../component/DisplayActionCard'
+import { useState } from 'react'
+import NewSale from '../component/NewSale'
+import RenewMembership from '../component/RenewMembership'
 
 const Overview = () => {
+  const [openNewSale, setOpenNewSale] = useState(false)
+  const [openRenewMember, setOpenRenewMember] = useState(false)
+
+  const handleActionClick = title => {
+    if (title === '+ New Sale') {
+      setOpenNewSale(true)
+    }
+    if (title === '+ Renew  Membership') {
+      setOpenRenewMember(true)
+    }
+  }
+
   return (
-    <div>
+    <div className='space-y-4'>
       <div className='flex w-full'>
         <StatusDisplayCard />
       </div>
@@ -29,9 +44,11 @@ const Overview = () => {
 
         {/* Right Section */}
         <div className='w-full lg:w-1/3'>
-          <DisplayActionCard />
+          <DisplayActionCard onActionClick={handleActionClick} />
         </div>
       </div>
+      <NewSale saleOpen={openNewSale} setSaleOpen={setOpenNewSale} />
+      <RenewMembership overview={true} openRenewMember={openRenewMember} setOpenRenewMember={setOpenRenewMember} />
     </div>
   )
 }

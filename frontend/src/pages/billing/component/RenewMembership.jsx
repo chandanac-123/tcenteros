@@ -3,10 +3,27 @@ import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 
-const RenewMembership = ({ open, setOpen }) => {
+const RenewMembership = ({
+  open,
+  setOpen,
+  overview,
+  openRenewMember,
+  setOpenRenewMember
+}) => {
   return (
-    <CustomeModal header='Renew Membership' open={open} onOpenChange={setOpen}>
+    <CustomeModal
+      header='Renew Membership'
+      open={overview ? openRenewMember : open}
+      onOpenChange={overview ? setOpenRenewMember : setOpen}
+    >
       <form className='flex flex-col gap-2 lg:w-96 w-full'>
+        {overview && (
+          <CustomeSelect
+            label='Select Member'
+            name='center_id'
+            placeholder='Select Plan'
+          />
+        )}
         <CustomeSelect
           label='Plan'
           name='center_id'
