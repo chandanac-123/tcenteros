@@ -862,22 +862,22 @@ async def delete_multiple_employees(
     return {"detail": f"Deleted {len(employees)} employees"}
 
 
-#Delete All Employees of Centeradmin's Center
-@router.delete("/employee/delete-all")
-async def delete_all_employees(
+#Delete  Employees of Centeradmin's Center
+@router.delete("/employee/{employee_id}")
+async def delete_employee(
+    employee_id: str,
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    stmt = select(Employee).where(Employee.center_id == current_admin["center_id"])
-    result = await session.execute(stmt)
-    employees = result.scalars().all()
-    count = 0
-    for emp in employees:
-        await session.delete(emp)
-        count += 1
+    emp = await session.get(Employee, employee_id)
+    if not emp:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    # Only allow deletion if employee belongs to the centeradmin's center
+    if str(emp.center_id) != str(current_admin["center_id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to delete this employee")
+    await session.delete(emp)
     await session.commit()
-    return {"detail": f"Deleted all {count} employees of your center"}
-
+    return {"detail": "Employee deleted successfully"}
 
 
 
