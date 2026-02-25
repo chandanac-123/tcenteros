@@ -7,7 +7,7 @@ const MasterLayout = () => (
     <Sidebar />
     <div className='flex flex-col flex-1 min-w-0'>
       <Header />
-      <main className='flex-1 min-w-0 overflow-hidden bg-textblack'>
+      <main className='flex-1 min-w-0 overflow-hidden bg-layout_bg'>
         <Outlet />
       </main>
     </div>
