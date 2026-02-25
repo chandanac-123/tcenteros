@@ -79,6 +79,7 @@ class Center(Base, AuditMixin):
     whatsapp_number = Column(String, nullable=True)
     gst_number = Column(String, nullable=True)
     live_class_enable = Column(Boolean, default=False)
+    branch_count = Column(Integer, default=0)
 
 
 

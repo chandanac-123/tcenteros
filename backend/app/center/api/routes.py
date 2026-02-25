@@ -188,7 +188,7 @@ async def calculate_gst(
         tax=tax_info
     )
 
-# 5. POST /billing/onboarding/finalize
+
 # 5. POST /billing/onboarding/finalize
 @router.post('/billing/onboarding/finalize/{onboarding_id}', response_model=OnboardingFinalizeResponse)
 async def finalize_onboarding(
@@ -228,7 +228,7 @@ async def finalize_onboarding(
         db.add(address)
         await db.flush()
 
-        # 4. Create Center and assign address_id
+        # 4. Create Center (parent_center_id is None for parent center)
         center = Center(
             id=uuid4(),
             center_name=onboarding_temp.center_name,
@@ -246,6 +246,7 @@ async def finalize_onboarding(
             approval_status="approved",
             center_status="active",
             network_enabled=True,
+            parent_center_id=None,  # Explicitly set as None
             created_by=None,  # Will set after CenterAdmin is created
             updated_by=None,
             created_at=datetime.utcnow(),

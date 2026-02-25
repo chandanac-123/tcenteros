@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.platforms.models.models import PlatformBranchSetting
 from sqlalchemy.future import select
 from app.core.database import get_async_session
 from app.core.dependencies import superadmin_required, centeradmin_required
-
+from app.billing.models.models import PaymentOrder
+from app.center.models.models import Center
+from uuid import uuid4
+from datetime import datetime
 
 router = APIRouter()
 
@@ -21,15 +25,15 @@ async def set_branching_price(
     current_superadmin=Depends(superadmin_required)
 ):
     # Store price in a settings table (e.g., PlatformSetting)
-    from app.settings.models.models import PlatformSetting
+    
     setting = await session.execute(
-        select(PlatformSetting).where(PlatformSetting.key == "branching_price")
+        select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
     )
     setting = setting.scalar_one_or_none()
     if setting:
         setting.value = str(price)
     else:
-        setting = PlatformSetting(key="branching_price", value=str(price))
+        setting = PlatformBranchSetting(key="branching_price", value=str(price))
         session.add(setting)
     await session.commit()
     return {"branching_price": price, "detail": "Branching price set successfully"}
@@ -42,9 +46,9 @@ async def get_branching_price(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    from app.settings.models.models import PlatformSetting
+    
     setting = await session.execute(
-        select(PlatformSetting).where(PlatformSetting.key == "branching_price")
+        select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
     )
     setting = setting.scalar_one_or_none()
     price = float(setting.value) if setting else 0.0
@@ -58,35 +62,9 @@ async def request_branch_creation(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    from app.settings.models.models import PlatformSetting
+    # Get the current branching price from settings
     setting = await session.execute(
-        select(PlatformSetting).where(PlatformSetting.key == "branching_price")
-    )
-    setting = setting.scalar_one_or_none()
-    price = float(setting.value) if setting else 0.0
-    total_amount = branch_count * price
-    return {
-        "branch_count": branch_count,
-        "branching_price": price,
-        "total_amount": total_amount
-    }
-
-
-#4. Centeradmin: Make Payment for Branches
-@router.post("/centeradmin/branch/payment")
-async def pay_for_branches(
-    branch_count: int = Body(..., embed=True),
-    session: AsyncSession = Depends(get_async_session),
-    current_admin=Depends(centeradmin_required)
-):
-    # Calculate total amount
-    from app.settings.models.models import PlatformSetting
-    from app.billing.models.models import PaymentOrder
-    from uuid import uuid4
-    from datetime import datetime
-
-    setting = await session.execute(
-        select(PlatformSetting).where(PlatformSetting.key == "branching_price")
+        select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
     )
     setting = setting.scalar_one_or_none()
     price = float(setting.value) if setting else 0.0
@@ -99,7 +77,7 @@ async def pay_for_branches(
         payer_user_id=current_admin["user_id"],
         payer_type="center_admin",
         payee_type="platform",
-        order_type="branch_creation",
+        order_type="add_on",  # Use the correct enum value as per your DB
         reference_schema="center",
         reference_id=current_admin["center_id"],
         subtotal_amount=total_amount,
@@ -113,13 +91,73 @@ async def pay_for_branches(
         updated_at=datetime.utcnow(),
     )
     session.add(payment_order)
+
+    # Fetch the parent center and increment branch_count if it is a parent (parent_center_id is None)
+    parent_center = await session.get(Center, current_admin["center_id"])
+    total_branch_count = None
+    if parent_center and parent_center.parent_center_id is None:
+        parent_center.branch_count = (parent_center.branch_count or 0) + branch_count
+        total_branch_count = parent_center.branch_count
+
     await session.commit()
     return {
         "branch_count": branch_count,
+        "branching_price": price,
         "total_amount": total_amount,
         "payment_order_id": str(payment_order.payment_order_id),
-        "payment_status": "success"
+        "payment_status": "success",
+        "total_branch_count": total_branch_count
     }
+
+
+#4. Centeradmin: Make Payment for Branches
+# @router.post("/centeradmin/branch/payment")
+# async def pay_for_branches(
+#     branch_count: int = Body(..., embed=True),
+#     session: AsyncSession = Depends(get_async_session),
+#     current_admin=Depends(centeradmin_required)
+# ):
+#     # Calculate total amount
+
+#     from app.billing.models.models import PaymentOrder
+#     from uuid import uuid4
+#     from datetime import datetime
+
+#     setting = await session.execute(
+#         select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
+#     )
+#     setting = setting.scalar_one_or_none()
+#     price = float(setting.value) if setting else 0.0
+#     total_amount = branch_count * price
+
+#     # Create payment order (simulate payment success)
+#     payment_order = PaymentOrder(
+#         payment_order_id=uuid4(),
+#         center_id=current_admin["center_id"],
+#         payer_user_id=current_admin["user_id"],
+#         payer_type="center_admin",
+#         payee_type="platform",
+#         order_type="branch_creation",
+#         reference_schema="center",
+#         reference_id=current_admin["center_id"],
+#         subtotal_amount=total_amount,
+#         tax_amount=0.0,
+#         total_amount=total_amount,
+#         currency="INR",
+#         status="paid",
+#         created_by=current_admin["user_id"],
+#         updated_by=current_admin["user_id"],
+#         created_at=datetime.utcnow(),
+#         updated_at=datetime.utcnow(),
+#     )
+#     session.add(payment_order)
+#     await session.commit()
+#     return {
+#         "branch_count": branch_count,
+#         "total_amount": total_amount,
+#         "payment_order_id": str(payment_order.payment_order_id),
+#         "payment_status": "success"
+#     }
 
 
 #5. Centeradmin: Create Sub-Branches (after payment)

@@ -96,3 +96,13 @@ class PlatformWallet(Base, AuditMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     balance = Column(Numeric(12, 2), nullable=False, default=0)
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+
+class PlatformBranchSetting(Base):
+    __tablename__ = "platform_branch_settings"
+    __table_args__ = {"schema": "platform"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    key = Column(String, unique=True, nullable=False)
+    value = Column(String, nullable=False)
