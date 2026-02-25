@@ -579,9 +579,11 @@ async def update_center_location(
 #-------------------------------
 
 #wallet creation api
+from decimal import Decimal
+
 @router.post("/center/wallet/create")
-async def create_center_wallet(
-    deposit: float,
+async def create_or_topup_center_wallet(
+    deposit: float = Body(..., embed=True),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
@@ -590,39 +592,56 @@ async def create_center_wallet(
     if not center:
         raise HTTPException(404, "Center not found")
 
-    # Check if wallet already exists
     wallet_result = await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == center_id)
     )
     wallet = wallet_result.scalar_one_or_none()
-    if wallet:
-        raise HTTPException(400, "Wallet already exists for this center")
 
-    # Create wallet
-    wallet = CenterWallet(
-        id=uuid4(),
-        center_id=center_id,
-        balance=deposit,
-        deposit=deposit,
-        min_balance=10000,
-        min_deposit=2000,
-        last_updated=datetime.utcnow(),
-        created_by=current_admin["user_id"],
-        updated_by=current_admin["user_id"],
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-    )
-    session.add(wallet)
-    await session.commit()
-    await session.refresh(wallet)
-    return {
-        "center_id": str(center_id),
-        "wallet_id": str(wallet.id),
-        "balance": float(wallet.balance),
-        "deposit": float(wallet.deposit),
-        "min_balance": float(wallet.min_balance),
-        "min_deposit": float(wallet.min_deposit)
-    }
+    if not wallet:
+        # Wallet creation: require minimum deposit of 20000
+        if deposit < 20000:
+            raise HTTPException(400, "Minimum deposit to create wallet is ₹20,000")
+        wallet = CenterWallet(
+            id=uuid4(),
+            center_id=center_id,
+            balance=Decimal(str(deposit)),
+            deposit=Decimal(str(deposit)),
+            min_balance=Decimal("10000"),
+            last_updated=datetime.utcnow(),
+            created_by=current_admin["user_id"],
+            updated_by=current_admin["user_id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        session.add(wallet)
+        await session.commit()
+        await session.refresh(wallet)
+        return {
+            "center_id": str(center_id),
+            "wallet_id": str(wallet.id),
+            "balance": float(wallet.balance),
+            "deposit": float(wallet.deposit),
+            "min_balance": float(wallet.min_balance),
+            "message": "Wallet created successfully"
+        }
+    else:
+        # Wallet exists: allow top-up with any positive deposit
+        if deposit <= 0:
+            raise HTTPException(400, "Deposit amount must be positive")
+        wallet.balance += Decimal(str(deposit))
+        wallet.last_updated = datetime.utcnow()
+        wallet.updated_by = current_admin["user_id"]
+        await session.commit()
+        await session.refresh(wallet)
+        return {
+            "center_id": str(center_id),
+            "wallet_id": str(wallet.id),
+            "balance": float(wallet.balance),
+            "deposit": float(wallet.deposit),
+            "min_balance": float(wallet.min_balance),
+            "message": "Wallet topped up successfully"
+        }
+    
 
 #Get Center Wallet
 @router.get("/center/wallet")
@@ -642,7 +661,7 @@ async def get_my_center_wallet(
         "balance": float(wallet.balance),
         "deposit": float(wallet.deposit),
         "min_balance": float(wallet.min_balance),
-        "min_deposit": float(wallet.min_deposit)
+        # "min_deposit": float(wallet.min_deposit)
     }
 
 #Get Platform Wallet
@@ -665,6 +684,10 @@ async def list_my_wallet_transactions(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     type: Optional[str] = Query(None, description="credit or debit"),
+    transaction_type: Optional[str] = Query(None, description="Transaction type (e.g., network-in, network-out)"),
+    status: Optional[str] = Query(None, description="Transaction status (e.g., completed, pending)"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
@@ -676,25 +699,47 @@ async def list_my_wallet_transactions(
     if not wallet:
         raise HTTPException(404, "Wallet not found")
 
-    # Filter for credit or debit
+    # Build base filter
+    filters = []
+
+    # Credit/debit filter
     if type == "credit":
-        stmt = select(WalletTransaction).where(
-            WalletTransaction.to_wallet_id == wallet.id,
-            WalletTransaction.transaction_type == "network-in"
-        )
+        filters.append(WalletTransaction.to_wallet_id == wallet.id)
+        filters.append(WalletTransaction.type == "credit")
     elif type == "debit":
-        stmt = select(WalletTransaction).where(
-            WalletTransaction.from_wallet_id == wallet.id,
-            WalletTransaction.transaction_type == "network-out"
-        )
+        filters.append(WalletTransaction.from_wallet_id == wallet.id)
+        filters.append(WalletTransaction.type == "debit")
     else:
-        # Show both (optional)
-        stmt = select(WalletTransaction).where(
-            (WalletTransaction.to_wallet_id == wallet.id) & (WalletTransaction.transaction_type == "network-in") |
-            (WalletTransaction.from_wallet_id == wallet.id) & (WalletTransaction.transaction_type == "network-out")
+        filters.append(
+            ((WalletTransaction.to_wallet_id == wallet.id) & (WalletTransaction.type == "credit")) |
+            ((WalletTransaction.from_wallet_id == wallet.id) & (WalletTransaction.type == "debit"))
         )
 
-    stmt = stmt.order_by(WalletTransaction.created_at.desc())
+    # Transaction type filter
+    if transaction_type:
+        filters.append(WalletTransaction.transaction_type == transaction_type)
+
+    # Status filter
+    if status:
+        filters.append(WalletTransaction.status == status)
+
+    # Date range filter
+    if start_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            filters.append(WalletTransaction.created_at >= start_dt)
+        except Exception:
+            raise HTTPException(400, "Invalid start_date format. Use YYYY-MM-DD.")
+    if end_date:
+        try:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            # To include the whole end date, add 1 day and use < next day
+            end_dt = end_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+            filters.append(WalletTransaction.created_at <= end_dt)
+        except Exception:
+            raise HTTPException(400, "Invalid end_date format. Use YYYY-MM-DD.")
+
+    stmt = select(WalletTransaction).where(*filters).order_by(WalletTransaction.created_at.desc())
 
     # Pagination
     total_result = await session.execute(stmt.with_only_columns(sa.func.count()).order_by(None))
@@ -705,8 +750,8 @@ async def list_my_wallet_transactions(
 
     tx_list = []
     for tx in txs:
-        is_credit = tx.to_wallet_id == wallet.id and tx.transaction_type == "network-in"
-        is_debit = tx.from_wallet_id == wallet.id and tx.transaction_type == "network-out"
+        is_credit = tx.to_wallet_id == wallet.id and tx.type == "credit"
+        is_debit = tx.from_wallet_id == wallet.id and tx.type == "debit"
         credit = float(tx.amount) if is_credit else None
         debit = float(tx.amount) if is_debit else None
 
@@ -742,6 +787,8 @@ async def list_my_wallet_transactions(
         "page_size": page_size,
         "transactions": tx_list
     }
+
+
 
 #wallet card api
 @router.get("/center/wallet/summary")

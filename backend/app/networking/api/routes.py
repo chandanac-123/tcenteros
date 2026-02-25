@@ -400,8 +400,8 @@ async def approve_networking_access(
     membership = await session.get(UserCenterMembership, network_membership_id)
     if not membership or str(membership.center_id) != str(current_admin["center_id"]):
         raise HTTPException(404, "Request not found or not your center")
-    if membership.network_status != NetworkingStatusEnum.pending:
-        raise HTTPException(400, "Request is not pending")
+    if membership.network_status not in [NetworkingStatusEnum.pending, NetworkingStatusEnum.pending_settlement]:
+        raise HTTPException(400, "Request is not pending or pending settlement")
 
     # 2. Get network center and member
     network_center = await session.get(Center, membership.center_id)
@@ -430,10 +430,20 @@ async def approve_networking_access(
         select(CenterWallet).where(CenterWallet.center_id == member.home_center_id)
     )
     home_wallet = home_wallet.scalar_one_or_none()
-    if not home_wallet or home_wallet.balance < center_share:
-        raise HTTPException(400, "Insufficient home center wallet balance")
 
-    # Ensure platform wallet exists, create if not
+    # 5. Check home wallet balance
+    if not home_wallet or home_wallet.balance < center_share:
+        # Mark as pending settlement
+        membership.network_status = NetworkingStatusEnum.pending_settlement
+        membership.updated_by = current_admin["user_id"]
+        membership.updated_at = datetime.utcnow()
+        await session.commit()
+        raise HTTPException(
+            400,
+            "Home center has insufficient balance, request marked as pending settlement."
+        )
+
+    # 6. Ensure platform wallet exists, create if not
     platform_wallet = await session.execute(select(PlatformWallet))
     platform_wallet = platform_wallet.scalar_one_or_none()
     if not platform_wallet:
@@ -447,9 +457,9 @@ async def approve_networking_access(
             updated_by=current_admin["user_id"],
         )
         session.add(platform_wallet)
-        await session.flush()  # Make sure it's available for update
+        await session.flush()
 
-    # 5. Update wallet balances
+    # 7. Update wallet balances
     home_wallet.balance -= center_share
     network_wallet.balance += center_share
     platform_wallet.balance += platform_share
@@ -457,8 +467,7 @@ async def approve_networking_access(
     platform_wallet.updated_at = datetime.utcnow()
     platform_wallet.updated_by = current_admin["user_id"]
 
-    # 6. Log WalletTransaction (one for home center, one for network center)
-    # Outgoing from home center (network-out, debit)
+    # 8. Log WalletTransaction (one for home center, one for network center)
     session.add(WalletTransaction(
         id=uuid4(),
         txn_id=uuid4(),
@@ -472,7 +481,6 @@ async def approve_networking_access(
         status="completed",
         created_at=datetime.utcnow()
     ))
-    # Incoming to network center (network-in, credit)
     session.add(WalletTransaction(
         id=uuid4(),
         txn_id=uuid4(),
@@ -486,9 +494,9 @@ async def approve_networking_access(
         status="completed",
         created_at=datetime.utcnow()
     ))
-    # Note: Platform share is only tracked in PlatformWallet, not in WalletTransaction
+    # Platform share is only tracked in PlatformWallet
 
-    # 7. Update membership status
+    # 9. Update membership status
     membership.network_status = NetworkingStatusEnum.approved
     membership.updated_by = current_admin["user_id"]
     membership.updated_at = datetime.utcnow()
@@ -503,7 +511,32 @@ async def approve_networking_access(
         "transferred_to_network_center": float(center_share)
     }
 
+@router.get("/networking/pending-settlements")
+async def list_pending_settlements(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.auth.models.models import UserCenterMembership, NetworkingStatusEnum, Member
+    from app.center.models.models import Center
 
+    results = await session.execute(
+        select(UserCenterMembership, Member)
+        .join(Member, UserCenterMembership.user_id == Member.id)
+        .where(
+            UserCenterMembership.center_id == current_admin["center_id"],
+            UserCenterMembership.network_status == NetworkingStatusEnum.pending_settlement
+        )
+    )
+    settlements = []
+    for membership, member in results.all():
+        settlements.append({
+            "network_membership_id": str(membership.id),
+            "member_full_name": member.full_name,
+            "start_date": membership.start_date,
+            "end_date": membership.end_date,
+            "network_status": membership.network_status.value,
+        })
+    return {"pending_settlements": settlements}
 
 
 

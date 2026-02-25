@@ -24,6 +24,8 @@ class NetworkingStatusEnum(enum.Enum):
     pending = "pending"
     approved = "approved"
     paid = "paid"
+    completed = "completed"
+    pending_settlement = "pending_settlement"
 
 
 class SuperAdmin(User):
