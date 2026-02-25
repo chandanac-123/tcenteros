@@ -39,7 +39,7 @@ export const categoryValidationSchema = Yup.object().shape({
     )
 })
 
-export const employeeValidationSchema = (isEdit) =>
+export const employeeValidationSchema = isEdit =>
   Yup.object().shape({
     full_name: Yup.string().required('Full name is required'),
     email: Yup.string().email().required('Email is required'),
@@ -87,5 +87,25 @@ export const attendanceValidationSchema = Yup.object().shape({
   employee_id: Yup.string().required('Select full name'),
   date: Yup.string().required('Enter date'),
   check_in_time: Yup.string().required('Enter check-in time'),
-  check_out_time: Yup.string().required('Enter check-out time'),
+  check_out_time: Yup.string().required('Enter check-out time')
+})
+
+export const brandingValidationSchema = Yup.object().shape({
+  app_name: Yup.string().required('Enter App Name'),
+  app_logo: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test(
+      'fileType',
+      'Only JPG, JPEG, PNG files are allowed',
+      value =>
+        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
+    )
+    .test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    ),
+  primary_color: Yup.string().required('Enter Primary Color'),
+  secondary_color: Yup.string().required('Enter Secondary Color')
 })
