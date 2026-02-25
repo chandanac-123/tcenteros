@@ -946,7 +946,7 @@ async def centeradmin_change_password(
     session: AsyncSession = Depends(get_async_session)
 ):
     from app.auth.models.models import CenterAdmin
-    from app.core.security import get_password_hash
+    from app.core.security import get_password_hash, create_access_token, create_refresh_token
 
     if payload.password != payload.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
@@ -961,7 +961,17 @@ async def centeradmin_change_password(
     admin.password_hash = get_password_hash(payload.password)
     admin.updated_at = datetime.utcnow()
     await session.commit()
-    return {"detail": "Password updated successfully"}
+
+    # Generate new tokens
+    access_token = create_access_token({"sub": str(admin.id), "role": "centeradmin"})
+    refresh_token = create_refresh_token({"sub": str(admin.id), "role": "centeradmin"})
+
+    return {
+        "detail": "Password updated successfully",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 
 #--------------------------------
