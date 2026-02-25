@@ -801,11 +801,23 @@ async def list_employees(
             profile_photo=emp.profile_photo,
         ))
 
+    # --- Employee-wise count by designation ---
+    from sqlalchemy import func
+    count_stmt = (
+        select(Designation.name, func.count(Employee.id))
+        .join(Employee, Employee.designation_id == Designation.id)
+        .where(Employee.center_id == center_id)
+        .group_by(Designation.name)
+    )
+    count_result = await session.execute(count_stmt)
+    employee_counts = {row[0]: row[1] for row in count_result.all()}
+
     return {
         "page": page,
         "page_size": page_size,
         "total_count": total_count,
-        "employees": employee_list
+        "employees": employee_list,
+        "employee_counts": employee_counts
     }
 
 
