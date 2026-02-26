@@ -4,12 +4,13 @@ import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
+import CustomHexColorPicker from '@common/CustomeHexColorPicker'
 
 const Branding = () => {
   const initialValues = {
     app_name: '',
-    primary_color: '',
-    secondary_color: '',
+    primary_color: '#1452D4',
+    secondary_color: '#8B24E2',
     app_logo: null
   }
 
@@ -24,6 +25,7 @@ const Branding = () => {
       }
     }
   })
+    console.log('formik: ', formik.values);
 
   return (
     <ContentLayout>
@@ -56,27 +58,18 @@ const Branding = () => {
         </div>
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <Input
-              label='Primary Color Picker'
-              name='primary_color'
-              placeholder='Enter the Primary Color'
+            <CustomHexColorPicker
+              label='Primary Color'
               value={formik.values.primary_color}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.primary_color && formik.errors.primary_color
-              }
+              name='primary_color'
+              onChange={val => formik.setFieldValue('primary_color', val)}
             />
           </div>
           <div className='flex-1'>
-            <Input
+            <CustomHexColorPicker
               label='Secondary Color Picker'
-              name='secondary_color'
-              placeholder='Enter the Secondary Color'
               value={formik.values.secondary_color}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.secondary_color && formik.errors.secondary_color
-              }
+              onChange={val => formik.setFieldValue('secondary_color', val)}
             />
           </div>
         </div>

@@ -14,3 +14,19 @@
   background: #d1d5db;
   border-radius: 10px;
 }
+
+.react-colorful {
+  width: 100% !important;
+}
+
+/* Make hue slider thin */
+.react-colorful__hue {
+  height: 6px !important;
+  border-radius: 4px;
+}
+
+/* Make hue pointer smaller */
+.react-colorful__hue-pointer {
+  width: 4px;
+  height: 4px;
+}
