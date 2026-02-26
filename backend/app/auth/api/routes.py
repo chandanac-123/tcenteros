@@ -373,11 +373,14 @@ async def create_employee(
     address: Optional[str] = Form(None),
     password: str = Form(...),
     designation_id: str = Form(...),
-    center_id: str = Form(...),
     joining_date: Optional[date] = Form(None),
     profile_photo: Optional[UploadFile] = File(None),
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
 ):
+    # Use center_id from the logged-in centeradmin
+    center_id = current_admin["center_id"]
+
     # Check for duplicate email
     existing_user = await session.execute(select(User).where(User.email == email))
     if existing_user.scalar_one_or_none():
@@ -418,13 +421,13 @@ async def create_employee(
         experience_years=experience,
         password_hash=password,  # Hash if needed
         designation_id=designation_id,
-        center_id=center_id,
+        center_id=center_id,  # Use centeradmin's center_id
         joining_date=joining_date,
         profile_photo=profile_photo_url,
         address_id=address_obj.id if address_obj else None,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
-        status=StatusEnum.active,  # Set status if your model supports it
+        status=StatusEnum.active,
     )
     session.add(employee)
     await session.commit()

@@ -171,7 +171,8 @@ class CenterOperationalSetting(Base, AuditMixin):
     )
 
     attendance_allowed_radius_meters = Column(Integer, default=5, nullable=True)
-
+    inventory_profit = Column(Numeric(10, 2), default=0.0, nullable=False)
+                               
                                                                                          
     center = relationship(
         "Center",

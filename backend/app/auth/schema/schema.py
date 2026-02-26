@@ -81,7 +81,6 @@ class EmployeeCreate(BaseModel):
     address: Optional[str] = None
     password: str
     designation_id: UUID4
-    center_id: UUID4
     joining_date: Optional[date] = None  # <-- Add this
 
 class EmployeeUpdate(BaseModel):
