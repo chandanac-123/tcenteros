@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4, conint, validator, HttpUrl
+from pydantic import BaseModel, UUID4, conint, validator, HttpUrl, condecimal
 from datetime import time, date
 from typing import Optional, List
 import uuid
@@ -49,14 +49,14 @@ class CenterOperationalSettingCreate(BaseModel):
     opening_time: time
     closing_time: time
     week_off_days: List[str]
-    attendance_allowed_radius_meters: conint(gt=0) = 5
+    payroll_cycle_day: int = 1
+    inventory_profit: condecimal(max_digits=10, decimal_places=2) = 0.0
 
     @validator("opening_time", "closing_time", pre=True)
     def parse_time(cls, v):
         if isinstance(v, time):
             return v
         try:
-            # Accepts "HH:MM" or "HH:MM:SS"
             return time.fromisoformat(v) if len(v.split(":")) == 3 else time.fromisoformat(v + ":00")
         except Exception:
             raise ValueError("Time must be in HH:MM or HH:MM:SS format")
@@ -65,7 +65,8 @@ class CenterOperationalSettingUpdate(BaseModel):
     opening_time: Optional[time] = None
     closing_time: Optional[time] = None
     week_off_days: Optional[List[str]] = None
-    attendance_allowed_radius_meters: Optional[conint(gt=0)] = None
+    payroll_cycle_day: Optional[int] = None
+    inventory_profit: Optional[condecimal(max_digits=10, decimal_places=2)] = None
 
 class CenterOperationalSettingOut(BaseModel):
     id: UUID4
@@ -73,7 +74,8 @@ class CenterOperationalSettingOut(BaseModel):
     opening_time: time
     closing_time: time
     week_off_days: List[str]
-    attendance_allowed_radius_meters: int
+    payroll_cycle_day: int
+    inventory_profit: float
 
     class Config:
         orm_mode = True

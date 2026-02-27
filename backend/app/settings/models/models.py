@@ -37,6 +37,7 @@ class TaxScope(enum.Enum):
     product = "product"
     service = "service"
     platform_fee = "platform_fee"
+    add_on = "add_on"
 
 class Address(Base, AuditMixin):
     __tablename__ = "address"
@@ -172,7 +173,7 @@ class CenterOperationalSetting(Base, AuditMixin):
 
     attendance_allowed_radius_meters = Column(Integer, default=5, nullable=True)
     inventory_profit = Column(Numeric(10, 2), default=0.0, nullable=False)
-                               
+    payroll_cycle_day = Column(Integer, nullable=False, default=1) # 1 = 1st of the month, 15 = 15th, etc.                          
                                                                                          
     center = relationship(
         "Center",

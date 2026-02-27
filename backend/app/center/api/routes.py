@@ -837,7 +837,7 @@ async def get_wallet_summary(
         "month_debit": float(month_debit)
     }
 
-
+#get center details (centeradmin only)
 @router.get("/center/me")
 async def get_my_center_details(
     session: AsyncSession = Depends(get_async_session),
@@ -858,6 +858,12 @@ async def get_my_center_details(
             select(Address).where(Address.id == center.address_id)
         )
         address = address_result.scalar_one_or_none()
+
+    # Get center image URL if present
+    center_image_url = (
+        await run_in_threadpool(get_file_url, center.center_image)
+        if center.center_image else None
+    )
 
     return {
         "center_id": str(center.id),
@@ -881,6 +887,7 @@ async def get_my_center_details(
         "center_phone": center.center_phone,
         "gst_number": center.gst_number,
         "live_class_enable": center.live_class_enable,
+        "center_image_url": center_image_url,  # <-- Added here
         "address": {
             "address_line_1": address.address_line_1,
             "address_line_2": address.address_line_2,
@@ -891,6 +898,75 @@ async def get_my_center_details(
             "postal_code": address.postal_code,
         } if address else None
     }
+
+#get center details by id (centeradmin can get own center and sub-branches, sub-branch admin can get only own center)
+@router.get("/center/{center_id}/by-id")
+async def get_center_by_id(
+    center_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Get the requested center
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # Get the current admin's center
+    admin_center_id = str(current_admin["center_id"])
+
+    # Permission logic:
+    # - Parent admin: can get own center and any sub-branch (center.parent_center_id == admin_center_id)
+    # - Sub-branch admin: can get only their own center
+    is_own_center = str(center.id) == admin_center_id
+    is_sub_branch = str(center.parent_center_id) == admin_center_id if center.parent_center_id else False
+
+    if not (is_own_center or is_sub_branch):
+        raise HTTPException(403, "Not allowed to access this center data")
+
+    # Optionally fetch address details
+    address = None
+    if center.address_id:
+        address = await session.get(Address, center.address_id)
+
+    # Get center image URL if present
+    center_image_url = (
+        await run_in_threadpool(get_file_url, center.center_image)
+        if center.center_image else None
+    )
+
+    return {
+        "center_id": str(center.id),
+        "center_name": center.center_name,
+        "about": center.about,
+        "facilities": center.facilities,
+        "website_url": center.website_url,
+        "capacity": float(center.capacity) if center.capacity else None,
+        "approval_status": center.approval_status.value if hasattr(center.approval_status, "value") else center.approval_status,
+        "center_status": center.center_status.value if hasattr(center.center_status, "value") else center.center_status,
+        "network_enabled": center.network_enabled,
+        "networking_amount": float(center.networking_amount) if center.networking_amount else None,
+        "white_label_enabled": center.white_label_enabled,
+        "kind_of_center": center.kind_of_center,
+        "members_count": center.members_count,
+        "trainer_count": center.trainer_count,
+        "currently_using_digital_tool": center.currently_using_digital_tool,
+        "marketing_platform": center.marketing_platform,
+        "contact_person": center.contact_person,
+        "center_email": center.center_email,
+        "center_phone": center.center_phone,
+        "gst_number": center.gst_number,
+        "live_class_enable": center.live_class_enable,
+        "center_image_url": center_image_url,
+        "address": {
+            "address_line_1": address.address_line_1,
+            "address_line_2": address.address_line_2,
+            "city": address.city,
+            "district": address.district,
+            "state": address.state,
+            "country": address.country,
+            "postal_code": address.postal_code,
+        } if address else None
+    }    
 
 
 @router.put("/center/profile/update")
@@ -904,7 +980,7 @@ async def update_center_profile(
     if not center:
         raise HTTPException(404, "Center not found")
 
-    # Update Center fields (except address)
+    # Update Center fields (except address and image)
     update_data = data.dict(exclude_unset=True)
     for field, value in update_data.items():
         if field != "address" and hasattr(center, field):
@@ -941,8 +1017,8 @@ async def update_center_profile(
         "facilities": center.facilities,
         "website_url": center.website_url,
         "capacity": float(center.capacity) if center.capacity else None,
-        "approval_status": center.approval_status.value if center.approval_status else None,
-        "center_status": center.center_status.value if center.center_status else None,
+        "approval_status": center.approval_status.value if hasattr(center.approval_status, "value") else center.approval_status,
+        "center_status": center.center_status.value if hasattr(center.center_status, "value") else center.center_status,
         "network_enabled": center.network_enabled,
         "networking_amount": float(center.networking_amount) if center.networking_amount else None,
         "white_label_enabled": center.white_label_enabled,
@@ -956,12 +1032,63 @@ async def update_center_profile(
         "center_phone": center.center_phone,
         "gst_number": center.gst_number,
         "live_class_enable": center.live_class_enable,
+        "center_image_url": (
+            await run_in_threadpool(get_file_url, center.center_image) if center.center_image else None
+        ),
         "address": address_data,
     }
 
     return {
         "detail": "Center profile updated successfully",
         "updated_center": updated_center
+    }
+
+#center image update api
+@router.put("/center/image/update")
+async def update_center_image(
+    center_id: str = Body(..., embed=True, description="Center ID to update image"),
+    image: UploadFile = File(...),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Get current admin info
+    admin_id = current_admin["user_id"]
+    admin = await session.get(CenterAdmin, admin_id)
+    if not admin:
+        raise HTTPException(404, "CenterAdmin not found")
+
+    # Get the center to update
+    center = await session.get(Center, center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # Permission logic:
+    # - Sub-branch admin: can update only their own center
+    # - Parent admin: can update their own center and any sub-branch
+    print("admin.center_id:", admin.center_id)
+    print("center_id:", center_id)
+    print("center.parent_center_id:", center.parent_center_id)
+
+    is_own_center = str(admin.center_id) == str(center_id)
+    is_sub_branch = str(center.parent_center_id) == str(admin.center_id) if center.parent_center_id else False
+
+    if not (is_own_center or is_sub_branch):
+        raise HTTPException(403, "Not allowed to update this center image")
+
+    # Upload image to S3
+    file_bytes = await image.read()
+    file_ext = image.filename.split('.')[-1]
+    key = f"center_images/{center_id}.{file_ext}"
+    await run_in_threadpool(upload_file, file_bytes, key, image.content_type)
+    center.center_image = key
+    await session.commit()
+
+    image_url = await run_in_threadpool(get_file_url, key)
+    return {
+        "detail": "Center image updated successfully",
+        "center_id": center_id,
+        "center_name": center.center_name,
+        "center_image_url": image_url
     }
 
 
@@ -996,6 +1123,8 @@ async def update_centeradmin_profile_photo(
     return {
         "detail": "Profile photo updated successfully",
         "profile_photo_url": profile_photo_url,
+        "user_id": str(user.id),
+        "role": user.role,
         "center_id": str(center.id),
         "center_name": center.center_name
     }

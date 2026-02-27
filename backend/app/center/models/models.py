@@ -80,6 +80,7 @@ class Center(Base, AuditMixin):
     gst_number = Column(String, nullable=True)
     live_class_enable = Column(Boolean, default=False)
     branch_count = Column(Integer, default=0)
+    center_image = Column(String, nullable=True)
 
 
 

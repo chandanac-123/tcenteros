@@ -194,18 +194,27 @@ class AddressUpdate(BaseModel):
     postal_code: Optional[str] = None
 
 class CenterProfileUpdate(BaseModel):
-    center_name: Optional[str] = None
-    about: Optional[str] = None
-    facilities: Optional[List[str]] = None
-    website_url: Optional[str] = None
-    capacity: Optional[float] = None
-    kind_of_center: Optional[Dict] = None
-    contact_person: Optional[str] = None
-    center_email: Optional[str] = None
-    center_phone: Optional[str] = None
-    gst_number: Optional[str] = None
-    live_class_enable: Optional[bool] = None
-    address: Optional[AddressUpdate] = None
+    center_name: Optional[str]
+    about: Optional[str]
+    facilities: Optional[List[str]]
+    website_url: Optional[str]
+    capacity: Optional[int]
+    approval_status: Optional[str]
+    center_status: Optional[str]
+    network_enabled: Optional[bool]
+    networking_amount: Optional[float]
+    white_label_enabled: Optional[bool]
+    kind_of_center: Optional[str]  # <-- Make sure this is str or Enum, not dict
+    members_count: Optional[int]
+    trainer_count: Optional[int]
+    currently_using_digital_tool: Optional[List[str]]
+    marketing_platform: Optional[List[str]]
+    contact_person: Optional[str]
+    center_email: Optional[str]
+    center_phone: Optional[str]
+    gst_number: Optional[str]
+    live_class_enable: Optional[bool]
+    address: Optional[AddressUpdate]
 
 #image gallary schema
 class CenterGalleryImageOut(BaseModel):

@@ -178,14 +178,14 @@ async def create_center_operational_setting(
         opening_time=data.opening_time,
         closing_time=data.closing_time,
         week_off_days=data.week_off_days,
-        attendance_allowed_radius_meters=data.attendance_allowed_radius_meters
+        inventory_profit=data.inventory_profit,
+        payroll_cycle_day=data.payroll_cycle_day
     )
     session.add(ops)
     await session.commit()
     await session.refresh(ops)
     return ops
 
-# READ (get for current center)
 @router.get("/center-operational-settings/", response_model=CenterOperationalSettingOut)
 async def get_center_operational_setting(
     session: AsyncSession = Depends(get_async_session),
@@ -204,7 +204,6 @@ async def get_center_operational_setting(
         raise HTTPException(status_code=404, detail="Operational settings not found for this center")
     return ops
 
-# UPDATE
 @router.put("/center-operational-settings/", response_model=CenterOperationalSettingOut)
 async def update_center_operational_setting(
     data: CenterOperationalSettingUpdate,
@@ -228,7 +227,6 @@ async def update_center_operational_setting(
     await session.refresh(ops)
     return ops
 
-# DELETE
 @router.delete("/center-operational-settings/", status_code=204)
 async def delete_center_operational_setting(
     session: AsyncSession = Depends(get_async_session),

@@ -1,17 +1,20 @@
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, UploadFile, File, Form
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.platforms.models.models import PlatformBranchSetting
 from sqlalchemy.future import select
+from sqlalchemy import or_
 from app.core.database import get_async_session
 from app.core.dependencies import superadmin_required, centeradmin_required
 from app.auth.models.models import CenterAdmin
 from app.core.security import get_password_hash
-from app.settings.models.models import Address
+from app.settings.models.models import Address, CenterCategory
 from app.billing.models.models import PaymentOrder, PaymentOrderStatus
 from app.center.models.models import Center
+from app.auth.models.models import Employee, Member, MemberStatusEnum
 from uuid import uuid4
 from datetime import datetime
+from app.s3.service import upload_file, get_file_url
 
 router = APIRouter()
 
@@ -207,10 +210,23 @@ from uuid import UUID
 @router.post("/centeradmin/branch/create")
 async def create_sub_branch(
     payment_order_id: str = Query(..., description="Payment order ID"),
-    data: dict = Body(...),
+    name: str = Form(...),
+    center_category_id: str = Form(...),
+    address_line_1: str = Form(...),
+    address_line_2: str = Form(...),
+    city: str = Form(...),
+    district: str = Form(...),
+    state: str = Form(...),
+    country: str = Form(...),
+    postal_code: str = Form(...),
+    center_email: str = Form(...),
+    password: str = Form(...),
+    center_phone: str = Form(...),
+    center_image: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
+    from uuid import UUID
     # 1. Verify payment (convert to UUID for DB lookup)
     try:
         payment_uuid = UUID(payment_order_id)
@@ -236,31 +252,22 @@ async def create_sub_branch(
     if remaining <= 0:
         raise HTTPException(400, "No branch slots available. Please purchase more branches.")
 
-    # 3. Validate required fields
-    required_fields = ["name", "center_category_id", "address", "center_email", "password"]
-    for field in required_fields:
-        if field not in data:
-            raise HTTPException(400, f"Missing required field: {field}")
+    # 3. Upload center image to S3
+    image_key = f"center_images/{uuid4()}_{center_image.filename}"
+    image_bytes = await center_image.read()
+    upload_file(image_bytes, image_key, center_image.content_type)
+    center_image_url = get_file_url(image_key)  # Get the presigned/public URL
 
-    # 4. Validate address fields
-    address = data["address"]
-    required_addr_fields = [
-        "address_line_1", "address_line_2", "city", "district", "state", "country", "postal_code"
-    ]
-    for field in required_addr_fields:
-        if field not in address:
-            raise HTTPException(400, f"Missing address field: {field}")
-
-    # 5. Create Address
+    # 4. Create Address
     address_obj = Address(
         id=uuid4(),
-        address_line_1=address["address_line_1"],
-        address_line_2=address["address_line_2"],
-        city=address["city"],
-        district=address["district"],
-        state=address["state"],
-        country=address["country"],
-        postal_code=address["postal_code"],
+        address_line_1=address_line_1,
+        address_line_2=address_line_2,
+        city=city,
+        district=district,
+        state=state,
+        country=country,
+        postal_code=postal_code,
         created_by=current_admin["user_id"],
         updated_by=current_admin["user_id"],
         created_at=datetime.utcnow(),
@@ -269,13 +276,15 @@ async def create_sub_branch(
     session.add(address_obj)
     await session.flush()
 
-    # 6. Create branch center
+    # 5. Create branch center
     branch = Center(
         id=uuid4(),
         parent_center_id=parent_center_id,
-        center_name=data["name"],
-        center_category_id=data["center_category_id"],
+        center_name=name,
+        center_category_id=center_category_id,
         address_id=address_obj.id,
+        center_phone=center_phone,
+        center_image=image_key,  # Store S3 key in DB
         approval_status="approved",
         center_status="active",
         created_by=current_admin["user_id"],
@@ -286,22 +295,23 @@ async def create_sub_branch(
     session.add(branch)
     await session.flush()
 
-    # 7. Create CenterAdmin for the new branch
+    # 6. Create CenterAdmin for the new branch
     # Check for duplicate email
     existing_admin = await session.execute(
-        select(CenterAdmin).where(CenterAdmin.email == data["center_email"])
+        select(CenterAdmin).where(CenterAdmin.email == center_email)
     )
     if existing_admin.scalar_one_or_none():
         raise HTTPException(400, "A center admin with this email already exists.")
 
     # Use email prefix as full_name
-    full_name = data["center_email"].split("@")[0]
+    full_name = center_email.split("@")[0]
 
+    from app.core.security import get_password_hash
     center_admin = CenterAdmin(
         id=uuid4(),
         full_name=full_name,
-        email=data["center_email"],
-        password_hash=get_password_hash(data["password"]),
+        email=center_email,
+        password_hash=get_password_hash(password),
         center_id=branch.id,
         is_approved=True,
         created_at=datetime.utcnow(),
@@ -311,12 +321,237 @@ async def create_sub_branch(
     session.add(center_admin)
 
     await session.commit()
+
+    # Prepare parent center data
+    parent_center_data = {
+        "center_id": str(parent_center.id),
+        "center_name": parent_center.center_name,
+        "center_phone": parent_center.center_phone,
+        "center_email": parent_center.center_email,
+        "center_status": parent_center.center_status.value if parent_center.center_status else None,
+        "approval_status": parent_center.approval_status.value if parent_center.approval_status else None,
+        "created_at": parent_center.created_at,
+        "updated_at": parent_center.updated_at,
+        "center_image_url": get_file_url(parent_center.center_image) if parent_center.center_image else None,
+        # Add more fields as needed
+    }
+
     return {
-        "parent_center_id": str(parent_center_id),
+        "parent_center": parent_center_data,
         "branch_id": str(branch.id),
         "center_admin_id": str(center_admin.id),
         "center_admin_email": center_admin.email,
+        "center_phone": branch.center_phone,
+        "center_image_key": branch.center_image,  # S3 key
+        "center_image_url": center_image_url,      # Public/presigned URL
         "detail": "Branch and center admin created successfully"
     }
 
+
+# list all branches under the logged-in centeradmin's center
+@router.get("/centeradmin/branches/list-summary")
+async def list_branches_and_summary(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    parent_center_id = current_admin["center_id"]
+    center = await session.get(Center, parent_center_id)
+    if not center:
+        raise HTTPException(404, "Center not found")
+
+    # If this is a sub-branch, only show this branch and its stats
+    if center.parent_center_id is not None:
+        # Fetch address
+        address = None
+        if center.address_id:
+            address_obj = await session.get(Address, center.address_id)
+            if address_obj:
+                address = {
+                    "address_line_1": address_obj.address_line_1,
+                    "address_line_2": address_obj.address_line_2,
+                    "city": address_obj.city,
+                    "district": address_obj.district,
+                    "state": address_obj.state,
+                    "country": address_obj.country,
+                    "postal_code": address_obj.postal_code,
+                }
+            else:
+                address = {}
+        else:
+            address = {}
+
+        # Fetch category name
+        category_name = None
+        if center.center_category_id:
+            category_obj = await session.get(CenterCategory, center.center_category_id)
+            if category_obj:
+                category_name = category_obj.name
+
+        # Fetch center admin email
+        admin_email = None
+        admin_result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.center_id == center.id)
+        )
+        admin_obj = admin_result.scalar_one_or_none()
+        if admin_obj:
+            admin_email = admin_obj.email
+
+        # Get employees for this sub-branch
+        emp_result = await session.execute(
+            select(Employee).where(Employee.center_id == str(center.id))
+        )
+        employees = emp_result.scalars().all()
+        total_employees = len(employees)
+
+        # Get members for this sub-branch
+        mem_result = await session.execute(
+            select(Member).where(Member.home_center_id == str(center.id))
+        )
+        members = mem_result.scalars().all()
+        total_active_members = sum(1 for m in members if m.member_status == MemberStatusEnum.member)
+        total_inactive_members = sum(1 for m in members if m.member_status != MemberStatusEnum.member)
+
+        # Prepare branch data
+        center_image_url = get_file_url(center.center_image) if center.center_image else None
+
+        branch_data = [{
+            "id": str(center.id),
+            "center_name": center.center_name,
+            "parent_center_id": str(center.parent_center_id),
+            "center_category_id": str(center.center_category_id) if center.center_category_id else None,
+            "center_category_name": category_name,
+            "address_id": str(center.address_id) if center.address_id else None,
+            "address": address,
+            "center_email": admin_email,
+            "center_phone": center.center_phone,
+            "center_image_url": center_image_url,
+            "approval_status": center.approval_status.value if center.approval_status else None,
+            "center_status": center.center_status.value if center.center_status else None,
+            "created_at": center.created_at,
+            "updated_at": center.updated_at,
+        }]
+
+        return {
+            "branches": branch_data,
+            "total_centers": 1,
+            "total_employees": total_employees,
+            "total_active_members": total_active_members,
+            "total_inactive_members": total_inactive_members
+        }
+
+    # Otherwise, parent center: show parent + all sub-branches
+    # 1. Get parent branch (parent_center_id is None)
+    parent_branch_data = {
+        "id": str(center.id),
+        "center_name": center.center_name,
+        "parent_center_id": None,
+        "center_category_id": str(center.center_category_id) if center.center_category_id else None,
+        "center_category_name": None,  # You can fetch category name if needed
+        "address_id": str(center.address_id) if center.address_id else None,
+        "address": {},  # You can fetch address details if needed
+        "center_email": center.center_email,
+        "center_phone": center.center_phone,
+        "center_image_url": get_file_url(center.center_image) if center.center_image else None,
+        "approval_status": center.approval_status.value if center.approval_status else None,
+        "center_status": center.center_status.value if center.center_status else None,
+        "created_at": center.created_at,
+        "updated_at": center.updated_at,
+    }
+
+    # 2. Get all sub-branches (exclude parent center)
+    result = await session.execute(
+        select(Center).where(Center.parent_center_id == parent_center_id)
+    )
+    centers = result.scalars().all()
+    center_ids = [str(c.id) for c in centers]
+
+    # 3. Total count of centers (parent + sub-branches)
+    total_centers = 1 + len(centers)
+
+    # 4. Total employees in all these centers (parent + sub-branches)
+    all_center_ids = [str(parent_center_id)] + center_ids
+    emp_result = await session.execute(
+        select(Employee).where(Employee.center_id.in_(all_center_ids))
+    )
+    employees = emp_result.scalars().all()
+    total_employees = len(employees)
+
+    # 5. Total active/inactive members in all these centers (parent + sub-branches)
+    mem_result = await session.execute(
+        select(Member).where(Member.home_center_id.in_(all_center_ids))
+    )
+    members = mem_result.scalars().all()
+    total_active_members = sum(1 for m in members if m.member_status == MemberStatusEnum.member)
+    total_inactive_members = sum(1 for m in members if m.member_status != MemberStatusEnum.member)
+
+    # 6. Batch fetch related data for sub-branches only
+    category_ids = [c.center_category_id for c in centers if c.center_category_id]
+    address_ids = [c.address_id for c in centers if c.address_id]
+
+    # Fetch all categories
+    categories = {}
+    if category_ids:
+        cat_result = await session.execute(
+            select(CenterCategory).where(CenterCategory.id.in_(category_ids))
+        )
+        for cat in cat_result.scalars().all():
+            categories[str(cat.id)] = cat.name
+
+    # Fetch all addresses
+    addresses = {}
+    if address_ids:
+        addr_result = await session.execute(
+            select(Address).where(Address.id.in_(address_ids))
+        )
+        for addr in addr_result.scalars().all():
+            addresses[str(addr.id)] = {
+                "address_line_1": addr.address_line_1,
+                "address_line_2": addr.address_line_2,
+                "city": addr.city,
+                "district": addr.district,
+                "state": addr.state,
+                "country": addr.country,
+                "postal_code": addr.postal_code,
+            }
+
+    # Fetch all center admins for these branches
+    center_admins = {}
+    if center_ids:
+        admin_result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.center_id.in_(center_ids))
+        )
+        for admin in admin_result.scalars().all():
+            center_admins[str(admin.center_id)] = admin.email
+
+    # 7. Prepare branch data (sub-branches only)
+    branch_data = []
+    for c in centers:
+        center_image_url = get_file_url(c.center_image) if c.center_image else None
+        branch_data.append({
+            "id": str(c.id),
+            "center_name": c.center_name,
+            "parent_center_id": str(c.parent_center_id) if c.parent_center_id else None,
+            "center_category_id": str(c.center_category_id) if c.center_category_id else None,
+            "center_category_name": categories.get(str(c.center_category_id)),
+            "address_id": str(c.address_id) if c.address_id else None,
+            "address": addresses.get(str(c.address_id), {}),
+            "center_email": center_admins.get(str(c.id)),
+            "center_phone": c.center_phone,
+            "center_image_url": center_image_url,
+            "approval_status": c.approval_status.value if c.approval_status else None,
+            "center_status": c.center_status.value if c.center_status else None,
+            "created_at": c.created_at,
+            "updated_at": c.updated_at,
+        })
+
+    # 8. Combine parent branch and sub-branches
+    all_branches = [parent_branch_data] + branch_data
+
+    return {
+        "branches": all_branches,
+        "total_centers": total_centers,
+        "total_employees": total_employees,
+        "total_active_members": total_active_members,
+        "total_inactive_members": total_inactive_members
+    }
 
