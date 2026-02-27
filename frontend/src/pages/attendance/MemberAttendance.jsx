@@ -6,6 +6,7 @@ import {
   useAllMemberAttendanceQuery,
   useDeleteAttendanceMutation
 } from '@api-queries/attendance/Query'
+import { formatTo12Hour } from '@utils/helper'
 
 const MemberAttendance = ({ dateRange }) => {
   const [tableParams, setTableParams] = useState({
@@ -19,14 +20,14 @@ const MemberAttendance = ({ dateRange }) => {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
 
-   useEffect(() => {
-      setTableParams(prev => ({
-        ...prev,
-        from: dateRange?.from,
-        to: dateRange?.to,
-        page: 1
-      }))
-    }, [dateRange])
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      from: dateRange?.from,
+      to: dateRange?.to,
+      page: 1
+    }))
+  }, [dateRange])
 
   const columns = [
     {
@@ -39,11 +40,13 @@ const MemberAttendance = ({ dateRange }) => {
     },
     {
       accessorKey: 'check_in_time',
-      header: 'Check In Time'
+      header: 'Check In Time',
+      cell: ({ row }) => formatTo12Hour(row.original.check_in_time)
     },
     {
       accessorKey: 'check_out_time',
-      header: 'Check Out Time '
+      header: 'Check Out Time ',
+      cell: ({ row }) => formatTo12Hour(row.original.check_out_time)
     },
     {
       accessorKey: 'duration',
