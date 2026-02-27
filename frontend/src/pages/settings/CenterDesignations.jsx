@@ -5,7 +5,7 @@ import {
   useDeleteCategoryMutation
 } from '@api-queries/employee-management/Query'
 import { useState } from 'react'
-import AddCategory from '@pages/employee-management/AddCategory'
+import AddCategory from '@pages/employee-management/category/AddCategory'
 import DeleteModal from '@common/CustomeDelete'
 import { Button } from '@pages/components/ui/button'
 import InputFile from '@common/CustomeFileUpload'

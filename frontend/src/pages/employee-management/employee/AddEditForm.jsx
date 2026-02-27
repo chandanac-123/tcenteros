@@ -5,7 +5,6 @@ import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
 import CustomeModal from '@common/CustomeModal'
 import { Plus } from 'lucide-react'
-import AddCategory from './AddCategory'
 import {
   useCategoriesQuery,
   useCreateEmployeeMutation,
@@ -18,6 +17,7 @@ import { useFormik } from 'formik'
 import { employeeValidationSchema } from '@utils/validations'
 import CustomDatePicker from '@common/CustomeDatepicker'
 import { format } from 'date-fns'
+import AddCategory from '../category/AddCategory'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const state = useAuthStore.getState()

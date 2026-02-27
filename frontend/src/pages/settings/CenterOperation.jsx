@@ -160,7 +160,7 @@ const CenterOperations = () => {
           </div>
           <div className='flex-1'>
             <Input
-              label='Payroll Cycle'
+              label='Pay Cycle'
               value={centerTimeFormik.values.payroll_cycle}
               onChange={e =>
                 centerTimeFormik.setFieldValue('payroll_cycle', e.target.value)
