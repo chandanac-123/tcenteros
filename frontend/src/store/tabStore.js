@@ -1,19 +1,43 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const createTabStore = (storageKey) =>
+/* -----------------------------
+   Generic Tab Store (Reusable)
+-------------------------------- */
+const createTabStore = storageKey =>
   create(
     persist(
-      (set) => ({
+      set => ({
         selectedTab: 1,
-        setSelectedTab: (id) => set({ selectedTab: id }),
+        setSelectedTab: id => set({ selectedTab: id })
       }),
       {
-        name: storageKey,
+        name: storageKey
       }
     )
   )
 
-export const useCrmStore = createTabStore('crm_selected_tab')
 export const useSettingsTabStore = createTabStore('settings_selected_tab')
+
 export const useAttendanceStore = createTabStore('attendance_selected_tab')
+
+/* -----------------------------
+   CRM Store (Custom)
+-------------------------------- */
+export const useCrmStore = create(
+  persist(
+    set => ({
+      selectedTab: 1,
+      setSelectedTab: id => set({ selectedTab: id }),
+
+      memberView: 'list',
+      setMemberView: view => set({ memberView: view }),
+
+      selectedMemberId: null,
+      setSelectedMemberId: id => set({ selectedMemberId: id })
+    }),
+    {
+      name: 'crm_store'
+    }
+  )
+)

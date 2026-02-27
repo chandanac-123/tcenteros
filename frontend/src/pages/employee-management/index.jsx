@@ -8,15 +8,18 @@ import {
   useEmployeeQuery,
   useDeleteMultipleEmployeeMutation
 } from '@api-queries/employee-management/Query'
+import { Button } from '@pages/components/ui/button'
 
 const EmployeeManagement = () => {
+  const [open, setOpen] = useState(false)
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
   })
   const { data, isFetching } = useEmployeeQuery(tableParams)
-
- 
+  const handleOpen = () => {
+    setOpen(true)
+  }
 
   return (
     <ContentLayout>
@@ -29,6 +32,9 @@ const EmployeeManagement = () => {
         </div>
         <div className='flex-1 flex justify-end items-center gap-2'>
           <CustomFilter />
+          <Button onClick={handleOpen} size='addbutton'>
+            + Add Employee
+          </Button>
         </div>
       </div>
 
