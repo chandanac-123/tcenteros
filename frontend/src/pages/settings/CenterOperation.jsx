@@ -40,8 +40,8 @@ const CenterOperations = () => {
     closing_time: convertTo12Hour(centerTime?.closing_time) || '',
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
-    attendance_allowed_radius_meters:
-      parseInt(centerTime?.attendance_allowed_radius_meters) || ''
+    payroll_cycle: centerTime?.payroll_cycle || '',
+    inventory_profit: centerTime?.inventory_profit || ''
   }
 
   const initialValues = {
@@ -145,25 +145,38 @@ const CenterOperations = () => {
           />
         </div>
 
-        <div className='flex justify-between items-center'>
-          <Input
-            label='Attendance allowed radius'
-            value={centerTimeFormik.values.attendance_allowed_radius_meters}
-            onChange={e =>
-              centerTimeFormik.setFieldValue(
-                'attendance_allowed_radius_meters',
-                e.target.value
-              )
-            }
-          />
-          <Button
-            id='center-timing'
-            size='addbutton'
-            variant='button_outlined'
-            type='submit'
-          >
-            Save Changes
-          </Button>
+        <div className='flex gap-4'>
+          <div className='flex-1'>
+            <Input
+              label='Inventory Profit'
+              value={centerTimeFormik.values.inventory_profit}
+              onChange={e =>
+                centerTimeFormik.setFieldValue(
+                  'inventory_profit',
+                  e.target.value
+                )
+              }
+            />
+          </div>
+          <div className='flex-1'>
+            <Input
+              label='Payroll Cycle'
+              value={centerTimeFormik.values.payroll_cycle}
+              onChange={e =>
+                centerTimeFormik.setFieldValue('payroll_cycle', e.target.value)
+              }
+            />
+          </div>
+          <div className='flex-1 justify-end items-center flex'>
+            <Button
+              id='center-timing'
+              size='addbutton'
+              variant='button_outlined'
+              type='submit'
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
       </form>
 

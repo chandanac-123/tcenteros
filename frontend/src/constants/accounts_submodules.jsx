@@ -2,7 +2,6 @@ import expense from '@assets/account-modules/expense.svg'
 import income from '@assets/account-modules/income.svg'
 import inventory from '@assets/account-modules/inventory.svg'
 import ledger from '@assets/account-modules/ledger.svg'
-import overview from '@assets/account-modules/overview.svg'
 import payroll from '@assets/account-modules/payroll.svg'
 import settlement from '@assets/account-modules/settlement.svg'
 import taxes from '@assets/account-modules/taxes.svg'
@@ -10,11 +9,9 @@ import expense_active from '@assets/account-modules/expense-active.svg'
 import income_active from '@assets/account-modules/income-active.svg'
 import inventory_active from '@assets/account-modules/inventory-active.svg'
 import ledger_active from '@assets/account-modules/ledger-active.svg'
-import overview_active from '@assets/account-modules/overview-active.svg'
 import payrol_activel from '@assets/account-modules/payroll-active.svg'
 import settlement_active from '@assets/account-modules/settlement-active.svg'
 import taxes_active from '@assets/account-modules/taxes-active.svg'
-import Overview from '@pages/accounts/sub-modules/Oveview'
 import Ledger from '@pages/accounts/sub-modules/Ledger'
 import Income from '@pages/accounts/sub-modules/Income'
 import Expense from '@pages/accounts/sub-modules/Expense'
@@ -25,13 +22,6 @@ import Taxes from '@pages/accounts/sub-modules/Taxes'
 
 
 export const subaccounts = [
-  {
-    title: 'Overview',
-    image: overview,
-    image_active: overview_active,
-    active_bg_color: 'bg-overview_bg',
-    component: <Overview />
-  },
   {
     title: 'Ledger',
     image: ledger,
