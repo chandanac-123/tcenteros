@@ -5,8 +5,31 @@ import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
 import CustomHexColorPicker from '@common/CustomeHexColorPicker'
+import { useState } from 'react'
+import DocumentCard from './components/DocumentCard'
+import DocumentModal from './components/DocumentModal'
 
 const Branding = () => {
+  const [modalState, setModalState] = useState({
+    open: false,
+    type: null,
+    mode: 'view'
+  })
+
+  const [documents, setDocuments] = useState({
+    terms: `1. Membership Agreement
+Members must follow gym rules.
+
+2. Payments
+Fees must be paid before due date.`,
+
+    privacy: `1. Data Collection
+We collect personal info for billing and operations.
+
+2. Data Protection
+Your data is secured and not shared.`
+  })
+
   const initialValues = {
     app_name: '',
     primary_color: '#1452D4',
@@ -25,7 +48,7 @@ const Branding = () => {
       }
     }
   })
-    console.log('formik: ', formik.values);
+  console.log('formik: ', formik.values)
 
   return (
     <ContentLayout>
@@ -74,12 +97,52 @@ const Branding = () => {
           </div>
         </div>
 
-        <div className='flex justify-center mt-4 '>
+        <div className='flex justify-end mt-4 '>
           <Button size='addbutton' variant='default' type='submit'>
             Create Branding
           </Button>
         </div>
       </form>
+
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-8'>
+        <DocumentCard
+          title='Terms and Conditions'
+          onView={() =>
+            setModalState({ open: true, type: 'terms', mode: 'view' })
+          }
+          onEdit={() =>
+            setModalState({ open: true, type: 'terms', mode: 'edit' })
+          }
+        />
+
+        <DocumentCard
+          title='Privacy Policy'
+          onView={() =>
+            setModalState({ open: true, type: 'privacy', mode: 'view' })
+          }
+          onEdit={() =>
+            setModalState({ open: true, type: 'privacy', mode: 'edit' })
+          }
+        />
+      </div>
+
+      <DocumentModal
+        open={modalState.open}
+        mode={modalState.mode}
+        title={
+          modalState.type === 'terms'
+            ? 'Terms and Conditions'
+            : 'Privacy Policy'
+        }
+        initialContent={documents[modalState.type]}
+        onClose={() => setModalState({ open: false, type: null, mode: 'view' })}
+        onSave={updatedContent =>
+          setDocuments(prev => ({
+            ...prev,
+            [modalState.type]: updatedContent
+          }))
+        }
+      />
     </ContentLayout>
   )
 }
