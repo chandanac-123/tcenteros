@@ -74,7 +74,24 @@ async def request_branch_creation(
     )
     setting = setting.scalar_one_or_none()
     price = float(setting.value) if setting else 0.0
-    total_amount = branch_count * price
+    subtotal_amount = branch_count * price
+
+    # Check for tax category with tax_scope = "add_on"
+    from app.settings.models.models import TaxCategory
+    tax_result = await session.execute(
+        select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
+    )
+    tax_category = tax_result.scalar_one_or_none()
+    if tax_category:
+        tax_percentage = float(tax_category.tax_percentage or 0)
+        tax_amount = round(subtotal_amount * (tax_percentage / 100), 2)
+        total_amount = round(subtotal_amount + tax_amount, 2)
+        tax_category_id = str(tax_category.id)
+    else:
+        tax_percentage = 0.0
+        tax_amount = 0.0
+        total_amount = subtotal_amount
+        tax_category_id = None
 
     # Create payment order (simulate payment success)
     payment_order = PaymentOrder(
@@ -86,8 +103,8 @@ async def request_branch_creation(
         order_type="add_on",  # Use the correct enum value as per your DB
         reference_schema="center",
         reference_id=current_admin["center_id"],
-        subtotal_amount=total_amount,
-        tax_amount=0.0,
+        subtotal_amount=subtotal_amount,
+        tax_amount=tax_amount,
         total_amount=total_amount,
         currency="INR",
         status="paid",
@@ -109,10 +126,14 @@ async def request_branch_creation(
     return {
         "branch_count": branch_count,
         "branching_price": price,
+        "subtotal_amount": subtotal_amount,
+        "tax_percentage": tax_percentage,
+        "tax_amount": tax_amount,
         "total_amount": total_amount,
         "payment_order_id": str(payment_order.payment_order_id),
         "payment_status": "success",
-        "total_branch_count": total_branch_count
+        "total_branch_count": total_branch_count,
+        "tax_category_id": tax_category_id,
     }
 
 
