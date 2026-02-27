@@ -136,6 +136,69 @@ async def request_branch_creation(
         "tax_category_id": tax_category_id,
     }
 
+#GET API that allows the logged-in center admin to view their latest branch purchase calculation, including tax details:
+@router.get("/centeradmin/branch/request/summary")
+async def get_branch_request_summary(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Get the current branching price from settings
+    setting = await session.execute(
+        select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
+    )
+    setting = setting.scalar_one_or_none()
+    price = float(setting.value) if setting else 0.0
+
+    # Get the latest paid payment order for add_on
+    result = await session.execute(
+        select(PaymentOrder)
+        .where(
+            PaymentOrder.center_id == current_admin["center_id"],
+            PaymentOrder.status == "paid",
+            PaymentOrder.order_type == "add_on"
+        )
+        .order_by(PaymentOrder.created_at.desc())
+        .limit(1)
+    )
+    payment_order = result.scalar_one_or_none()
+
+    if not payment_order:
+        raise HTTPException(404, "No branch purchase found for this center.")
+
+    subtotal_amount = float(payment_order.subtotal_amount)
+    tax_amount = float(payment_order.tax_amount)
+    total_amount = float(payment_order.total_amount)
+    # Fix: convert both to float before division
+    branch_count = int(subtotal_amount // price) if price > 0 else 0
+
+    # Get tax details
+    from app.settings.models.models import TaxCategory
+    tax_result = await session.execute(
+        select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
+    )
+    tax_category = tax_result.scalar_one_or_none()
+    tax_percentage = float(tax_category.tax_percentage or 0) if tax_category else 0.0
+    tax_category_id = str(tax_category.id) if tax_category else None
+
+    # Get total branch count
+    parent_center = await session.get(Center, current_admin["center_id"])
+    total_branch_count = parent_center.branch_count if parent_center else None
+
+    return {
+        "branch_count": branch_count,
+        "branching_price": price,
+        "subtotal_amount": subtotal_amount,
+        "tax_percentage": tax_percentage,
+        "tax_amount": tax_amount,
+        "total_amount": total_amount,
+        "payment_order_id": str(payment_order.payment_order_id),
+        "payment_status": payment_order.status,
+        "total_branch_count": total_branch_count,
+        "tax_category_id": tax_category_id,
+    }
+
+
+
 
 @router.get("/centeradmin/branch/purchased")
 async def get_purchased_branch_count(
