@@ -208,3 +208,14 @@ export const getBrandingApiCall = id =>
   axiosInstance.get(`/branding/branding/white-label/all`)
 export const createBrandingApiCall = details =>
   axiosInstance.post(`/branding/branding/white-label/bulk-update`, details)
+
+//CENTER PROFILE API
+export const getCenterProfileApiCall = () =>
+  axiosInstance.get(`/branching/centeradmin/branches/list-summary`)
+export const updateCenterProfileApiCall = details =>
+  axiosInstance.put(`/center/center/profile/update`, details, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+export const getCenterProfileByIdApiCall = id =>
+  axiosInstance.get(`/center/center/${id}/by-id`)
+
