@@ -32,14 +32,46 @@ const EditCenterInformation = ({ open, setOpen }) => {
         <div className='flex gap-4'>
           <div className='flex-1'>
             <Input
-              label='Email *'
+              label='Center Capacity'
               name='center_code'
               placeholder='Enter Center Code'
             />
           </div>
           <div className='flex-1'>
             <Input
-              label='Phone *'
+              label='Kind of Center'
+              name='email'
+              placeholder='Enter Your Email'
+            />
+          </div>
+        </div>
+        <div className='flex gap-4'>
+          <div className='flex-1'>
+            <Input
+              label='Contact Person'
+              name='center_code'
+              placeholder='Enter Center Code'
+            />
+          </div>
+          <div className='flex-1'>
+            <Input
+              label='gst_number'
+              name='email'
+              placeholder='Enter Your Email'
+            />
+          </div>
+        </div>
+        <div className='flex gap-4'>
+          <div className='flex-1'>
+            <Input
+              label='Center Email'
+              name='center_code'
+              placeholder='Enter Center Code'
+            />
+          </div>
+          <div className='flex-1'>
+            <Input
+              label='Center Phone'
               name='email'
               placeholder='Enter Your Email'
             />
@@ -70,6 +102,7 @@ const EditCenterInformation = ({ open, setOpen }) => {
         <Input label='Address 1' name='address' />
         <Input label='Address 2' name='address' />
         <Textarea label='Description' name='description' />
+        <Input label='Website Link' name='website_link' />
 
         <div className='flex justify-end mt-4 gap-4'>
           <Button

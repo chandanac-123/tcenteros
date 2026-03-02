@@ -4,6 +4,7 @@ import { Button } from '@pages/components/ui/button'
 import EditCenterInformation from './EditCenterInfo'
 import { useState } from 'react'
 import { CustomeCollapse } from '@common/CustomeCollapse'
+import PublicWebUrl from './PublicWebUrl'
 
 const CenterInformation = () => {
   const [open, setOpen] = useState(false)
@@ -89,6 +90,7 @@ const CenterInformation = () => {
         <p className='text-pricing_text text-sm'>Center description</p>
         <p className='text-textblack text-base mt-2'>{data.description}</p>
       </div>
+     <PublicWebUrl />
     </div>
   )
 
