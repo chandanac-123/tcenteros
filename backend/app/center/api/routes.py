@@ -1353,11 +1353,21 @@ async def delete_center_gallery_image(
     img = await session.get(CenterGalleryImage, image_id)
     if not img:
         raise HTTPException(404, "Image not found")
-    if img.center_id != current_admin["center_id"]:
+
+    admin_center_id = str(current_admin["center_id"])
+    is_own_center = str(img.center_id) == admin_center_id
+
+    # Fetch the image's center to check parent relationship
+    center = await session.get(Center, img.center_id)
+    is_sub_branch = str(center.parent_center_id) == admin_center_id if center and center.parent_center_id else False
+
+    if not (is_own_center or is_sub_branch):
         raise HTTPException(403, "Not allowed")
+
     await session.delete(img)
     await session.commit()
     return {"detail": "Image deleted"}
+
 
 
 @router.get("/centers", response_model=dict)
