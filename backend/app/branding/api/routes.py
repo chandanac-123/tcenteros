@@ -275,3 +275,7 @@ async def create_or_update_center_terms_privacy(
     await session.commit()
     await session.refresh(terms)
     return terms
+
+
+
+

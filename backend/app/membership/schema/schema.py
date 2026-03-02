@@ -40,23 +40,25 @@ class MembershipOut(BaseModel):
 
 
 class MemberCreate(BaseModel):
-    username: str
+    center_id: str
+    full_name: str
     email: EmailStr
-    password: str
-    gender: str = None
-    mobile: str = None
-    profile_photo: str = None
-    blood_group: str = None
-    date_of_birth: date = None
+    mobile: str
+    gender: Optional[str]
+    date_of_birth: Optional[date]
+    blood_group: Optional[str]
     address_line_1: str
-    address_line_2: str = ""
+    address_line_2: Optional[str] = None
     city: str
     state: str
     country: str
     postal_code: str
-    membership_id: UUID4
-    time_slot_id: UUID4 = None
-    member_status: MemberStatusEnum = MemberStatusEnum.member
+    membership_id: Optional[str] = None
+    time_slot_id: Optional[str] = None
+    member_status: str  # member, guest, visitor, lead
+    payment_method: Optional[str] = None
+    payment_status: Optional[str] = None  # paid, unpaid
+    password: Optional[str] = None  # Only for paid member
 
 
 #time slot change request schema
