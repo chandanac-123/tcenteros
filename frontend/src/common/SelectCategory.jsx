@@ -7,7 +7,7 @@ const SelectCategory = ({ item, selected, onSelect }) => {
         ${selected ? 'border-secondary bg-secondary/5' : 'border-bordergreylight'}
       `}
     >
-      <img src={item?.image_url} alt={item?.name} className='w-10 h-10 mr-3 rounded-lg justify-center flex' />
+      <img src={item?.image_url}loading="lazy" alt={item?.name} className='w-10 h-10 mr-3 rounded-lg justify-center flex' />
 
       <span className='flex-1 text-sm text-center'>{item?.name}</span>
     </label>

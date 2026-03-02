@@ -49,6 +49,7 @@ const GalleryUpload = () => {
           >
             <img
               src={image?.image_url}
+              loading='lazy'
               alt='gallery'
               className='w-full h-56 object-cover'
             />
