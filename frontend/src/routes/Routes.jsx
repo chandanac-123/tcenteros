@@ -45,12 +45,14 @@ import {
   ListChecks,
   NetworkIcon,
   NotebookText,
+  ProportionsIcon,
   Receipt,
   ShapesIcon,
   Tickets,
   UserCog,
   WalletIcon
 } from 'lucide-react'
+import Reports from '@pages/reports'
 
 export const routes = [
   {
@@ -472,6 +474,18 @@ export const routes = [
     pageTitle: 'Branding',
     component: Branding,
     icon:   <CrownIcon />,
+    menubar: true,
+    permission: true
+  },
+    {
+    key: 1,
+    path: '/reports',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: 'Reports',
+    component: Reports,
+    icon:   <ProportionsIcon  />,
     menubar: true,
     permission: true
   },
