@@ -1,3 +1,5 @@
+
+from datetime import datetime
 from fastapi import APIRouter,HTTPException, Depends, UploadFile, File, Form
 from sqlalchemy.future import select
 from uuid import UUID, uuid4
@@ -5,6 +7,8 @@ from app.branding.models.models import WhiteLabelConfig
 from app.branding.schema.schema import (
     WhiteLabelConfigCreate, WhiteLabelConfigOut
 )
+from app.settings.schema.schema import TermsPrivacyOut
+from app.settings.models.models import TermsPrivacy
 from app.core.dependencies import get_async_session, centeradmin_required                               
 from app.core.models.models import StatusEnum
 from app.s3.service import upload_file, get_file_url
@@ -205,3 +209,69 @@ async def get_white_label_custom_domain(
     if custom_domain is None:
         raise HTTPException(status_code=404, detail="Custom domain not found")
     return {"custom_domain": custom_domain}
+
+
+
+#Here is an API that allows a logged-in centeradmin to get the global Terms & Privacy created by the superadmin 
+@router.get("/terms-privacy/global", response_model=TermsPrivacyOut)
+async def get_global_terms_privacy(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    # Fetch the global TermsPrivacy (center_id is None)
+    result = await session.execute(
+        select(TermsPrivacy).where(TermsPrivacy.center_id == None)
+    )
+    terms = result.scalars().first()
+    if not terms:
+        raise HTTPException(404, "Global Terms/Privacy not found")
+
+    return TermsPrivacyOut(
+        id=terms.id,
+        title=terms.title,
+        content=terms.content,
+        created_at=terms.created_at,
+        updated_at=terms.updated_at
+    )
+
+
+
+# Centeradmin creates/updates Terms & Privacy for their center
+@router.post("/terms-privacy/center", response_model=TermsPrivacyOut)
+async def create_or_update_center_terms_privacy(
+    title: Optional[str] = Form(None),
+    content: Optional[str] = Form(None),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_id = current_user["center_id"]
+    # Check if already exists
+    result = await session.execute(
+        select(TermsPrivacy).where(TermsPrivacy.center_id == center_id)
+    )
+    terms = result.scalars().first()
+    if terms:
+        # Update only provided fields
+        if title is not None:
+            terms.title = title
+        if content is not None:
+            terms.content = content
+        terms.updated_by = current_user["user_id"]
+        terms.updated_at = datetime.utcnow()
+    else:
+        # Create, allow missing fields (but at least one must be provided)
+        if title is None and content is None:
+            raise HTTPException(400, "At least one of 'title' or 'content' must be provided")
+        terms = TermsPrivacy(
+            title=title or "",
+            content=content or "",
+            center_id=center_id,
+            created_by=current_user["user_id"],
+            updated_by=current_user["user_id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        session.add(terms)
+    await session.commit()
+    await session.refresh(terms)
+    return terms
