@@ -11,11 +11,12 @@ import { usePlansQuery } from '@api-queries/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 
 const MembershipPlan = () => {
+  const [activeTab, setActiveTab] = useState('All')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
-  const { data, isFetching } = usePlansQuery()
-  // console.log('data: ', data);
-  const employeeOrCenter = [
+  const { data, isFetching } = usePlansQuery(activeTab)
+
+  const Status = [
     { id: 1, name: 'All' },
     { id: 2, name: 'Active' },
     { id: 3, name: 'Inactive' }
@@ -30,9 +31,10 @@ const MembershipPlan = () => {
       <div className='flex justify-between items-center my-4'>
         <div>
           <CustomeTab
-            tabList={employeeOrCenter}
+            tabList={Status}
             defaultVal='All'
             tabsListClass=' w-[400px] p-[1px]'
+            onChange={value => setActiveTab(value)}
           />
         </div>
         <div className='flex'>

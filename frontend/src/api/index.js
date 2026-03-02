@@ -101,7 +101,7 @@ export const updateCenterTimeApiCall = (details) =>
   )
 
 //MEMBERSHIP PLAN API
-export const getMembershipPlanApiCall = () =>
+export const getMembershipPlanApiCall = (status) =>
   axiosInstance.get(`/membership/memberships-plans`)
 export const createMembershipPlanApiCall = details =>
   axiosInstance.post('/membership/memberships-plans', details)

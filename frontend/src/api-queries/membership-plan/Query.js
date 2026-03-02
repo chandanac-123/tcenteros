@@ -9,10 +9,10 @@ import {
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
-export const usePlansQuery = () => {
+export const usePlansQuery = (status) => {
   return useQuery({
-    queryKey: ['plans'],
-    queryFn: () => getAllPlans(),
+    queryKey: ['plans', status],
+    queryFn: () => getAllPlans(status),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
