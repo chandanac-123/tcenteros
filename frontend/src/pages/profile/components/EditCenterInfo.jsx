@@ -8,12 +8,14 @@ import {
   useGetProfileByIdQuery,
   useUpdateProfileMutation
 } from '@api-queries/center-profile/Query'
+import { useState } from 'react'
+import { X, Plus } from 'lucide-react'
 
 const EditCenterInformation = ({ open, setOpen, editId }) => {
   const { data, isFetching } = useGetProfileByIdQuery(editId)
   console.log('1111111111: ', data)
   const { mutateAsync: update } = useUpdateProfileMutation()
-
+  const [facilities, setFacilities] = useState(data?.facilities || [])
   const initialValues = {
     center_name: data?.center_name || '',
     category: data?.center_category_name || '',
@@ -50,19 +52,14 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
             <InputFile label='Upload Image' name='image_url' />
           </div>
           <div className='flex-1'>
-            <Textarea
+            <Input
               label='About'
               name='full_name'
               placeholder='Enter Your Name'
             />
           </div>
         </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input label='Fecilities' name='image_url' />
-          </div>
-          <div className='flex-1'></div>
-        </div>
+     
         <div className='flex gap-4'>
           <div className='flex-1'>
             <Input
@@ -159,7 +156,43 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
             <Input label='Address 2' name='address' />
           </div>
         </div>
+   <div className='flex-1'>
+          {/* Grid Layout: 3 per row */}
+          <div className='grid grid-cols-4 gap-4'>
+            {facilities.map((facility, index) => (
+              <div key={index} className='flex items-center gap-2'>
+                <Input
+                  value={facility}
+                  onChange={e => {
+                    const updated = [...facilities]
+                    updated[index] = e.target.value
+                    setFacilities(updated)
+                  }}
+                />
 
+                <button
+                  type='button'
+                  onClick={() => {
+                    const updated = facilities.filter((_, i) => i !== index)
+                    setFacilities(updated)
+                  }}
+                  className='text-red-500 hover:text-red-700'
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Button */}
+          <button
+            type='button'
+            onClick={() => setFacilities([...facilities, ''])}
+            className='flex items-center gap-1 text-primary mt-3'
+          >
+            <Plus size={16} /> Add Facility
+          </button>
+        </div>
         <Input label='Website Link' name='website_link' />
 
         <div className='flex justify-end mt-4 gap-4'>
