@@ -92,6 +92,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
           }
           await createEmployee(fd)
         }
+        formik.resetForm()
         closeModal()
       } catch (error) {
         console.error(error)

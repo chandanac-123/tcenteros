@@ -8,8 +8,18 @@ import CustomHexColorPicker from '@common/CustomeHexColorPicker'
 import { useState } from 'react'
 import DocumentCard from './components/DocumentCard'
 import DocumentModal from './components/DocumentModal'
+import {
+  useAllBrandQuery,
+  useCreateBrandMutation
+} from '@api-queries/branding/Query'
+import { useBrandingStore } from '@store/brandingStore'
 
 const Branding = () => {
+  const { setBranding } = useBrandingStore()
+  const { data: brandingData, isFetching } = useAllBrandQuery()
+  const { mutateAsync: createBranding, isLoading: isCreating } =
+    useCreateBrandMutation()
+
   const [modalState, setModalState] = useState({
     open: false,
     type: null,
@@ -31,10 +41,12 @@ Your data is secured and not shared.`
   })
 
   const initialValues = {
-    app_name: '',
-    primary_color: '#1452D4',
-    secondary_color: '#8B24E2',
-    app_logo: null
+    app_name: brandingData?.centers?.[0]?.branding?.app_name || '',
+    primary_color:
+      brandingData?.centers?.[0]?.branding?.primary_color || '#1452D4',
+    secondary_color:
+      brandingData?.centers?.[0]?.branding?.secondary_color || '#8B24E2',
+    app_logo: brandingData?.centers?.[0]?.branding?.logo_url || null
   }
 
   const formik = useFormik({
@@ -43,6 +55,21 @@ Your data is secured and not shared.`
     enableReinitialize: true,
     onSubmit: async values => {
       try {
+        const formData = new FormData()
+        formData.append('app_name', values.app_name)
+        formData.append('primary_color', values.primary_color)
+        formData.append('secondary_color', values.secondary_color)
+        if (values.app_logo instanceof File) {
+          formData.append('logo', values.app_logo)
+        }
+        const response = await createBranding(formData)
+        const updatedBranding = {
+          app_name: response?.app_name,
+          logo_url: response?.logo_url,
+          primary_color: response?.primary_color,
+          secondary_color: response?.secondary_color
+        }
+        setBranding(updatedBranding) // 🔥🔥 THIS updates instantly
       } catch (error) {
         console.error(error)
       }
@@ -56,21 +83,14 @@ Your data is secured and not shared.`
       <form onSubmit={formik.handleSubmit} className='space-y-4'>
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <Input
-              label='Name of the App'
-              name='app_name'
-              placeholder='Enter the Name of the App'
-              value={formik.values.app_name}
-              onChange={formik.handleChange}
-              error={formik.touched.app_name && formik.errors.app_name}
-            />
-          </div>
-          <div className='flex-1'>
             <InputFile
               label='Upload Image'
               name='app_logo'
               value={formik.values.app_logo}
-              onChange={formik.handleChange}
+              onChange={e => {
+                formik.setFieldValue('app_logo', e.target.value)
+                formik.setFieldTouched('app_logo', true, false)
+              }}
               onRemove={() => {
                 formik.setFieldValue('app_logo', null)
                 formik.setFieldTouched('app_logo', true, false)
@@ -78,6 +98,7 @@ Your data is secured and not shared.`
               error={formik.touched.app_logo && formik.errors.app_logo}
             />
           </div>
+          <div className='flex-1'></div>
         </div>
         <div className='flex gap-4'>
           <div className='flex-1'>
@@ -91,6 +112,7 @@ Your data is secured and not shared.`
           <div className='flex-1'>
             <CustomHexColorPicker
               label='Secondary Color Picker'
+              name='secondary_color'
               value={formik.values.secondary_color}
               onChange={val => formik.setFieldValue('secondary_color', val)}
             />

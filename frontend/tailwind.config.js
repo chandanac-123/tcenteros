@@ -15,8 +15,8 @@ export default {
         'img-bg': "url('/src/assets/images/bgimage.svg')"
       },
       colors: {
-        primary: 'rgb(var(--primary))',
-        secondary: 'rgb(var(--secondary))',
+        primary: 'rgb(var(--primary) / <alpha-value>)',
+        secondary: 'rgb(var(--secondary) / <alpha-value>)',
         grey: '#3A3A3A',
         primarybg: '#FFFFFF4D',
         secondarybg: '#F7EDFF',
@@ -83,7 +83,7 @@ export default {
         profile_bg_green: '#D3F3C4',
         profile_bg_brown: '#ECF0CE',
         profile_bg_pink: '#FFE3E1',
-        layout_bg: '#100F0F'
+        blue:'#407BFF'
       }
     }
   },

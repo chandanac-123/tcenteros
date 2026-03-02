@@ -24,7 +24,7 @@ const PublicWebUrl = () => {
         <div className='flex flex-col gap-2'>
           <span className='text-sm text-pricing_text'>Website URL</span>
           <div className='flex items-center gap-4 border border-tableborder p-2 rounded-md'>
-            <span className='text-sm break-all text-primary'>{url}</span>
+            <span className='text-sm break-all text-primary_light'>{url}</span>
             <button
               onClick={handleCopy}
               className='text-primary text-sm font-medium'

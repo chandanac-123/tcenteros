@@ -94,14 +94,14 @@ export const createCenterTimeApiCall = details =>
   )
 export const deleteCenterTimeApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-operational-settings/${id}`)
-export const updateCenterTimeApiCall = (details) =>
+export const updateCenterTimeApiCall = details =>
   axiosInstance.put(
     `/settings/superadmin/center-operational-settings/`,
     details
   )
 
 //MEMBERSHIP PLAN API
-export const getMembershipPlanApiCall = (status) =>
+export const getMembershipPlanApiCall = status =>
   axiosInstance.get(`/membership/memberships-plans`)
 export const createMembershipPlanApiCall = details =>
   axiosInstance.post('/membership/memberships-plans', details)
@@ -198,8 +198,13 @@ export const createGalleryApiCall = details =>
   axiosInstance.post(`/center/center/gallery`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
-export const deleteGalleryApiCall = id =>{
-  console.log("idaaaaaaa", id);
+export const deleteGalleryApiCall = id => {
+  console.log('idaaaaaaa', id)
   return axiosInstance.delete(`/center/center/gallery/${id}`)
-  
 }
+
+//BRANDING API
+export const getBrandingApiCall = id =>
+  axiosInstance.get(`/branding/branding/white-label/all`)
+export const createBrandingApiCall = details =>
+  axiosInstance.post(`/branding/branding/white-label/bulk-update`, details)

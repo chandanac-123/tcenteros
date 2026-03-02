@@ -90,24 +90,22 @@ export const attendanceValidationSchema = Yup.object().shape({
   check_out_time: Yup.string().required('Enter check-out time')
 })
 
-export const brandingValidationSchema = Yup.object().shape({
-  app_name: Yup.string().required('Enter App Name'),
-  app_logo: Yup.mixed()
-    .nullable()
-    .required('Upload an image')
-    .test(
-      'fileType',
-      'Only JPG, JPEG, PNG files are allowed',
-      value =>
-        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    ),
-  primary_color: Yup.string().required('Enter Primary Color'),
-  secondary_color: Yup.string().required('Enter Secondary Color')
+export const brandingValidationSchema = Yup.object({
+  app_name: Yup.string().required('App name is required'),
+  primary_color: Yup.string().required('Primary color is required'),
+  secondary_color: Yup.string().required(),
+  app_logo: Yup.mixed().test(
+    'file-or-url',
+    'Logo is required',
+    function (value) {
+      if (!value) return false
+      // If it's a File object
+      if (value instanceof File) return true
+      // If it's existing URL string
+      if (typeof value === 'string') return true
+      return false
+    }
+  )
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({

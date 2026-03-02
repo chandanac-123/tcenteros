@@ -36,7 +36,7 @@ const Header = () => {
   }
 
   return (
-    <header className='w-full bg-layout_bg shadow flex items-center h-16 p-3'>
+    <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
       <div className='w-1/2 flex'>
         <CustomeSearch placeholder='Search User' />
       </div>
