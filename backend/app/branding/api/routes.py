@@ -95,6 +95,51 @@ async def bulk_update_white_label_config(
         "total_processed": len(updated) + len(created)
     }
 
+@router.get("/branding/white-label/all", response_model=dict)
+async def get_all_white_label_configs(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    from app.center.models.models import Center
+
+    admin_center_id = str(current_admin["center_id"])
+
+    # Get parent center and all sub-branches
+    result = await session.execute(
+        select(Center).where(
+            (Center.id == admin_center_id) | (Center.parent_center_id == admin_center_id)
+        )
+    )
+    centers = result.scalars().all()
+    if not centers:
+        raise HTTPException(404, "No centers found for this admin")
+
+    configs = []
+    for center in centers:
+        config_result = await session.execute(
+            select(WhiteLabelConfig).where(WhiteLabelConfig.center_id == center.id)
+        )
+        config = config_result.scalars().first()
+        configs.append({
+            "center_id": str(center.id),
+            "center_name": center.center_name,
+            "is_parent": center.parent_center_id is None,
+            "parent_center_id": str(center.parent_center_id) if center.parent_center_id else None,
+            "branding": {
+                "app_name": config.app_name if config else None,
+                "logo_url": config.logo_url if config else None,
+                "primary_color": config.primary_color if config else None,
+                "secondary_color": config.secondary_color if config else None,
+                "custom_domain": config.custom_domain if config else None,
+                "status": config.status.value if config and hasattr(config.status, "value") else (config.status if config else None),
+            }
+        })
+
+    return {
+        "total_centers": len(configs),
+        "centers": configs
+    }
+
 
 @router.get("/branding/white-label/{center_id}/logo")
 async def get_white_label_logo(
