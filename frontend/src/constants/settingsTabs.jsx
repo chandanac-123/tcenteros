@@ -1,6 +1,7 @@
 import CenterDesignations from '@pages/settings/CenterDesignations'
 import CenterHolidays from '@pages/settings/CenterHolidays'
 import CenterOperations from '@pages/settings/CenterOperation'
+import GalleryUpload from '@pages/settings/GalleryUpload'
 import TaxCategorySettings from '@pages/settings/TaxCategorySettings'
 
 export const setting_tabs = [
@@ -28,5 +29,11 @@ export const setting_tabs = [
     name: ' Designation',
     heading: '',
     component_view: <CenterDesignations />
+  },
+  {
+    id: 5,
+    name: 'Gallery image upload',
+    heading: '',
+    component_view: <GalleryUpload />
   }
 ]

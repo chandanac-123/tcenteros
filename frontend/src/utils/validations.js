@@ -109,3 +109,20 @@ export const brandingValidationSchema = Yup.object().shape({
   primary_color: Yup.string().required('Enter Primary Color'),
   secondary_color: Yup.string().required('Enter Secondary Color')
 })
+
+export const galleryImageValidationSchema = Yup.object().shape({
+  image_url: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test(
+      'fileType',
+      'Only JPG, JPEG, PNG files are allowed',
+      value =>
+        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
+    )
+    .test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    )
+})

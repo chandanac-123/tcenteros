@@ -24,9 +24,9 @@ export const createCenterTime = async (details) => {
   }
 }
 
-export const updateCenterTime = async (details, id) => {
+export const updateCenterTime = async (details) => {
   try {
-    const response = await updateCenterTimeApiCall(details, id)
+    const response = await updateCenterTimeApiCall(details)
     return response.data
   } catch (error) {
     throw error

@@ -22,13 +22,13 @@ export const requestOTPforgotPasswordApiCall = details =>
 export const verifyOTPforgotPasswordApiCall = details =>
   axiosInstance.post('/auth/centeradmin/forgot-password/verify-otp', details)
 export const resetPasswordApiCall = details => {
-  return axiosInstance.post('/auth/centeradmin/forgot-password/set-password', details)
+  return axiosInstance.post(
+    '/auth/centeradmin/forgot-password/set-password',
+    details
+  )
 }
 export const createCenterAccountApiCall = details =>
   axiosInstance.post('/auth/centeradmin/change-password', details)
-
-  
-
 
 // EmployeeManagement
 export const getEmployeeCategoriesApiCall = () =>
@@ -47,9 +47,7 @@ export const GetEmployeeCategoriesByIdApiCall = id =>
   axiosInstance.get(`/settings/superadmin/designation/${id}`)
 
 export const getEmployeeApiCall = data =>
-  axiosInstance.get(
-    `/auth/employee?page=${data?.page}&page_size=${10}`
-  )
+  axiosInstance.get(`/auth/employee?page=${data?.page}&page_size=${10}`)
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)
 export const updateEmployeeApiCall = (details, id) =>
@@ -59,7 +57,10 @@ export const deleteEmployeeApiCall = id =>
 export const GetEmployeeByIdApiCall = id =>
   axiosInstance.get(`/auth/employee/${id}`)
 export const updateEmployeeStatusApiCall = (details, id) =>
-  axiosInstance.patch(`/auth/employee/${id}/status?status=${details.status}`, details)
+  axiosInstance.patch(
+    `/auth/employee/${id}/status?status=${details.status}`,
+    details
+  )
 export const deleteMultipleEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee/delete-multiple', details)
 
@@ -93,9 +94,9 @@ export const createCenterTimeApiCall = details =>
   )
 export const deleteCenterTimeApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-operational-settings/${id}`)
-export const updateCenterTimeApiCall = (details, id) =>
+export const updateCenterTimeApiCall = (details) =>
   axiosInstance.put(
-    `/settings/superadmin/center-operational-settings/${id}`,
+    `/settings/superadmin/center-operational-settings/`,
     details
   )
 
@@ -111,7 +112,10 @@ export const updateMembershipPlanApiCall = (details, id) =>
 export const getMembershipPlanByIdApiCall = id =>
   axiosInstance.get(`/membership/memberships-plans/${id}`)
 export const updateMembershipStatusApiCall = (details, id) =>
-  axiosInstance.patch(`/membership/memberships-plans/${id}/status?status=${details.status}`, details)
+  axiosInstance.patch(
+    `/membership/memberships-plans/${id}/status?status=${details.status}`,
+    details
+  )
 
 //HOLIDAY API
 export const getHolidayApiCall = () =>
@@ -122,27 +126,32 @@ export const deleteHolidayApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center-holidays/${id}`)
 
 // NETWORK API
-export const addNetworkAmountApiCall = (amount) =>
-  axiosInstance.put('/networking/center/networking-amount', null, { params: { amount } })
-export const networkToggleButtonApiCall = (enabled) =>
-  axiosInstance.put("/networking/center/networking/toggle", { enabled })
+export const addNetworkAmountApiCall = amount =>
+  axiosInstance.put('/networking/center/networking-amount', null, {
+    params: { amount }
+  })
+export const networkToggleButtonApiCall = enabled =>
+  axiosInstance.put('/networking/center/networking/toggle', { enabled })
 export const getNetworkToggleStatusApiCall = () =>
-  axiosInstance.get("/networking/center/network-enabled/me")
-export const getUserNetworkListApiCall = (data) =>
-  axiosInstance.get(`/networking/networking/bookings?page=${data?.page}&page_size=${data?.pageSize}`)
-export const editApproveNetworkApiCall = (id) =>
-  axiosInstance.put(`/networking/networking/access/approve`, null, { params: { network_membership_id: id } });
-export const getNetworkingBookingByIdApiCall = (id) =>
+  axiosInstance.get('/networking/center/network-enabled/me')
+export const getUserNetworkListApiCall = data =>
+  axiosInstance.get(
+    `/networking/networking/bookings?page=${data?.page}&page_size=${data?.pageSize}`
+  )
+export const editApproveNetworkApiCall = id =>
+  axiosInstance.put(`/networking/networking/access/approve`, null, {
+    params: { network_membership_id: id }
+  })
+export const getNetworkingBookingByIdApiCall = id =>
   axiosInstance.get(`/networking/networking/booking/${id}`)
-export const deleteNetworkBookingApiCall = (id) =>
+export const deleteNetworkBookingApiCall = id =>
   axiosInstance.delete(`/networking/networking/booking/${id}`)
 
-
 // Wallet
-export const createWalletApiCall = (details) =>  
+export const createWalletApiCall = details =>
   axiosInstance.post('/center/center/wallet/create', null, {
-    params: details,
-  });
+    params: details
+  })
 //ATTENDANCE API
 export const getAllEmployeesApiCall = () =>
   axiosInstance.get(`auth/centeradmin/employees`)
@@ -181,3 +190,16 @@ export const getAllEmployeeAttendanceApiCall = data => {
 }
 export const deleteAttendanceApiCall = id =>
   axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)
+
+//GALLERY API
+export const getGalleryApiCall = id =>
+  axiosInstance.get(`/center/center/${id}/gallery`)
+export const createGalleryApiCall = details =>
+  axiosInstance.post(`/center/center/gallery`, details, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+export const deleteGalleryApiCall = id =>{
+  console.log("idaaaaaaa", id);
+  return axiosInstance.delete(`/center/center/gallery/${id}`)
+  
+}
