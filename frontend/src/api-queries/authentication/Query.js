@@ -32,30 +32,33 @@ export const useRequestOTPforgotPasswordMutation = () => {
 }
 
 export const useResetPasswordMutation = () => {
-  const query=useQueryClient()
+  const query = useQueryClient()
   return useMutation({
     mutationFn: resetPassword,
-    onSuccess:()=>{
+    onSuccess: () => {
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })
 }
 
 export const useVerifyOTPforgotPasswordMutation = () => {
-  const query=useQueryClient()
+  const query = useQueryClient()
   return useMutation({
     mutationFn: verifyOTPforgotPassword,
-     onSuccess:()=>{
+    onSuccess: () => {
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })
 }
 
 export const useCreateCenterAccountMutation = () => {
-  const query=useQueryClient()    
+  const query = useQueryClient()
+  const setAuth = useAuthStore(state => state.setAuth)
   return useMutation({
     mutationFn: createCenterAccount,
-      onSuccess:()=>{
+    onSuccess: (data) => {
+      console.log("Data Token", data);
+      setAuth(data, true)
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })

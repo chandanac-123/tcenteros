@@ -17,3 +17,4 @@ const createTabStore = (storageKey) =>
 export const useCrmStore = createTabStore('crm_selected_tab')
 export const useSettingsTabStore = createTabStore('settings_selected_tab')
 export const useAttendanceStore = createTabStore('attendance_selected_tab')
+export const useIventoriesTabStore = createTabStore('iventories_selected_tab')

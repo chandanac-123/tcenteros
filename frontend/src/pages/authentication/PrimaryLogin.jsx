@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useCreateCenterAccountMutation } from '@api-queries/authentication/Query'
 import { toast } from 'sonner'
 import NetworkWalletModal from './components/NetworkWalletModal'
+import { showError, showSuccess } from '@utils/toast'
 
 const PrimaryLogin = () => {
   const [formData, setFormData] = useState({
@@ -75,7 +76,7 @@ const PrimaryLogin = () => {
       });
       setOptionWalletModal(true);
       setWalletStep("networkWalletModal");
-      toast.success("Password set successfully");
+      showSuccess("Password set successfully");
       setErrors({});
 
     } catch (error) {
@@ -88,7 +89,7 @@ const PrimaryLogin = () => {
         "Something went wrong";
       // show toast only for non-validation errors
       if (status && status !== 422) {
-        toast.error(message);
+        showError(message);
       }
       const formattedErrors = formatValidationErrors(error);
       setErrors(formattedErrors);

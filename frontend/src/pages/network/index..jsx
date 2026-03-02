@@ -21,8 +21,6 @@ const Network = () => {
   const { data: networkToggle, isFetching: isNetworkToggleFetching } = useGetNetworkToggleButtonQuery()
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
     search: ''
   })
   const { data, isFetching } = useGetUserNetworkListQuery(tableParams)
@@ -156,6 +154,8 @@ const Network = () => {
             activeTab={activeTab}
             data={filteredData}
             tableParams={tableParams}
+            pagination={data?.total}
+             loading={isFetching}
             setTableParams={setTableParams}
           />
         )}

@@ -53,7 +53,9 @@ export const editApproveStatusNetwork = async (id) => {
         const response = await editApproveNetworkApiCall(id);
         return response.data
     } catch (err) {
-        // console.error("Error at editApproveStatusNetwork() api-queries/network/Urls.js::", err);
+        console.log("ERRRE",err.response.data);
+        
+        console.error("Error at editApproveStatusNetwork() api-queries/network/Urls.js::", err);
         throw err
     }
 }

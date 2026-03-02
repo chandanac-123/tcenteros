@@ -3,9 +3,9 @@ import CustomeModal from '@common/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import { useCreateWalletAmountMutation } from "@api-queries/wallet/Query"
-import { toast } from 'sonner'
+import { showError, showSuccess } from '@utils/toast'
 
-const AddWallet = ({ open, setOpen }) => {
+const AddWallet = ({ open, setOpen, refetchWalletAmount}) => {
     const [amount, setAmount] = useState('')
     const { mutate: createWalletAmount, isPending } = useCreateWalletAmountMutation();
 
@@ -17,15 +17,16 @@ const AddWallet = ({ open, setOpen }) => {
             {
                 onSuccess: () => {
                     setAmount('')
+                    refetchWalletAmount()
                     setOpen(false)
-                    toast.success("You successfully added your wallet amount")
+                    showSuccess("You successfully added your wallet amount")
                 },
                 onError: (error) => {
                     const message =
                         error?.response?.data?.message ||
                         error?.message ||
                         "Failed to add wallet amount"
-                    toast.error(message)
+                   showError(message)
                 }
             }
         )

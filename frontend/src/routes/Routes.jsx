@@ -36,6 +36,7 @@ import EmployeeManagement from '@pages/employee-management'
 import Settings from '@pages/settings'
 import Accounts from '@pages/accounts'
 import AccountsSubModules from '@pages/accounts/sub-modules'
+import AddBranches from "@pages/branch/AddBranches"
 
 import dashboard from '../assets/sidebar-icons/dashboard.svg'
 import branding from '../assets/sidebar-icons/branding.svg'
@@ -276,6 +277,17 @@ export const routes = [
   },
   {
     key: 0,
+    path: '/add-branches',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: '',
+    component: AddBranches,
+    menubar: false,
+    permission: true
+  },
+  {
+    key: 0,
     path: '/login',
     label: '',
     privetRoute: false,
@@ -394,7 +406,7 @@ export const routes = [
     menubar: true,
     permission: true
   },
-   {
+  {
     key: 1,
     path: '/centerview/:id',
     label: '',

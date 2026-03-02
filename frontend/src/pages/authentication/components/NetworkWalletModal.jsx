@@ -6,13 +6,32 @@ import { Switch } from '@pages/components/ui/switch'
 import { ArrowBigRightDash } from 'lucide-react'
 import WhyWalletModal from './WhyWalletModal'
 import AddWallet from '@pages/wallet/AddWallet'
+import {
+    useNetworkToggleButtonMutation,
+    useGetNetworkToggleButtonQuery,
+} from "@api-queries/network/Query"
+import { useNavigate } from 'react-router-dom'
 
 const NetworkWalletModal = ({ open, setOpen }) => {
     const [openWhyModal, setOpenWhyModal] = useState(false)
-    const [openAddWalletModal,setAddwalletModal]=useState(false)
+    const [openAddWalletModal, setAddwalletModal] = useState(false);
+    const navigate = useNavigate();
+
+    const { data: networkToggle, isFetching: isNetworkToggleFetching } = useGetNetworkToggleButtonQuery();
+    const { mutateAsync: enabled, isPending } = useNetworkToggleButtonMutation();
+    const networkActive = networkToggle?.network_enabled ?? false
+
 
     const handleNext = () => {
-        setOpenWhyModal(true)   // open why modal
+        setOpenWhyModal(true)
+    }
+
+    const handleToggle = async (checked) => {
+        try {
+            await enabled(checked)
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     return (
@@ -20,7 +39,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
             {/* NETWORK MODAL */}
             {open && !openWhyModal && (
                 <div
-                    className='flex min-h-screen flex justify-center items-center px-2 overflow-hidden'
+                    className='flex min-h-screen  justify-center items-center px-2 overflow-hidden'
                     style={{
                         backgroundImage: `url(${dummy})`,
                         backgroundSize: 'cover',
@@ -43,14 +62,18 @@ const NetworkWalletModal = ({ open, setOpen }) => {
 
                             <div className="flex justify-between rounded-[10px] border border-[#DDD9D9] py-4 px-3">
                                 <p className='text-[17px] font-medium'>Network Enable</p>
-                                <Switch />
+                                <Switch
+                                    checked={networkActive}
+                                    onCheckedChange={handleToggle}
+                                    disabled={isPending || isNetworkToggleFetching}
+                                />
                             </div>
 
                             <div className="flex justify-between rounded-[10px] border border-[#DDD9D9] p-3">
                                 <p className='text-[17px] font-medium'>Create Wallet</p>
-                                <Button 
-                                onClick={()=>setAddwalletModal(true)}
-                                variant="button_filled" size="addbutton">
+                                <Button
+                                    onClick={() => setAddwalletModal(true)}
+                                    variant="button_filled" size="addbutton">
                                     Add Wallet
                                 </Button>
                                 <AddWallet open={openAddWalletModal} setOpen={setAddwalletModal} />
@@ -66,12 +89,12 @@ const NetworkWalletModal = ({ open, setOpen }) => {
                                 </div>
                                 <div className="flex items-center justify-end">
                                     <Button
-
+                                        onClick={()=>navigate('/add-branches')}
                                         variant="outline_primary"
                                         size="addbutton"
                                     >
                                         Next
-                                        <ArrowBigRightDash className="ml-2" />
+                                        <ArrowBigRightDash color='red' className="ml-2" />
                                     </Button>
                                 </div>
                             </div>

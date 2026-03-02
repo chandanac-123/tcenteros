@@ -1,3 +1,4 @@
+import { ca } from 'date-fns/locale'
 import axiosInstance from './axiosInstance'
 
 //ONBOARDING
@@ -27,7 +28,7 @@ export const resetPasswordApiCall = details => {
 export const createCenterAccountApiCall = details =>
   axiosInstance.post('/auth/centeradmin/change-password', details)
 
-  
+
 
 
 // EmployeeManagement
@@ -135,10 +136,27 @@ export const deleteNetworkBookingApiCall = (id) =>
 
 
 // Wallet
-export const createWalletApiCall = (details) =>  
-  axiosInstance.post('/center/center/wallet/create', null, {
-    params: details,
+export const createWalletApiCall = (details) =>
+  axiosInstance.post('/center/center/wallet/create', details);
+export const getWalletsummaryApiCall = () =>
+  axiosInstance.get('/center/center/wallet/summary');
+export const getWalletTransactionsApiCall = (details = {}) => {  
+  return axiosInstance.get(`/center/center/wallet/transactions`, {
+    params: {
+      page: details.page ?? 1,
+      page_size: details.page_size ?? 10,
+      type: details.type ?? '',
+      transaction_type: details.transaction_type ?? '',
+      status: details.status ?? '',
+      start_date: details.start_date ?? '',
+      end_date: details.end_date ?? '',
+    },
   });
+};
+export const getWalletAmountApiCall = () =>
+  axiosInstance.get('/center/center/wallet');
+
+
 //ATTENDANCE API
 export const getAllEmployeesApiCall = () =>
   axiosInstance.get(`auth/centeradmin/employees`)
@@ -177,3 +195,8 @@ export const getAllEmployeeAttendanceApiCall = data => {
 }
 export const deleteAttendanceApiCall = id =>
   axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)
+
+
+// BRANCH API
+export const addBranchCountryApiCall = details =>
+  axiosInstance.post('/branching/centeradmin/branch/request', details)

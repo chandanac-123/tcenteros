@@ -10,7 +10,7 @@ import DeleteModal from './DeleteModal'
 
 
 
-const NetworkTables = ({ activeTab, data }) => {
+const NetworkTables = ({ activeTab, data, tableParams, setTableParams, pagination }) => {
 
   const [selectedRow, setSelectedRow] = useState(null);
   const [approveOpen, setApproveOpen] = useState(false);
@@ -157,9 +157,11 @@ const NetworkTables = ({ activeTab, data }) => {
       <DataTable
         columns={columns}
         data={data}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        pagination={pagination}
         paginationVisibile={true}
       />
-
       {selectedRow && (
         <ApproveModal
           open={approveOpen}

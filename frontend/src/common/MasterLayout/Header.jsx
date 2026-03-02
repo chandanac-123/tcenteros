@@ -21,6 +21,8 @@ import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
+import AddBranchButton from '@pages/branch'
+import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
 
 const Header = () => {
   const [open, setOpen] = useState(false)
@@ -50,6 +52,13 @@ const Header = () => {
             <img src={map} className='w-5 h-5 mr-2' />
             Fitness center
           </span>
+
+          {/* ADD */}
+          {/* <Button  size='addbutton'>
+            + Add Branch
+          </Button> */}
+          <AddBranchButton/>
+          <BranchDetailsButton/>
 
           {/* ADD */}
           <Button onClick={handleOpen} size='addbutton'>

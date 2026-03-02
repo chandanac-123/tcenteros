@@ -6,6 +6,7 @@ import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
 import { useResetPasswordMutation } from '@api-queries/authentication/Query'
 import { toast } from 'sonner'
+import { showError, showSuccess, showWarning } from '@utils/toast'
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("")
@@ -19,12 +20,12 @@ const ResetPassword = () => {
     e.preventDefault()
 
     if (!password || !confirmPassword) {
-      toast.warning("Please fill the fields");
+      showWarning("Please fill the fields");
       return
     }
 
     if (password !== confirmPassword) {
-      toast.warning("Password not match");
+     showWarning("Password not match");
       return
     }
 
@@ -35,11 +36,11 @@ const ResetPassword = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Password reset successful");
+          showSuccess("Password reset successful");
           navigate("/reset-success")
         },
         onError: () => {
-          toast.error("Password reset Failed");
+          showError("Password reset Failed");
         }
       }
     )

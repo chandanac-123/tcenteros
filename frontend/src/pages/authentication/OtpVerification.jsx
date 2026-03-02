@@ -5,7 +5,7 @@ import OtpInput from '@common/OtpInput'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
 import { useVerifyOTPforgotPasswordMutation } from '@api-queries/authentication/Query'
-import { toast } from 'sonner'
+import { showError, showSuccess } from '@utils/toast'
 
 const OTPVerification = () => {
   const [otp, setOTP] = useState("");
@@ -25,16 +25,19 @@ const OTPVerification = () => {
       { otp },
       {
         onSuccess: (res) => {
-          console.log("OTP verified", res)
-          toast.success("OTP Verified Successfully");
+        
+          showSuccess("OTP Verified Successfully");
           // navigate to reset password page
           navigate("/reset-password", {
             state: { otp }   // pass OTP forward
           })
         },
         onError: (error) => {
-          console.log(error.response?.data)
-           toast.error("OTP Verified Failed");
+          console.log(error.response?.data);
+          const message =
+            error?.response?.data?.detail ||
+            "OTP Verification Failed";
+          showError(message) 
 
         }
       }
