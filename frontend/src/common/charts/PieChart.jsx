@@ -5,7 +5,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels'
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels)
 
-const RevenuePieChart = () => {
+const PieChart = () => {
   const [visible, setVisible] = useState({
     membership: true,
     training: true,
@@ -125,4 +125,4 @@ const LegendItem = ({ color, label, active, onClick }) => {
   )
 }
 
-export default RevenuePieChart
+export default PieChart

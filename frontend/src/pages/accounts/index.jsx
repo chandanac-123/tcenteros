@@ -1,13 +1,13 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import MonthlyFinanceChart from '@common/charts/MonthlyFinanceChart'
 import { Card } from '@pages/components/ui/card'
 import SummaryCard from './components/SummaryCard'
-import RevenuePieChart from '@common/charts/RevenuePieChart'
 import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
 import { DataTable } from '@common/DataTable'
 import { useNavigate } from 'react-router-dom'
 import CustomDatePicker from '@common/CustomeDatepicker'
+import BarChart from '@common/charts/BarChart'
+import PieChart from '@common/charts/PieChart'
 
 const Accounts = () => {
   const navigate = useNavigate()
@@ -137,7 +137,7 @@ const Accounts = () => {
                   <CustomDatePicker pickerType='year' />
                 </span>
               </div>
-              <MonthlyFinanceChart />
+              <BarChart />
             </div>
           </Card>
 
@@ -152,7 +152,7 @@ const Accounts = () => {
                   <CustomDatePicker pickerType='year' />
                 </span>
               </div>
-              <RevenuePieChart />{' '}
+              <PieChart />{' '}
             </div>
           </Card>
         </div>

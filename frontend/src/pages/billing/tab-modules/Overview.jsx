@@ -38,7 +38,28 @@ const Overview = () => {
                 <CustomDatePicker pickerType='year' />
               </span>
             </div>
-            <LineChart />
+            <LineChart
+              datasets={[
+                {
+                  label: 'Membership',
+                  data: [3000, 4500, 6000],
+                  borderColor: '#377CF6'
+                },
+                {
+                  label: 'Inventory',
+                  data: [2000, 3500, 5500],
+                  borderColor: '#FFCD0F'
+                },
+                {
+                  label: 'Network',
+                  data: [1000, 2500, 4000],
+                  borderColor: '#55EFC2'
+                }
+              ]}
+              yMin={0}
+              yMax={10000}
+              tickFormat={v => v / 1000 + 'k'}
+            />
           </Card>
         </div>
 
@@ -48,7 +69,11 @@ const Overview = () => {
         </div>
       </div>
       <NewSale saleOpen={openNewSale} setSaleOpen={setOpenNewSale} />
-      <RenewMembership overview={true} openRenewMember={openRenewMember} setOpenRenewMember={setOpenRenewMember} />
+      <RenewMembership
+        overview={true}
+        openRenewMember={openRenewMember}
+        setOpenRenewMember={setOpenRenewMember}
+      />
     </div>
   )
 }

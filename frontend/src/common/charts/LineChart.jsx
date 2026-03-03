@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,26 +21,47 @@ ChartJS.register(
   Legend
 )
 
-const LineChart = () => {
+const defaultLabels = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+]
+
+const LineChart = ({
+  labels = defaultLabels,
+  datasets = [],
+  yMin = 0,
+  yMax,
+  tickFormat = value => value
+}) => {
   const chartRef = useRef(null)
 
-  const [visibleDatasets, setVisibleDatasets] = useState({
-    Membership: true,
-    Inventory: true,
-    Network: true
-  })
+  const [visibleDatasets, setVisibleDatasets] = useState({})
+
+  useEffect(() => {
+    const visibility = {}
+    datasets.forEach(ds => {
+      visibility[ds.label] = true
+    })
+    setVisibleDatasets(visibility)
+  }, [datasets])
 
   const toggleDataset = label => {
     const chart = chartRef.current
     if (!chart) return
 
-    const datasetIndex = chart.data.datasets.findIndex(ds => ds.label === label)
+    const index = chart.data.datasets.findIndex(ds => ds.label === label)
 
-    chart.setDatasetVisibility(
-      datasetIndex,
-      !chart.isDatasetVisible(datasetIndex)
-    )
-
+    chart.setDatasetVisibility(index, !chart.isDatasetVisible(index))
     chart.update()
 
     setVisibleDatasets(prev => ({
@@ -50,67 +71,25 @@ const LineChart = () => {
   }
 
   const data = {
-    labels: [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ],
-    datasets: [
-      {
-        label: 'Membership',
-        data: [
-          3000, 4500, 6000, 4000, 8000, 9500, 7000, 8500, 9000, 10000, 11000,
-          12000
-        ],
-        borderColor: '#377CF6',
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 0
-      },
-      {
-        label: 'Inventory',
-        data: [
-          2000, 3500, 5500, 6500, 7000, 8500, 6000, 7500, 8000, 9500, 10000,
-          10500
-        ],
-        borderColor: '#FFCD0F',
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 0
-      },
-      {
-        label: 'Network',
-        data: [
-          1000, 2500, 4000, 5000, 6000, 7500, 6500, 7000, 7200, 8500, 9000, 9500
-        ],
-        borderColor: '#55EFC2',
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 0
-      }
-    ]
+    labels,
+    datasets: datasets.map(ds => ({
+      ...ds,
+      tension: 0.4,
+      borderWidth: 2,
+      pointRadius: 0
+    }))
   }
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index', // show all datasets at same x
-      intersect: false // no need to touch the exact line
+      mode: 'index',
+      intersect: false
     },
-
     plugins: {
       legend: { display: false },
-
+      datalabels: { display: false },
       tooltip: {
         enabled: true,
         mode: 'index',
@@ -119,44 +98,31 @@ const LineChart = () => {
         titleColor: '#fff',
         bodyColor: '#fff',
         padding: 10
-      },
-
-      datalabels: {
-        display: false
       }
     },
-
     scales: {
       x: {
         grid: { display: false }
       },
       y: {
-        min: 0,
-        max: 10000,
+        min: yMin,
+        max: yMax,
         grid: { display: false },
-        afterBuildTicks: scale => {
-          scale.ticks = [
-            { value: 1000 },
-            { value: 2000 },
-            { value: 5000 },
-            { value: 10000 }
-          ]
-        },
         ticks: {
-          callback: value => value / 1000 + 'k'
+          callback: tickFormat
         }
       }
     }
   }
 
   return (
-    <div className='w-full  flex flex-col'>
+    <div className='w-full flex flex-col'>
       <div className='h-60 w-full'>
         <Line ref={chartRef} data={data} options={options} />
       </div>
 
-      <div className='flex gap-8 justify-center py-3 rounded-lg'>
-        {data.datasets.map(ds => (
+      <div className='flex gap-8 justify-center py-3'>
+        {datasets.map(ds => (
           <div
             key={ds.label}
             onClick={() => toggleDataset(ds.label)}
