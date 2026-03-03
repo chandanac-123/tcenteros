@@ -134,7 +134,7 @@ const Accounts = () => {
                   Monthly Income Vs Expenses
                 </span>
                 <span>
-                <CustomDatePicker pickerType="year"/>
+                  <CustomDatePicker pickerType='year' />
                 </span>
               </div>
               <MonthlyFinanceChart />
@@ -147,7 +147,10 @@ const Accounts = () => {
                 <span className='text-lg font-semibold text-textblack'>
                   Revenue Breakdown
                 </span>
-                <span> <CustomDatePicker pickerType="year"/></span>
+                <span>
+                  {' '}
+                  <CustomDatePicker pickerType='year' />
+                </span>
               </div>
               <RevenuePieChart />{' '}
             </div>
@@ -201,6 +204,7 @@ const Accounts = () => {
           subTitle='Products'
           columns={columns}
           data={[]}
+          search={false}
         />
       </div>
     </ContentLayout>

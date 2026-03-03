@@ -37,9 +37,6 @@ const Header = () => {
 
   return (
     <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
-      <div className='w-1/2 flex'>
-        <CustomeSearch placeholder='Search User' />
-      </div>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
           <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>

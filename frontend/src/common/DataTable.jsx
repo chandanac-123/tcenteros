@@ -24,6 +24,7 @@ import {
   PaginationEllipsis
 } from '@pages/components/ui/pagination'
 import { Spinner } from '@pages/components/ui/spinner'
+import CustomeSearch from './CustomeSearch'
 
 export function DataTable ({
   columns,
@@ -32,7 +33,8 @@ export function DataTable ({
   tableParams,
   paginationVisibile,
   pagination,
-  loading
+  loading,
+  search = true
 }) {
   const page = tableParams?.page || 1
   const rowsPerPage = 10
@@ -105,101 +107,117 @@ export function DataTable ({
   })
 
   return (
-    <div className='overflow-hidden rounded-md border '>
-      <div className='max-h-[380px] overflow-y-auto'>
-        <Table className=''>
-          <TableHeader>
-            {table?.getHeaderGroups()?.map(headerGroup => (
-              <TableRow key={headerGroup?.id}>
-                {headerGroup?.headers?.map(header => (
-                  <TableHead key={header?.id}>
-                    {header?.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header?.column?.columnDef?.header,
-                          header?.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns?.length}
-                  className='h-24 text-center'
-                >
-                  <div className='flex justify-center items-center gap-2'>
-                    <Spinner />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : table?.getRowModel()?.rows.length ? (
-              table?.getRowModel()?.rows.map(row => (
-                <TableRow
-                  key={row?.id}
-                  data-state={row?.getIsSelected() && 'selected'}
-                >
-                  {row?.getVisibleCells()?.map(cell => (
-                    <TableCell key={cell?.id}>
-                      {flexRender(
-                        cell?.column?.columnDef?.cell,
-                        cell?.getContext()
-                      )}
-                    </TableCell>
+    <>
+      {search && (
+        <div className='mb-4'>
+          <CustomeSearch
+            value={tableParams?.search || ''}
+            onChange={e =>
+              setTableParams(prev => ({
+                ...prev,
+                search: e.target.value,
+                page: 1
+              }))
+            }
+          />
+        </div>
+      )}
+      <div className='overflow-hidden rounded-md border '>
+        <div className='max-h-[380px] overflow-y-auto'>
+          <Table className=''>
+            <TableHeader>
+              {table?.getHeaderGroups()?.map(headerGroup => (
+                <TableRow key={headerGroup?.id}>
+                  {headerGroup?.headers?.map(header => (
+                    <TableHead key={header?.id}>
+                      {header?.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header?.column?.columnDef?.header,
+                            header?.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns?.length}
-                  className='h-24 text-center'
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns?.length}
+                    className='h-24 text-center'
+                  >
+                    <div className='flex justify-center items-center gap-2'>
+                      <Spinner />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : table?.getRowModel()?.rows.length ? (
+                table?.getRowModel()?.rows.map(row => (
+                  <TableRow
+                    key={row?.id}
+                    data-state={row?.getIsSelected() && 'selected'}
+                  >
+                    {row?.getVisibleCells()?.map(cell => (
+                      <TableCell key={cell?.id}>
+                        {flexRender(
+                          cell?.column?.columnDef?.cell,
+                          cell?.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns?.length}
+                    className='h-24 text-center'
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className='py-2 flex justify-between items-center w-full px-2'>
+          {paginationVisibile && totalRecords > 10 && (
+            <div className='flex justify-between items-center w-full mt-4'>
+              <div className='text-grey text-sm '>
+                Showing {(page - 1) * rowsPerPage + 1} -
+                {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
+              </div>
+              <div className='flex items-center space-x-2'>
+                <Pagination
+                  currentPage={tableParams?.page}
+                  lastPage={tableParams?.pageSize}
+                  setPageIndex={handlePageChange}
                 >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className='py-2 flex justify-between items-center w-full px-2'>
-        {paginationVisibile && totalRecords > 10 && (
-          <div className='flex justify-between items-center w-full mt-4'>
-            <div className='text-grey text-sm '>
-              Showing {(page - 1) * rowsPerPage + 1} -
-              {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(Math.max(page - 1, 1))}
+                      />
+                    </PaginationItem>
+                    <div className='flex border cursor-pointer border-secondary rounded-md overflow-hidden'>
+                      {paginationItems}
+                    </div>
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          handlePageChange(Math.min(page + 1, totalPageCount))
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
-            <div className='flex items-center space-x-2'>
-              <Pagination
-                currentPage={tableParams?.page}
-                lastPage={tableParams?.pageSize}
-                setPageIndex={handlePageChange}
-              >
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => handlePageChange(Math.max(page - 1, 1))}
-                    />
-                  </PaginationItem>
-                  <div className='flex border cursor-pointer border-secondary rounded-md overflow-hidden'>
-                    {paginationItems}
-                  </div>
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        handlePageChange(Math.min(page + 1, totalPageCount))
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
