@@ -39,7 +39,7 @@ class Membership(Base, AuditMixin):
     duration_unit = Column(Enum(DurationUnitEnum), nullable=False)
     default_price = Column(Numeric(10, 2), nullable=False)
     network_enabled = Column(Boolean, nullable=False, default=False)
-    status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
+    status = Column(Enum(StatusEnum, name="status_enum"), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
     member_memberships = relationship(
@@ -68,5 +68,10 @@ class MemberMembership(Base, AuditMixin):
     membership_status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
+    member = relationship(
+        "Member",
+        back_populates="member_memberships",
+        foreign_keys=[member_id]
+    )
     center = relationship("Center", back_populates="member_memberships")
     membership = relationship("Membership", back_populates="member_memberships")

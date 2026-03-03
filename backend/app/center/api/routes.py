@@ -957,6 +957,7 @@ async def get_center_by_id(
         "gst_number": center.gst_number,
         "live_class_enable": center.live_class_enable,
         "center_image_url": center_image_url,
+        "whatsapp_number": center.whatsapp_number,
         "address": {
             "address_line_1": address.address_line_1,
             "address_line_2": address.address_line_2,
@@ -977,11 +978,20 @@ async def update_center_profile(
 ):
     center_id = current_admin["center_id"]
     center = await session.get(Center, center_id)
+
     if not center:
-        raise HTTPException(404, "Center not found")
+        raise HTTPException(status_code=404, detail="Center not found")
+
+    # Make whatsapp_number mandatory
+    if not data.whatsapp_number:
+        raise HTTPException(
+            status_code=400,
+            detail="WhatsApp number is required"
+        )
 
     # Update Center fields (except address and image)
     update_data = data.dict(exclude_unset=True)
+
     for field, value in update_data.items():
         if field != "address" and hasattr(center, field):
             setattr(center, field, value)
@@ -990,13 +1000,22 @@ async def update_center_profile(
     address_data = None
     if "address" in update_data and update_data["address"]:
         if not center.address_id:
-            raise HTTPException(400, "Center has no address to update")
+            raise HTTPException(
+                status_code=400,
+                detail="Center has no address to update"
+            )
+
         address = await session.get(Address, center.address_id)
         if not address:
-            raise HTTPException(404, "Address not found")
+            raise HTTPException(
+                status_code=404,
+                detail="Address not found"
+            )
+
         for field, value in update_data["address"].items():
             if hasattr(address, field):
                 setattr(address, field, value)
+
         address_data = {
             "address_line_1": address.address_line_1,
             "address_line_2": address.address_line_2,
@@ -1008,6 +1027,7 @@ async def update_center_profile(
         }
 
     await session.commit()
+    await session.refresh(center)
 
     # Prepare updated response
     updated_center = {
@@ -1017,10 +1037,16 @@ async def update_center_profile(
         "facilities": center.facilities,
         "website_url": center.website_url,
         "capacity": float(center.capacity) if center.capacity else None,
-        "approval_status": center.approval_status.value if hasattr(center.approval_status, "value") else center.approval_status,
-        "center_status": center.center_status.value if hasattr(center.center_status, "value") else center.center_status,
+        "approval_status": center.approval_status.value
+        if hasattr(center.approval_status, "value")
+        else center.approval_status,
+        "center_status": center.center_status.value
+        if hasattr(center.center_status, "value")
+        else center.center_status,
         "network_enabled": center.network_enabled,
-        "networking_amount": float(center.networking_amount) if center.networking_amount else None,
+        "networking_amount": float(center.networking_amount)
+        if center.networking_amount
+        else None,
         "white_label_enabled": center.white_label_enabled,
         "kind_of_center": center.kind_of_center,
         "members_count": center.members_count,
@@ -1030,10 +1056,13 @@ async def update_center_profile(
         "contact_person": center.contact_person,
         "center_email": center.center_email,
         "center_phone": center.center_phone,
+        "whatsapp_number": center.whatsapp_number,  
         "gst_number": center.gst_number,
         "live_class_enable": center.live_class_enable,
         "center_image_url": (
-            await run_in_threadpool(get_file_url, center.center_image) if center.center_image else None
+            await run_in_threadpool(get_file_url, center.center_image)
+            if center.center_image
+            else None
         ),
         "address": address_data,
     }

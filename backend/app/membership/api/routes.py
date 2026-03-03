@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile,
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership, MembershipFeature
-from app.membership.schema.schema import MembershipCreate, MemberCreate, GuestRegisterIn
+from app.membership.schema.schema import MembershipCreate, MemberCreate, MemberUpdate ,GuestRegisterIn
 from app.auth.models.models import Member, MemberStatusEnum
 from app.core.security import get_password_hash, generate_random_password
 from app.membership.models.models import MemberMembership, Membership
@@ -395,6 +395,7 @@ async def create_member(
         blood_group=payload.blood_group,
         time_slot_id=payload.time_slot_id,
         member_status=MemberStatusEnum(payload.member_status),
+        address_id=address.id,
         created_by=current_user["user_id"],
         updated_by=current_user["user_id"],
         created_at=datetime.utcnow(),
@@ -471,26 +472,28 @@ async def get_member_by_id(
         raise HTTPException(status_code=403, detail="Not a center admin")
     admin_center_id = str(center_admin.center_id)
 
-    # Get the member
-    member = await db.get(Member, member_id)
+    # Get the member with relationships loaded
+    result = await db.execute(
+        select(Member)
+        .options(selectinload(Member.member_memberships))
+        .where(Member.id == member_id)
+    )
+    member = result.scalar_one_or_none()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
     # Get the member's center
-    from app.center.models.models import Center
+    from app.center.models.models import Center, CenterTimeSlot
     member_center = await db.get(Center, member.home_center_id)
     if not member_center:
         raise HTTPException(status_code=404, detail="Member's center not found")
 
     # Access control
     if member_center.parent_center_id:
-        # Sub-branch member
         if admin_center_id != str(member_center.id) and admin_center_id != str(member_center.parent_center_id):
             raise HTTPException(status_code=403, detail="Not allowed to access this member")
     else:
-        # Parent center member
         if admin_center_id != str(member_center.id):
-            # Check if member is in a sub-branch of this admin
             sub_centers = await db.execute(
                 select(Center.id).where(Center.parent_center_id == admin_center_id)
             )
@@ -498,7 +501,62 @@ async def get_member_by_id(
             if str(member_center.id) not in allowed_sub_ids:
                 raise HTTPException(status_code=403, detail="Not allowed to access this member")
 
-    # Return all member data
+    # Get address details (fallback to member fields if address_id is missing)
+    address = None
+    if member.address_id:
+        address_obj = await db.get(Address, member.address_id)
+        if address_obj:
+            address = {
+                "id": str(address_obj.id),
+                "address_type": address_obj.address_type.value if address_obj.address_type else None,
+                "address_line_1": address_obj.address_line_1,
+                "address_line_2": address_obj.address_line_2,
+                "city": address_obj.city,
+                "district": address_obj.district,
+                "state": address_obj.state,
+                "country": address_obj.country,
+                "postal_code": address_obj.postal_code,
+                "latitude": float(address_obj.latitude) if address_obj.latitude else None,
+                "longitude": float(address_obj.longitude) if address_obj.longitude else None,
+                "is_primary": address_obj.is_primary,
+                "status": address_obj.status.value if address_obj.status else None,
+            }
+    else:
+        address = {
+            "address_line_1": getattr(member, "address_line_1", None),
+            "address_line_2": getattr(member, "address_line_2", None),
+            "city": getattr(member, "city", None),
+            "state": getattr(member, "state", None),
+            "country": getattr(member, "country", None),
+            "postal_code": getattr(member, "postal_code", None),
+        }
+
+    # Get time slot details
+    time_slot = None
+    if member.time_slot_id:
+        time_slot_obj = await db.get(CenterTimeSlot, member.time_slot_id)
+        if time_slot_obj:
+            time_slot = {
+                "id": str(time_slot_obj.id),
+                "start_time": time_slot_obj.start_time,
+                "end_time": time_slot_obj.end_time,
+                "slot_capacity": time_slot_obj.slot_capacity,
+            }
+
+    # Get latest membership info
+    membership_id = None
+    start_date = None
+    end_date = None
+    payment_status_val = None
+    status_val = None
+    if member.member_memberships:
+        latest_mm = sorted(member.member_memberships, key=lambda mm: mm.start_date, reverse=True)[0]
+        membership_id = latest_mm.membership_id
+        start_date = latest_mm.start_date
+        end_date = latest_mm.end_date
+        payment_status_val = getattr(latest_mm, "payment_status", None)
+        status_val = latest_mm.membership_status.value if latest_mm.membership_status else None
+
     return {
         "id": str(member.id),
         "full_name": member.full_name,
@@ -507,54 +565,36 @@ async def get_member_by_id(
         "gender": member.gender.value if member.gender else None,
         "date_of_birth": member.date_of_birth,
         "blood_group": member.blood_group,
-        "address_id": str(member.address_id) if hasattr(member, "address_id") else None,
+        "address_id": str(member.address_id) if member.address_id else None,
+        "address": address,
         "home_center_id": str(member.home_center_id),
+        "home_center_name": member_center.center_name if member_center else None,
+        "center_name": member_center.center_name if member_center else None,
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
+        "time_slot": time_slot,
+        "membership_id": str(membership_id) if membership_id else None,
+        "start_date": start_date,
+        "end_date": end_date,
+        "payment_status": payment_status_val,
+        "membership_status": status_val,
         "member_status": member.member_status.value,
         "created_at": member.created_at,
         "updated_at": member.updated_at,
-        # Add other fields as needed
     }
 
 
 #Update Member by ID (centeradmin can update their own and sub-branch members; sub-branch admin only their own; all fields editable)
-@router.put("/center/members/{member_id}")
-async def update_member_by_id(
+@router.patch("/center/members/{member_id}")
+async def partial_update_member(
     member_id: str,
-    payload: MemberCreate,
+    payload: MemberUpdate,
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    center_admin = await db.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-    admin_center_id = str(center_admin.center_id)
-
-    # Get the member
     member = await db.get(Member, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
-    # Get the member's center
-    from app.center.models.models import Center
-    member_center = await db.get(Center, member.home_center_id)
-    if not member_center:
-        raise HTTPException(status_code=404, detail="Member's center not found")
-
-    # Access control (same as get)
-    if member_center.parent_center_id:
-        if admin_center_id != str(member_center.id) and admin_center_id != str(member_center.parent_center_id):
-            raise HTTPException(status_code=403, detail="Not allowed to update this member")
-    else:
-        if admin_center_id != str(member_center.id):
-            sub_centers = await db.execute(
-                select(Center.id).where(Center.parent_center_id == admin_center_id)
-            )
-            allowed_sub_ids = [str(row[0]) for row in sub_centers.fetchall()]
-            if str(member_center.id) not in allowed_sub_ids:
-                raise HTTPException(status_code=403, detail="Not allowed to update this member")
-
-    # Update all fields from payload
     update_fields = payload.dict(exclude_unset=True)
     for field, value in update_fields.items():
         if hasattr(member, field):
@@ -573,13 +613,13 @@ async def update_member_by_id(
         "gender": member.gender.value if member.gender else None,
         "date_of_birth": member.date_of_birth,
         "blood_group": member.blood_group,
-        "address_id": str(member.address_id) if hasattr(member, "address_id") else None,
+        "address_id": str(member.address_id) if member.address_id else None,
         "home_center_id": str(member.home_center_id),
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
         "member_status": member.member_status.value,
+        "status": member.status.value,
         "created_at": member.created_at,
         "updated_at": member.updated_at,
-        # Add other fields as needed
     }
 
 
@@ -587,6 +627,7 @@ async def update_member_by_id(
 @router.get("/center/members")
 async def list_members(
     payment_status: str = Query(None, description="Filter by payment status: paid/unpaid"),
+    membership_status: str = Query(None, description="Filter by membership status: active/inactive/expired"),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_async_session),
@@ -597,98 +638,169 @@ async def list_members(
         raise HTTPException(status_code=403, detail="Not a center admin")
     admin_center_id = str(center_admin.center_id)
 
-    from app.center.models.models import Center
-    # Determine allowed center IDs
+    from app.center.models.models import Center, CenterTimeSlot
     allowed_center_ids = [admin_center_id]
     parent_center = await db.get(Center, admin_center_id)
     if parent_center and not parent_center.parent_center_id:
-        # Parent center: include sub-branches
         sub_centers = await db.execute(
             select(Center.id).where(Center.parent_center_id == admin_center_id)
         )
         allowed_center_ids += [str(row[0]) for row in sub_centers.fetchall()]
 
-    # Build query for members in allowed centers
     query = (
         select(Member)
         .options(selectinload(Member.member_memberships))
         .where(Member.home_center_id.in_(allowed_center_ids))
     )
 
-    # Filter by payment status if provided
     if payment_status:
         query = query.join(MemberMembership).where(MemberMembership.payment_status == payment_status)
 
-    # Pagination
+    # Get all members for counts and pagination
     total_members_result = await db.execute(query)
     total_members = total_members_result.scalars().all()
     total_count = len(total_members)
 
-    # Apply pagination
-    query = query.offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(query)
-    members = result.scalars().all()
-
-    # Prepare response data
-    member_list = []
+    # --- Calculate counts for all members ---
+    today = date.today()
     active_count = 0
     inactive_count = 0
     expired_count = 0
 
-    today = date.today()
-    for member in members:
-        # Get latest membership (if any)
+    for member in total_members:
+        status_val = None
+        end_date = None
+        if member.member_memberships:
+            latest_mm = sorted(member.member_memberships, key=lambda mm: mm.start_date, reverse=True)[0]
+            status_val = latest_mm.membership_status.value if latest_mm.membership_status else None
+            end_date = latest_mm.end_date
+            if end_date:
+                end_date_val = end_date.date() if hasattr(end_date, "date") else end_date
+                if end_date_val < today:
+                    expired_count += 1
+                elif status_val == "active":
+                    active_count += 1
+                elif status_val == "inactive":
+                    inactive_count += 1
+            else:
+                if status_val == "active":
+                    active_count += 1
+                elif status_val == "inactive":
+                    inactive_count += 1
+
+    # --- Pagination ---
+    paged_members = total_members[(page - 1) * page_size : page * page_size]
+
+    member_list = []
+    for member in paged_members:
         membership = None
         start_date = None
         end_date = None
         payment_status_val = None
         status_val = None
+        address = None
+        time_slot = None
+
+        # Address details
+        if member.address_id:
+            address_obj = await db.get(Address, member.address_id)
+            if address_obj:
+                address = {
+                    "id": str(address_obj.id),
+                    "address_type": address_obj.address_type.value if address_obj.address_type else None,
+                    "address_line_1": address_obj.address_line_1,
+                    "address_line_2": address_obj.address_line_2,
+                    "city": address_obj.city,
+                    "district": address_obj.district,
+                    "state": address_obj.state,
+                    "country": address_obj.country,
+                    "postal_code": address_obj.postal_code,
+                    "latitude": float(address_obj.latitude) if address_obj.latitude else None,
+                    "longitude": float(address_obj.longitude) if address_obj.longitude else None,
+                    "is_primary": address_obj.is_primary,
+                    "status": address_obj.status.value if address_obj.status else None,
+                }
+        else:
+            address = {
+                "address_line_1": getattr(member, "address_line_1", None),
+                "address_line_2": getattr(member, "address_line_2", None),
+                "city": getattr(member, "city", None),
+                "state": getattr(member, "state", None),
+                "country": getattr(member, "country", None),
+                "postal_code": getattr(member, "postal_code", None),
+            }
+
+        # Time slot details
+        if member.time_slot_id:
+            time_slot_obj = await db.get(CenterTimeSlot, member.time_slot_id)
+            if time_slot_obj:
+                time_slot = {
+                    "id": str(time_slot_obj.id),
+                    "start_time": time_slot_obj.start_time,
+                    "end_time": time_slot_obj.end_time,
+                    "slot_capacity": time_slot_obj.slot_capacity,
+                }
+
+        # Get home center name
+        home_center = await db.get(Center, member.home_center_id) if member.home_center_id else None
+        home_center_name = home_center.center_name if home_center else None
+
+        # Membership status logic
+        member_status_for_filter = None
         if member.member_memberships:
-            membership = member.member_memberships[-1]
-            start_date = membership.start_date
-            end_date = membership.end_date
-            payment_status_val = getattr(membership, "payment_status", None)
-            status_val = membership.membership_status.value if membership.membership_status else None
-            # Count logic
-            if status_val == "active":
-                active_count += 1
-            elif status_val == "inactive":
-                inactive_count += 1
-            if end_date and end_date < today:
-                expired_count += 1
+            latest_mm = sorted(member.member_memberships, key=lambda mm: mm.start_date, reverse=True)[0]
+            membership = latest_mm.membership_id
+            start_date = latest_mm.start_date
+            end_date = latest_mm.end_date
+            payment_status_val = getattr(latest_mm, "payment_status", None)
+            status_val = latest_mm.membership_status.value if latest_mm.membership_status else None
+
+            # Determine expired/active/inactive
+            if end_date:
+                end_date_val = end_date.date() if hasattr(end_date, "date") else end_date
+                if end_date_val < today:
+                    member_status_for_filter = "expired"
+                elif status_val == "active":
+                    member_status_for_filter = "active"
+                elif status_val == "inactive":
+                    member_status_for_filter = "inactive"
+                else:
+                    member_status_for_filter = status_val
+            else:
+                if status_val == "active":
+                    member_status_for_filter = "active"
+                elif status_val == "inactive":
+                    member_status_for_filter = "inactive"
+                else:
+                    member_status_for_filter = status_val
+        else:
+            member_status_for_filter = None
+
+        # Apply membership_status filter
+        if membership_status:
+            if member_status_for_filter != membership_status:
+                continue
 
         member_list.append({
             "id": str(member.id),
             "full_name": member.full_name,
             "email": member.email,
             "mobile": member.mobile,
+            "gender": member.gender.value if member.gender else None,
+            "date_of_birth": member.date_of_birth,
+            "blood_group": member.blood_group,
+            "address_id": str(member.address_id) if member.address_id else None,
+            "address": address,
+            "home_center_id": str(member.home_center_id),
+            "home_center_name": home_center_name,
+            "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
+            "time_slot": time_slot,
+            "membership_id": str(membership) if membership else None,
             "start_date": start_date,
             "end_date": end_date,
-            "status": status_val,
             "payment_status": payment_status_val,
+            "membership_status": member_status_for_filter,
         })
-
-    # Summary counts (for all allowed centers)
-    # Re-run count queries for all members in allowed centers
-    all_members_result = await db.execute(
-        select(Member).where(Member.home_center_id.in_(allowed_center_ids))
-    )
-    all_members = all_members_result.scalars().all()
-    total_count = len(all_members)
-    active_count = 0
-    inactive_count = 0
-    expired_count = 0
-    for member in all_members:
-        if member.member_memberships:
-            membership = member.member_memberships[-1]
-            status_val = membership.membership_status.value if membership.membership_status else None
-            end_date = membership.end_date
-            if status_val == "active":
-                active_count += 1
-            elif status_val == "inactive":
-                inactive_count += 1
-            if end_date and end_date < today:
-                expired_count += 1
 
     return {
         "members": member_list,
@@ -704,6 +816,20 @@ async def list_members(
             "expired_members": expired_count
         }
     }
+
+
+@router.delete("/center/members/{member_id}", status_code=204)
+async def delete_member(
+    member_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    member = await db.get(Member, member_id)
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    await db.delete(member)
+    await db.commit()
+    return {"detail": "Member deleted"}
 
 
 
