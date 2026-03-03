@@ -18,6 +18,8 @@ export const applyTheme = theme => {
 // const { data } = await getThemeConfig()
 // applyTheme(data)
 
+
+//"14:30" to "02:30 PM"
 export const convertTo12Hour = time => {
   if (!time) return ''
   const [hours, minutes] = time.split(':')
@@ -26,6 +28,17 @@ export const convertTo12Hour = time => {
   hour = hour % 12 || 12
   return `${hour.toString().padStart(2, '0')}:${minutes} ${period}`
 }
+
+//2026-02-20T12:31:15.504485 to "02:31 PM"
+export const formatTo12Hour = (isoString) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return date.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 
 export const convert12To24WithSeconds = (time) => {
   if (!time) return null

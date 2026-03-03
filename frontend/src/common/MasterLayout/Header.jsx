@@ -16,23 +16,19 @@ import {
 } from 'lucide-react'
 import CustomeSearch from '../CustomeSearch'
 import CustomeModal from '../CustomeModal'
-import AddEditForm from '../../pages/employee-management/AddEditForm'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
 import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
+import { useCrmStore } from '@store/tabStore'
 
 const Header = () => {
-  const [open, setOpen] = useState(false)
+  const { setSelectedTab, setMemberView } = useCrmStore()
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
   const navigate = useNavigate()
-
-  const handleOpen = () => {
-    setOpen(true)
-  }
 
   const handleLogout = () => {
     const state = useAuthStore.getState()
@@ -42,42 +38,27 @@ const Header = () => {
   }
 
   return (
-    <header className='w-full bg-textblack shadow flex items-center h-16 p-3'>
-      <div className='w-1/2 flex'>
-        <CustomeSearch placeholder='Search User' />
-      </div>
+    <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
           <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
             <img src={map} className='w-5 h-5 mr-2' />
             Fitness center
           </span>
-
-          {/* ADD */}
-          {/* <Button  size='addbutton'>
-            + Add Branch
-          </Button> */}
-          <AddBranchButton/>
-          <BranchDetailsButton/>
-
-          {/* ADD */}
-          <Button onClick={handleOpen} size='addbutton'>
-            + Add Employee
-          </Button>
-
-          {/* EDIT MODAL */}
-          <CustomeModal
-            open={open}
-            onOpenChange={setOpen}
-            header='Create Employee'
+          <AddBranchButton />
+          <BranchDetailsButton />
+          <Button
+            size='addbutton'
+            onClick={() => {
+              setSelectedTab(1)
+              setMemberView('add')
+              navigate('/crm')
+            }}
           >
-            <AddEditForm
-              open={open}
-              setOpen={setOpen}
-              closeModal={() => setOpen(false)}
-            />
-          </CustomeModal>
+            + Add Member
+          </Button>
         </div>
+
         <img src={bell} alt='logo' className='mr-2' />
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
@@ -94,7 +75,7 @@ const Header = () => {
                       Hello, Pratibha
                     </span>
                     <span className='text-primary text-xs font-light'>
-                      Center Admin
+                      Center Admin
                     </span>
                   </div>
                 </div>

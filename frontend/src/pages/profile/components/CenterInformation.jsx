@@ -4,91 +4,94 @@ import { Button } from '@pages/components/ui/button'
 import EditCenterInformation from './EditCenterInfo'
 import { useState } from 'react'
 import { CustomeCollapse } from '@common/CustomeCollapse'
+import view from '@assets/form-icons/view.svg'
+import { useAllProfileQuery } from '@api-queries/center-profile/Query'
+import ViewCenterInfo from './ViewCenterInfo'
 
 const CenterInformation = () => {
+  const [editId, setEditId] = useState(false)
   const [open, setOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+  const [viewId, setViewId] = useState(false)
+  const { data, isFetching } = useAllProfileQuery()
 
-  const dummyCenterData = [
-    {
-      name: 'Power Gym',
-      category: 'Premium Fitness',
-      code: 'GYM001',
-      email: 'powergym@email.com',
-      phone: '+91 9876543210',
-      country: 'India',
-      state: 'Kerala',
-      city: 'Kochi',
-      pincode: '682019',
-      address1: 'MG Road',
-      address2: 'Galaxy Tower ',
-      description: 'Premium fitness center with modern equipment.'
-    },
-    {
-      name: 'Elite Gym',
-      category: 'Standard Fitness',
-      code: 'GYM002',
-      email: 'elite@email.com',
-      phone: '+91 9123456789',
-      country: 'India',
-      state: 'Tamil Nadu',
-      city: 'Chennai',
-      pincode: '600001',
-      address1: 'Anna Salai',
-      address2: 'Sky Plaza',
-      description: 'Affordable fitness center with good facilities.'
-    }
-  ]
+  const branches = data?.branches || []
+  const firstCenter = branches[0]
+  const remainingCenters = branches.slice(1)
 
-  const firstCenter = dummyCenterData[0]
-  const remainingCenters = dummyCenterData.slice(1)
-
-  const renderCard = (data, index) => (
+  const renderCard = (center, index) => (
     <div
-      key={index}
+      key={center.id}
       className='border border-tableborder rounded-2xl p-4 relative mb-4'
     >
-      <div className='absolute top-6 right-6'>
+      <div className='absolute top-6 right-6 items-center flex gap-3'>
         <Button
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setOpen(true)
+            setEditId(center.id)
+          }}
           variant='button_filter'
           rightIcon={profile_edit}
           size='editbutton'
         >
           Edit
         </Button>
+        <button
+          onClick={() => {
+            setViewOpen(true)
+            setViewId(center?.id)
+          }}
+        >
+          <img src={view} alt='view' className='w-8 h-8' />
+        </button>
       </div>
+
       <div className='flex items-center gap-6 mb-4'>
         <img
-          src={profile}
+          src={center.center_image_url || profile}
           alt='Center'
           className='w-20 h-20 rounded-md object-cover'
         />
+
         <div className='flex gap-8 w-full'>
           <div>
             <p className='text-pricing_text text-sm'>Center Name</p>
-            <p className='text-textblack text-base'>{data.name}</p>
+            <p className='text-textblack text-base'>{center.center_name}</p>
           </div>
+
           <div>
             <p className='text-pricing_text text-sm'>Center Category</p>
-            <p className='text-textblack text-base'>{data.category}</p>
+            <p className='text-textblack text-base'>
+              {center.center_category_name || '-'}
+            </p>
           </div>
         </div>
       </div>
       <div className='grid grid-cols-3 gap-y-2 gap-x-6'>
-        <InfoItem label='Center Code' value={data.code} />
-        <InfoItem label='Email address' value={data.email} />
-        <InfoItem label='Phone' value={data.phone} />
-        <InfoItem label='Country' value={data.country} />
-        <InfoItem label='State' value={data.state} />
-        <InfoItem label='City' value={data.city} />
-        <InfoItem label='Pincode' value={data.pincode} />
-        <InfoItem label='Address 1' value={data.address1} />
-        <InfoItem label='Address 2' value={data.address2} />
+        <InfoItem label='Center Code' value={center.center_email || '-'} />
+        <InfoItem label='Email address' value={center.center_email || '-'} />
+        <InfoItem label='Phone' value={center.center_phone || '-'} />
+        <InfoItem label='Country' value={center.address?.country || '-'} />
+        <InfoItem label='State' value={center.address?.state || '-'} />
+        <InfoItem label='City' value={center.address?.city || '-'} />
+        <InfoItem label='Pincode' value={center.address?.postal_code || '-'} />
+        <InfoItem
+          label='Address 1'
+          value={center.address?.address_line_1 || '-'}
+        />
+        <InfoItem
+          label='Address 2'
+          value={center.address?.address_line_2 || '-'}
+        />
       </div>
-      <div className='mt-4'>
+
+      {/* <div className='mt-4'>
         <p className='text-pricing_text text-sm'>Center description</p>
-        <p className='text-textblack text-base mt-2'>{data.description}</p>
+        <p className='text-textblack text-base mt-2'>
+          {center.center_description || '-'}
+        </p>
       </div>
+      <PublicWebUrl /> */}
     </div>
   )
 
@@ -96,16 +99,15 @@ const CenterInformation = () => {
     <div className='flex flex-col p-2'>
       <span className='text-lg font-semibold mb-4'>Center Information</span>
       {/* Always show first center */}
-      {firstCenter && renderCard(firstCenter, 0)}
-      {/* If more than one center, show rest inside collapse */}
+      {branches.length > 0 && renderCard(firstCenter, 0)}
+
       {remainingCenters.length > 0 && (
         <CustomeCollapse label='More Centers'>
-          {remainingCenters.map((center, index) =>
-            renderCard(center, index + 1)
-          )}
+          {remainingCenters.map(center => renderCard(center))}
         </CustomeCollapse>
       )}
-      <EditCenterInformation open={open} setOpen={setOpen} />
+      <EditCenterInformation open={open} setOpen={setOpen} editId={editId} />
+      <ViewCenterInfo open={viewOpen} setOpen={setViewOpen} viewId={viewId} />
     </div>
   )
 }

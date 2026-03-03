@@ -2,7 +2,6 @@ import ContentLayout from '@common/masterLayout/ContentLayout'
 import ProfileUpload from './components/ProfileUpload'
 import ProfileCard from './components/ProflieCard'
 import CenterInformation from './components/CenterInformation'
-import PublicWebUrl from './components/PublicWebUrl'
 
 const profilecardcolor = [
   {
@@ -49,7 +48,6 @@ const ProfilePage = () => {
         ))}
       </div>
       <CenterInformation/>
-      <PublicWebUrl/>
       </div>
     </ContentLayout>
   )

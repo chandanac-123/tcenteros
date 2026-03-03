@@ -2,7 +2,6 @@ import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { crm_tabs } from '@constants/crmTabs'
 import { Button } from '@pages/components/ui/button'
-import { useState } from 'react'
 import Members from './member'
 import MemberView from './member/MemberView'
 import MemberAdd from './member/MemberAdd'
@@ -10,11 +9,15 @@ import { SquarePen } from 'lucide-react'
 import { useCrmStore } from '@store/tabStore'
 
 const CRM = () => {
-  const { selectedTab: crmSelectedTab, setSelectedTab: setCrmSelectedTab } =
-    useCrmStore()
+  const {
+    selectedTab: crmSelectedTab,
+    setSelectedTab: setCrmSelectedTab,
+    memberView,
+    setMemberView,
+    selectedMemberId,
+    setSelectedMemberId
+  } = useCrmStore()
   const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
-  const [memberView, setMemberView] = useState('list')
-  const [selectedMemberId, setSelectedMemberId] = useState(null)
 
   return (
     <ContentLayout>

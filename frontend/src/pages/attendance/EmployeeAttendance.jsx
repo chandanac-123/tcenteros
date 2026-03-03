@@ -1,8 +1,12 @@
 import { DataTable } from '@common/DataTable'
 import { useEffect, useState } from 'react'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { useAllEmployeesAttendanceQuery ,useDeleteAttendanceMutation} from '@api-queries/attendance/Query'
+import {
+  useAllEmployeesAttendanceQuery,
+  useDeleteAttendanceMutation
+} from '@api-queries/attendance/Query'
 import DeleteModal from '@common/CustomeDelete'
+import { convertTo12Hour, formatTo12Hour } from '@utils/helper'
 
 const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
@@ -52,11 +56,13 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
     },
     {
       accessorKey: 'check_in_time',
-      header: 'Check In Time'
+      header: 'Check In Time',
+      cell: ({ row }) => formatTo12Hour(row.original.check_in_time)
     },
     {
       accessorKey: 'check_out_time',
-      header: 'Check Out Time '
+      header: 'Check Out Time ',
+      cell: ({ row }) => formatTo12Hour(row.original.check_out_time)
     },
     {
       accessorKey: 'duration',

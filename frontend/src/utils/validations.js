@@ -39,7 +39,7 @@ export const categoryValidationSchema = Yup.object().shape({
     )
 })
 
-export const employeeValidationSchema = (isEdit) =>
+export const employeeValidationSchema = isEdit =>
   Yup.object().shape({
     full_name: Yup.string().required('Full name is required'),
     email: Yup.string().email().required('Email is required'),
@@ -139,3 +139,38 @@ export const branchValidationSchema = Yup.object().shape({
   postal_code: Yup.string()
     .required("Enter postal code"),
 });
+
+export const brandingValidationSchema = Yup.object({
+  app_name: Yup.string().required('App name is required'),
+  primary_color: Yup.string().required('Primary color is required'),
+  secondary_color: Yup.string().required(),
+  app_logo: Yup.mixed().test(
+    'file-or-url',
+    'Logo is required',
+    function (value) {
+      if (!value) return false
+      // If it's a File object
+      if (value instanceof File) return true
+      // If it's existing URL string
+      if (typeof value === 'string') return true
+      return false
+    }
+  )
+})
+
+export const galleryImageValidationSchema = Yup.object().shape({
+  image_url: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test(
+      'fileType',
+      'Only JPG, JPEG, PNG files are allowed',
+      value =>
+        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
+    )
+    .test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    )
+})

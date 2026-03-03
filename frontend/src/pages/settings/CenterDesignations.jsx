@@ -1,11 +1,12 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import edit from '@assets/form-icons/edit.svg'
+import deleteicon from '@assets/form-icons/delete.svg'
 import { useCreateCategoryMutation } from '@api-queries/employee-management/Query'
 import {
   useCategoriesQuery,
   useDeleteCategoryMutation
 } from '@api-queries/employee-management/Query'
 import { useState } from 'react'
-import AddCategory from '@pages/employee-management/AddCategory'
+import AddCategory from '@pages/employee-management/category/AddCategory'
 import DeleteModal from '@common/CustomeDelete'
 import { Button } from '@pages/components/ui/button'
 import InputFile from '@common/CustomeFileUpload'
@@ -66,22 +67,6 @@ const CenterDesignations = () => {
           onChange={formik.handleChange}
           error={formik.touched.name && formik.errors.name}
         />
-
-        {/* <InputFile
-          label='Upload Image'
-          name='image_url'
-          onChange={e => {
-            formik.setFieldValue('image_url', e.target.value) // value is File
-            formik.setFieldTouched('image_url', true, false)
-            formik.validateField('image_url') // <-- Add this line
-          }}
-          onRemove={() => {
-            formik.setFieldValue('image_url', null)
-            formik.setFieldTouched('image_url', true, false)
-            formik.validateField('image_url') // <-- Add this line
-          }}
-          error={formik.touched.image_url && formik.errors.image_url}
-        /> */}
         <InputFile
           label='Upload Image'
           name='image_url'
@@ -126,9 +111,9 @@ const CenterDesignations = () => {
                     setValue(d.id)
                     setCategoryOpen(!categoryOpen)
                   }}
-                  className='bg-[#F3E8FF] text-primary p-2 rounded-md hover:bg-primary/10 transition'
+                  className='bg-[#F3E8FF] text-primary rounded-md hover:bg-primary/10 transition'
                 >
-                  <Pencil className='w-4 h-4' />
+                  <img src={edit} alt='edit' />
                 </button>
                 <button
                   type='button'
@@ -136,9 +121,9 @@ const CenterDesignations = () => {
                     setDelValue(d.id)
                     setDeleteOpen(true)
                   }}
-                  className='bg-[#FFE4E6] text-red-500 p-2 rounded-md hover:bg-red-100 transition'
+                  className='bg-[#FFE4E6] text-red-500  rounded-md hover:bg-red-100 transition'
                 >
-                  <Trash2 className='w-4 h-4' />
+                  <img src={deleteicon} alt='delete' />
                 </button>
               </div>
             </div>

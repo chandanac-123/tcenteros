@@ -1,13 +1,7 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 
-
-const MenuCard = ({
-  icon,
-  iconActive,
-  title,
-  path,
-}) => {
+const MenuCard = ({ icon, title, path }) => {
   return (
     <NavLink
       to={path}
@@ -19,7 +13,11 @@ const MenuCard = ({
     >
       {({ isActive }) => (
         <>
-          <img alt='' src={isActive && iconActive ? iconActive : icon} />
+          {isActive ? (
+            <span className='text-textwhite'>{icon}</span>
+          ) : (
+            <span className='text-primary'>{icon}</span>
+          )}
           {title}
         </>
       )}

@@ -10,12 +10,13 @@ const cardValue = [
   { title: '+ Record Payment', value: '₹26,070', image: record_payment }
 ]
 
-const DisplayActionCard = () => {
+const DisplayActionCard = ({onActionClick }) => {
   return (
     <div className='flex flex-col gap-5 w-full justify-center items-center'>
       {cardValue.map((card, index) => (
         <div
           key={index}
+           onClick={() => onActionClick(card.title)}
           className='flex w-full  items-center gap-4 rounded-lg p-3 cursor-pointer shadow-xl transition'
         >
           <img src={card.image} alt={card.title} />

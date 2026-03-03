@@ -28,7 +28,7 @@ export const useCreateCenterTimeMutation = () => {
 export const useUpdateCenterTimeMutation = () => {
   const query = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => updateCenterTime(data, id),
+    mutationFn: ({  data }) => updateCenterTime(data),
     onSuccess: async data => {
       query.invalidateQueries('centerTime')
       showSuccess('Center time updated successfully')

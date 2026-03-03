@@ -7,9 +7,9 @@ import {
   updateMembershipStatusApiCall
 } from '../../api'
 
-export const getAllPlans = async () => {
+export const getAllPlans = async (status) => {
   try {
-    const response = await getMembershipPlanApiCall()
+    const response = await getMembershipPlanApiCall(status)
     return response.data
   } catch (error) {
     throw error

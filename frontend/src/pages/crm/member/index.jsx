@@ -42,12 +42,8 @@ const Members = ({ onView, onEdit }) => {
       status: 'active'
     }
   ]
-  const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [editopen, setEditOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-  const [editId, setEditId] = useState(null)
-  const [viewId, setViewId] = useState(null)
   const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
 
   const handleDelete = () => {

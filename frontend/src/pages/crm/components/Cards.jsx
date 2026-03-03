@@ -5,7 +5,7 @@ const Card = ({ label, value = 35420 }) => {
         {label}
       </span>
 
-      <span className="text-sm bg-primarybglight py-1 px-3 rounded-xl font-semibold text-primary">
+      <span className="text-sm bg-primarybglight py-1 px-3 rounded-xl font-semibold text-blue">
         {value}
       </span>
     </div>

@@ -40,8 +40,8 @@ const CenterOperations = () => {
     closing_time: convertTo12Hour(centerTime?.closing_time) || '',
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
-    attendance_allowed_radius_meters:
-      parseInt(centerTime?.attendance_allowed_radius_meters) || ''
+    payroll_cycle_day: centerTime?.payroll_cycle_day || 0,
+    inventory_profit: centerTime?.inventory_profit || 0
   }
 
   const initialValues = {
@@ -53,7 +53,6 @@ const CenterOperations = () => {
   const formik = useFormik({
     initialValues,
     onSubmit: async values => {
-      console.log('values: ', values)
       try {
         await createSlot(values)
         formik.resetForm()
@@ -71,15 +70,12 @@ const CenterOperations = () => {
         ...values,
         opening_time: convert12To24WithSeconds(values.opening_time),
         closing_time: convert12To24WithSeconds(values.closing_time),
-        attendance_allowed_radius_meters: parseInt(
-          values.attendance_allowed_radius_meters
-        )
+        payroll_cycle_day: parseInt(values.payroll_cycle_day),
+        inventory_profit: parseInt(values.inventory_profit)
       }
-
       try {
         if (centerTime) {
           await updateCenterTime({
-            id: centerTime.id,
             data: formattedValues
           })
         } else {
@@ -145,25 +141,43 @@ const CenterOperations = () => {
           />
         </div>
 
-        <div className='flex justify-between items-center'>
-          <Input
-            label='Attendance allowed radius'
-            value={centerTimeFormik.values.attendance_allowed_radius_meters}
-            onChange={e =>
-              centerTimeFormik.setFieldValue(
-                'attendance_allowed_radius_meters',
-                e.target.value
-              )
-            }
-          />
-          <Button
-            id='center-timing'
-            size='addbutton'
-            variant='button_outlined'
-            type='submit'
-          >
-            Save Changes
-          </Button>
+        <div className='flex gap-4'>
+          <div className='flex-1'>
+            <Input
+              label='Inventory Profit'
+              name='inventory_profit'
+              value={centerTimeFormik.values.inventory_profit}
+              onChange={e =>
+                centerTimeFormik.setFieldValue(
+                  'inventory_profit',
+                  e.target.value
+                )
+              }
+            />
+          </div>
+          <div className='flex-1'>
+            <Input
+              label='Pay Cycle'
+              name='payroll_cycle_day'
+              value={centerTimeFormik.values.payroll_cycle_day}
+              onChange={e =>
+                centerTimeFormik.setFieldValue(
+                  'payroll_cycle_day',
+                  e.target.value
+                )
+              }
+            />
+          </div>
+          <div className='flex-1 justify-end items-center flex'>
+            <Button
+              id='center-timing'
+              size='addbutton'
+              variant='button_outlined'
+              type='submit'
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
       </form>
 
