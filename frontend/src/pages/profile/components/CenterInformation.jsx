@@ -4,12 +4,15 @@ import { Button } from '@pages/components/ui/button'
 import EditCenterInformation from './EditCenterInfo'
 import { useState } from 'react'
 import { CustomeCollapse } from '@common/CustomeCollapse'
-import PublicWebUrl from './PublicWebUrl'
+import view from '@assets/form-icons/view.svg'
 import { useAllProfileQuery } from '@api-queries/center-profile/Query'
+import ViewCenterInfo from './ViewCenterInfo'
 
 const CenterInformation = () => {
   const [editId, setEditId] = useState(false)
   const [open, setOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+  const [viewId, setViewId] = useState(false)
   const { data, isFetching } = useAllProfileQuery()
 
   const branches = data?.branches || []
@@ -21,15 +24,26 @@ const CenterInformation = () => {
       key={center.id}
       className='border border-tableborder rounded-2xl p-4 relative mb-4'
     >
-      <div className='absolute top-6 right-6'>
+      <div className='absolute top-6 right-6 items-center flex gap-3'>
         <Button
-          onClick={() => { setOpen(true); setEditId(center.id); }}
+          onClick={() => {
+            setOpen(true)
+            setEditId(center.id)
+          }}
           variant='button_filter'
           rightIcon={profile_edit}
           size='editbutton'
         >
           Edit
         </Button>
+        <button
+          onClick={() => {
+            setViewOpen(true)
+            setViewId(center?.id)
+          }}
+        >
+          <img src={view} alt='view' className='w-8 h-8' />
+        </button>
       </div>
 
       <div className='flex items-center gap-6 mb-4'>
@@ -53,7 +67,7 @@ const CenterInformation = () => {
           </div>
         </div>
       </div>
-    <div className='grid grid-cols-3 gap-y-2 gap-x-6'>
+      <div className='grid grid-cols-3 gap-y-2 gap-x-6'>
         <InfoItem label='Center Code' value={center.center_email || '-'} />
         <InfoItem label='Email address' value={center.center_email || '-'} />
         <InfoItem label='Phone' value={center.center_phone || '-'} />
@@ -61,10 +75,16 @@ const CenterInformation = () => {
         <InfoItem label='State' value={center.address?.state || '-'} />
         <InfoItem label='City' value={center.address?.city || '-'} />
         <InfoItem label='Pincode' value={center.address?.postal_code || '-'} />
-        <InfoItem label='Address 1' value={center.address?.address_line_1 || '-'} />
-        <InfoItem label='Address 2' value={center.address?.address_line_2 || '-'} />
+        <InfoItem
+          label='Address 1'
+          value={center.address?.address_line_1 || '-'}
+        />
+        <InfoItem
+          label='Address 2'
+          value={center.address?.address_line_2 || '-'}
+        />
       </div>
-      
+
       {/* <div className='mt-4'>
         <p className='text-pricing_text text-sm'>Center description</p>
         <p className='text-textblack text-base mt-2'>
@@ -87,6 +107,7 @@ const CenterInformation = () => {
         </CustomeCollapse>
       )}
       <EditCenterInformation open={open} setOpen={setOpen} editId={editId} />
+      <ViewCenterInfo open={viewOpen} setOpen={setViewOpen} viewId={viewId} />
     </div>
   )
 }
