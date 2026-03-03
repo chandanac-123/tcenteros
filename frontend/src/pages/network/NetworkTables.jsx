@@ -16,6 +16,9 @@ const NetworkTables = ({ activeTab, data, tableParams, setTableParams, paginatio
   const [approveOpen, setApproveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
+  console.log("Table",tableParams);
+  
+
   const navigate = useNavigate();
 
 

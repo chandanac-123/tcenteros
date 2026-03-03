@@ -11,6 +11,7 @@ import {
     useGetNetworkToggleButtonQuery,
 } from "@api-queries/network/Query"
 import { useNavigate } from 'react-router-dom'
+import { useGetWalletAmountQuery } from '@api-queries/wallet/Query'
 
 const NetworkWalletModal = ({ open, setOpen }) => {
     const [openWhyModal, setOpenWhyModal] = useState(false)
@@ -19,6 +20,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
 
     const { data: networkToggle, isFetching: isNetworkToggleFetching } = useGetNetworkToggleButtonQuery();
     const { mutateAsync: enabled, isPending } = useNetworkToggleButtonMutation();
+    const { data: walletAmout, refetch: refetchWalletAmount } = useGetWalletAmountQuery()
     const networkActive = networkToggle?.network_enabled ?? false
 
 
@@ -76,7 +78,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
                                     variant="button_filled" size="addbutton">
                                     Add Wallet
                                 </Button>
-                                <AddWallet open={openAddWalletModal} setOpen={setAddwalletModal} />
+                                <AddWallet open={openAddWalletModal} setOpen={setAddwalletModal} refetchWalletAmount={refetchWalletAmount}  />
 
                             </div>
 

@@ -1,4 +1,3 @@
-import { ca } from 'date-fns/locale'
 import axiosInstance from './axiosInstance'
 
 //ONBOARDING
@@ -125,8 +124,9 @@ export const networkToggleButtonApiCall = (enabled) =>
   axiosInstance.put("/networking/center/networking/toggle", { enabled })
 export const getNetworkToggleStatusApiCall = () =>
   axiosInstance.get("/networking/center/network-enabled/me")
-export const getUserNetworkListApiCall = (data) =>
-  axiosInstance.get(`/networking/networking/bookings?page=${data?.page}&page_size=${data?.pageSize}`)
+export const getUserNetworkListApiCall = (data) =>{
+ return axiosInstance.get(`/networking/networking/bookings?page=${data?.page}`)
+}
 export const editApproveNetworkApiCall = (id) =>
   axiosInstance.put(`/networking/networking/access/approve`, null, { params: { network_membership_id: id } });
 export const getNetworkingBookingByIdApiCall = (id) =>
@@ -140,7 +140,7 @@ export const createWalletApiCall = (details) =>
   axiosInstance.post('/center/center/wallet/create', details);
 export const getWalletsummaryApiCall = () =>
   axiosInstance.get('/center/center/wallet/summary');
-export const getWalletTransactionsApiCall = (details = {}) => {  
+export const getWalletTransactionsApiCall = (details = {}) => {
   return axiosInstance.get(`/center/center/wallet/transactions`, {
     params: {
       page: details.page ?? 1,
@@ -198,5 +198,24 @@ export const deleteAttendanceApiCall = id =>
 
 
 // BRANCH API
-export const addBranchCountryApiCall = details =>
-  axiosInstance.post('/branching/centeradmin/branch/request', details)
+export const addBranchCountApiCall = details =>
+  axiosInstance.post('/branching/centeradmin/branch/request', details);
+export const getBranchPricesAndTaxApiCall = () =>
+  axiosInstance.get('/branching/centeradmin/branch/request/summary');
+export const getPurchasedBranchesApiCall = () =>
+  axiosInstance.get(`/branching/centeradmin/branch/purchased`);
+export const getBranchCategoriesListApiCall = () =>
+  axiosInstance.get('/settings/superadmin/center-categories/');
+export const createNewBranchDetailsApiCall = ({ param, data }) =>{
+  console.log("FormData",data);
+  console.log("Param",param);
+  return  axiosInstance.post(`/branching/centeradmin/branch/create?payment_order_id=${param}`,data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+}
+ 
+

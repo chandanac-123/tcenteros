@@ -1,7 +1,6 @@
 import ContentLayout from "@common/masterLayout/ContentLayout"
 import { Switch } from "@pages/components/ui/switch"
 import NetworkTables from "./NetworkTables"
-import calender from '@assets/header-icons/calender.svg'
 import CustomeTab from '@common/CustomeTab'
 import { useState } from "react"
 import AmountForm from "./AmountForm"
@@ -11,6 +10,8 @@ import {
   useGetUserNetworkListQuery
 } from "@api-queries/network/Query"
 import { useNetworkTabStore } from "@store/networkTabstore"
+import { format } from "date-fns"
+import CustomDatePicker from "@common/CustomeDatepicker"
 
 
 const Network = () => {
@@ -21,9 +22,12 @@ const Network = () => {
   const { data: networkToggle, isFetching: isNetworkToggleFetching } = useGetNetworkToggleButtonQuery()
   const [tableParams, setTableParams] = useState({
     page: 1,
-    search: ''
   })
   const { data, isFetching } = useGetUserNetworkListQuery(tableParams)
+  const [dateRange, setDateRange] = useState({
+    from: null,
+    to: null
+  })
   const networkActive = networkToggle?.network_enabled ?? false
 
   const networkTabs = [
@@ -43,6 +47,7 @@ const Network = () => {
       ? new Date(item.end_date).setHours(0, 0, 0, 0)
       : null;
 
+      
     // Network Tab → ONLY approved
     if (activeTab === "Network") {
       return status === "approved";
@@ -132,13 +137,33 @@ const Network = () => {
         />
 
         <div className='flex gap-2'>
-          <button>
-            <img
-              src={calender}
-              alt='calender'
-              className='bg-primary p-2 rounded-md'
-            />
-          </button>
+          <CustomDatePicker
+            pickerType="range"
+            value={dateRange}
+            onChange={(range) => {
+              setDateRange(range)
+
+              // When both dates selected → apply
+              if (range?.from && range?.to) {
+                setTableParams(prev => ({
+                  ...prev,
+                  page: 1,
+                  start_date: format(range.from, "yyyy-MM-dd"),
+                  end_date: format(range.to, "yyyy-MM-dd"),
+                }))
+              }
+
+              // When cleared → reset date filter
+              if (!range?.from && !range?.to) {
+                setTableParams(prev => ({
+                  ...prev,
+                  page: 1,
+                  start_date: "",
+                  end_date: "",
+                }))
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -155,7 +180,7 @@ const Network = () => {
             data={filteredData}
             tableParams={tableParams}
             pagination={data?.total}
-             loading={isFetching}
+            loading={isFetching}
             setTableParams={setTableParams}
           />
         )}

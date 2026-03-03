@@ -89,3 +89,53 @@ export const attendanceValidationSchema = Yup.object().shape({
   check_in_time: Yup.string().required('Enter check-in time'),
   check_out_time: Yup.string().required('Enter check-out time'),
 })
+
+export const branchValidationSchema = Yup.object().shape({
+  name: Yup.string()
+    .min(3, "Branch name must be at least 3 characters")
+    .max(50, "Branch name is too long")
+    .required("Enter branch name"),
+
+  center_category_id: Yup.string()
+    .required("Select center category"),
+
+  address_line_1: Yup.string()
+    .min(5, "Address is too short")
+    .required("Enter address line 1"),
+
+  address_line_2: Yup.string()
+    .min(5, "Address is too short")
+    .required("Enter address line 2"),
+
+  center_email: Yup.string()
+    .email("Invalid email format")
+    .required("Enter branch email"),
+
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Create password"),
+
+  center_phone: Yup.string()
+    .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+    .required("Enter phone number"),
+
+  center_image: Yup.mixed()
+    .required("Upload profile picture")
+    .test(
+      "fileType",
+      "Unsupported file format",
+      value =>
+        !value ||
+        ["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(value.type)
+    ),
+  country: Yup.string()
+    .required("Select country"),
+  state: Yup.string()
+    .required("Select state"),
+  city: Yup.string()
+    .required("Select city"),
+  district: Yup.string()
+    .required("Select district"),
+  postal_code: Yup.string()
+    .required("Enter postal code"),
+});

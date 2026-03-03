@@ -14,6 +14,9 @@ import { format } from 'date-fns'
 const AddEmployeeAttendance = ({ open, setOpen }) => {
   const { data: employees, isLoading: isEmployeesLoading } =
     useAllEmployeesQuery()
+
+    console.log("Employee",employees);
+    
   const { mutate: createAttendance } = useCreateAttendanceMutation()
 
   const initialValues = {
