@@ -30,12 +30,6 @@ export const resetPasswordApiCall = details => {
 export const createCenterAccountApiCall = details =>
   axiosInstance.post('/auth/centeradmin/change-password', details)
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> abc52c0a2183a50c90cf64e77aa5154e2c9cd110
 // EmployeeManagement
 export const getEmployeeCategoriesApiCall = () =>
   axiosInstance.get('/settings/superadmin/designation')
