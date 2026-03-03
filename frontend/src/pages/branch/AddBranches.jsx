@@ -8,10 +8,6 @@ import FaledModal from './message-popup/failed';
 import SuccessModal from './message-popup/success';
 import { useNavigate } from 'react-router-dom';
 
-
-
-
-
 const AddBranches = () => {
     const [count, setCount] = useState(1);
     const { mutateAsync: addCount, isPending } = useAddBranchCountMutation();

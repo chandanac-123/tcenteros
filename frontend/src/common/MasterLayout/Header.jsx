@@ -14,14 +14,12 @@ import {
   Settings,
   UserRound
 } from 'lucide-react'
-import CustomeSearch from '../CustomeSearch'
 import CustomeModal from '../CustomeModal'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
-import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
 import { useCrmStore } from '@store/tabStore'
 
 const Header = () => {
@@ -46,7 +44,6 @@ const Header = () => {
             Fitness center
           </span>
           <AddBranchButton />
-          <BranchDetailsButton />
           <Button
             size='addbutton'
             onClick={() => {

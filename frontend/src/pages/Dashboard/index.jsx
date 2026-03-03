@@ -5,6 +5,7 @@ import { Card } from '@pages/components/ui/card'
 import CustomDatePicker from '@common/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import DashboardTable from './components/DashboardTable'
+import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
 
 const cardsData = [
   { label: 'Total employees', value: 354 },
@@ -27,7 +28,7 @@ const Dashboard = () => {
             <span>Good Morning!</span>
             <span className='text-xs'>Center Admin</span>
           </div>
-          <div>sfdf</div>
+          <div> <BranchDetailsButton /></div>
         </div>
 
         <div className='grid gap-4   grid-cols-[repeat(auto-fit,minmax(220px,1fr))]'>
