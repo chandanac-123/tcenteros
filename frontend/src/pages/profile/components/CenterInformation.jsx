@@ -1,25 +1,20 @@
-import profile from '@assets/dummy/profile.png'
 import profile_edit from '@assets/form-icons/profile-edit.svg'
 import { Button } from '@pages/components/ui/button'
 import EditCenterInformation from './EditCenterInfo'
 import { useState } from 'react'
 import { CustomeCollapse } from '@common/CustomeCollapse'
 import view from '@assets/form-icons/view.svg'
-import { useAllProfileQuery } from '@api-queries/center-profile/Query'
 import ViewCenterInfo from './ViewCenterInfo'
-import { useFormik } from 'formik'
 import UpdateProfile from './UpdateProfile'
 import { Camera } from 'lucide-react'
-import { useUpdateProfileImageMutation } from '@api-queries/center-profile/Query'
 
-const CenterInformation = () => {
+const CenterInformation = ({data}) => {
   const [editId, setEditId] = useState(false)
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileId, setProfileId] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const [viewId, setViewId] = useState(false)
-  const { data, isFetching } = useAllProfileQuery()
 
   const branches = data?.branches || []
   const firstCenter = branches[0]
