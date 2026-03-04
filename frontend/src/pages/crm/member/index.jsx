@@ -9,39 +9,15 @@ import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 import { memberType } from '@constants/members'
 import Card from '../components/Cards'
+import { useMembersQuery } from '@api-queries/crm/Query'
 
 const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
     search: ''
   })
+  const { data, isFetching } = useMembersQuery(tableParams)
 
-  // Dummy data for DataTable
-  const data = [
-    {
-      id: 1,
-      full_name: 'John Doe',
-      email: 'john.doe@example.com',
-      mobile: '9876543210',
-      status: 'active'
-    },
-    {
-      id: 2,
-      full_name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      mobile: '9123456780',
-      status: 'inactive'
-    },
-    {
-      id: 3,
-      full_name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      mobile: '9988776655',
-      status: 'active'
-    }
-  ]
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
   const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
@@ -118,10 +94,11 @@ const Members = ({ onView, onEdit }) => {
       </div>
 
       <DataTable
-        title='Products'
-        subTitle='Products'
+        isLoading={isFetching}
         columns={columns}
-        data={data}
+        data={data?.members}
+        pagination={5}
+        search={false}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}

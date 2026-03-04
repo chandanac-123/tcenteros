@@ -267,3 +267,19 @@ export const updateCentersProfileImageApiCall = details =>
   axiosInstance.put(`/center/center/image/update`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }) // For updating centers and sub-branchs image from center information page
+
+//CRM API
+export const getMemberApiCall = data =>
+  axiosInstance.get(`/membership/center/members?page=${data?.page}`)
+export const createMemberApiCall = details =>
+  axiosInstance.post('/membership/center/members', details)
+export const updateMemberApiCall = (details, id) =>
+  axiosInstance.put(`/membership/center/members/${id}`, details)
+export const getMemberByIdApiCall = id =>
+  axiosInstance.get(`/membership/center/members/${id}`)
+export const deleteMemberApiCall = id =>
+  axiosInstance.delete(`/membership/center/members/${id}`)
+export const getMemberTimeSlotApiCall = id =>
+  axiosInstance.get(`/membership/center/time-slots?center_id=${id}`)
+export const getMemberPlanApiCall = () =>
+  axiosInstance.get(`/membership/memberships-plans-mini`)
