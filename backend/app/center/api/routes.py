@@ -1148,11 +1148,13 @@ async def update_centeradmin_profile_photo(
     file_bytes = await profile_photo.read()
     file_ext = profile_photo.filename.split('.')[-1]
     key = f"profile_photos/{user.id}.{file_ext}"
+    from app.s3.service import upload_file, get_file_url
+    from fastapi.concurrency import run_in_threadpool
     await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
-    profile_photo_url = await run_in_threadpool(get_file_url, key)
-    user.profile_photo_url = profile_photo_url
+    user.profile_photo = key  # <-- Save the S3 key, not the URL
 
     await session.commit()
+    profile_photo_url = await run_in_threadpool(get_file_url, key)
     return {
         "detail": "Profile photo updated successfully",
         "profile_photo_url": profile_photo_url,
@@ -1162,6 +1164,41 @@ async def update_centeradmin_profile_photo(
         "center_name": center.center_name
     }
 
+
+    
+#get centeradmin profile api
+@router.get("/centeradmin/profile", response_model=dict)
+async def get_centeradmin_profile(
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    # Get the logged-in centeradmin's user ID
+    admin_id = current_admin["user_id"]
+
+    # Fetch CenterAdmin record
+    center_admin = await session.get(CenterAdmin, admin_id)
+    if not center_admin:
+        raise HTTPException(404, "CenterAdmin not found")
+
+    # Fetch User record (for profile_photo and role)
+    user = await session.get(User, admin_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    # Get the public S3 URL for the profile photo if present
+    profile_photo_url = None
+    if user.profile_photo:
+        # user.profile_photo should be the S3 key
+        from app.s3.service import get_file_url
+        from fastapi.concurrency import run_in_threadpool
+        profile_photo_url = await run_in_threadpool(get_file_url, user.profile_photo)
+
+    return {
+        "user_id": str(user.id),
+        "role": user.role,
+        "profile_photo": profile_photo_url,
+        "full_name": center_admin.full_name
+    }
 
 
 @router.get("/center/{center_id}/profile", response_model=CenterOperationalInfoOut)

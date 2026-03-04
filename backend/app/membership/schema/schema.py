@@ -38,6 +38,12 @@ class MembershipOut(BaseModel):
     network_enabled: bool
     membership_features: List[MembershipFeatureOut]
 
+class MembershipOutMini(BaseModel):
+    membership_id: str
+    membership_name: str
+    default_price: float
+    
+
 
 class MemberCreate(BaseModel):
     center_id: str

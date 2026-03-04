@@ -16,7 +16,7 @@ from app.core.dependencies import centeradmin_required, get_current_user, member
 from app.s3.service import upload_file, get_file_url
 from uuid import uuid4
 from sqlalchemy import select, func
-from app.membership.schema.schema import MembershipOut, MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
+from app.membership.schema.schema import MembershipOut, MembershipOutMini , MembershipFeatureIn, MembershipFeatureOut , TimeSlotChangeRequestIn
 from sqlalchemy.orm import selectinload
 from dateutil.relativedelta import relativedelta
 from random import randint
@@ -149,6 +149,47 @@ async def list_membership_plans(
         )
         for m in memberships
     ]
+
+#list membership plans with minium data
+@router.get("/memberships-plans-mini", response_model=List[MembershipOutMini])
+async def list_membership_plans(
+    status: str = Query(None, pattern="^(active|inactive)$"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user)
+):
+    from app.auth.models.models import CenterAdmin, Member
+    from app.core.models.models import StatusEnum
+
+    role = current_user["role"]
+    query = select(Membership).options(selectinload(Membership.membership_features))
+
+    if role == "centeradmin":
+        center_admin = await db.get(CenterAdmin, current_user["user_id"])
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+        query = query.where(Membership.center_id == center_admin.center_id)
+    elif role == "member":
+        member = await db.get(Member, current_user["user_id"])
+        if not member:
+            raise HTTPException(status_code=403, detail="Not a member")
+        query = query.where(Membership.center_id == member.home_center_id)
+    # else: superadmin or other roles get all
+
+    if status:
+        # Convert string to enum for correct comparison
+        query = query.where(Membership.status == StatusEnum[status])
+
+    result = await db.execute(query)
+    memberships = result.scalars().all()
+    return [
+        MembershipOutMini(
+            membership_id=str(m.membership_id),
+            membership_name=m.membership_name,
+            default_price=float(m.default_price)
+        )
+        for m in memberships
+    ]
+
 
 
 # # #Get Membership Plan by ID (superadmin, centeradmin, member)
