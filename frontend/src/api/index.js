@@ -283,3 +283,5 @@ export const getMemberTimeSlotApiCall = id =>
   axiosInstance.get(`/membership/center/time-slots?center_id=${id}`)
 export const getMemberPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans-mini`)
+export const getMemberCountApiCall = () =>
+  axiosInstance.get(`/membership/center/member-counts`)

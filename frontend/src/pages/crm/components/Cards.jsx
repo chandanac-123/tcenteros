@@ -1,4 +1,4 @@
-const Card = ({ label, value = 35420 }) => {
+const Card = ({ label, value }) => {
   return (
     <div className="h-16 w-full flex items-center justify-between px-4 bg-textwhite rounded-xl shadow-md">
       <span className="text-sm font-medium leading-tight whitespace-pre-line">

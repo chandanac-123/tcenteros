@@ -9,7 +9,7 @@ import DeleteModal from '@common/CustomeDelete'
 import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 import { memberType } from '@constants/members'
 import Card from '../components/Cards'
-import { useMembersQuery } from '@api-queries/crm/Query'
+import { useMembersQuery, useMembersCountQuery } from '@api-queries/crm/Query'
 
 const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
@@ -17,6 +17,8 @@ const Members = ({ onView, onEdit }) => {
     search: ''
   })
   const { data, isFetching } = useMembersQuery(tableParams)
+  const { data: memberCountData, isFetching: isMemberCountFetching } =
+    useMembersCountQuery()
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
@@ -89,7 +91,11 @@ const Members = ({ onView, onEdit }) => {
     <>
       <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6'>
         {memberType?.map(member => (
-          <Card key={member.id} label={member.name} />
+          <Card
+            key={member.id}
+            label={member.name}
+            value={memberCountData?.[member.key] || 0}
+          />
         ))}
       </div>
 

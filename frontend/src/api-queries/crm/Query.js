@@ -6,7 +6,8 @@ import {
   getMemberById,
   updateMember,
   getMemberTimeSlot,
-  getMemberPlan
+  getMemberPlan,
+  getMemberCount
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -88,6 +89,15 @@ export const useMembersPlanQuery = () => {
   return useQuery({
     queryKey: ['membersPlan'],
     queryFn: () => getMemberPlan(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useMembersCountQuery = () => {
+  return useQuery({
+    queryKey: ['membersCount'],
+    queryFn: () => getMemberCount(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

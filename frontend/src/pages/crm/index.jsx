@@ -26,11 +26,11 @@ const CRM = () => {
           Customer Relationship Management
         </span>
         <div>
-          {crmSelectedTab === 1 && memberView === 'list' && (
+          {/* {crmSelectedTab === 1 && memberView === 'list' && (
             <Button size='addbutton' onClick={() => setMemberView('add')}>
               + Add Member
             </Button>
-          )}
+          )} */}
 
           {crmSelectedTab === 1 && memberView === 'view' && (
             <Button size='addbutton' onClick={() => setMemberView('edit')}>

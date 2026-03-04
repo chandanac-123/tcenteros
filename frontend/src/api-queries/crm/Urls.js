@@ -5,7 +5,8 @@ import {
   deleteMemberApiCall,
   getMemberByIdApiCall,
   getMemberTimeSlotApiCall,
-  getMemberPlanApiCall
+  getMemberPlanApiCall,
+  getMemberCountApiCall
 } from '../../api'
 
 export const getAllMember = async data => {
@@ -64,6 +65,15 @@ export const getMemberTimeSlot = async id => {
 export const getMemberPlan = async () => {
   try {
     const response = await getMemberPlanApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getMemberCount = async () => {
+  try {
+    const response = await getMemberCountApiCall()
     return response.data
   } catch (error) {
     throw error

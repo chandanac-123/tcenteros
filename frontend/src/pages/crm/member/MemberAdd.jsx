@@ -79,9 +79,11 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
         if (isEdit) {
           await updateMember({data:payload ,  id: memberId })
+          goBack()
         } else {
           await createMember(payload)
           formik.resetForm()
+          goBack()
         }
       } catch (error) {
         console.error(error)
