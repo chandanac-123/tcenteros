@@ -119,6 +119,8 @@ class Employee(User):
     joining_date = Column(DateTime, nullable=True)
     attendance_marking_allowed = Column(Boolean, default=False, nullable=False)
     qualification = Column(String, nullable=True)
+    salary_type = Column(String, nullable=True)  
+    pay_cycle = Column(String, nullable=True)    
 
     center = relationship("Center", foreign_keys=[center_id])
     designation = relationship("Designation", foreign_keys=[designation_id])

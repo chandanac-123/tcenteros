@@ -10,6 +10,7 @@ from app.networking.api.routes import router as networking_router
 from app.support.api.routes import router as support_router
 from app.branding.api.routes import router as branding_router
 from app.branching.api.routes import router as branching_router
+from app.payrole.api.routes import router as payrole_router
 
 
 
@@ -59,3 +60,4 @@ app.include_router(networking_router, prefix="/api/networking", tags=["Networkin
 app.include_router(support_router, prefix="/api/support", tags=["Support"])
 app.include_router(branding_router, prefix="/api/branding", tags=["Branding"])
 app.include_router(branching_router, prefix="/api/branching", tags=["Branching"])
+app.include_router(payrole_router, prefix="/api/payrole", tags=["Payrole"])

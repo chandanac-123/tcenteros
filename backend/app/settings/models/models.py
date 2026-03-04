@@ -109,7 +109,7 @@ class Designation(Base, AuditMixin):
     image_url = Column(String, nullable=True)  # S3 image URL
 
     center = relationship("Center", backref="designations", foreign_keys=[center_id])
-
+  
 
 # ------------------------
 # Center Categories
@@ -238,3 +238,5 @@ class FAQ(Base):
     answer = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
