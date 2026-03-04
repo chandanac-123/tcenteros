@@ -274,7 +274,7 @@ export const getMemberApiCall = data =>
 export const createMemberApiCall = details =>
   axiosInstance.post('/membership/center/members', details)
 export const updateMemberApiCall = (details, id) =>
-  axiosInstance.put(`/membership/center/members/${id}`, details)
+  axiosInstance.patch(`/membership/center/members/${id}`, details)
 export const getMemberByIdApiCall = id =>
   axiosInstance.get(`/membership/center/members/${id}`)
 export const deleteMemberApiCall = id =>

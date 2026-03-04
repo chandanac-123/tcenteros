@@ -31,6 +31,7 @@ const genderOption = [
 ]
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
+  console.log('memberId: ', memberId);
   const state = useAuthStore.getState()
   const navigate = useNavigate()
   const { setSelectedTab } = useSettingsTabStore()
@@ -77,7 +78,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         }
 
         if (isEdit) {
-          await updateMember({ memberId, ...payload })
+          await updateMember({data:payload ,  id: memberId })
         } else {
           await createMember(payload)
           formik.resetForm()
