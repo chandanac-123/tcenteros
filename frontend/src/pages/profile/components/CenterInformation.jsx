@@ -8,14 +8,15 @@ import view from '@assets/form-icons/view.svg'
 import { useAllProfileQuery } from '@api-queries/center-profile/Query'
 import ViewCenterInfo from './ViewCenterInfo'
 import { useFormik } from 'formik'
-import InputFile from '@common/CustomeFileUpload'
 import UpdateProfile from './UpdateProfile'
 import { Camera } from 'lucide-react'
+import { useUpdateProfileImageMutation } from '@api-queries/center-profile/Query'
 
 const CenterInformation = () => {
   const [editId, setEditId] = useState(false)
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [profileId, setProfileId] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
   const [viewId, setViewId] = useState(false)
   const { data, isFetching } = useAllProfileQuery()
@@ -23,26 +24,6 @@ const CenterInformation = () => {
   const branches = data?.branches || []
   const firstCenter = branches[0]
   const remainingCenters = branches.slice(1)
-
-  const initialValues = {
-    center_image_url: null
-  }
-
-  const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
-    onSubmit: async values => {
-      const formData = new FormData()
-      Object.keys(values).forEach(key => {
-        formData.append(key, values[key])
-      })
-      try {
-        await update(formData)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-  })
 
   const renderCard = (center, index) => (
     <div
@@ -75,12 +56,15 @@ const CenterInformation = () => {
         <div className='relative self-center'>
           {/* Profile Image */}
           <img
-            src={view}
+            src={center.center_image_url}
             alt='User'
             className='w-20 h-20 rounded-md object-cover'
           />
           <button
-            onClick={() => setProfileOpen(true)}
+            onClick={() => {
+              setProfileOpen(true)
+              setProfileId(center.id)
+            }}
             className='absolute -right-3 bottom-0 bg-primary w-6 h-6 rounded-full flex justify-center items-center shadow-md'
           >
             <Camera size={16} className='text-white' />
@@ -134,7 +118,12 @@ const CenterInformation = () => {
       )}
       <EditCenterInformation open={open} setOpen={setOpen} editId={editId} />
       <ViewCenterInfo open={viewOpen} setOpen={setViewOpen} viewId={viewId} />
-      <UpdateProfile open={profileOpen} setOpen={setProfileOpen} center_edit={true} />
+      <UpdateProfile
+        open={profileOpen}
+        setOpen={setProfileOpen}
+        center_edit={true}
+        profileId={profileId}
+      />
     </div>
   )
 }

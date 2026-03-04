@@ -133,22 +133,24 @@ export const addNetworkAmountApiCall = amount =>
 export const networkToggleButtonApiCall = enabled =>
   axiosInstance.put('/networking/center/networking/toggle', { enabled })
 export const getNetworkToggleStatusApiCall = () =>
-  axiosInstance.get("/networking/center/network-enabled/me")
-export const getUserNetworkListApiCall = (data) =>{
- return axiosInstance.get(`/networking/networking/bookings?page=${data?.page}`)
+  axiosInstance.get('/networking/center/network-enabled/me')
+export const getUserNetworkListApiCall = data => {
+  return axiosInstance.get(`/networking/networking/bookings?page=${data?.page}`)
 }
-export const editApproveNetworkApiCall = (id) =>
-  axiosInstance.put(`/networking/networking/access/approve`, null, { params: { network_membership_id: id } });
-export const getNetworkingBookingByIdApiCall = (id) =>
+export const editApproveNetworkApiCall = id =>
+  axiosInstance.put(`/networking/networking/access/approve`, null, {
+    params: { network_membership_id: id }
+  })
+export const getNetworkingBookingByIdApiCall = id =>
   axiosInstance.get(`/networking/networking/booking/${id}`)
 export const deleteNetworkBookingApiCall = id =>
   axiosInstance.delete(`/networking/networking/booking/${id}`)
 
 // Wallet
-export const createWalletApiCall = (details) =>
-  axiosInstance.post('/center/center/wallet/create', details);
+export const createWalletApiCall = details =>
+  axiosInstance.post('/center/center/wallet/create', details)
 export const getWalletsummaryApiCall = () =>
-  axiosInstance.get('/center/center/wallet/summary');
+  axiosInstance.get('/center/center/wallet/summary')
 export const getWalletTransactionsApiCall = (details = {}) => {
   return axiosInstance.get(`/center/center/wallet/transactions`, {
     params: {
@@ -158,13 +160,12 @@ export const getWalletTransactionsApiCall = (details = {}) => {
       transaction_type: details.transaction_type ?? '',
       status: details.status ?? '',
       start_date: details.start_date ?? '',
-      end_date: details.end_date ?? '',
-    },
-  });
-};
+      end_date: details.end_date ?? ''
+    }
+  })
+}
 export const getWalletAmountApiCall = () =>
-  axiosInstance.get('/center/center/wallet');
-
+  axiosInstance.get('/center/center/wallet')
 
 //ATTENDANCE API
 export const getAllEmployeesApiCall = () =>
@@ -205,28 +206,29 @@ export const getAllEmployeeAttendanceApiCall = data => {
 export const deleteAttendanceApiCall = id =>
   axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)
 
-
 // BRANCH API
 export const addBranchCountApiCall = details =>
-  axiosInstance.post('/branching/centeradmin/branch/request', details);
+  axiosInstance.post('/branching/centeradmin/branch/request', details)
 export const getBranchPricesAndTaxApiCall = () =>
-  axiosInstance.get('/branching/centeradmin/branch/request/summary');
+  axiosInstance.get('/branching/centeradmin/branch/request/summary')
 export const getPurchasedBranchesApiCall = () =>
-  axiosInstance.get(`/branching/centeradmin/branch/purchased`);
+  axiosInstance.get(`/branching/centeradmin/branch/purchased`)
 export const getBranchCategoriesListApiCall = () =>
-  axiosInstance.get('/settings/superadmin/center-categories/');
-export const createNewBranchDetailsApiCall = ({ param, data }) =>{
-  console.log("FormData",data);
-  console.log("Param",param);
-  return  axiosInstance.post(`/branching/centeradmin/branch/create?payment_order_id=${param}`,data,
+  axiosInstance.get('/settings/superadmin/center-categories/')
+export const createNewBranchDetailsApiCall = ({ param, data }) => {
+  console.log('FormData', data)
+  console.log('Param', param)
+  return axiosInstance.post(
+    `/branching/centeradmin/branch/create?payment_order_id=${param}`,
+    data,
     {
       headers: {
-        "Content-Type": "multipart/form-data",
-      },
+        'Content-Type': 'multipart/form-data'
+      }
     }
-  );
+  )
 }
- 
+
 //GALLERY API
 export const getGalleryApiCall = id =>
   axiosInstance.get(`/center/center/${id}/gallery`)
@@ -255,3 +257,11 @@ export const updateCenterProfileApiCall = details =>
 export const getCenterProfileByIdApiCall = id =>
   axiosInstance.get(`/center/center/${id}/by-id`)
 
+export const updateCenterProfilePicApiCall = details =>
+  axiosInstance.put(`/center/centeradmin/profile-photo`, details, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })// For updating profile photo in the center profile section
+export const updateCentersProfileImageApiCall = details =>
+  axiosInstance.put(`/center/center/image/update`, details, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })// For updating centers and sub-branchs image from center information page

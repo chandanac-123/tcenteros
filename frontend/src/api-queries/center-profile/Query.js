@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { updateProfile, getProfile, getProfileById } from './Urls'
+import {
+  updateProfile,
+  getProfile,
+  getProfileById,
+  updateProfilePic,
+  updateProfileImage
+} from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
 export const useAllProfileQuery = () => {
@@ -33,5 +39,37 @@ export const useGetProfileByIdQuery = id => {
     enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useUpdateProfilePicMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => updateProfilePic(data),
+    onSuccess: async data => {
+      query.invalidateQueries('profile')
+      showSuccess('Profile picture updated successfully')
+    },
+    onError: err => {
+      showError(
+        err?.response?.data?.message || 'Failed to update profile picture'
+      )
+      return err
+    }
+  })
+}
+
+export const useUpdateProfileImageMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => updateProfileImage(data),
+    onSuccess: async data => {
+      query.invalidateQueries('profile')
+      showSuccess('Center image updated successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update center image')
+      return err
+    }
   })
 }

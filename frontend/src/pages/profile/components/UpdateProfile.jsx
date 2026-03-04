@@ -2,17 +2,41 @@ import CustomeModal from '@common/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import InputFile from '@common/CustomeFileUpload'
 import { useFormik } from 'formik'
+import {
+  useUpdateProfileImageMutation,
+  useGetProfileByIdQuery,
+  useUpdateProfilePicMutation
+} from '@api-queries/center-profile/Query'
 
-const UpdateProfile = ({ open, setOpen ,center_edit}) => {
-  const initialValues = {
-    image_url: null
-  }
+const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
+  const { mutateAsync: updateCenterImage } = useUpdateProfileImageMutation()
+  const { mutateAsync: updateProfilePic } = useUpdateProfilePicMutation()
+  const { data, isFetching } = useGetProfileByIdQuery(profileId)
+  const initialValues = center_edit
+    ? {
+        image: data?.center_image_url || null,
+        center_id: profileId || ''
+      }
+    : {
+        profile_photo: null
+      }
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    onSubmit: async () => {
+    onSubmit: async values => {
+      const formData = new FormData()
+      Object.keys(values).forEach(key => {
+        formData.append(key, values[key])
+      })
       try {
+        if (center_edit) {
+          await updateCenterImage(formData)
+        } else {
+          await updateProfilePic(formData)
+        }
+        formik.resetForm()
+        setOpen(false)
       } catch (error) {
         console.error(error)
       }
@@ -30,25 +54,45 @@ const UpdateProfile = ({ open, setOpen ,center_edit}) => {
           <span className='text-grey text-sm font-normal'>
             {center_edit ? '' : 'Prathibha, help others recognize you!'}
           </span>
-          <InputFile
-            name='image_url'
-            value={formik.values.image_url}
-            onChange={e => {
-              formik.setFieldValue('image_url', e.target.value)
-              formik.setFieldTouched('image_url', true, false)
-            }}
-            onRemove={() => {
-              formik.setFieldValue('image_url', null)
-              formik.setFieldTouched('image_url', true, false)
-            }}
-          />
+          {center_edit ? (
+            <InputFile
+              name='image'
+              value={formik.values.image}
+              onChange={e => {
+                formik.setFieldValue('image', e.target.value)
+                formik.setFieldTouched('image', true, false)
+              }}
+              onRemove={() => {
+                formik.setFieldValue('image', null)
+                formik.setFieldTouched('image', true, false)
+              }}
+            />
+          ) : (
+            <InputFile
+              name='profile_photo '
+              value={formik.values.profile_photo}
+              onChange={e => {
+                formik.setFieldValue('profile_photo', e.target.value)
+                formik.setFieldTouched('profile_photo', true, false)
+              }}
+              onRemove={() => {
+                formik.setFieldValue('profile_photo', null)
+                formik.setFieldTouched('profile_photo', true, false)
+              }}
+            />
+          )}
           <span className='text-grey text-sm '>
-          {center_edit ? '' : 'Upload a clear photo for easy identification.'}
+            {center_edit ? '' : 'Upload a clear photo for easy identification.'}
           </span>
         </div>
 
         <div className='flex gap-2 justify-end pt-4'>
-          <Button  onClick={() => setOpen(false)} size='addbutton' variant='outline_secondary' type='button'>
+          <Button
+            onClick={() => setOpen(false)}
+            size='addbutton'
+            variant='outline_secondary'
+            type='button'
+          >
             Cancel
           </Button>
           <Button size='addbutton' variant='default' type='submit'>

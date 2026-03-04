@@ -1,7 +1,9 @@
 import {
   updateCenterProfileApiCall,
   getCenterProfileApiCall,
-  getCenterProfileByIdApiCall
+  getCenterProfileByIdApiCall,
+  updateCenterProfilePicApiCall,
+  updateCentersProfileImageApiCall
 } from '../../api/index'
 
 export const getProfile = async () => {
@@ -25,6 +27,24 @@ export const updateProfile = async details => {
 export const getProfileById = async id => {
   try {
     const response = await getCenterProfileByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateProfilePic = async details => {
+  try {
+    const response = await updateCenterProfilePicApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const updateProfileImage = async details => {
+  try {
+    const response = await updateCentersProfileImageApiCall(details)
     return response.data
   } catch (error) {
     throw error
