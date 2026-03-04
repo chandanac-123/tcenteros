@@ -3,7 +3,7 @@ import { Button } from '@pages/components/ui/button'
 import InputFile from '@common/CustomeFileUpload'
 import { useFormik } from 'formik'
 
-const UpdateProfile = ({ open, setOpen }) => {
+const UpdateProfile = ({ open, setOpen ,center_edit}) => {
   const initialValues = {
     image_url: null
   }
@@ -23,12 +23,12 @@ const UpdateProfile = ({ open, setOpen }) => {
     <CustomeModal
       open={open}
       onOpenChange={setOpen}
-      header='Update Profile Photo'
+      header={center_edit ? 'Update Center Photo' : 'Update Profile Photo'}
     >
       <form onSubmit={formik.handleSubmit}>
         <div className='flex flex-col justify-center items-center gap-4'>
           <span className='text-grey text-sm font-normal'>
-            Prathibha, help others recognize you!
+            {center_edit ? '' : 'Prathibha, help others recognize you!'}
           </span>
           <InputFile
             name='image_url'
@@ -43,7 +43,7 @@ const UpdateProfile = ({ open, setOpen }) => {
             }}
           />
           <span className='text-grey text-sm '>
-            Upload a clear photo for easy identification.
+          {center_edit ? '' : 'Upload a clear photo for easy identification.'}
           </span>
         </div>
 

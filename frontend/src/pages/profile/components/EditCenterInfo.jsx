@@ -34,14 +34,19 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     about: data?.about || '',
     website_url: data?.website_link || '',
     facilities: data?.facilities || [],
-    center_image_url: data?.center_image_url || null
+    whatsapp_number: data?.whatsapp_number || ''
   }
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
     onSubmit: async values => {
+      values.facilities.forEach(f => {
+        formData.append('facilities', f)
+      })
+      const formData = new FormData()
       try {
+        await update(formData)
       } catch (error) {
         console.error(error)
       }
@@ -57,20 +62,6 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     >
       <form className='space-y-2 w-full' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
-          <div className='flex-1'>
-            <InputFile
-              label='Upload Image'
-              name='center_image_url'
-              onChange={e => {
-                formik.setFieldValue('center_image_url', e.target.value)
-                formik.setFieldTouched('center_image_url', true, false)
-              }}
-              onRemove={() => {
-                formik.setFieldValue('center_image_url', null)
-                formik.setFieldTouched('center_image_url', true, false)
-              }}
-            />
-          </div>
           <div className='flex-1'>
             <Input
               label='About'
@@ -155,27 +146,33 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           <div className='flex-1'>
             <Input
               label='Center Phone'
-              name='email'
-              placeholder='Enter Your Email'
-              value={formik.values.email}
+              name='center_phone'
+              value={formik.values.center_phone}
+              placeholder='Enter Center Phone'
               onChange={formik.handleChange}
             />
           </div>
         </div>
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <Input
+            <CustomeSelect
+              options={[
+                { id: true, name: 'Yes' },
+                { id: false, name: 'No' }
+              ]}
               label='Live Class'
               name='live_class_enable'
               value={formik.values.live_class_enable}
-              onChange={formik.handleChange}
+              onChange={option =>
+                formik.setFieldValue('live_class_enable', option?.id)
+              }
             />
           </div>
           <div className='flex-1'>
             <Input
-              label='Whataspp Number'
-              name='state'
-              value={formik.values.email}
+              label='Whatsapp Number'
+              name='whatsapp_number'
+              value={formik.values.whatsapp_number}
               onChange={formik.handleChange}
             />
           </div>
@@ -273,8 +270,8 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
         </div>
         <Input
           label='Website Link'
-          name='website_link'
-          value={formik.values.email}
+          name='website_url'
+          value={formik.values.website_url}
           onChange={formik.handleChange}
         />
 

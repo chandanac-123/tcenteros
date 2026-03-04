@@ -67,14 +67,6 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
           />
         </div>
 
-        {/* Stats */}
-        <SectionTitle title='Statistics' />
-
-        <div className='grid grid-cols-4 gap-6'>
-          <Info label='Members Count' value={data?.members_count} />
-          <Info label='Trainer Count' value={data?.trainer_count} />
-        </div>
-
         {/* Address */}
         <SectionTitle title='Address Details' />
 
@@ -124,7 +116,7 @@ const Info = ({ label, value }) => (
 )
 
 const SectionTitle = ({ title }) => (
-  <p className='text-lg font-semibold text-textblack mt-4'>{title}</p>
+  <p className='text-md font-medium text-textblack mt-4'>{title}</p>
 )
 
 export default ViewCenterInfo
