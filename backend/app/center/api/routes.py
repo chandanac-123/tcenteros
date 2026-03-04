@@ -970,17 +970,25 @@ async def get_center_by_id(
     }    
 
 
-@router.put("/center/profile/update")
+@router.put("/center/profile/update/{center_id}")
 async def update_center_profile(
+    center_id: str = Path(..., description="ID of the center to update"),
     data: CenterProfileUpdate = Body(...),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    center_id = current_admin["center_id"]
+    # Fetch the center to update
     center = await session.get(Center, center_id)
-
     if not center:
         raise HTTPException(status_code=404, detail="Center not found")
+
+    admin_center_id = str(current_admin["center_id"])
+    is_own_center = str(center.id) == admin_center_id
+    is_sub_branch = str(center.parent_center_id) == admin_center_id if center.parent_center_id else False
+
+    # Permission check
+    if not (is_own_center or is_sub_branch):
+        raise HTTPException(status_code=403, detail="Not allowed to update this center")
 
     # Make whatsapp_number mandatory
     if not data.whatsapp_number:
@@ -991,7 +999,6 @@ async def update_center_profile(
 
     # Update Center fields (except address and image)
     update_data = data.dict(exclude_unset=True)
-
     for field, value in update_data.items():
         if field != "address" and hasattr(center, field):
             setattr(center, field, value)
@@ -1004,18 +1011,15 @@ async def update_center_profile(
                 status_code=400,
                 detail="Center has no address to update"
             )
-
         address = await session.get(Address, center.address_id)
         if not address:
             raise HTTPException(
                 status_code=404,
                 detail="Address not found"
             )
-
         for field, value in update_data["address"].items():
             if hasattr(address, field):
                 setattr(address, field, value)
-
         address_data = {
             "address_line_1": address.address_line_1,
             "address_line_2": address.address_line_2,
