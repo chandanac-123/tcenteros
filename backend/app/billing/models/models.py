@@ -52,6 +52,12 @@ class PaymentOrderStatus(enum.Enum):
     refunded = "refunded"
     expired = "expired"
 
+class PaymentMethod(enum.Enum):
+    cash = "cash"
+    card = "card"
+    upi = "upi"
+    bank_transfer = "bank_transfer"
+    other = "other"
 
 
 
@@ -128,6 +134,13 @@ class PaymentOrder(Base, AuditMixin):
         default=PaymentOrderStatus.pending,
         nullable=False, index=True
     )
+
+    payment_method = Column(
+        Enum(PaymentMethod),
+        nullable=True
+    )
+
+    
 
     # ------------------------
     # Relationships
