@@ -17,6 +17,8 @@ export default {
       colors: {
         primary: 'rgb(var(--primary) / <alpha-value>)',
         secondary: 'rgb(var(--secondary) / <alpha-value>)',
+        onboard_primary:'#1452D4',
+        onboard_secondary:'#8B24E2',
         grey: '#3A3A3A',
         primarybg: '#FFFFFF4D',
         secondarybg: '#F7EDFF',

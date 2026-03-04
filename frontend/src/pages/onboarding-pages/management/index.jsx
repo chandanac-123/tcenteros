@@ -45,7 +45,7 @@ const CenterManagement = () => {
       <div className='flex justify-center px-4 sm:px-10'>
         <div className='flex flex-col w-full gap-4 sm:w-2/3 px-6 py-6 lg:w-1/3 bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl'>
           <div className='flex-1 overflow-y-auto flex flex-col gap-2'>
-            <h2 className='font-semibold text-xl text-secondary'>
+            <h2 className='font-semibold text-xl text-onboard_secondary'>
               Center Management
             </h2>
 
@@ -118,7 +118,7 @@ const CenterManagement = () => {
         </Button>
 
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/smart-recommandation')}
         >

@@ -67,6 +67,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
                                 <Switch
                                     checked={networkActive}
                                     onCheckedChange={handleToggle}
+                                    className="data-[state=checked]:bg-onboard_primary data-[state=unchecked]:bg-onboard_primary data-[state=checked]:border-onboard_primary"
                                     disabled={isPending || isNetworkToggleFetching}
                                 />
                             </div>
@@ -75,7 +76,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
                                 <p className='text-[17px] font-medium'>Create Wallet</p>
                                 <Button
                                     onClick={() => setAddwalletModal(true)}
-                                    variant="button_filled" size="addbutton">
+                                    variant="onboard_button_filled" size="addbutton">
                                     Add Wallet
                                 </Button>
                                 <AddWallet open={openAddWalletModal} setOpen={setAddwalletModal} refetchWalletAmount={refetchWalletAmount}  />
@@ -92,7 +93,7 @@ const NetworkWalletModal = ({ open, setOpen }) => {
                                 <div className="flex items-center justify-end">
                                     <Button
                                         onClick={()=>navigate('/add-branches')}
-                                        variant="outline_primary"
+                                        variant="onboard_outline_primary"
                                         size="addbutton"
                                     >
                                         Next

@@ -95,7 +95,7 @@ const ContactDetails = () => {
                   <img
                     src={people_icon}
                     alt='peopel icon'
-                    className='w-6 h-6 text-primary mr-2'
+                    className='w-6 h-6 text-onboard_primary mr-2'
                   />
                 }
                 value={formik.values.center_name}
@@ -107,7 +107,7 @@ const ContactDetails = () => {
                 label='Contact Person'
                 name='contact_person'
                 placeholder='Contact Person'
-                icon={<User className='w-5 h-5 text-primary mr-2' />}
+                icon={<User className='w-5 h-5 text-onboard_primary mr-2' />}
                 value={formik.values.contact_person}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -120,7 +120,7 @@ const ContactDetails = () => {
                 name='center_email'
                 placeholder='Email'
                 type='email'
-                icon={<Mail className='w-5 h-5 text-primary mr-2' />}
+                icon={<Mail className='w-5 h-5 text-onboard_primary mr-2' />}
                 value={formik.values.center_email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -133,7 +133,7 @@ const ContactDetails = () => {
                 name='center_phone'
                 placeholder='Phone'
                 type='tel'
-                icon={<Phone className='w-5 h-5 text-primary mr-2' />}
+                icon={<Phone className='w-5 h-5 text-onboard_primary mr-2' />}
                 value={formik.values.center_phone}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -145,7 +145,7 @@ const ContactDetails = () => {
                 label='City'
                 name='city'
                 placeholder='City'
-                icon={<MapPin className='w-5 h-5 text-primary mr-2' />}
+                icon={<MapPin className='w-5 h-5 text-onboard_primary mr-2' />}
                 value={formik.values.city}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -177,7 +177,7 @@ const ContactDetails = () => {
           </div>
           {/* Right Part */}
           <div className='w-full md:w-1/2 gap-4 flex flex-col justify-center items-center text-center'>
-            <span className='text-3xl font-semibold  text-secondary'>
+            <span className='text-3xl font-semibold  text-onboard_secondary'>
               Almost there!
             </span>
             <span className='text-base'>
@@ -199,7 +199,7 @@ const ContactDetails = () => {
         </Button>
         {!submitted ? (
           <Button
-            variant='outline_primary'
+            variant='onboard_outline_primary'
             rightIcon={rightcolorarrow}
             type='submit'
             form='contact-details-form'
@@ -208,7 +208,7 @@ const ContactDetails = () => {
           </Button>
         ) : (
           <Button
-            variant='outline_primary'
+            variant='onboard_outline_primary'
             rightIcon={rightcolorarrow}
             onClick={() => navigate('/pricing-page')}
           >

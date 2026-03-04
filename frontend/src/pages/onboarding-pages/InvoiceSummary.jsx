@@ -182,7 +182,7 @@ const InvoiceSummary = () => {
                 <Button
                   form='invoice-details-form'
                   type='submit'
-                  variant='button_filled'
+                  variant='onboard_button_filled'
                   className='w-1/2'
                   size='sm'
                 >

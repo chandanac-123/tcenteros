@@ -37,7 +37,7 @@ const SmartRecommandation = () => {
       {/* Heading */}
       <div className='px-4 sm:px-10'>
         <div className='flex flex-col gap-1 mb-6'>
-          <span className='text-2xl font-medium text-secondary'>
+          <span className='text-2xl font-medium text-onboard_secondary'>
             We’ve Designed an Exclusive Branded Package for You
           </span>
           <span className='text-pricing_text text-sm'>
@@ -51,7 +51,7 @@ const SmartRecommandation = () => {
         <div className='w-full max-w-2xl bg-white shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl p-6 sm:p-8 flex flex-col gap-6'>
           {/* Card Header */}
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-around gap-3'>
-            <span className='bg-secondary text-white font-medium py-2 px-4 rounded-lg w-fit'>
+            <span className='bg-onboard_secondary text-white font-medium py-2 px-4 rounded-lg w-fit'>
               Best Fit for Your Business
             </span>
             <span className='text-base sm:text-lg font-medium text-textblack'>
@@ -100,7 +100,7 @@ const SmartRecommandation = () => {
               ))}
 
               {/* Highlight */}
-              <div className='mt-3 flex items-center bg-secondary_light gap-2 border border-secondary rounded-2xl p-3 text-secondary text-sm font-medium'>
+              <div className='mt-3 flex items-center bg-secondary_light gap-2 border border-onboard_secondary rounded-2xl p-3 text-onboard_secondary text-sm font-medium'>
                 <img src={tick} alt='tick' className='w-5' />
                 White-Label Offline + Live Classes
               </div>
@@ -121,7 +121,7 @@ const SmartRecommandation = () => {
         </Button>
 
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/marketing-support')}
         >

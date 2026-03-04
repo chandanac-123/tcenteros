@@ -47,7 +47,7 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount}) => {
 
                 <div className="flex justify-center gap-3">
 
-                    <Button size="addbutton" type="submit" disabled={isPending}>
+                    <Button variant='onboard_button_filled' size="addbutton" type="submit" disabled={isPending}>
                         {isPending ? "Processing..." : "Add Wallet"}
                     </Button>
                 </div>

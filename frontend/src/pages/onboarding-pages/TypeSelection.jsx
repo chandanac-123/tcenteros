@@ -53,7 +53,7 @@ const TypeSelection = () => {
 
       <div className='mt-auto flex justify-end px-4 sm:px-10 pb-6 sm:pb-8'>
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/class-mode')}
         >

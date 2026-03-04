@@ -24,7 +24,7 @@ const MarketingSupport = () => {
       {/* Heading */}
       <div className='px-4 sm:px-10'>
         <div className='flex flex-col gap-1 mb-6'>
-          <span className='text-xl font-medium text-secondary'>
+          <span className='text-xl font-medium text-onboard_secondary'>
             Do you need a marketing support?
           </span>
           <span className='text-grey text-sm'>
@@ -55,7 +55,7 @@ const MarketingSupport = () => {
               flex items-center gap-4 border-2 rounded-lg px-4 py-3 cursor-pointer transition
               ${
                 marketingSupportType === 'none'
-                  ? 'border-primary bg-primary/5'
+                  ? 'border-onboard_primary bg-onboard_primary/5'
                   : 'border-bordergreylight'
               }
             `}
@@ -65,7 +65,7 @@ const MarketingSupport = () => {
               name='marketing-support'
               checked={marketingSupportType === 'none'}
               onChange={() => handleSelect('none')}
-              className='w-5 h-5 accent-primary'
+              className='w-5 h-5 accent-onboard_primary'
             />
             <span className='flex-1'>None of the above</span>
           </label>
@@ -80,7 +80,7 @@ const MarketingSupport = () => {
         </Button>
 
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           disabled={!marketingSupportType}
           onClick={() => navigate('/contact-details')}

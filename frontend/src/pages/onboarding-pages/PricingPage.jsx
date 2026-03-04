@@ -26,7 +26,7 @@ const PricingPage = () => {
 
       <div className='px-4 sm:px-10'>
         <div className='flex flex-col gap-1'>
-          <h2 className='text-xl font-semibold text-secondary'>
+          <h2 className='text-xl font-semibold text-onboard_secondary'>
             Your Exclusive 1-Year White-Label Package
           </h2>
         </div>
@@ -41,7 +41,8 @@ const PricingPage = () => {
                 <CustomeTab
                   tabList={packageOptions}
                   defaultVal='Yearly'
-                  tabsListClass=' w-44 p-[1px]'
+                  tabsListClass='w-44 p-[2px] bg-white border-onboard_primary rounded-lg'
+                  tabsTriggerClass='bg-white text-onboard_primary data-[state=active]:bg-onboard_primary data-[state=active]:text-white '
                   onChange={value => setActiveTab(value)}
                 />
               </div>
@@ -52,12 +53,12 @@ const PricingPage = () => {
 
               {/* Price */}
               <div className='text-center mb-4'>
-                <span className='text-3xl font-bold text-purple-600'>
+                <span className='text-3xl font-bold text-onboard_secondary'>
                   {data?.calculated_amount
                     ? `₹${data.calculated_amount.toFixed(2)}`
                     : '₹0'}
                 </span>
-                <span className='text-base font-medium text-purple-600'>
+                <span className='text-base font-medium text-onboard_secondary'>
                   {' '}
                   / {activeTab}
                 </span>
@@ -87,7 +88,7 @@ const PricingPage = () => {
               </ul>
 
               {/* Total */}
-              <div className='text-center text-lg font-semibold text-purple-600'>
+              <div className='text-center text-lg font-semibold text-onboard_secondary'>
                 Total 1-year Cost :{' '}
                 {data?.calculated_amount
                   ? `₹${data.calculated_amount.toFixed(2)}`
@@ -98,7 +99,7 @@ const PricingPage = () => {
             {/* BUTTONS (NO px-20 / py-6) */}
             <div className='px-6 py-4 border-t border-gray-200 flex justify-center gap-3'>
               <Button
-                variant='button_filled'
+                variant='onboard_button_filled'
                 size='sm'
                 className='w-1/2'
                 onClick={() => navigate('/invoice-summary')}

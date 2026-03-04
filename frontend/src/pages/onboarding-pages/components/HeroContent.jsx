@@ -8,9 +8,9 @@ const HeroContent = () => {
     <div className='w-full md:w-1/2 flex flex-col gap-12 pt-6 pb-16 relative'>
       {/* Text */}
       <div className='space-y-6'>
-        <h1 className='text-3xl sm:text-4xl font-bold font-roboto text-primary'>
+        <h1 className='text-3xl sm:text-4xl font-bold font-roboto text-onboard_primary'>
           Let's Create a software to <br />
-          manage <span className='text-secondary'>your center</span>
+          manage <span className='text-onboard_secondary'>your center</span>
         </h1>
 
         <p className='text-grey sm:w-2/3'>
@@ -21,13 +21,13 @@ const HeroContent = () => {
 
       {/* CTA */}
       <div className='mt-auto space-y-6 text-center md:text-left'>
-        <h2 className='text-2xl text-primary'>
+        <h2 className='text-2xl text-onboard_primary'>
           Takes less than
-          <span className='text-secondary font-bold text-4xl'> 2</span> minutes.
+          <span className='text-onboard_secondary font-bold text-4xl'> 2</span> minutes.
         </h2>
 
         <Button
-          variant='default'
+          variant='onboard_default'
           size='landing'
           rightIcon={nextarrow}
           onClick={() => navigate('/type-selection')}
@@ -38,10 +38,10 @@ const HeroContent = () => {
 
       {/* Footer links */}
       <div className='absolute bottom-4 left-0 text-xs sm:text-sm text-grey flex gap-4'>
-        <a href='#terms' className='hover:text-primary'>
+        <a href='#terms' className='hover:text-onboard_primary'>
           Terms & Conditions
         </a>
-        <a href='#privacy' className='hover:text-primary'>
+        <a href='#privacy' className='hover:text-onboard_primary'>
           Privacy Policy
         </a>
       </div>

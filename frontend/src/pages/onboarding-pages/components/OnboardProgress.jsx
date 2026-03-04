@@ -20,7 +20,7 @@ const OnboardProgress = ({
       <div className='w-full sm:w-2/3 lg:w-1/3 flex flex-col gap-3'>
         <Slider defaultValue={[value]} max={100} disabled />
 
-        <h2 className='text-secondary font-semibold text-xl sm:text-2xl'>
+        <h2 className='text-onboard_secondary font-semibold text-xl sm:text-2xl'>
           {title}
         </h2>
 

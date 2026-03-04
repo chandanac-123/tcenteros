@@ -6,7 +6,7 @@ const ToolOption = ({ tool, selected, onToggle }) => {
       htmlFor={inputId}
       className={`
         flex items-center border-2 rounded-lg px-4 py-3 cursor-pointer transition
-        ${selected ? 'border-primary bg-primary/5' : 'border-bordergreylight'}
+        ${selected ? 'border-onboard_primary bg-onboard_primary/5' : 'border-bordergreylight'}
       `}
     >
       <img
