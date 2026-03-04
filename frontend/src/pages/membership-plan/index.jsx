@@ -18,8 +18,8 @@ const MembershipPlan = () => {
 
   const Status = [
     { id: 1, name: 'All' },
-    { id: 2, name: 'Active' },
-    { id: 3, name: 'Inactive' }
+    { id: 2, name: 'active' },
+    { id: 3, name: 'inactive' }
   ]
 
   return (

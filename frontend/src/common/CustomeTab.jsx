@@ -7,7 +7,7 @@ const CustomeTab = ({ tabList, defaultVal, tabsListClass = '', tabsTriggerClass 
       <TabsList className={tabsListClass} >
         {tabList.map(tab => (
           <TabsTrigger key={tab.id} value={tab.name} className={tabsTriggerClass}>
-            {tab.name}
+           {tab.name?.charAt(0).toUpperCase() + tab.name?.slice(1)}
           </TabsTrigger>
         ))}
       </TabsList>

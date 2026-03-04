@@ -102,7 +102,9 @@ export const updateCenterTimeApiCall = details =>
 
 //MEMBERSHIP PLAN API
 export const getMembershipPlanApiCall = status =>
-  axiosInstance.get(`/membership/memberships-plans`)
+  axiosInstance.get(
+    `/membership/memberships-plans${status == 'All' ? '' : `?status=${status}`}`
+  )
 export const createMembershipPlanApiCall = details =>
   axiosInstance.post('/membership/memberships-plans', details)
 export const deleteMembershipPlanApiCall = id =>
@@ -260,8 +262,8 @@ export const getCenterProfileByIdApiCall = id =>
 export const updateCenterProfilePicApiCall = details =>
   axiosInstance.put(`/center/centeradmin/profile-photo`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
-  })// For updating profile photo in the center profile section
+  }) // For updating profile photo in the center profile section
 export const updateCentersProfileImageApiCall = details =>
   axiosInstance.put(`/center/center/image/update`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
-  })// For updating centers and sub-branchs image from center information page
+  }) // For updating centers and sub-branchs image from center information page
