@@ -826,11 +826,10 @@ async def list_center_members(
 
     return {
         "members": members_data,
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "total": total_filtered
-        }
+        "page": page,
+        "page_size": page_size,
+        "total": total_filtered
+        
     }
 
 
@@ -958,8 +957,95 @@ async def change_member_status(
     }
 
 
+#list visitors of a center with search and pagination (centeradmin can see their own and sub-branch visitors; sub-branch admin only their own)
+@router.get("/center/visitors", response_model=dict)
+async def list_visitors_in_center(
+    name: Optional[str] = Query(None, description="Search by full name"),
+    phone: Optional[str] = Query(None, description="Search by mobile number"),
+    email: Optional[str] = Query(None, description="Search by email"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    from app.auth.models.models import CenterAdmin, Member, MemberStatusEnum
+    from sqlalchemy import or_
 
+    # Get the center admin and their center_id
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
 
+    # Build base query for visitors
+    query = select(Member).where(
+        Member.home_center_id == center_id,
+        Member.role == "member",
+        Member.member_status == MemberStatusEnum.visitor
+    )
+
+    # Add search filters if provided
+    if name or phone or email:
+        search_conditions = []
+        if name:
+            search_conditions.append(Member.full_name.ilike(f"%{name}%"))
+        if phone:
+            search_conditions.append(Member.mobile.ilike(f"%{phone}%"))
+        if email:
+            search_conditions.append(Member.email.ilike(f"%{email}%"))
+        query = query.where(or_(*search_conditions))
+
+    # Get total count for pagination
+    count_query = select(func.count()).select_from(Member).where(
+        Member.home_center_id == center_id,
+        Member.role == "member",
+        Member.member_status == MemberStatusEnum.visitor
+    )
+    if name or phone or email:
+        search_conditions = []
+        if name:
+            search_conditions.append(Member.full_name.ilike(f"%{name}%"))
+        if phone:
+            search_conditions.append(Member.mobile.ilike(f"%{phone}%"))
+        if email:
+            search_conditions.append(Member.email.ilike(f"%{email}%"))
+        count_query = count_query.where(or_(*search_conditions))
+    total_result = await session.execute(count_query)
+    total = total_result.scalar_one()
+
+    # Apply pagination
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await session.execute(query)
+    visitors = result.scalars().all()
+
+    # If visited_date is not set, assign created_at as visited_date and save
+    updated = False
+    for visitor in visitors:
+        if visitor.visited_date is None:
+            visitor.visited_date = visitor.created_at.date() if visitor.created_at else None
+            session.add(visitor)
+            updated = True
+    if updated:
+        await session.commit()
+
+    # Return visitor info with pagination
+    return {
+        "visitors": [
+            {
+                "id": str(visitor.id),
+                "full_name": visitor.full_name,
+                "email": visitor.email,
+                "mobile": visitor.mobile,
+                "visited_date": str(visitor.visited_date) if visitor.visited_date else None
+            }
+            for visitor in visitors
+        ],
+        
+            "page": page,
+            "page_size": page_size,
+            "total": total
+    
+    }
 
 
 

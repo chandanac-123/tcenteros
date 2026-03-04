@@ -167,6 +167,7 @@ class Member(User):
     member_status = Column(Enum(MemberStatusEnum, name="member_status_enum"), nullable=False, default=MemberStatusEnum.member)
     home_center = relationship("Center", foreign_keys=[home_center_id])
     network_center = relationship("Center", foreign_keys=[network_center_id])
+    visited_date = Column(Date, nullable=True)
     member_memberships = relationship(
         "MemberMembership",
         back_populates="member",
