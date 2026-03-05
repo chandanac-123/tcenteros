@@ -6,10 +6,14 @@ import { Switch } from '@pages/components/ui/switch'
 import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
 import DeleteModal from '@common/CustomeDelete'
-import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
 import { memberType } from '@constants/members'
 import Card from '../components/Cards'
-import { useMembersQuery, useMembersCountQuery } from '@api-queries/crm/Query'
+import {
+  useMembersQuery,
+  useMembersCountQuery,
+  useDeleteMemberMutation,
+  useUpdateMemberStatusMutation
+} from '@api-queries/crm/Query'
 
 const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
@@ -22,13 +26,22 @@ const Members = ({ onView, onEdit }) => {
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-  const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
+  const { mutate: deleteMember } = useDeleteMemberMutation(deleteId)
+  const { mutate: updateStatus } = useUpdateMemberStatusMutation()
 
   const handleDelete = () => {
     if (deleteId) {
-      deleteEmployee(deleteId)
+      deleteMember(deleteId)
       setDeleteOpen(false)
       setDeleteId(null)
+    }
+  }
+
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await updateStatus({ id, status })
+    } catch (error) {
+      console.error('Failed to update status', error)
     }
   }
 
@@ -81,7 +94,15 @@ const Members = ({ onView, onEdit }) => {
           >
             <img src={deleteicon} alt='delete' />
           </button>
-          <Switch />
+          <Switch
+            checked={row.original.status === 'active'}
+            onCheckedChange={checked => {
+              handleStatusUpdate(
+                row.original.id,
+                checked ? 'active' : 'inactive'
+              )
+            }}
+          />
         </span>
       )
     }

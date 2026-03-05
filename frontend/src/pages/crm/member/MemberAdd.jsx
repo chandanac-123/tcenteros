@@ -51,12 +51,12 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     gender: memberData?.gender || '',
     date_of_birth: memberData?.date_of_birth || '',
     blood_group: memberData?.blood_group || '',
-    address_line_1: memberData?.address_line_1 || '',
-    address_line_2: memberData?.address_line_2 || '',
-    city: memberData?.city || '',
-    state: memberData?.state || '',
-    country: memberData?.country || '',
-    postal_code: memberData?.postal_code || '',
+    address_line_1: memberData?.address?.address_line_1 || '',
+    address_line_2: memberData?.address?.address_line_2 || '',
+    city: memberData?.address?.city || '',
+    state: memberData?.address?.state || '',
+    country: memberData?.address?.country || '',
+    postal_code: memberData?.address?.postal_code || '',
     membership_id: memberData?.membership_id || '',
     time_slot_id: memberData?.time_slot_id || '',
     member_status: 'member',
@@ -163,7 +163,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         <div className='flex gap-4 '>
           <div className='flex-1'>
             <Input
-              label='Address'
+              label='Address line 1'
               name='address_line_1'
               value={formik.values.address_line_1}
               onChange={formik.handleChange}
@@ -171,7 +171,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
           <div className='flex-1'>
             <Input
-              label='Address'
+              label='Address line 2'
               name='address_line_2'
               value={formik.values.address_line_2}
               onChange={formik.handleChange}

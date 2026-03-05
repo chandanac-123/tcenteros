@@ -7,7 +7,8 @@ import {
   updateMember,
   getMemberTimeSlot,
   getMemberPlan,
-  getMemberCount
+  getMemberCount,
+  updateMemberStatus
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -100,5 +101,20 @@ export const useMembersCountQuery = () => {
     queryFn: () => getMemberCount(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useUpdateMemberStatusMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }) => updateMemberStatus(id, status),
+    onSuccess: async data => {
+      query.invalidateQueries('members')
+      showSuccess(data.detail ||'Member status updated successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.detail || 'Failed to update member status')
+      return err
+    }
   })
 }
