@@ -54,6 +54,7 @@ import {
   WalletIcon
 } from 'lucide-react'
 import Reports from '@pages/reports'
+import VisitorAdd from '@pages/crm/visitor/VisitorAdd'
 
 export const routes = [
   {
@@ -522,5 +523,17 @@ export const routes = [
     component: ProfilePage,
     menubar: false,
     permission: true
-  }
+  },
+    {
+    key: 1,
+    path: '/crm/visitor-add',
+    label: '',
+    privetRoute: true,
+    isSubRoute: false,
+    pageTitle: '',
+    component: VisitorAdd,
+    icon: <FileUserIcon />,
+    menubar: false,
+    permission: true
+  },
 ]

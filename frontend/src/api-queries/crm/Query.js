@@ -8,7 +8,8 @@ import {
   getMemberTimeSlot,
   getMemberPlan,
   getMemberCount,
-  updateMemberStatus
+  updateMemberStatus,
+  getVisitor
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -116,5 +117,14 @@ export const useUpdateMemberStatusMutation = () => {
       showError(err?.response?.data?.detail || 'Failed to update member status')
       return err
     }
+  })
+}
+
+export const useVisitorQuery = data => {
+  return useQuery({
+    queryKey: ['visitors', data],
+    queryFn: () => getVisitor(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

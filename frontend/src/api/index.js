@@ -287,3 +287,6 @@ export const getMemberCountApiCall = () =>
   axiosInstance.get(`/membership/center/member-counts`)
 export const updateMemberStatusApiCall = (id,status) =>
   axiosInstance.patch(`/membership/center/members/${id}/status?status=${status}`)
+
+export const getVisitorApiCall = data =>
+  axiosInstance.get(`/membership/center/visitors?page=${data?.page}`)
