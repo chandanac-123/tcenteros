@@ -7,8 +7,16 @@ import {
   useGetProfileByIdQuery,
   useUpdateProfilePicMutation
 } from '@api-queries/center-profile/Query'
+import { imageValidation } from '@utils/validations'
+import * as Yup from 'yup'
 
-const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
+const UpdateProfile = ({
+  open,
+  setOpen,
+  center_edit,
+  profileId,
+  profileImage
+}) => {
   const { mutateAsync: updateCenterImage } = useUpdateProfileImageMutation()
   const { mutateAsync: updateProfilePic } = useUpdateProfilePicMutation()
   const { data, isFetching } = useGetProfileByIdQuery(profileId)
@@ -18,16 +26,23 @@ const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
         center_id: profileId || ''
       }
     : {
-        profile_photo: null
+        profile_photo: profileImage || null
       }
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: Yup.object().shape(
+      center_edit
+        ? { image: imageValidation }
+        : { profile_photo: imageValidation }
+    ),
     onSubmit: async values => {
       const formData = new FormData()
       Object.keys(values).forEach(key => {
-        formData.append(key, values[key])
+        if (values[key]) {
+          formData.append(key, values[key])
+        }
       })
       try {
         if (center_edit) {
@@ -66,10 +81,11 @@ const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
                 formik.setFieldValue('image', null)
                 formik.setFieldTouched('image', true, false)
               }}
+              error={formik.touched.image && formik.errors.image}
             />
           ) : (
             <InputFile
-              name='profile_photo '
+              name='profile_photo'
               value={formik.values.profile_photo}
               onChange={e => {
                 formik.setFieldValue('profile_photo', e.target.value)
@@ -79,6 +95,9 @@ const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
                 formik.setFieldValue('profile_photo', null)
                 formik.setFieldTouched('profile_photo', true, false)
               }}
+              error={
+                formik.touched.profile_photo && formik.errors.profile_photo
+              }
             />
           )}
           <span className='text-grey text-sm '>
@@ -91,7 +110,6 @@ const UpdateProfile = ({ open, setOpen, center_edit, profileId }) => {
             onClick={() => setOpen(false)}
             size='addbutton'
             variant='outline_secondary'
-            type='button'
           >
             Cancel
           </Button>

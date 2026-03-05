@@ -174,3 +174,18 @@ export const galleryImageValidationSchema = Yup.object().shape({
       value => !value || value.size <= 2 * 1024 * 1024
     )
 })
+
+export const imageValidation = Yup.mixed()
+  .nullable()
+  .required('Upload an image')
+  .test(
+    'fileType',
+    'Only JPG, JPEG, PNG files are allowed',
+    value =>
+      !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
+  )
+  .test(
+    'fileSize',
+    'Image size must be less than 2MB',
+    value => !value || value.size <= 2 * 1024 * 1024
+  )

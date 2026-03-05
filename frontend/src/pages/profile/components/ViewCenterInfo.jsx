@@ -37,7 +37,7 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
         <div className='grid grid-cols-4 gap-6'>
           <Info label='Center Name' value={data?.center_name} />
           <Info label='Center Category' value={data?.center_category_name} />
-          <Info label='Center Capacity' value={data?.center_code} />
+          <Info label='Center Capacity' value={data?.capacity} />
           <Info label='Kind of Center' value={data?.kind_of_center} />
         </div>
 
@@ -83,7 +83,7 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
         <SectionTitle title='Website' />
 
         <div className='grid grid-cols-4 gap-6'>
-          <Info label='Website URL' value={data?.website_link} />
+          <Info label='Website URL' value={data?.website_url} />
           <Info label='GST Number' value={data?.gst_number} />
         </div>
 
@@ -103,6 +103,41 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
             </div>
           </>
         )}
+
+             {/* Marketing Platforms */}
+        {data?.marketing_platform?.length > 0 && (
+          <>
+            <SectionTitle title='Marketing Platforms' />
+            <div className='grid grid-cols-4 gap-4'>
+              {data.marketing_platform.map((facility, index) => (
+                <div
+                  key={index}
+                  className='border rounded-lg px-4 py-2 text-sm bg-gray-50'
+                >
+                  {facility}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+             {/* Currently Using Digital Tools */}
+        {data?.currently_using_digital_tool?.length > 0 && (
+          <>
+            <SectionTitle title='Currently Using Digital Tools' />
+            <div className='grid grid-cols-4 gap-4'>
+              {data.currently_using_digital_tool.map((facility, index) => (
+                <div
+                  key={index}
+                  className='border rounded-lg px-4 py-2 text-sm bg-gray-50'
+                >
+                  {facility}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
       </div>
     </CustomeModal>
   )

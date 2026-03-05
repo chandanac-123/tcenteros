@@ -1,21 +1,30 @@
 import CustomeModal from '@common/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import InputFile from '@common/CustomeFileUpload'
 import CustomeSelect from '@common/CustomeSelect'
 import {
   useGetProfileByIdQuery,
   useUpdateProfileMutation
 } from '@api-queries/center-profile/Query'
-import { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useFormik } from 'formik'
+import DynamicListInput from './DynamicListInput'
 
 const EditCenterInformation = ({ open, setOpen, editId }) => {
   const { data, isFetching } = useGetProfileByIdQuery(editId)
-  console.log('1111111111: ', data)
-  const { mutateAsync: update } = useUpdateProfileMutation()
-  const [facilities, setFacilities] = useState(data?.facilities || [])
+  const { mutateAsync: update } = useUpdateProfileMutation(editId)
+  const [facilities, setFacilities] = useState([])
+  const [digitalTools, setDigitalTools] = useState([])
+  const [marketingPlatforms, setMarketingPlatforms] = useState([])
+
+  useEffect(() => {
+    if (data) {
+      setFacilities(data?.facilities || [])
+      setDigitalTools(data?.currently_using_digital_tool || [])
+      setMarketingPlatforms(data?.marketing_platform || [])
+    }
+  }, [data])
+
   const initialValues = {
     center_name: data?.center_name || '',
     category: data?.center_category_name || '',
@@ -32,8 +41,10 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     address_line_1: data?.address?.address_line_1 || '',
     address_line_2: data?.address?.address_line_2 || '',
     about: data?.about || '',
-    website_url: data?.website_link || '',
+    website_url: data?.website_url || '',
     facilities: data?.facilities || [],
+    currently_using_digital_too: data?.currently_using_digital_tool || [],
+    marketing_platform: data?.marketing_platform || [],
     whatsapp_number: data?.whatsapp_number || ''
   }
 
@@ -41,12 +52,16 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     initialValues,
     enableReinitialize: true,
     onSubmit: async values => {
-      values.facilities.forEach(f => {
-        formData.append('facilities', f)
-      })
-      const formData = new FormData()
       try {
-        await update(formData)
+        const payload = {
+          ...values,
+          facilities,
+          currently_using_digital_tool: digitalTools,
+          marketing_platform: marketingPlatforms
+        }
+        await update(payload)
+        formik.resetForm()
+        setOpen(false)
       } catch (error) {
         console.error(error)
       }
@@ -71,24 +86,12 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               onChange={formik.handleChange}
             />
           </div>
-        </div>
-
-        <div className='flex gap-4'>
           <div className='flex-1'>
             <Input
               label='Center Name'
               name='center_name'
               placeholder='Enter Your Name'
               value={formik.values.center_name}
-              onChange={formik.handleChange}
-            />
-          </div>
-          <div className='flex-1'>
-            <CustomeSelect
-              label='Center Category'
-              name='category'
-              placeholder='Select Category'
-              value={formik.values.category}
               onChange={formik.handleChange}
             />
           </div>
@@ -164,7 +167,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               name='live_class_enable'
               value={formik.values.live_class_enable}
               onChange={option =>
-                formik.setFieldValue('live_class_enable', option?.id)
+                formik.setFieldValue('live_class_enable', option)
               }
             />
           </div>
@@ -231,43 +234,22 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
             />
           </div>
         </div>
-        <div className='flex-1'>
-          {/* Grid Layout: 3 per row */}
-          <div className='grid grid-cols-4 gap-4'>
-            {facilities.map((facility, index) => (
-              <div key={index} className='flex items-center gap-2'>
-                <Input
-                  value={facility}
-                  onChange={e => {
-                    const updated = [...facilities]
-                    updated[index] = e.target.value
-                    setFacilities(updated)
-                  }}
-                />
 
-                <button
-                  type='button'
-                  onClick={() => {
-                    const updated = facilities.filter((_, i) => i !== index)
-                    setFacilities(updated)
-                  }}
-                  className='text-red-500 hover:text-red-700'
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Add Button */}
-          <button
-            type='button'
-            onClick={() => setFacilities([...facilities, ''])}
-            className='flex items-center gap-1 text-primary mt-3'
-          >
-            <Plus size={16} /> Add Facility
-          </button>
-        </div>
+        <DynamicListInput
+          label='Facilities'
+          values={facilities}
+          setValues={setFacilities}
+        />
+        <DynamicListInput
+          label='Currently Using Digital Tools'
+          values={digitalTools}
+          setValues={setDigitalTools}
+        />
+        <DynamicListInput
+          label='Marketing Platforms'
+          values={marketingPlatforms}
+          setValues={setMarketingPlatforms}
+        />
         <Input
           label='Website Link'
           name='website_url'
@@ -280,7 +262,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
             onClick={() => setOpen(false)}
             size='addbutton'
             variant='outline_secondary'
-            type='submit'
+            type='button'
           >
             Cancel
           </Button>

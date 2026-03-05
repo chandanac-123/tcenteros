@@ -4,7 +4,8 @@ import {
   getProfile,
   getProfileById,
   updateProfilePic,
-  updateProfileImage
+  updateProfileImage,
+  getProfileInfo
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -17,10 +18,10 @@ export const useAllProfileQuery = () => {
   })
 }
 
-export const useUpdateProfileMutation = () => {
+export const useUpdateProfileMutation = (id, data) => {
   const query = useQueryClient()
   return useMutation({
-    mutationFn: data => updateProfile(data),
+    mutationFn: data => updateProfile(data,id),
     onSuccess: async data => {
       query.invalidateQueries('profile')
       showSuccess('Profile updated successfully')
@@ -71,5 +72,14 @@ export const useUpdateProfileImageMutation = () => {
       showError(err?.response?.data?.message || 'Failed to update center image')
       return err
     }
+  })
+}
+
+export const useGetProfileInfoQuery = () => {
+  return useQuery({
+    queryKey: ['profileInfo'],
+    queryFn: getProfileInfo,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

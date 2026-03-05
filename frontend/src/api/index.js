@@ -252,10 +252,8 @@ export const createBrandingApiCall = details =>
 //CENTER PROFILE API
 export const getCenterProfileApiCall = () =>
   axiosInstance.get(`/branching/centeradmin/branches/list-summary`)
-export const updateCenterProfileApiCall = details =>
-  axiosInstance.put(`/center/center/profile/update`, details, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+export const updateCenterProfileApiCall = (details, id) =>
+  axiosInstance.put(`/center/center/profile/update/${id}`, details)
 export const getCenterProfileByIdApiCall = id =>
   axiosInstance.get(`/center/center/${id}/by-id`)
 
@@ -267,6 +265,8 @@ export const updateCentersProfileImageApiCall = details =>
   axiosInstance.put(`/center/center/image/update`, details, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }) // For updating centers and sub-branchs image from center information page
+export const getCenterProfileInfoApiCall = () =>
+  axiosInstance.get(`/center/centeradmin/profile`)
 
 //CRM API
 export const getMemberApiCall = data =>
@@ -285,8 +285,10 @@ export const getMemberPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans-mini`)
 export const getMemberCountApiCall = () =>
   axiosInstance.get(`/membership/center/member-counts`)
-export const updateMemberStatusApiCall = (id,status) =>
-  axiosInstance.patch(`/membership/center/members/${id}/status?status=${status}`)
+export const updateMemberStatusApiCall = (id, status) =>
+  axiosInstance.patch(
+    `/membership/center/members/${id}/status?status=${status}`
+  )
 
 export const getVisitorApiCall = data =>
   axiosInstance.get(`/membership/center/visitors?page=${data?.page}`)
