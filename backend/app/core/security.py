@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+from sqlalchemy.orm import Session
+from app.core.models.models import SKU
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 import secrets
 import string
 
@@ -46,3 +51,24 @@ def generate_random_password(length: int = 10) -> str:
     password += [secrets.choice(alphabet) for _ in range(length - 4)]
     secrets.SystemRandom().shuffle(password)
     return ''.join(password)
+
+
+
+async def generate_sku_code(db: AsyncSession, center_id: UUID):
+
+    result = await db.execute(
+        select(SKU)
+        .where(SKU.center_id == center_id)
+        .order_by(SKU.created_at.desc())
+        .limit(1)
+    )
+
+    last_sku = result.scalar_one_or_none()
+
+    if not last_sku:
+        return "SKU-0001"
+
+    last_number = int(last_sku.sku_code.split("-")[-1])
+    new_number = str(last_number + 1).zfill(4)
+
+    return f"SKU-{new_number}"

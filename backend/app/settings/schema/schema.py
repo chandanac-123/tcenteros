@@ -172,6 +172,7 @@ class SKUCategoryCreate(BaseModel):
 
 class SKUCategoryOut(BaseModel):
     id: UUID4
+    center_id: UUID4
     name: str
     description: Optional[str] = None
 
