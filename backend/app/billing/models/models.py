@@ -47,6 +47,7 @@ class PaymentOrderStatus(enum.Enum):
     created = "created"
     processing = "processing"
     paid = "paid"
+    unpaid = "unpaid"
     failed = "failed"
     cancelled = "cancelled"
     refunded = "refunded"

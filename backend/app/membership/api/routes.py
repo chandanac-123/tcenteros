@@ -474,8 +474,10 @@ async def create_member(
         )
         db.add(member_membership)
 
-        # Create PaymentOrder if payment_status and payment_method are provided
-        if hasattr(payload, "payment_status") and hasattr(payload, "payment_method"):
+        # Only create PaymentOrder if payment_status is "paid"
+        if hasattr(payload, "payment_status") and payload.payment_status == "paid":
+            if not hasattr(payload, "payment_method") or not payload.payment_method:
+                raise HTTPException(status_code=400, detail="payment_method required for paid member")
             try:
                 payment_status_enum = PaymentOrderStatus(payload.payment_status)
             except Exception:
@@ -486,25 +488,25 @@ async def create_member(
                 raise HTTPException(status_code=400, detail="Invalid payment_method")
 
             payment_order = PaymentOrder(
-            payer_user_id=member.id,  # Use member.id here
-            payer_type="user",        # Or PayerType.user if using enum
-            payee_type="center",      # Or PayeeType.center if using enum
-            center_id=target_center.id,
-            order_type="center_subscription",  # Or OrderType.center_subscription
-            reference_schema="center",         # Or ReferenceSchema.center
-            reference_id=target_center.id,
-            subtotal_amount=float(membership.default_price),
-            tax_amount=0.00,
-            total_amount=float(membership.default_price),
-            currency="INR",  # Or Currency.INR
-            status=payment_status_enum,
-            payment_method=payment_method_enum,
-            created_by=current_user["user_id"],
-            updated_by=current_user["user_id"],
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-        )
-        db.add(payment_order)
+                payer_user_id=member.id,
+                payer_type="user",
+                payee_type="center",
+                center_id=target_center.id,
+                order_type="center_subscription",
+                reference_schema="center",
+                reference_id=target_center.id,
+                subtotal_amount=float(membership.default_price),
+                tax_amount=0.00,
+                total_amount=float(membership.default_price),
+                currency="INR",
+                status=payment_status_enum,
+                payment_method=payment_method_enum,
+                created_by=current_user["user_id"],
+                updated_by=current_user["user_id"],
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(payment_order)
 
     await db.commit()
     await db.refresh(member)
