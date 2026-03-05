@@ -1,7 +1,5 @@
 import { DataTable } from '@common/DataTable'
 import { useState } from 'react'
-import Card from '../components/Cards'
-import { visitorType } from '@constants/visitors'
 import { useVisitorQuery } from '@api-queries/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
@@ -12,13 +10,7 @@ const Visitors = () => {
     search: ''
   })
   const { data } = useVisitorQuery(tableParams)
-  const {
-    setSelectedTab,
-    setVisitorView,
-    setMemberView,
-    memberView,
-    visitorView
-  } = useCrmStore()
+  const { setSelectedTab, setMemberView } = useCrmStore()
 
   const columns = [
     {
@@ -57,24 +49,7 @@ const Visitors = () => {
     }
   ]
   return (
-    <>
-      <div className='grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6'>
-        {visitorType?.map(member => (
-          <Card key={member.id} label={member.name} />
-        ))}
-      </div>
-      <div className='flex justify-end mb-4'>
-        <Button
-          size='addbutton'
-          onClick={() => {
-            setVisitorView('add')
-            setSelectedTab(4)
-          }}
-        >
-          + Add Visitor
-        </Button>
-      </div>
-
+    <div className='flex flex-col mt-4'>
       <DataTable
         columns={columns}
         data={data?.visitors}
@@ -83,7 +58,7 @@ const Visitors = () => {
         search={false}
         paginationVisibile={true}
       />
-    </>
+    </div>
   )
 }
 

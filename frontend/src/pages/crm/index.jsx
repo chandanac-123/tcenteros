@@ -30,11 +30,17 @@ const CRM = () => {
           Customer Relationship Management
         </span>
         <div>
-          {/* {crmSelectedTab === 1 && memberView === 'list' && (
-            <Button size='addbutton' onClick={() => setMemberView('add')}>
-              + Add Member
+          {crmSelectedTab === 4 && visitorView === 'list' && (
+            <Button
+              size='addbutton'
+              onClick={() => {
+                setVisitorView('add')
+                setSelectedTab(4)
+              }}
+            >
+              + Add Visitor
             </Button>
-          )} */}
+          )}
 
           {crmSelectedTab === 1 && memberView === 'view' && (
             <Button size='addbutton' onClick={() => setMemberView('edit')}>
@@ -51,6 +57,7 @@ const CRM = () => {
         onSelect={id => {
           setCrmSelectedTab(id)
           setMemberView('list')
+          setVisitorView('list')
         }}
         heading={
           crmSelectedTab === 1

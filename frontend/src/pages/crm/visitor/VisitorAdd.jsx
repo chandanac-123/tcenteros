@@ -5,7 +5,7 @@ import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
 import {
   useCreateMemberMutation,
   useMembersGetByIdQuery,
-  useUpdateMemberMutation,
+  useUpdateMemberMutation
 } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
 import { useAuthStore } from '@store/authStore'
@@ -37,8 +37,6 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
     state: memberData?.address?.state || '',
     country: memberData?.address?.country || '',
     postal_code: memberData?.address?.postal_code || '',
-    membership_id: memberData?.membership_id || '',
-    time_slot_id: memberData?.time_slot_id || '',
     member_status: 'visitor'
   }
 
@@ -47,21 +45,9 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
     enableReinitialize: true,
     onSubmit: async values => {
       try {
-        const payload = { ...values }
-
-        if (payload.payment_status === 'unpaid') {
-          delete payload.password
-          delete payload.payment_method
-        }
-
-        if (isEdit) {
-          await updateMember({ data: payload, id: memberId })
-          goBack()
-        } else {
-          await createMember(payload)
-          formik.resetForm()
-          goBack()
-        }
+        await createMember(values)
+        formik.resetForm()
+        goBack()
       } catch (error) {
         console.error(error)
       }
@@ -69,7 +55,7 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
   })
 
   return (
-    <div className='flex flex-col gap-4 space-y-4'>
+    <div className='flex flex-col gap-4 space-y-2'>
       <CustomeBreadcrumb
         goBack={goBack}
         buttonName='Visitor Listing'
@@ -201,7 +187,7 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
           <div className='flex-1'></div>
         </div>
 
-        <div className='flex justify-center mt-6'>
+        <div className='flex justify-end mt-6'>
           <Button size='addbutton' variant='default' type='submit'>
             Create Visitor
           </Button>
