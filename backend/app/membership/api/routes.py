@@ -623,16 +623,25 @@ async def get_member_by_id(
     membership_id = None
     start_date = None
     end_date = None
-    payment_status_val = None
     status_val = None
     if member.member_memberships:
         latest_mm = sorted(member.member_memberships, key=lambda mm: mm.start_date, reverse=True)[0]
         membership_id = latest_mm.membership_id
         start_date = latest_mm.start_date
         end_date = latest_mm.end_date
-        payment_status_val = getattr(latest_mm, "payment_status", None)
         status_val = latest_mm.membership_status.value if latest_mm.membership_status else None
 
+    # Get latest payment status from PaymentOrder
+    from app.billing.models.models import PaymentOrder
+    payment_status_val = None
+    payment_order_result = await db.execute(
+        select(PaymentOrder)
+        .where(PaymentOrder.payer_user_id == member.id)
+        .order_by(PaymentOrder.created_at.desc())
+    )
+    payment_orders = payment_order_result.scalars().all()
+    if payment_orders:
+        payment_status_val = payment_orders[0].status.value if payment_orders[0].status else None
     return {
         "id": str(member.id),
         "full_name": member.full_name,
@@ -667,19 +676,104 @@ async def partial_update_member(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
+    from app.membership.models.models import MemberMembership, Membership
+    from datetime import datetime, date
+    from dateutil.relativedelta import relativedelta
+
     member = await db.get(Member, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
     update_fields = payload.dict(exclude_unset=True)
+    address_fields = ["address_line_1", "address_line_2", "city", "state", "country", "postal_code"]
+
+    # Update or create address if address fields are present
+    if any(field in update_fields for field in address_fields):
+        if member.address_id:
+            address = await db.get(Address, member.address_id)
+            if address:
+                for field in address_fields:
+                    if field in update_fields:
+                        setattr(address, field, update_fields[field])
+                address.updated_at = datetime.utcnow()
+                address.updated_by = current_user["user_id"]
+                await db.flush()
+        else:
+            address = Address(
+                id=uuid4(),
+                address_line_1=update_fields.get("address_line_1"),
+                address_line_2=update_fields.get("address_line_2"),
+                city=update_fields.get("city"),
+                state=update_fields.get("state"),
+                country=update_fields.get("country"),
+                postal_code=update_fields.get("postal_code"),
+                created_by=current_user["user_id"],
+                updated_by=current_user["user_id"],
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(address)
+            await db.flush()
+            member.address_id = address.id
+
+    # Update member fields
     for field, value in update_fields.items():
-        if hasattr(member, field):
+        if field not in address_fields:
             setattr(member, field, value)
     member.updated_at = datetime.utcnow()
     member.updated_by = current_user["user_id"]
 
+    # If membership_id is present, create a new MemberMembership record
+    if "membership_id" in update_fields and update_fields["membership_id"]:
+        membership = await db.get(Membership, update_fields["membership_id"])
+        if not membership:
+            raise HTTPException(status_code=400, detail="Membership not found")
+        start_date = date.today()
+        duration_unit = membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit
+        if duration_unit == "month":
+            end_date = start_date + relativedelta(months=membership.duration_count)
+        elif duration_unit == "year":
+            end_date = start_date + relativedelta(years=membership.duration_count)
+        elif duration_unit == "day":
+            end_date = start_date + relativedelta(days=membership.duration_count)
+        else:
+            end_date = None
+
+        member_membership = MemberMembership(
+            id=uuid4(),
+            member_id=member.id,
+            membership_id=membership.membership_id,
+            center_id=member.home_center_id,
+            start_date=start_date,
+            end_date=end_date,
+            total_amount=float(membership.default_price),
+            membership_status=StatusEnum.active,
+            created_by=current_user["user_id"],
+            updated_by=current_user["user_id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(member_membership)
+
     await db.commit()
     await db.refresh(member)
+
+    # Fetch updated address for response
+    address_obj = None
+    if member.address_id:
+        address_obj = await db.get(Address, member.address_id)
+
+    # Fetch latest MemberMembership for response
+    result = await db.execute(
+        select(MemberMembership)
+        .where(MemberMembership.member_id == member.id)
+        .order_by(MemberMembership.start_date.desc())
+    )
+    member_memberships = result.scalars().all()
+    membership_id = None
+    if member_memberships:
+        latest_mm = member_memberships[0]
+        membership_id = str(latest_mm.membership_id) if latest_mm.membership_id else None
 
     return {
         "id": str(member.id),
@@ -690,10 +784,19 @@ async def partial_update_member(
         "date_of_birth": member.date_of_birth,
         "blood_group": member.blood_group,
         "address_id": str(member.address_id) if member.address_id else None,
+        "address": {
+            "address_line_1": address_obj.address_line_1 if address_obj else None,
+            "address_line_2": address_obj.address_line_2 if address_obj else None,
+            "city": address_obj.city if address_obj else None,
+            "state": address_obj.state if address_obj else None,
+            "country": address_obj.country if address_obj else None,
+            "postal_code": address_obj.postal_code if address_obj else None,
+        } if address_obj else None,
         "home_center_id": str(member.home_center_id),
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
         "member_status": member.member_status.value,
         "status": member.status.value,
+        "membership_id": membership_id,
         "created_at": member.created_at,
         "updated_at": member.updated_at,
     }
@@ -1090,6 +1193,112 @@ async def list_visitors_in_center(
     
     }
 
+@router.get("/center/visitors/{visitor_id}", response_model=dict)
+async def get_visitor_by_id(
+    visitor_id: str = Path(..., description="Visitor ID"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    from app.auth.models.models import CenterAdmin, Member, MemberStatusEnum
+    from app.settings.models.models import Address
+    from app.center.models.models import Center, CenterTimeSlot
+    from app.billing.models.models import PaymentOrder
+
+    # Get the center admin and their center_id
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    admin_center_id = str(center_admin.center_id)
+
+    # Get the visitor
+    visitor = await db.get(Member, visitor_id)
+    if not visitor or visitor.member_status != MemberStatusEnum.visitor:
+        raise HTTPException(status_code=404, detail="Visitor not found")
+
+    # Access control: only allow if visitor is in admin's center or sub-branch
+    visitor_center = await db.get(Center, visitor.home_center_id)
+    if not visitor_center:
+        raise HTTPException(status_code=404, detail="Visitor's center not found")
+    if visitor_center.parent_center_id:
+        if admin_center_id != str(visitor_center.id) and admin_center_id != str(visitor_center.parent_center_id):
+            raise HTTPException(status_code=403, detail="Not allowed to access this visitor")
+    else:
+        if admin_center_id != str(visitor_center.id):
+            sub_centers = await db.execute(
+                select(Center.id).where(Center.parent_center_id == admin_center_id)
+            )
+            allowed_sub_ids = [str(row[0]) for row in sub_centers.fetchall()]
+            if str(visitor_center.id) not in allowed_sub_ids:
+                raise HTTPException(status_code=403, detail="Not allowed to access this visitor")
+
+    # Get address details
+    address = None
+    if visitor.address_id:
+        address_obj = await db.get(Address, visitor.address_id)
+        if address_obj:
+            address = {
+                "id": str(address_obj.id),
+                "address_line_1": address_obj.address_line_1,
+                "address_line_2": address_obj.address_line_2,
+                "city": address_obj.city,
+                "state": address_obj.state,
+                "country": address_obj.country,
+                "postal_code": address_obj.postal_code,
+            }
+    else:
+        address = {
+            "address_line_1": getattr(visitor, "address_line_1", None),
+            "address_line_2": getattr(visitor, "address_line_2", None),
+            "city": getattr(visitor, "city", None),
+            "state": getattr(visitor, "state", None),
+            "country": getattr(visitor, "country", None),
+            "postal_code": getattr(visitor, "postal_code", None),
+        }
+
+    # Get time slot details
+    time_slot = None
+    if visitor.time_slot_id:
+        time_slot_obj = await db.get(CenterTimeSlot, visitor.time_slot_id)
+        if time_slot_obj:
+            time_slot = {
+                "id": str(time_slot_obj.id),
+                "start_time": time_slot_obj.start_time,
+                "end_time": time_slot_obj.end_time,
+                "slot_capacity": time_slot_obj.slot_capacity,
+            }
+
+    # Get latest payment status from PaymentOrder
+    payment_status_val = None
+    payment_order_result = await db.execute(
+        select(PaymentOrder)
+        .where(PaymentOrder.payer_user_id == visitor.id)
+        .order_by(PaymentOrder.created_at.desc())
+    )
+    payment_orders = payment_order_result.scalars().all()
+    if payment_orders:
+        payment_status_val = payment_orders[0].status.value if payment_orders[0].status else None
+
+    return {
+        "id": str(visitor.id),
+        "full_name": visitor.full_name,
+        "email": visitor.email,
+        "mobile": visitor.mobile,
+        "gender": visitor.gender.value if visitor.gender else None,
+        "date_of_birth": visitor.date_of_birth,
+        "blood_group": visitor.blood_group,
+        "address_id": str(visitor.address_id) if visitor.address_id else None,
+        "address": address,
+        "home_center_id": str(visitor.home_center_id),
+        "home_center_name": visitor_center.center_name if visitor_center else None,
+        "time_slot_id": str(visitor.time_slot_id) if visitor.time_slot_id else None,
+        "time_slot": time_slot,
+        "visited_date": str(visitor.visited_date) if visitor.visited_date else None,
+        "payment_status": payment_status_val,
+        "member_status": visitor.member_status.value,
+        "status": visitor.status.value,
+        "created_at": visitor.created_at,
+        "updated_at": visitor.updated_at,
+    }
 
 
 
