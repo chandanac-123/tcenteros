@@ -90,12 +90,16 @@ class SKU(Base, AuditMixin):
     sku_code = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     sku_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.sku_categories.id"))
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
     description = Column(Text)
     base_price = Column(Numeric(10, 2))
     unit_of_measure = Column(String)
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
 
     category = relationship("SKUCategory", back_populates="skus")
+    center = relationship("Center", back_populates="skus")
+    # If you want to link SKU to Product, add:
+    product = relationship("Product", back_populates="sku", uselist=False)
 
 
 

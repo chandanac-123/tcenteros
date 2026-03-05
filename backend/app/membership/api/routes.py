@@ -1720,29 +1720,54 @@ async def register_guest_member_to_center(
 
 
 #list guest members assigned to the logged-in center admin’s center
-@router.get("/center/guests", response_model=list[dict])
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from typing import Dict, Any
+
+router = APIRouter()
+
+@router.get("/center/guests", response_model=Dict[str, Any])
 async def list_guests_in_center(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    # Get the center admin and their center_id
+    # Get center admin
     center_admin = await session.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
+
     center_id = center_admin.center_id
 
-    # Query for guest members assigned to this center
+    offset = (page - 1) * page_size
+
+    # Get total guest count
+    total_result = await session.execute(
+        select(func.count())
+        .select_from(Member)
+        .where(
+            Member.home_center_id == center_id,
+            Member.member_status == MemberStatusEnum.guest
+        )
+    )
+    total = total_result.scalar()
+
+    # Fetch paginated guests
     result = await session.execute(
         select(Member)
         .where(
             Member.home_center_id == center_id,
             Member.member_status == MemberStatusEnum.guest
         )
+        .offset(offset)
+        .limit(page_size)
     )
+
     guests = result.scalars().all()
 
-    # Return guest info
-    return [
+    guest_list = [
         {
             "id": str(guest.id),
             "email": guest.email,
@@ -1753,6 +1778,15 @@ async def list_guests_in_center(
         }
         for guest in guests
     ]
+
+    return {
+        "guests": guest_list,
+        "page": page,
+        "page_size": page_size,
+        "total_records": total,
+        "total_pages": (total + page_size - 1) // page_size
+        
+    }
 
 
 

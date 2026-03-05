@@ -915,7 +915,7 @@ async def get_center_by_id(
     admin_center_id = str(current_admin["center_id"])
 
     # Permission logic:
-    # - Parent admin: can get own center and any sub-branch (center.parent_center_id == admin_center_id)
+    # - Parent admin: can get own center and any sub-branch
     # - Sub-branch admin: can get only their own center
     is_own_center = str(center.id) == admin_center_id
     is_sub_branch = str(center.parent_center_id) == admin_center_id if center.parent_center_id else False
@@ -923,12 +923,17 @@ async def get_center_by_id(
     if not (is_own_center or is_sub_branch):
         raise HTTPException(403, "Not allowed to access this center data")
 
-    # Optionally fetch address details
+    # Fetch address
     address = None
     if center.address_id:
         address = await session.get(Address, center.address_id)
 
-    # Get center image URL if present
+    # Fetch center category
+    center_category = None
+    if center.center_category_id:
+        center_category = await session.get(CenterCategory, center.center_category_id)
+
+    # Get center image URL
     center_image_url = (
         await run_in_threadpool(get_file_url, center.center_image)
         if center.center_image else None
@@ -939,6 +944,13 @@ async def get_center_by_id(
         "center_name": center.center_name,
         "about": center.about,
         "facilities": center.facilities,
+
+        # CENTER CATEGORY ADDED
+        "center_category": {
+            "id": str(center_category.id),
+            "name": center_category.name
+        } if center_category else None,
+
         "website_url": center.website_url,
         "capacity": float(center.capacity) if center.capacity else None,
         "approval_status": center.approval_status.value if hasattr(center.approval_status, "value") else center.approval_status,
@@ -958,6 +970,7 @@ async def get_center_by_id(
         "live_class_enable": center.live_class_enable,
         "center_image_url": center_image_url,
         "whatsapp_number": center.whatsapp_number,
+
         "address": {
             "address_line_1": address.address_line_1,
             "address_line_2": address.address_line_2,
@@ -967,7 +980,7 @@ async def get_center_by_id(
             "country": address.country,
             "postal_code": address.postal_code,
         } if address else None
-    }    
+    }  
 
 
 @router.put("/center/profile/update/{center_id}")

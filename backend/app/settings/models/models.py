@@ -139,11 +139,14 @@ class SKUCategory(Base, AuditMixin):
     __table_args__ = {"schema": "settings"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
     name = Column(String, nullable=False, unique=True)
     description = Column(Text)
 
     # Relationship: one category has many SKUs
     skus = relationship("SKU", back_populates="category")
+    center = relationship("Center", back_populates="sku_categories")
+    
 
 
 

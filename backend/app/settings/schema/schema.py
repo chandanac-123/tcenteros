@@ -161,3 +161,19 @@ class CenterHolidayOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+#------------------------
+#sku category schema
+#------------------------
+class SKUCategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class SKUCategoryOut(BaseModel):
+    id: UUID4
+    name: str
+    description: Optional[str] = None
+
+    class Config:
+        from_attributes = True

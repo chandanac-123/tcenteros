@@ -25,6 +25,10 @@ from app.s3.service import get_file_url
 import random
 import re
 from datetime import datetime
+from pydantic import UUID4
+from app.settings.models.models import SKUCategory
+from app.settings.schema.schema import SKUCategoryCreate, SKUCategoryOut
+
 
 router = APIRouter()
 
@@ -663,3 +667,90 @@ async def delete_center_holiday(
     await session.delete(holiday)
     await session.commit()
     return {"message": "Data deleted", "deleted_id": holiday_id}
+
+
+
+# Create SKU Category
+@router.post("/center/sku-categories", response_model=SKUCategoryOut, status_code=201)
+async def create_sku_category(
+    payload: SKUCategoryCreate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    # Check for duplicate name in this center
+    result = await db.execute(
+        select(SKUCategory).where(SKUCategory.name == payload.name)
+    )
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=400, detail="SKU category with this name already exists.")
+
+    sku_category = SKUCategory(
+        name=payload.name,
+        description=payload.description,
+        created_by=current_user["user_id"],
+        updated_by=current_user["user_id"],
+        # Optionally, add center_id if you want to link to center
+    )
+    db.add(sku_category)
+    await db.commit()
+    await db.refresh(sku_category)
+    return sku_category
+
+# List SKU Categories (for centeradmin's center)
+@router.get("/center/sku-categories", response_model=list[SKUCategoryOut])
+async def list_sku_categories(
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    # If SKUCategory has center_id, filter by center_id
+    # result = await db.execute(select(SKUCategory).where(SKUCategory.center_id == center_admin.center_id))
+    result = await db.execute(select(SKUCategory))
+    categories = result.scalars().all()
+    return categories
+
+# Get SKU Category by ID
+@router.get("/center/sku-categories/{category_id}", response_model=SKUCategoryOut)
+async def get_sku_category_by_id(
+    category_id: UUID4,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    sku_category = await db.get(SKUCategory, category_id)
+    if not sku_category:
+        raise HTTPException(status_code=404, detail="SKU category not found")
+    # If SKUCategory has center_id, check center
+    # if sku_category.center_id != center_admin.center_id:
+    #     raise HTTPException(status_code=403, detail="Not allowed to access this SKU category")
+    return sku_category
+
+# Delete SKU Category
+@router.delete("/center/sku-categories/{category_id}", status_code=204)
+async def delete_sku_category(
+    category_id: UUID4,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    sku_category = await db.get(SKUCategory, category_id)
+    if not sku_category:
+        raise HTTPException(status_code=404, detail="SKU category not found")
+    # If SKUCategory has center_id, check center
+    # if sku_category.center_id != center_admin.center_id:
+    #     raise HTTPException(status_code=403, detail="Not allowed to delete this SKU category")
+    await db.delete(sku_category)
+    await db.commit()
+    return {"detail": "SKU category deleted"}

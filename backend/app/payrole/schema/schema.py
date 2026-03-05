@@ -17,3 +17,5 @@ class EmployeeSalaryUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+
