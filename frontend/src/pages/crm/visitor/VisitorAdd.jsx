@@ -2,28 +2,14 @@ import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/CustomeSelect'
 import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
-import CustomeTab from '@common/CustomeTab'
 import {
   useCreateMemberMutation,
-  useMembersTimeSlotQuery,
   useMembersGetByIdQuery,
   useUpdateMemberMutation,
-  useMembersPlanQuery
 } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
-import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'
-import { useSettingsTabStore } from '@store/tabStore'
-import { useNavigate } from 'react-router-dom'
 
-const paidStatus = [
-  { id: 'unpaid', name: 'unpaid' },
-  { id: 'paid', name: 'paid' }
-]
-const paymentMethod = [
-  { id: 'cash', name: 'Cash' },
-  { id: 'upi', name: 'UPI' }
-]
 const genderOption = [
   { id: 'male', name: 'Male' },
   { id: 'female', name: 'Female' },
@@ -31,17 +17,11 @@ const genderOption = [
 ]
 
 const VisitorAdd = ({ memberId, isEdit, goBack }) => {
-  console.log('memberId: ', memberId);
   const state = useAuthStore.getState()
-  const navigate = useNavigate()
-  const { setSelectedTab } = useSettingsTabStore()
   const { mutateAsync: createMember } = useCreateMemberMutation()
   const { mutateAsync: updateMember } = useUpdateMemberMutation()
-  const { data: memberTimeSlot } = useMembersTimeSlotQuery(
-    state?.auth?.center_id
-  )
+
   const { data: memberData } = useMembersGetByIdQuery(memberId)
-  const { data: memberPlan } = useMembersPlanQuery()
 
   const initialValues = {
     center_id: state?.auth?.center_id,
@@ -59,10 +39,7 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
     postal_code: memberData?.address?.postal_code || '',
     membership_id: memberData?.membership_id || '',
     time_slot_id: memberData?.time_slot_id || '',
-    member_status: 'member',
-    payment_method: memberData?.payment_method || '',
-    payment_status: memberData?.payment_status || 'unpaid',
-    password: ''
+    member_status: 'visitor'
   }
 
   const formik = useFormik({
@@ -78,7 +55,7 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
         }
 
         if (isEdit) {
-          await updateMember({data:payload ,  id: memberId })
+          await updateMember({ data: payload, id: memberId })
           goBack()
         } else {
           await createMember(payload)
@@ -92,13 +69,11 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
   })
 
   return (
-    <div className='flex flex-col gap-4 pb-6'>
+    <div className='flex flex-col gap-4 space-y-4'>
       <CustomeBreadcrumb
         goBack={goBack}
-        buttonName='Members Listing'
-        currentPageName={
-          isEdit ? 'Member Updation Form' : 'Member Creation Form'
-        }
+        buttonName='Visitor Listing'
+        currentPageName={'Visitor Creation Form'}
       />
       <form className='space-y-2' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
@@ -216,82 +191,19 @@ const VisitorAdd = ({ memberId, isEdit, goBack }) => {
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-            <CustomeSelect
-              options={memberPlan}
-              search={true}
-              value={formik.values.membership_id}
-              onChange={value => formik.setFieldValue('membership_id', value)}
-              label='Membership Plan '
-              name='membership_id'
-            />
-          </div>
-          <div className='flex-1'>
             <div className='flex-1'>
               <span className='text-sm'>Membership Status </span>
               <div className='cursor-pointer px-4 py-1.5 rounded-md  text-onboard_primary border border-onboard_primary bg-onboard_primary/10'>
-                Member
+                Visitor
               </div>
             </div>
           </div>
-        </div>
-        {formik?.values?.payment_status == 'paid' && (
-          <div className='flex gap-4 '>
-            <div className='flex-1'>
-              <CustomeSelect
-                label='Payment Method'
-                name='payment_method'
-                options={paymentMethod}
-                value={formik.values.payment_method}
-                onChange={value =>
-                  formik.setFieldValue('payment_method', value)
-                }
-              />
-            </div>
-            <div className='flex-1'>
-              <Input
-                label='Set Password'
-                name='password'
-                value={formik.values.password}
-                onChange={formik.handleChange}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className='flex justify-end'>
-          <CustomeTab
-            tabList={paidStatus}
-            defaultVal={formik.values.payment_status}
-            tabsListClass='w-40 p-[1px] rounded-full'
-            tabsTriggerClass='rounded-full'
-            onChange={value => formik.setFieldValue('payment_status', value)}
-          />
-        </div>
-        <div className='flex justify-between items-center pt-4'>
-          <span className='text-md font-semibold'>Select Time Slot</span>
-          <Button
-            type='button'
-            size='addbutton'
-            onClick={() => {
-              setSelectedTab(2)
-              navigate('/settings')
-            }}
-          >
-            Add Time Slot
-          </Button>
+          <div className='flex-1'></div>
         </div>
 
-        <div className='flex flex-col'>
-          <TimeSlotSelector
-            slots={memberTimeSlot}
-            selectedSlot={formik.values.time_slot_id}
-            onChange={id => formik.setFieldValue('time_slot_id', id)}
-          />
-        </div>
-
-        <div className='flex justify-center mt-4 '>
+        <div className='flex justify-center mt-6'>
           <Button size='addbutton' variant='default' type='submit'>
-            {isEdit ? 'Update Member' : 'Create Member'}
+            Create Visitor
           </Button>
         </div>
       </form>

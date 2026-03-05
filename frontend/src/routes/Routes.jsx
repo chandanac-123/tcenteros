@@ -524,16 +524,4 @@ export const routes = [
     menubar: false,
     permission: true
   },
-    {
-    key: 1,
-    path: '/crm/visitor-add',
-    label: '',
-    privetRoute: true,
-    isSubRoute: false,
-    pageTitle: '',
-    component: VisitorAdd,
-    icon: <FileUserIcon />,
-    menubar: false,
-    permission: true
-  },
 ]

@@ -7,6 +7,8 @@ import MemberView from './member/MemberView'
 import MemberAdd from './member/MemberAdd'
 import { SquarePen } from 'lucide-react'
 import { useCrmStore } from '@store/tabStore'
+import VisitorAdd from './visitor/VisitorAdd'
+import Visitors from './visitor'
 
 const CRM = () => {
   const {
@@ -14,6 +16,8 @@ const CRM = () => {
     setSelectedTab: setCrmSelectedTab,
     memberView,
     setMemberView,
+    visitorView,
+    setVisitorView,
     selectedMemberId,
     setSelectedMemberId
   } = useCrmStore()
@@ -57,6 +61,10 @@ const CRM = () => {
               : memberView === 'edit'
               ? 'Edit Member'
               : 'Members'
+            : crmSelectedTab === 4
+            ? visitorView === 'add'
+              ? 'Add Visitor'
+              : 'Visitors'
             : selectedCrmCategory?.heading
         }
       >
@@ -85,6 +93,12 @@ const CRM = () => {
                 setMemberView('edit')
               }}
             />
+          )
+        ) : crmSelectedTab === 4 ? (
+          visitorView === 'add' ? (
+            <VisitorAdd goBack={() => setVisitorView('list')} />
+          ) : (
+            <Visitors />
           )
         ) : (
           selectedCrmCategory?.component_view

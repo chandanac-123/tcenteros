@@ -47,7 +47,7 @@ const Visitors = () => {
             size='addbutton'
             onClick={() => {
               setSelectedTab(1)
-              setVisitorView('add')
+              setMemberView('add')
             }}
           >
             Convert to Member
@@ -64,17 +64,16 @@ const Visitors = () => {
         ))}
       </div>
       <div className='flex justify-end mb-4'>
-        {/* <Button
+        <Button
           size='addbutton'
           onClick={() => {
             setVisitorView('add')
-            setSelectedTab(3)
+            setSelectedTab(4)
           }}
         >
           + Add Visitor
-        </Button> */}
+        </Button>
       </div>
-
 
       <DataTable
         columns={columns}

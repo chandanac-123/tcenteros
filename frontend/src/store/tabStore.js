@@ -32,6 +32,9 @@ export const useCrmStore = create(
 
       memberView: 'list',
       setMemberView: view => set({ memberView: view }),
+      
+       visitorView: 'list',
+      setVisitorView: view => set({ visitorView: view }),
 
       selectedMemberId: null,
       setSelectedMemberId: id => set({ selectedMemberId: id })
