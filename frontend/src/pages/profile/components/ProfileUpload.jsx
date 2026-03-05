@@ -38,7 +38,9 @@ const ProfileUpload = () => {
           {data?.full_name || '-'}
         </span>
         <span className='text-center block text-xs text-secondary'>
-          {data?.role || '-'}
+          {data?.role
+            ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
+            : '-'}
         </span>
       </div>
       <UpdateProfile

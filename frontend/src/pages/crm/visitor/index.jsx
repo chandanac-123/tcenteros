@@ -15,7 +15,7 @@ const Visitors = () => {
   const columns = [
     {
       accessorKey: 'full_name',
-      header: 'Member  Name'
+      header: 'Name'
     },
     {
       accessorKey: 'email',

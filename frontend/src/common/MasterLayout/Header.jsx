@@ -21,11 +21,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
 import { useCrmStore } from '@store/tabStore'
+import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
 
 const Header = () => {
   const { setSelectedTab, setMemberView } = useCrmStore()
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+   const { data } = useGetProfileInfoQuery()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -63,16 +65,16 @@ const Header = () => {
               <div className='flex items-center'>
                 <div className='flex items-center gap-0'>
                   <img
-                    src={dummy}
+                    src={data?.profile_photo}
                     alt='logo'
                     className='w-8 h-8 mr-4 rounded-full'
                   />
                   <div className='flex flex-col'>
                     <span className='text-textwhite text-sm whitespace-nowrap'>
-                      Hello, Pratibha
+                      Hello,{ data?.full_name || '-'}
                     </span>
                     <span className='text-primary text-xs font-light'>
-                      Center Admin
+                     {data?.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : '-'}
                     </span>
                   </div>
                 </div>

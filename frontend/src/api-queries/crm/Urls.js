@@ -8,7 +8,8 @@ import {
   getMemberPlanApiCall,
   getMemberCountApiCall,
   updateMemberStatusApiCall,
-  getVisitorApiCall
+  getVisitorApiCall,
+  getGuestApiCall
 } from '../../api'
 
 export const getAllMember = async data => {
@@ -94,6 +95,16 @@ export const updateMemberStatus = async (id, status) => {
 export const getVisitor = async (data) => {
   try {
     const response = await getVisitorApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getGuestInfo = async () => {
+  try {
+    const response = await getGuestApiCall()
+    console.log('response:qqq ', response);
     return response.data
   } catch (error) {
     throw error

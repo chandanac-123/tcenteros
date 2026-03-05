@@ -128,3 +128,12 @@ export const useVisitorQuery = data => {
     refetchOnMount: true
   })
 }
+
+export const useGuestQuery = () => {
+  return useQuery({
+    queryKey: ['guests'],
+    queryFn: () => getGuestInfo(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}

@@ -27,7 +27,7 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
 
           <div className='flex-1'>
             <p className='text-sm text-pricing_text'>About</p>
-            <p className='mt-2 text-base'>{data?.description || '-'}</p>
+            <p className='mt-2 text-base'>{data?.about || '-'}</p>
           </div>
         </div>
 
@@ -36,7 +36,7 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
 
         <div className='grid grid-cols-4 gap-6'>
           <Info label='Center Name' value={data?.center_name} />
-          <Info label='Center Category' value={data?.center_category_name} />
+          <Info label='Center Category' value={data?.center_category?.name} />
           <Info label='Center Capacity' value={data?.capacity} />
           <Info label='Kind of Center' value={data?.kind_of_center} />
         </div>
@@ -55,7 +55,6 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
         <SectionTitle title='Configuration' />
 
         <div className='grid grid-cols-4 gap-6'>
-          <Info label='Approval Status' value={data?.approval_status} />
           <Info label='Center Status' value={data?.center_status} />
           <Info
             label='Live Class Enabled'
