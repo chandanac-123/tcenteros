@@ -10,6 +10,7 @@ import {
 import { useFormik } from 'formik'
 import { salaryValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
+import { useEmployeesDropdownQuery } from '@api-queries/employee-management/Query'
 
 const payCycleOptions = [
   { id: 'daily', label: 'Daily' },
@@ -25,20 +26,19 @@ const salaryTypeOptions = [
 const StructureAddEdit = ({ open, setOpen, id }) => {
   const { data: salaryData, isFetching: isEmployeeFetching } =
     useSalaryGetByIdQuery(id)
-  console.log('salaryData: ', salaryData)
+  const { data: employeesDropdown } = useEmployeesDropdownQuery()
+
   const { mutateAsync: createEmployeeSalary, isPending } =
     useCreateSalaryMutation()
   const { mutateAsync: updateEmployeeSalary, isPending: updatePending } =
     useUpdateSalaryMutation()
 
- const initialValues = {
-  employee_id: salaryData?.employee_id || '',
-  salary: salaryData?.salary || '',
-  salary_type:
-    salaryTypeOptions.find(opt => opt.id === salaryData?.salary_type) || null,
-  pay_cycle:
-    payCycleOptions.find(opt => opt.id === salaryData?.pay_cycle) || null
-}
+  const initialValues = {
+    employee_id: salaryData?.employee_id || '',
+    salary: salaryData?.salary || '',
+    salary_type: salaryData?.salary_type || null,
+    pay_cycle: salaryData?.pay_cycle || null
+  }
 
   const formik = useFormik({
     initialValues,
@@ -72,13 +72,9 @@ const StructureAddEdit = ({ open, setOpen, id }) => {
             <CustomeSelect
               label='Employee Name'
               name='employee_id'
-              options={salaryTypeOptions}
-              value={salaryTypeOptions.find(
-                option => option.id === formik.values.employee_id
-              )}
-              onChange={option =>
-                formik.setFieldValue('employee_id', option)
-              }
+              options={employeesDropdown}
+              value={formik.values.employee_id}
+              onChange={value => formik.setFieldValue('employee_id', value)}
               error={formik.touched.employee_id && formik.errors.employee_id}
               placeholder='Select Employee'
             />
@@ -89,12 +85,8 @@ const StructureAddEdit = ({ open, setOpen, id }) => {
               name='salary_type'
               placeholder='Select Salary Type'
               options={salaryTypeOptions}
-              value={salaryTypeOptions.find(
-                option => option.id === formik.values.salary_type
-              )}
-              onChange={option =>
-                formik.setFieldValue('salary_type', option)
-              }
+              value={formik.values.salary_type}
+              onChange={value => formik.setFieldValue('salary_type', value)}
               error={formik.touched.salary_type && formik.errors.salary_type}
             />
           </div>
@@ -107,7 +99,7 @@ const StructureAddEdit = ({ open, setOpen, id }) => {
               placeholder='Select Pay Cycle'
               options={payCycleOptions}
               value={formik.values.pay_cycle}
-              onChange={option => formik.setFieldValue('pay_cycle', option)}
+              onChange={value => formik.setFieldValue('pay_cycle', value)}
               error={formik.touched.pay_cycle && formik.errors.pay_cycle}
             />
           </div>

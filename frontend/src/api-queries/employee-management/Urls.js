@@ -10,7 +10,8 @@ import {
   GetEmployeeCategoriesByIdApiCall,
   GetEmployeeByIdApiCall,
   updateEmployeeStatusApiCall,
-  deleteMultipleEmployeeApiCall
+  deleteMultipleEmployeeApiCall,
+  getEmployeesDropdownApiCall
 } from '../../api'
 
 export const getAllCategories = async () => {
@@ -111,6 +112,15 @@ export const updateEmployeeStatus = async (details, id) => {
 export const deleteMultipleEmployees = async details => {
   try {
     const response = await deleteMultipleEmployeeApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getEmployeesDropdown = async () => {
+  try {
+    const response = await getEmployeesDropdownApiCall()
     return response.data
   } catch (error) {
     throw error

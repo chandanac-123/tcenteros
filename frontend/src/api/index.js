@@ -207,6 +207,8 @@ export const getAllEmployeeAttendanceApiCall = data => {
 }
 export const deleteAttendanceApiCall = id =>
   axiosInstance.delete(`/attendance/centeradmin/attendance/${id}`)
+export const getEmployeesDropdownApiCall = () =>
+  axiosInstance.get(`auth/employees/mini`)
 
 // BRANCH API
 export const addBranchCountApiCall = details =>

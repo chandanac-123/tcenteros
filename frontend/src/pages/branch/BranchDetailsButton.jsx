@@ -10,7 +10,7 @@ const BranchDetailsButton = () => {
     return (
         <div>
             <Button size='addbutton' onClick={handleOpenBranch}>
-                + Add Details
+                + Create Branch
             </Button>
             <AddBranchDetails open={openAddBranch} onOpenChange={setOpenAddbranch} />
         </div>

@@ -11,7 +11,8 @@ import {
   updateCategory,
   getEmployeeById,
   updateEmployeeStatus,
-  deleteMultipleEmployees
+  deleteMultipleEmployees,
+  getEmployeesDropdown
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -174,5 +175,15 @@ export const useDeleteMultipleEmployeeMutation = () => {
       )
       return err
     }
+  })
+}
+
+
+export const useEmployeesDropdownQuery = () => {
+  return useQuery({
+    queryKey: ['employees'],
+    queryFn: () => getEmployeesDropdown(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
