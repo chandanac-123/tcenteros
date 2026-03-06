@@ -39,7 +39,10 @@ export default function CustomeSelect ({
         </label>
       )}
 
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value ? String(value) : ''}
+        onValueChange={val => onChange(val)}
+      >
         <SelectTrigger className='w-full h-9'>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -72,7 +75,7 @@ export default function CustomeSelect ({
             return (
               <SelectItem
                 key={item?.id || item?.membership_id}
-                value={item?.id || item?.membership_id}
+                value={String(item?.id || item?.membership_id)}
               >
                 {label}
               </SelectItem>

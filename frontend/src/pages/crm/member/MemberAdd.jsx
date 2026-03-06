@@ -19,6 +19,7 @@ import { useCrmStore } from '@store/tabStore'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { memberValidationSchema } from '@utils/validations'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const paidStatus = [
   { id: 'unpaid', name: 'unpaid' },
@@ -41,8 +42,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     selectedGuestId,
     clearSelectedIds
   } = useCrmStore()
-  const { data: visitorData } = useVisitorById(selectedVisitorId)
-  const { data: guestData } = useGuestById(selectedGuestId)
+  const { data: visitorData, isFetching: isVisitorFetching } =
+    useVisitorById(selectedVisitorId)
+  const { data: guestData, isFetching: isGuestFetching } =
+    useGuestById(selectedGuestId)
   const state = useAuthStore()
   const navigate = useNavigate()
   const { mutateAsync: createMember } = useCreateMemberMutation()
@@ -50,8 +53,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
     state?.auth?.center_id
   )
-  const { data: memberData } = useMembersGetByIdQuery(memberId)
+  const { data: memberData, isFetching: isMemberFetching } =
+    useMembersGetByIdQuery(memberId)
   const { data: memberPlan } = useMembersPlanQuery()
+  const isFormLoading = isVisitorFetching || isGuestFetching || isMemberFetching
 
   const sourceData = isEdit
     ? memberData
@@ -94,8 +99,11 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           delete payload.password
           delete payload.payment_method
         }
-        if (isEdit) {
-          await updateMember({ data: payload, id: memberId })
+        if (isEdit || selectedVisitorId || selectedGuestId) {
+          await updateMember({
+            data: payload,
+            id: memberId || selectedVisitorId || selectedGuestId
+          })
           clearSelectedIds()
           goBack()
         } else {
@@ -115,30 +123,34 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
     formik.setValues({
       center_id: state?.auth?.center_id,
-
       full_name: sourceData?.full_name || '',
       email: sourceData?.email || '',
       mobile: sourceData?.mobile || '',
       gender: sourceData?.gender || '',
       date_of_birth: sourceData?.date_of_birth || '',
       blood_group: sourceData?.blood_group || '',
-
       address_line_1: sourceData?.address?.address_line_1 || '',
       address_line_2: sourceData?.address?.address_line_2 || '',
       city: sourceData?.address?.city || '',
       state: sourceData?.address?.state || '',
       country: sourceData?.address?.country || '',
       postal_code: sourceData?.address?.postal_code || '',
-
       membership_id: sourceData?.membership_id || '',
       time_slot_id: sourceData?.time_slot_id || '',
-
       member_status: 'member',
       payment_method: sourceData?.payment_method || '',
       payment_status: sourceData?.payment_status || 'unpaid',
       password: ''
     })
   }, [sourceData])
+
+  if (isFormLoading) {
+    return (
+      <div className='flex justify-center items-center h-[300px]'>
+        <Spinner />
+      </div>
+    )
+  }
 
   return (
     <div className='flex flex-col gap-4 pb-6'>
