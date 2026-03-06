@@ -1,6 +1,6 @@
 from app.core.models.models import StatusEnum, User
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File, Query, Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.membership.models.models import Membership, MembershipFeature
 from app.membership.schema.schema import MembershipCreate, MemberCreate, MemberUpdate ,GuestRegisterIn
@@ -1720,13 +1720,6 @@ async def register_guest_member_to_center(
 
 
 #list guest members assigned to the logged-in center admin’s center
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from typing import Dict, Any
-
-router = APIRouter()
-
 @router.get("/center/guests", response_model=Dict[str, Any])
 async def list_guests_in_center(
     page: int = Query(1, ge=1),

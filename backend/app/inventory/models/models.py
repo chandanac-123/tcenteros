@@ -69,3 +69,5 @@ class StockTransaction(Base, AuditMixin):
     reference = Column(String)
 
     product = relationship("Product")
+
+
