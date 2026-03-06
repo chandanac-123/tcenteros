@@ -784,3 +784,24 @@ async def delete_sku_category(
     await db.commit()
 
     return {"detail": "SKU category deleted"}
+
+
+#to get inventory profit for a center (centeradmin only, for their center)
+@router.get("/settings/inventory-profit", summary="Get center inventory profit (centeradmin)")
+async def get_inventory_profit(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No center assigned to this user")
+
+    stmt = select(CenterOperationalSetting.inventory_profit).where(
+        CenterOperationalSetting.center_id == center_id
+    ).limit(1)
+
+    res = await db.execute(stmt)
+    profit = res.scalar_one_or_none()
+
+    # Return as string to preserve Decimal precision in JSON
+    return {"center_id": str(center_id), "inventory_profit": str(profit) if profit is not None else "0.00"}
