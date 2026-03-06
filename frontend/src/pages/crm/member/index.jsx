@@ -124,7 +124,7 @@ const Members = ({ onView, onEdit }) => {
         isLoading={isFetching}
         columns={columns}
         data={data?.members}
-        pagination={5}
+        pagination={data?.total}
         search={false}
         setTableParams={setTableParams}
         tableParams={tableParams}

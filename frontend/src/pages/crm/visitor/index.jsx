@@ -56,6 +56,7 @@ const Visitors = () => {
         data={data?.visitors}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={data?.total}
         search={false}
         paginationVisibile={true}
       />
