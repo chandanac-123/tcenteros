@@ -39,6 +39,7 @@ class Stock(Base, AuditMixin):
                         unique=True)
 
     quantity_available = Column(Integer, default=0)
+    last_cost = Column(Numeric(10, 2), nullable=True)
 
     product = relationship("Product", back_populates="stock")
 
@@ -57,6 +58,9 @@ class StockTransaction(Base, AuditMixin):
 
 
     quantity = Column(Integer, nullable=False)
+
+    unit_cost = Column(Numeric(10, 2), nullable=False, default=0.00)
+    subtotal = Column(Numeric(10, 2), nullable=False, default=0.00)
 
     balance_after = Column(Integer)
 

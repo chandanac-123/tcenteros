@@ -27,6 +27,7 @@ class OrderType(enum.Enum):
     upgrade = "upgrade"
     add_on = "add_on"
     refund = "refund"
+    stock_purchase = "stock_purchase"
 
 
 class ReferenceSchema(enum.Enum):

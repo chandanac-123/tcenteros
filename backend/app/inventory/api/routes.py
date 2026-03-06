@@ -3,14 +3,17 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from app.core.dependencies import get_async_session, centeradmin_required
-from app.inventory.schema.schema import ProductCreateRequest, ProductUpdateRequest, StockAdjustRequest, StockOut
+from app.inventory.schema.schema import ProductCreateRequest, ProductUpdateRequest, StockAdjustRequest, StockOut, StockAdjustIn, StockHistoryRow, AllStockHistoryResponse
 from app.core.models.models import SKU
 from app.inventory.models.models import Product, Stock, StockTransaction
 from app.core.security import generate_sku_code
 import asyncio
 from uuid import uuid4
-from sqlalchemy import select,func
-from datetime import datetime
+from sqlalchemy import select,func, update, desc
+from datetime import datetime, date
+from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency
+from decimal import Decimal
+
 
 
 router = APIRouter()
@@ -286,79 +289,301 @@ async def delete_product(
     
 
 
-#stock adjustment endpoint (centeradmin only)
-@router.post("/stocks/adjust", response_model=StockOut)
-async def adjust_stock(
-    payload: StockAdjustRequest,
+@router.post("/stock/adjust")
+async def add_stock(
+    payload: StockAdjustIn,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: dict = Depends(centeradmin_required),
+):
+    # Hardcode transaction_type = "IN"
+    TRANSACTION_TYPE = "IN"
+
+    # verify product exists
+    product = await session.get(Product, payload.product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    qty = int(payload.quantity)
+    unit_cost = Decimal(payload.cost_price)
+    subtotal = (unit_cost * Decimal(qty)).quantize(Decimal("0.01"))
+    tax_amount = Decimal("0.00")
+    total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
+
+    # derive payer and center ids from current_user dict
+    payer_user_id = current_user.get("id") or current_user.get("user_id")
+    center_id = current_user.get("center_id")
+
+    async def _work():
+        # 1) create StockTransaction
+        stock_tx = StockTransaction(
+            product_id=product.id,
+            quantity=qty,
+            transaction_type=TRANSACTION_TYPE,
+            unit_cost=unit_cost,
+            subtotal=subtotal,
+            supplier_name=payload.supplier_name,
+            invoice_number=payload.invoice_number,
+            invoice_date=payload.invoice_date,
+        )
+        session.add(stock_tx)
+        await session.flush()  # populate stock_tx.id
+
+        # 2) update or create Stock aggregate row
+        q = select(Stock).where(Stock.product_id == product.id).limit(1)
+        res = await session.execute(q)
+        stock = res.scalars().first()
+
+        if stock:
+            new_qty = (stock.quantity_available or 0) + qty
+            stock.quantity_available = new_qty
+            stock.last_cost = unit_cost
+            session.add(stock)
+        else:
+            new_qty = qty
+            stock = Stock(
+                product_id=product.id,
+                quantity_available=new_qty,
+                last_cost=unit_cost
+            )
+            session.add(stock)
+
+        await session.flush()  # populate stock.id if new
+
+        # update transaction balance_after to reflect new aggregate
+        stock_tx.balance_after = new_qty
+        session.add(stock_tx)
+        await session.flush()
+
+        # 3) create PaymentOrder for this incoming stock
+        po = PaymentOrder(
+            payer_user_id=payer_user_id,
+            payer_type=PayerType.center_admin,
+            payee_type=PayeeType.center,
+            center_id=center_id,
+            order_type=OrderType.stock_purchase,
+            reference_schema=ReferenceSchema.invoice,
+            reference_id=stock_tx.id,  # link to stock transaction primary key
+            subtotal_amount=subtotal,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
+            currency=getattr(product, "currency", Currency.INR),
+            status=PaymentOrderStatus.paid,
+            payment_method=None,
+        )
+        session.add(po)
+        await session.flush()
+
+        return stock_tx, stock, po
+
+    # If a transaction is already active on this session, run work directly;
+    # otherwise open a new transaction context here.
+    if session.get_transaction() is None:
+        async with session.begin():
+            stock_tx, stock, po = await _work()
+    else:
+        # Already in a transaction (dependency or caller), just perform actions.
+        stock_tx, stock, po = await _work()
+
+    return {
+        "stock_transaction_id": str(stock_tx.id),
+        "stock_id": str(stock.id),
+        "payment_order_id": str(po.payment_order_id),
+        "subtotal": str(subtotal),
+        "tax": str(tax_amount),
+        "total": str(total_amount),
+    }
+
+
+@router.get("/stock-history", response_model=AllStockHistoryResponse)
+async def list_all_stock_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    product_id: Optional[str] = Query(None, description="Filter by product id"),
+    transaction_type: Optional[str] = Query(None, description="IN or OUT"),
+    date_from: Optional[date] = Query(None, description="From invoice/created date (inclusive)"),
+    date_to: Optional[date] = Query(None, description="To invoice/created date (inclusive)"),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
-    # Validate transaction_type
-    tx_type = (payload.transaction_type or "IN").upper()
-    if tx_type not in ("IN", "OUT"):
-        raise HTTPException(status_code=400, detail="transaction_type must be 'IN' or 'OUT'")
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Lookup product
-    stmt = select(Product).where(Product.id == payload.product_id)
+    # Base join: StockTransaction JOIN Product, left join Stock (aggregate)
+    stmt = select(StockTransaction, Product, Stock).join(
+        Product, Product.id == StockTransaction.product_id
+    ).outerjoin(
+        Stock, Stock.product_id == Product.id
+    ).where(Product.center_id == center_id)
+
+    # Apply filters
+    if product_id:
+        stmt = stmt.where(StockTransaction.product_id == product_id)
+    if transaction_type:
+        stmt = stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+    if date_from:
+        if hasattr(StockTransaction, "created_at"):
+            stmt = stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        else:
+            stmt = stmt.where(StockTransaction.invoice_date >= date_from)
+    if date_to:
+        if hasattr(StockTransaction, "created_at"):
+            stmt = stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        else:
+            stmt = stmt.where(StockTransaction.invoice_date <= date_to)
+
+    # Count total
+    count_stmt = select(func.count()).select_from(StockTransaction).join(
+        Product, Product.id == StockTransaction.product_id
+    ).where(Product.center_id == center_id)
+    if product_id:
+        count_stmt = count_stmt.where(StockTransaction.product_id == product_id)
+    if transaction_type:
+        count_stmt = count_stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+    if date_from:
+        if hasattr(StockTransaction, "created_at"):
+            count_stmt = count_stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        else:
+            count_stmt = count_stmt.where(StockTransaction.invoice_date >= date_from)
+    if date_to:
+        if hasattr(StockTransaction, "created_at"):
+            count_stmt = count_stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        else:
+            count_stmt = count_stmt.where(StockTransaction.invoice_date <= date_to)
+
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Ordering + pagination (most recent first)
+    # prefer created_at when present
+    order_col = getattr(StockTransaction, "created_at", StockTransaction.invoice_date)
+    stmt = stmt.order_by(desc(order_col)).offset((page - 1) * page_size).limit(page_size)
+
+    res = await db.execute(stmt)
+    rows = res.all()
+
+    items = []
+    for st, prod, stock in rows:
+        items.append(StockHistoryRow(
+            product_id=prod.id,
+            product_name=getattr(prod, "name", None),
+            sku_code=getattr(prod, "sku_code", None),
+            current_quantity=int(stock.quantity_available) if stock and stock.quantity_available is not None else 0,
+            transaction_id=st.id,
+            created_at=getattr(st, "created_at", None),
+            invoice_date=st.invoice_date,
+            transaction_type=st.transaction_type,
+            quantity=int(st.quantity or 0),
+            unit_cost=st.unit_cost or 0,
+            subtotal=st.subtotal or 0,
+            balance_after=int(st.balance_after) if st.balance_after is not None else None,
+            supplier_name=st.supplier_name,
+            invoice_number=st.invoice_number,
+        ))
+
+    return AllStockHistoryResponse(
+        page=page,
+        page_size=page_size,
+        total=total,
+        rows=items,
+    )    
+
+
+#stock transactions listing endpoint with pagination and filtering (centeradmin only)
+@router.get("/stock-transactions")
+async def list_stock_transactions(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    product_id: Optional[str] = Query(None, description="Filter by product id"),
+    transaction_type: Optional[str] = Query(None, description="IN or OUT"),
+    date_from: Optional[date] = Query(None, description="Filter transactions from this date (inclusive)"),
+    date_to: Optional[date] = Query(None, description="Filter transactions up to this date (inclusive)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    List stock transactions for products in the logged-in centeradmin's center.
+    Includes monetary fields (`unit_cost`, `subtotal`) and aggregate `balance_after`.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Base join: StockTransaction -> Product, left join Stock (to show current aggregate)
+    stmt = select(StockTransaction, Product, Stock).join(
+        Product, Product.id == StockTransaction.product_id
+    ).outerjoin(
+        Stock, Stock.product_id == Product.id
+    ).where(Product.center_id == center_id)
+
+    # Apply filters
+    if product_id:
+        stmt = stmt.where(StockTransaction.product_id == product_id)
+    if transaction_type:
+        stmt = stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+    if date_from:
+        if hasattr(StockTransaction, "created_at"):
+            stmt = stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        else:
+            stmt = stmt.where(StockTransaction.invoice_date >= date_from)
+    if date_to:
+        if hasattr(StockTransaction, "created_at"):
+            stmt = stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        else:
+            stmt = stmt.where(StockTransaction.invoice_date <= date_to)
+
+    # Count total rows
+    count_stmt = select(func.count()).select_from(StockTransaction).join(
+        Product, Product.id == StockTransaction.product_id
+    ).where(Product.center_id == center_id)
+    if product_id:
+        count_stmt = count_stmt.where(StockTransaction.product_id == product_id)
+    if transaction_type:
+        count_stmt = count_stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+    if date_from:
+        if hasattr(StockTransaction, "created_at"):
+            count_stmt = count_stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        else:
+            count_stmt = count_stmt.where(StockTransaction.invoice_date >= date_from)
+    if date_to:
+        if hasattr(StockTransaction, "created_at"):
+            count_stmt = count_stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        else:
+            count_stmt = count_stmt.where(StockTransaction.invoice_date <= date_to)
+
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Order by most recent (prefer created_at if available), apply pagination
+    order_col = getattr(StockTransaction, "created_at", StockTransaction.invoice_date)
+    stmt = stmt.order_by(desc(order_col)).offset((page - 1) * page_size).limit(page_size)
+
     result = await db.execute(stmt)
-    product = result.scalar_one_or_none()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+    rows = result.all()
 
-    # Enforce centeradmin scope
-    admin_center = current_admin.get("center_id")
-    if not admin_center or str(product.center_id) != str(admin_center):
-        raise HTTPException(status_code=403, detail="Not allowed to modify stock for this product")
+    transactions = []
+    for st, prod, stock in rows:
+        transactions.append({
+            "id": str(st.id),
+            "product_id": str(st.product_id),
+            "product_name": getattr(prod, "name", None),
+            "sku_code": getattr(prod, "sku_code", None),
+            "transaction_type": st.transaction_type,
+            "quantity": int(st.quantity or 0),
+            "unit_cost": str(st.unit_cost) if getattr(st, "unit_cost", None) is not None else None,
+            "subtotal": str(st.subtotal) if getattr(st, "subtotal", None) is not None else None,
+            "balance_after": int(st.balance_after) if st.balance_after is not None else (int(stock.quantity_available) if stock and stock.quantity_available is not None else None),
+            "supplier_name": st.supplier_name,
+            "invoice_number": st.invoice_number,
+            "invoice_date": st.invoice_date.isoformat() if st.invoice_date else None,
+            "reference": st.reference,
+            "created_at": st.created_at.isoformat() if getattr(st, "created_at", None) else None,
+            "created_by": str(st.created_by) if getattr(st, "created_by", None) else None,
+        })
 
-    # Get or create stock
-    stock_stmt = select(Stock).where(Stock.product_id == product.id)
-    stock_res = await db.execute(stock_stmt)
-    stock = stock_res.scalar_one_or_none()
-
-    # Determine new balance
-    qty = int(payload.quantity)
-    if qty <= 0:
-        raise HTTPException(status_code=400, detail="quantity must be a positive integer")
-
-    if not stock:
-        if tx_type == "OUT":
-            raise HTTPException(status_code=400, detail="Cannot perform OUT transaction: no existing stock")
-        stock = Stock(product_id=product.id, quantity_available=0)
-        db.add(stock)
-        await db.flush()  # ensure stock.id available
-
-    current_balance = stock.quantity_available or 0
-    if tx_type == "IN":
-        new_balance = current_balance + qty
-    else:  # OUT
-        if qty > current_balance:
-            raise HTTPException(status_code=400, detail="Insufficient stock for OUT transaction")
-        new_balance = current_balance - qty
-
-    # Create stock transaction record
-    stock_tx = StockTransaction(
-        product_id=product.id,
-        transaction_type=tx_type,
-        quantity=qty,
-        balance_after=new_balance,
-        supplier_name=payload.supplier_name,
-        invoice_number=payload.invoice_number,
-        invoice_date=payload.invoice_date,
-        reference=payload.reference,
-    )
-    db.add(stock_tx)
-
-    # Update stock balance and audit fields
-    stock.quantity_available = new_balance
-    stock.updated_at = datetime.utcnow()
-
-    try:
-        await db.commit()
-    except IntegrityError as ie:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database integrity error: {ie}") from ie
-    except Exception as exc:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to adjust stock: {exc}") from exc
-
-    return StockOut(product_id=product.id, quantity_available=stock.quantity_available)
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "transactions": transactions,
+    }

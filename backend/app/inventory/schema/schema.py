@@ -1,8 +1,8 @@
-from pydantic import BaseModel
-from typing import  Optional
+from pydantic import BaseModel, Field
+from typing import  Optional, List
 from decimal import Decimal
 from uuid import UUID
-from datetime import date
+from datetime import date, datetime
 
 class ProductCreateRequest(BaseModel):
     name: str
@@ -51,3 +51,36 @@ class StockOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+
+class StockAdjustIn(BaseModel):
+    product_id: UUID
+    quantity: int = Field(..., gt=0)
+    supplier_name: str | None = None
+    invoice_number: str | None = None
+    invoice_date: date | None = None
+    cost_price: Decimal
+
+
+class StockHistoryRow(BaseModel):
+    product_id: UUID
+    product_name: Optional[str]
+    sku_code: Optional[str]
+    current_quantity: int
+    transaction_id: UUID
+    created_at: Optional[datetime] = None
+    invoice_date: Optional[date] = None
+    transaction_type: Optional[str] = None
+    quantity: int
+    unit_cost: Decimal
+    subtotal: Decimal
+    balance_after: Optional[int] = None
+    supplier_name: Optional[str] = None
+    invoice_number: Optional[str] = None
+
+class AllStockHistoryResponse(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    rows: List[StockHistoryRow]
