@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createProduct,
+  deleteProduct,
+  getAllProducts,
   getAllSKU,
+  updateProduct,
 
 
 } from './Urls'
@@ -21,7 +24,7 @@ export const useCreateProductMutation = () => {
   return useMutation({
     mutationFn: data => createProduct(data),
     onSuccess: async data => {
-      query.invalidateQueries('salary')
+      query.invalidateQueries('Product')
       showSuccess('Product created successfully')
     },
     onError: err => {
@@ -31,40 +34,39 @@ export const useCreateProductMutation = () => {
   })
 }
 
-// export const useUpdateSalaryMutation = () => {
-//   const query = useQueryClient()
-//   return useMutation({
-//     mutationFn: ({ id, data }) => updateSalary(data, id),
-//     onSuccess: async data => {
-//       query.invalidateQueries('salary')
-//       showSuccess('Salary updated successfully')
-//     },
-//     onError: err => {
-//       showError(err?.response?.data?.message || 'Failed to update salary')
-//       return err
-//     }
-//   })
-// }
+export const useUpdateProductMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => updateProduct(data, id),
+    onSuccess: async data => {
+      query.invalidateQueries('Product')
+      showSuccess('Product updated successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update product')
+      return err
+    }
+  })
+}
 
-// export const useDeleteSalaryMutation = () => {
-//   const query = useQueryClient()
-//   return useMutation({
-//     mutationFn: id => deleteSalary(id),
-//     onSuccess: async data => {
-//       query.invalidateQueries('salary')
-//     },
-//     onError: err => {
-//       return err
-//     }
-//   })
-// }
+export const useDeleteProductMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: id => deleteProduct(id),
+    onSuccess: async data => {
+      query.invalidateQueries('Product')
+    },
+    onError: err => {
+      return err
+    }
+  })
+}
 
-// export const useSalaryGetByIdQuery = id => {
-//   return useQuery({
-//     queryKey: ['salary', id],
-//     queryFn: () => getSalaryById(id),
-//     enabled: !!id,
-//     refetchOnWindowFocus: true,
-//     refetchOnMount: true
-//   })
-// }
+export const useAllProductsQuery = (data) => {
+  return useQuery({
+    queryKey: ['Product'],
+    queryFn: () => getAllProducts(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}

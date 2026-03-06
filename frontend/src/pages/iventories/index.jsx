@@ -1,7 +1,6 @@
 import ContentLayout from "@common/masterLayout/ContentLayout"
 import { inventory_modules } from "@constants/inventory_modules"
 import CustomeTab from "@common/CustomeTab";
-import StatusDisplayCard from "@pages/iventories/components/StatusDisplaycard";
 import { useInventoryStore } from "@store/networkTabstore";
 
 const Inventories = () => {
@@ -27,9 +26,6 @@ const Inventories = () => {
           tabsListClass='p-[1px]'
           onChange={setActiveTab}
         />
-
-        <StatusDisplayCard />
-
         <div className='mt-4'>{activeModule?.component}</div>
       </div>
     </ContentLayout>

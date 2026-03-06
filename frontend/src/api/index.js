@@ -298,13 +298,12 @@ export const updateMemberStatusApiCall = (id, status) =>
 
 export const getVisitorApiCall = data =>
   axiosInstance.get(`/membership/center/visitors?page=${data?.page}`)
-export const getGuestApiCall = (data) =>
+export const getGuestApiCall = data =>
   axiosInstance.get(`/membership/center/guests?page=${data?.page}`)
 export const getVisitorByIdApiCall = id =>
   axiosInstance.get(`/membership/center/visitors/${id}`)
 export const getGuestByIdApiCall = id =>
   axiosInstance.get(`/membership/center/guests/${id}`)
-
 
 // EMPLOYEE SALARY API
 export const getSalaryApiCall = data =>
@@ -325,3 +324,13 @@ export const createProductApiCall = data =>
   axiosInstance.post(`/inventory/products`, data)
 export const getSKUApiCall = data =>
   axiosInstance.get(`/settings/superadmin/center/sku-categories`, data)
+export const getProductApiCall = data =>
+  axiosInstance.get(`inventory/products?page=${data?.page}`)
+export const updateProductApiCall = (details, id) =>
+  axiosInstance.patch(`/inventory/products/${id}`, details)
+export const deleteProductApiCall = id =>
+  axiosInstance.delete(`/inventory/products/${id}`)
+export const createStockApiCall = data =>
+  axiosInstance.post(`/inventory/stock/adjust`, data)
+export const getStockApiCall = data =>
+  axiosInstance.get(`/inventory/stock-history`, data)

@@ -1,6 +1,9 @@
 import {
   createProductApiCall,
-  getSKUApiCall
+  deleteProductApiCall,
+  getProductApiCall,
+  getSKUApiCall,
+  updateProductApiCall
 } from '../../api/index'
 
 export const getAllSKU = async () => {
@@ -21,28 +24,29 @@ export const createProduct = async (details) => {
   }
 }
 
-// export const updateSalary = async (details, id) => {
-//   try {
-//     const response = await updateSalaryApiCall(details, id)
-//     return response.data
-//   } catch (error) {
-//     throw error
-//   }
-// }
-// export const deleteSalary = async id => {
-//   try {
-//     const response = await deleteSalaryApiCall(id)
-//     return response.data
-//   } catch (error) {
-//     throw error
-//   }
-// }
+export const updateProduct = async (details, id) => {
+  try {
+    const response = await updateProductApiCall(details, id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
 
-// export const getSalaryById = async id => {
-//   try {
-//     const response = await getSalaryByIdApiCall(id)
-//     return response.data
-//   } catch (error) {
-//     throw error
-//   }
-// }
+export const deleteProduct = async id => {
+  try {
+    const response = await deleteProductApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAllProducts = async (data) => {
+  try {
+    const response = await getProductApiCall(data )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
