@@ -24,7 +24,7 @@ from app.settings.models.models import Designation
 import uuid
 from fastapi.concurrency import run_in_threadpool
 from datetime import datetime, date
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import EmailStr
 from sqlalchemy import  and_
 import logging
@@ -846,6 +846,45 @@ async def set_employee_status(
 
 
 
+@router.get("/employees/mini", response_model=List[Dict])
+async def list_center_employees_mini(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(get_current_user),
+):
+    # Permission check: must be centeradmin
+    if current_user.get("role") != "centeradmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only centeradmin users can access this resource.",
+        )
+
+    # Ensure center_id exists on the centeradmin user
+    center_id = current_user.get("center_id")
+    if not center_id:
+        # Optionally fallback to DB lookup if your token doesn't include center_id
+        from app.auth.models.models import CenterAdmin
+        result = await session.execute(select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"]))
+        center_admin = result.scalar_one_or_none()
+        if center_admin and center_admin.center_id:
+            center_id = str(center_admin.center_id)
+
+    if not center_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CenterAdmin has no associated center.",
+        )
+
+    # Query Employee rows for this center (async)
+    stmt = select(Employee).where(Employee.center_id == center_id)
+    result = await session.execute(stmt)
+    employees = result.scalars().all()
+
+    out = []
+    for emp in employees:
+        name = emp.full_name or getattr(emp, "username", None) or getattr(emp, "email", None) or ""
+        out.append({"id": str(emp.id), "name": name})
+
+    return out
 
 
 #Delete Multiple Selected Employees

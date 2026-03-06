@@ -1782,4 +1782,141 @@ async def list_guests_in_center(
     }
 
 
+@router.get("/center/guests/{guest_id}", response_model=dict)
+async def get_guest_by_id(
+    guest_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    from app.auth.models.models import CenterAdmin, Member, MemberStatusEnum
+    from app.settings.models.models import Address
+    from app.center.models.models import Center, CenterTimeSlot
+    from app.billing.models.models import PaymentOrder
+    from app.membership.models.models import MemberMembership
+    from sqlalchemy import select
+
+    # Get logged-in centeradmin and their center_id
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    admin_center_id = str(center_admin.center_id)
+
+    # Resolve the guest
+    guest = await db.get(Member, guest_id)
+    if not guest or guest.member_status != MemberStatusEnum.guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+
+    # Ensure guest.home_center exists
+    guest_center = await db.get(Center, guest.home_center_id)
+    if not guest_center:
+        raise HTTPException(status_code=404, detail="Guest's center not found")
+
+    # Access control: same rules as other center endpoints
+    if guest_center.parent_center_id:
+        # guest is in a sub-branch center
+        if admin_center_id != str(guest_center.id) and admin_center_id != str(guest_center.parent_center_id):
+            raise HTTPException(status_code=403, detail="Not allowed to access this guest")
+    else:
+        # guest is in a parent center — allow admin if same parent or admin of parent with sub-centers
+        if admin_center_id != str(guest_center.id):
+            sub_centers_result = await db.execute(
+                select(Center.id).where(Center.parent_center_id == admin_center_id)
+            )
+            allowed_sub_ids = [str(row[0]) for row in sub_centers_result.fetchall()]
+            if str(guest_center.id) not in allowed_sub_ids:
+                raise HTTPException(status_code=403, detail="Not allowed to access this guest")
+
+    # Address details
+    address = None
+    if guest.address_id:
+        address_obj = await db.get(Address, guest.address_id)
+        if address_obj:
+            address = {
+                "id": str(address_obj.id),
+                "address_type": address_obj.address_type.value if address_obj.address_type else None,
+                "address_line_1": address_obj.address_line_1,
+                "address_line_2": address_obj.address_line_2,
+                "city": address_obj.city,
+                "district": address_obj.district,
+                "state": address_obj.state,
+                "country": address_obj.country,
+                "postal_code": address_obj.postal_code,
+                "latitude": float(address_obj.latitude) if address_obj.latitude else None,
+                "longitude": float(address_obj.longitude) if address_obj.longitude else None,
+                "is_primary": address_obj.is_primary,
+                "status": address_obj.status.value if address_obj.status else None,
+            }
+    else:
+        address = {
+            "address_line_1": getattr(guest, "address_line_1", None),
+            "address_line_2": getattr(guest, "address_line_2", None),
+            "city": getattr(guest, "city", None),
+            "state": getattr(guest, "state", None),
+            "country": getattr(guest, "country", None),
+            "postal_code": getattr(guest, "postal_code", None),
+        }
+
+    # Time slot details
+    time_slot = None
+    if guest.time_slot_id:
+        slot_obj = await db.get(CenterTimeSlot, guest.time_slot_id)
+        if slot_obj:
+            time_slot = {
+                "id": str(slot_obj.id),
+                "start_time": slot_obj.start_time,
+                "end_time": slot_obj.end_time,
+                "slot_capacity": slot_obj.slot_capacity,
+            }
+
+    # Latest payment status (if any)
+    payment_status_val = None
+    payment_order_result = await db.execute(
+        select(PaymentOrder)
+        .where(PaymentOrder.payer_user_id == guest.id)
+        .order_by(PaymentOrder.created_at.desc())
+    )
+    payment_orders = payment_order_result.scalars().all()
+    if payment_orders:
+        payment_status_val = payment_orders[0].status.value if payment_orders[0].status else None
+
+    # Member memberships (if any) - return list of memberships for completeness
+    mm_result = await db.execute(
+        select(MemberMembership)
+        .where(MemberMembership.member_id == guest.id)
+        .order_by(MemberMembership.start_date.desc())
+    )
+    member_memberships = []
+    for mm in mm_result.scalars().all():
+        member_memberships.append({
+            "id": str(mm.id),
+            "membership_id": str(mm.membership_id) if mm.membership_id else None,
+            "center_id": str(mm.center_id) if mm.center_id else None,
+            "start_date": mm.start_date,
+            "end_date": mm.end_date,
+            "total_amount": float(mm.total_amount) if mm.total_amount is not None else None,
+            "membership_status": mm.membership_status.value if mm.membership_status else None,
+        })
+
+    return {
+        "id": str(guest.id),
+        "full_name": guest.full_name,
+        "email": guest.email,
+        "mobile": guest.mobile,
+        "gender": guest.gender.value if guest.gender else None,
+        "date_of_birth": guest.date_of_birth,
+        "blood_group": guest.blood_group,
+        "address_id": str(guest.address_id) if guest.address_id else None,
+        "address": address,
+        "home_center_id": str(guest.home_center_id) if guest.home_center_id else None,
+        "home_center_name": guest_center.center_name if guest_center else None,
+        "time_slot_id": str(guest.time_slot_id) if guest.time_slot_id else None,
+        "time_slot": time_slot,
+        "visited_date": str(guest.visited_date) if guest.visited_date else None,
+        "payment_status": payment_status_val,
+        "member_status": guest.member_status.value,
+        "status": guest.status.value if guest.status else None,
+        "member_memberships": member_memberships,
+        "created_at": guest.created_at,
+        "updated_at": guest.updated_at,
+    }
 
