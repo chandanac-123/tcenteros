@@ -87,7 +87,7 @@ class SKU(Base, AuditMixin):
     __table_args__ = {"schema": "shared"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sku_code = Column(String, unique=True, nullable=False)
+    sku_code = Column(String, unique=True, nullable=True)
     name = Column(String, nullable=False)
     sku_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.sku_categories.id"))
     center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
