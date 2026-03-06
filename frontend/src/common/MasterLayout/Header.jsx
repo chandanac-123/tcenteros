@@ -66,17 +66,17 @@ const Header = () => {
                     className='w-8 h-8 mr-4 rounded-full'
                   />
                   <div className='flex flex-col'>
-                    <span className='text-textwhite text-sm whitespace-nowrap'>
+                    <span className='text-textwhite text-xs font-normal whitespace-nowrap'>
                       Hello,{data?.full_name || '-'}
                     </span>
-                    <span className='text-primary text-xs font-light'>
+                    <span className='text-textwhite/50 text-xs font-light'>
                       {data?.role
                         ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
                         : '-'}
                     </span>
                   </div>
                 </div>
-                <ChevronDown className='w-5 h-5 text-primary  ml-10' />
+                <ChevronDown className='w-5 h-5 text-textwhite  ml-10' />
               </div>
             </div>
           </PopoverTrigger>

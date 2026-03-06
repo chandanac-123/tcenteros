@@ -72,6 +72,7 @@ const StructureAddEdit = ({ open, setOpen, id }) => {
             <CustomeSelect
               label='Employee Name'
               name='employee_id'
+              disabled={id ? true : false}
               options={employeesDropdown}
               value={formik.values.employee_id}
               onChange={value => formik.setFieldValue('employee_id', value)}

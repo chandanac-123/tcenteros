@@ -15,8 +15,8 @@ const CustomeVerticalSelect = ({
             onClick={() => onSelect?.(opt?.id)}
             className={`text-left p-3 transition-all rounded-l-lg font-medium text-base ${
               selected === opt?.id
-                ? 'bg-primarybglight text-primary border-r-8 border-primary'
-                : 'hover:bg-gray-100 text-textblack'
+                ? 'bg-primary/10 text-primary border-r-8 border-primary'
+                : 'hover:bg-primary/10 text-textblack'
             }`}
           >
             {opt?.name}

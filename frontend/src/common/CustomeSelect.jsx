@@ -14,7 +14,8 @@ export default function CustomeSelect ({
   value,
   onChange,
   error,
-  search = false
+  search = false,
+  disabled = false
 }) {
   const [searchVal, setSearchVal] = useState('')
 
@@ -40,6 +41,7 @@ export default function CustomeSelect ({
       )}
 
       <Select
+        disabled={disabled}
         value={value ? String(value) : ''}
         onValueChange={val => onChange(val)}
       >

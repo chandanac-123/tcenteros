@@ -315,3 +315,9 @@ export const deleteSalaryApiCall = id =>
   axiosInstance.delete(`/payrole/center/employees/${id}/salary-structure`)
 export const getSalaryByIdApiCall = id =>
   axiosInstance.get(`/payrole/center/employees/${id}/salary-structure`)
+
+//Inventory API
+export const createProductApiCall = data =>
+  axiosInstance.post(`/inventory/products`, data)
+export const getSKUApiCall = data =>
+  axiosInstance.get(`/settings/superadmin/center/sku-categories`, data)
