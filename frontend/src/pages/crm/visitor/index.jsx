@@ -9,7 +9,7 @@ const Visitors = () => {
     page: 1,
     search: ''
   })
-  const { data } = useVisitorQuery(tableParams)
+  const { data ,isFetching} = useVisitorQuery(tableParams)
   const { setSelectedTab, setMemberView ,setSelectedVisitorId} = useCrmStore()
 
   const columns = [
@@ -36,7 +36,7 @@ const Visitors = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
-            size='addbutton'
+            size='filterbutton'
             onClick={() => {
               setSelectedTab(1)
               setSelectedVisitorId(row.original.id) 
@@ -58,6 +58,7 @@ const Visitors = () => {
         tableParams={tableParams}
         pagination={data?.total}
         search={false}
+        loading={isFetching}
         paginationVisibile={true}
       />
     </div>

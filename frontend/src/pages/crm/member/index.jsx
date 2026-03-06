@@ -121,7 +121,7 @@ const Members = ({ onView, onEdit }) => {
       </div>
 
       <DataTable
-        isLoading={isFetching}
+        loading={isFetching}
         columns={columns}
         data={data?.members}
         pagination={data?.total}

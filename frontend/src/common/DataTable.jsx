@@ -122,13 +122,9 @@ export function DataTable ({
           />
         </div>
       )}
-      <div
-        className={`overflow-hidden rounded-md border ${
-          paginationVisibile ? 'max-h-full' : 'h-[100%]'
-        }`}
-      >
-        <Table>
-          <TableHeader className='bg-white sticky top-0 z-10'>
+      <div className='overflow-hidden rounded-md border '>
+        <Table className=''>
+          <TableHeader>
             {table?.getHeaderGroups()?.map(headerGroup => (
               <TableRow key={headerGroup?.id}>
                 {headerGroup?.headers?.map(header => (
@@ -144,49 +140,46 @@ export function DataTable ({
               </TableRow>
             ))}
           </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns?.length}
+                  className='h-24 text-center'
+                >
+                  <div className='flex justify-center items-center gap-2'>
+                    <Spinner />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table?.getRowModel()?.rows.length ? (
+              table?.getRowModel()?.rows.map(row => (
+                <TableRow
+                  key={row?.id}
+                  data-state={row?.getIsSelected() && 'selected'}
+                >
+                  {row?.getVisibleCells()?.map(cell => (
+                    <TableCell key={cell?.id}>
+                      {flexRender(
+                        cell?.column?.columnDef?.cell,
+                        cell?.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns?.length}
+                  className='h-24 text-center'
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
-
-        {/* Scroll only body */}
-        <div className=' overflow-y-auto'>
-          <Table>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns?.length}
-                    className='h-24 text-center'
-                  >
-                    <div className='flex justify-center items-center gap-2'>
-                      <Spinner />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : table?.getRowModel()?.rows.length ? (
-                table?.getRowModel()?.rows.map(row => (
-                  <TableRow key={row?.id}>
-                    {row?.getVisibleCells()?.map(cell => (
-                      <TableCell key={cell?.id}>
-                        {flexRender(
-                          cell?.column?.columnDef?.cell,
-                          cell?.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns?.length}
-                    className='h-24 text-center'
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
         <div className='py-2 flex justify-between items-center w-full px-2'>
           {paginationVisibile && totalRecords > 10 && (
             <div className='flex justify-between items-center w-full mt-4'>

@@ -30,7 +30,7 @@ const Guest = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
-            size='addbutton'
+            size='filterbutton'
             onClick={() => {
               setSelectedGuestId(row.original.id)
               setSelectedTab(1)
@@ -51,6 +51,7 @@ const Guest = () => {
         data={data?.guests}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        loading={isLoading}
         pagination={data?.total_records}
         paginationVisibile={true}
         search={false}

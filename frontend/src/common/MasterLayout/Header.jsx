@@ -1,6 +1,5 @@
 import bell from '@assets/header-icons/bell.svg'
 import map from '@assets/header-icons/map.svg'
-import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
   PopoverTrigger,
@@ -8,8 +7,6 @@ import {
 } from '@pages/components/ui/popover'
 import {
   ChevronDown,
-  FileText,
-  Key,
   LogOut,
   Settings,
   UserRound
@@ -27,13 +24,12 @@ const Header = () => {
   const { setSelectedTab, setMemberView } = useCrmStore()
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
-   const { data } = useGetProfileInfoQuery()
+  const { data } = useGetProfileInfoQuery()
   const navigate = useNavigate()
 
   const handleLogout = () => {
     const state = useAuthStore.getState()
     if (state.clearAuth) state.clearAuth()
-    // Implement logout logic here
     setLogoutOpen(false)
   }
 
@@ -71,10 +67,12 @@ const Header = () => {
                   />
                   <div className='flex flex-col'>
                     <span className='text-textwhite text-sm whitespace-nowrap'>
-                      Hello,{ data?.full_name || '-'}
+                      Hello,{data?.full_name || '-'}
                     </span>
                     <span className='text-primary text-xs font-light'>
-                     {data?.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : '-'}
+                      {data?.role
+                        ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
+                        : '-'}
                     </span>
                   </div>
                 </div>
@@ -94,10 +92,6 @@ const Header = () => {
                 <UserRound className='w-5 h-5 text-primary' />
                 Profile
               </button>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <Key className='w-5 h-5 text-primary' />
-                Reset Password
-              </button>
               <button
                 onClick={() => {
                   navigate('/settings')
@@ -107,10 +101,6 @@ const Header = () => {
               >
                 <Settings className='w-5 h-5 text-primary' />
                 Settings
-              </button>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <FileText className='w-5 h-5 text-primary' />
-                Legal & polices
               </button>
               <button
                 onClick={() => setLogoutOpen(true)}
