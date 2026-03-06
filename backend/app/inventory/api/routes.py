@@ -171,6 +171,45 @@ async def list_products(
     }
 
 
+@router.get("/products/{product_id}", summary="Get product by id (centeradmin)")
+async def get_product_by_id(
+    product_id: str = Path(..., description="Product ID"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    # Fetch product (Product is joined-table subclass of SKU)
+    product = await db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Enforce centeradmin scope
+    if str(product.center_id) != str(current_admin.get("center_id")):
+        raise HTTPException(status_code=403, detail="Not allowed to view this product")
+
+    # Fetch stock quantity for response
+    stmt = select(Stock.quantity_available).where(Stock.product_id == product.id)
+    res = await db.execute(stmt)
+    stock_qty = res.scalar_one_or_none() or 0
+
+    return {
+        "product_id": str(product.id),
+        "sku_code": getattr(product, "sku_code", None),
+        "sku_category_id": getattr(product, "sku_category_id", None),
+        "name": getattr(product, "name", None),
+        "description": getattr(product, "description", None),
+        "base_price": float(product.base_price) if getattr(product, "base_price", None) is not None else None,
+        "selling_price": float(getattr(product, "selling_price", None)) if getattr(product, "selling_price", None) is not None else None,
+        "unit_of_measure": getattr(product, "unit_of_measure", None),
+        "track_inventory": bool(getattr(product, "track_inventory", False)),
+        "stock": int(stock_qty),
+        "reorder_level": int(getattr(product, "reorder_level", 0)) if getattr(product, "reorder_level", None) is not None else 0,
+        "status": product.status.value if getattr(product, "status", None) else None,
+        "created_at": getattr(product, "created_at", None).isoformat() if getattr(product, "created_at", None) else None,
+        "updated_at": getattr(product, "updated_at", None).isoformat() if getattr(product, "updated_at", None) else None,
+    }
+
+
+
 @router.patch("/products/{product_id}")
 async def patch_product(
     product_id: str = Path(..., description="Product ID"),
@@ -295,7 +334,6 @@ async def add_stock(
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(centeradmin_required),
 ):
-    # Hardcode transaction_type = "IN"
     TRANSACTION_TYPE = "IN"
 
     # verify product exists
@@ -303,15 +341,19 @@ async def add_stock(
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
+    # enforce centeradmin scope (avoid records for other centers)
+    center_id = current_user.get("center_id")
+    if not center_id or str(product.center_id) != str(center_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to modify this product")
+
+    # compute quantities and amounts
     qty = int(payload.quantity)
     unit_cost = Decimal(payload.cost_price)
     subtotal = (unit_cost * Decimal(qty)).quantize(Decimal("0.01"))
     tax_amount = Decimal("0.00")
     total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
 
-    # derive payer and center ids from current_user dict
     payer_user_id = current_user.get("id") or current_user.get("user_id")
-    center_id = current_user.get("center_id")
 
     async def _work():
         # 1) create StockTransaction
@@ -326,9 +368,9 @@ async def add_stock(
             invoice_date=payload.invoice_date,
         )
         session.add(stock_tx)
-        await session.flush()  # populate stock_tx.id
+        await session.flush()  # ensure stock_tx.id
 
-        # 2) update or create Stock aggregate row
+        # 2) update/create Stock aggregate
         q = select(Stock).where(Stock.product_id == product.id).limit(1)
         res = await session.execute(q)
         stock = res.scalars().first()
@@ -343,18 +385,18 @@ async def add_stock(
             stock = Stock(
                 product_id=product.id,
                 quantity_available=new_qty,
-                last_cost=unit_cost
+                last_cost=unit_cost,
             )
             session.add(stock)
 
         await session.flush()  # populate stock.id if new
 
-        # update transaction balance_after to reflect new aggregate
+        # update transaction balance_after and persist
         stock_tx.balance_after = new_qty
         session.add(stock_tx)
         await session.flush()
 
-        # 3) create PaymentOrder for this incoming stock
+        # 3) create PaymentOrder linked to stock_tx
         po = PaymentOrder(
             payer_user_id=payer_user_id,
             payer_type=PayerType.center_admin,
@@ -362,7 +404,7 @@ async def add_stock(
             center_id=center_id,
             order_type=OrderType.stock_purchase,
             reference_schema=ReferenceSchema.invoice,
-            reference_id=stock_tx.id,  # link to stock transaction primary key
+            reference_id=stock_tx.id,
             subtotal_amount=subtotal,
             tax_amount=tax_amount,
             total_amount=total_amount,
@@ -375,14 +417,22 @@ async def add_stock(
 
         return stock_tx, stock, po
 
-    # If a transaction is already active on this session, run work directly;
-    # otherwise open a new transaction context here.
-    if session.get_transaction() is None:
-        async with session.begin():
-            stock_tx, stock, po = await _work()
-    else:
-        # Already in a transaction (dependency or caller), just perform actions.
+    # perform work and explicitly commit (rollback on error)
+    try:
         stock_tx, stock, po = await _work()
+        await session.commit()
+    except Exception as exc:
+        await session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to add stock: {exc}") from exc
+
+    # refresh to ensure we have latest DB state on objects
+    try:
+        await session.refresh(stock_tx)
+        await session.refresh(stock)
+        await session.refresh(po)
+    except Exception:
+        # non-fatal; objects are still safe to read
+        pass
 
     return {
         "stock_transaction_id": str(stock_tx.id),
@@ -394,7 +444,7 @@ async def add_stock(
     }
 
 
-@router.get("/stock-history", response_model=AllStockHistoryResponse)
+@router.get("/stock-history")
 async def list_all_stock_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
@@ -405,91 +455,82 @@ async def list_all_stock_history(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
+    """
+    Return stock-add history (one row per StockTransaction) with:
+      - product_id
+      - product_name
+      - available_quantity (current aggregate from `stocks`)
+      - quantity_added (stock transaction quantity)
+      - cost_price (unit_cost)
+      - total (subtotal)
+    """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Base join: StockTransaction JOIN Product, left join Stock (aggregate)
-    stmt = select(StockTransaction, Product, Stock).join(
-        Product, Product.id == StockTransaction.product_id
-    ).outerjoin(
-        Stock, Stock.product_id == Product.id
-    ).where(Product.center_id == center_id)
+    # Filter SKUs by center using a subquery (avoid duplicate joins)
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
 
-    # Apply filters
     if product_id:
-        stmt = stmt.where(StockTransaction.product_id == product_id)
+        where_clauses.append(StockTransaction.product_id == product_id)
     if transaction_type:
-        stmt = stmt.where(StockTransaction.transaction_type == transaction_type.upper())
-    if date_from:
-        if hasattr(StockTransaction, "created_at"):
-            stmt = stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        else:
-            stmt = stmt.where(StockTransaction.invoice_date >= date_from)
-    if date_to:
-        if hasattr(StockTransaction, "created_at"):
-            stmt = stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-        else:
-            stmt = stmt.where(StockTransaction.invoice_date <= date_to)
+        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
 
-    # Count total
-    count_stmt = select(func.count()).select_from(StockTransaction).join(
-        Product, Product.id == StockTransaction.product_id
-    ).where(Product.center_id == center_id)
-    if product_id:
-        count_stmt = count_stmt.where(StockTransaction.product_id == product_id)
-    if transaction_type:
-        count_stmt = count_stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+    created_at_attr = getattr(StockTransaction, "created_at", None)
     if date_from:
-        if hasattr(StockTransaction, "created_at"):
-            count_stmt = count_stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        if created_at_attr is not None:
+            where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
         else:
-            count_stmt = count_stmt.where(StockTransaction.invoice_date >= date_from)
+            where_clauses.append(StockTransaction.invoice_date >= date_from)
     if date_to:
-        if hasattr(StockTransaction, "created_at"):
-            count_stmt = count_stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        if created_at_attr is not None:
+            where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
         else:
-            count_stmt = count_stmt.where(StockTransaction.invoice_date <= date_to)
+            where_clauses.append(StockTransaction.invoice_date <= date_to)
 
+    # Count total matching stock_transactions
+    count_stmt = select(func.count()).select_from(StockTransaction).where(*where_clauses)
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one() or 0
 
-    # Ordering + pagination (most recent first)
-    # prefer created_at when present
-    order_col = getattr(StockTransaction, "created_at", StockTransaction.invoice_date)
+    # Main query: StockTransaction join Product, left join Stock (to get available quantity)
+    stmt = (
+        select(StockTransaction, Product, Stock)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+    )
+
+    # Order by created_at (if present) else by invoice_date
+    order_col = created_at_attr if created_at_attr is not None else StockTransaction.invoice_date
     stmt = stmt.order_by(desc(order_col)).offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stmt)
     rows = res.all()
 
-    items = []
+    out_rows = []
     for st, prod, stock in rows:
-        items.append(StockHistoryRow(
-            product_id=prod.id,
-            product_name=getattr(prod, "name", None),
-            sku_code=getattr(prod, "sku_code", None),
-            current_quantity=int(stock.quantity_available) if stock and stock.quantity_available is not None else 0,
-            transaction_id=st.id,
-            created_at=getattr(st, "created_at", None),
-            invoice_date=st.invoice_date,
-            transaction_type=st.transaction_type,
-            quantity=int(st.quantity or 0),
-            unit_cost=st.unit_cost or 0,
-            subtotal=st.subtotal or 0,
-            balance_after=int(st.balance_after) if st.balance_after is not None else None,
-            supplier_name=st.supplier_name,
-            invoice_number=st.invoice_number,
-        ))
+        out_rows.append({
+            "product_id": str(prod.id),
+            "product_name": getattr(prod, "name", None),
+            "available_quantity": int(stock.quantity_available) if stock and stock.quantity_available is not None else 0,
+            "quantity_added": int(st.quantity or 0),
+            "cost_price": str(st.unit_cost) if getattr(st, "unit_cost", None) is not None else None,
+            "total": str(st.subtotal) if getattr(st, "subtotal", None) is not None else None,
+            "transaction_id": str(st.id),
+            "invoice_date": st.invoice_date.isoformat() if st.invoice_date else None,
+        })
 
-    return AllStockHistoryResponse(
-        page=page,
-        page_size=page_size,
-        total=total,
-        rows=items,
-    )    
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "rows": out_rows,
+    }
 
 
-#stock transactions listing endpoint with pagination and filtering (centeradmin only)
+
 @router.get("/stock-transactions")
 async def list_stock_transactions(
     page: int = Query(1, ge=1),
@@ -501,61 +542,46 @@ async def list_stock_transactions(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
-    """
-    List stock transactions for products in the logged-in centeradmin's center.
-    Includes monetary fields (`unit_cost`, `subtotal`) and aggregate `balance_after`.
-    """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Base join: StockTransaction -> Product, left join Stock (to show current aggregate)
-    stmt = select(StockTransaction, Product, Stock).join(
-        Product, Product.id == StockTransaction.product_id
-    ).outerjoin(
-        Stock, Stock.product_id == Product.id
-    ).where(Product.center_id == center_id)
+    # SKU id subquery for this center (avoids duplicate joins)
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
 
-    # Apply filters
     if product_id:
-        stmt = stmt.where(StockTransaction.product_id == product_id)
+        where_clauses.append(StockTransaction.product_id == product_id)
     if transaction_type:
-        stmt = stmt.where(StockTransaction.transaction_type == transaction_type.upper())
+        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
+
+    created_at_attr = getattr(StockTransaction, "created_at", None)
     if date_from:
-        if hasattr(StockTransaction, "created_at"):
-            stmt = stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        if created_at_attr is not None:
+            where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
         else:
-            stmt = stmt.where(StockTransaction.invoice_date >= date_from)
+            where_clauses.append(StockTransaction.invoice_date >= date_from)
     if date_to:
-        if hasattr(StockTransaction, "created_at"):
-            stmt = stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+        if created_at_attr is not None:
+            where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
         else:
-            stmt = stmt.where(StockTransaction.invoice_date <= date_to)
+            where_clauses.append(StockTransaction.invoice_date <= date_to)
 
     # Count total rows
     count_stmt = select(func.count()).select_from(StockTransaction).join(
         Product, Product.id == StockTransaction.product_id
-    ).where(Product.center_id == center_id)
-    if product_id:
-        count_stmt = count_stmt.where(StockTransaction.product_id == product_id)
-    if transaction_type:
-        count_stmt = count_stmt.where(StockTransaction.transaction_type == transaction_type.upper())
-    if date_from:
-        if hasattr(StockTransaction, "created_at"):
-            count_stmt = count_stmt.where(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        else:
-            count_stmt = count_stmt.where(StockTransaction.invoice_date >= date_from)
-    if date_to:
-        if hasattr(StockTransaction, "created_at"):
-            count_stmt = count_stmt.where(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-        else:
-            count_stmt = count_stmt.where(StockTransaction.invoice_date <= date_to)
-
+    ).where(*where_clauses)
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one() or 0
 
-    # Order by most recent (prefer created_at if available), apply pagination
-    order_col = getattr(StockTransaction, "created_at", StockTransaction.invoice_date)
+    # Main query: join Product and left join Stock
+    stmt = select(StockTransaction, Product, Stock).join(
+        Product, Product.id == StockTransaction.product_id
+    ).outerjoin(
+        Stock, Stock.product_id == Product.id
+    ).where(*where_clauses)
+
+    order_col = created_at_attr if created_at_attr is not None else StockTransaction.invoice_date
     stmt = stmt.order_by(desc(order_col)).offset((page - 1) * page_size).limit(page_size)
 
     result = await db.execute(stmt)
