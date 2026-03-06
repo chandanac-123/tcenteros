@@ -5,12 +5,14 @@ import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
 import CustomHexColorPicker from '@common/CustomeHexColorPicker'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DocumentCard from './components/DocumentCard'
 import DocumentModal from './components/DocumentModal'
 import {
   useAllBrandQuery,
-  useCreateBrandMutation
+  useCreateBrandMutation,
+  useAllTermsandPrivacyQuery,
+  useCreateTermsandPrivacyMutation
 } from '@api-queries/branding/Query'
 import { useBrandingStore } from '@store/brandingStore'
 
@@ -19,26 +21,30 @@ const Branding = () => {
   const { data: brandingData, isFetching } = useAllBrandQuery()
   const { mutateAsync: createBranding, isLoading: isCreating } =
     useCreateBrandMutation()
+  const { data: termsandprivacyData, isFetching: isFetchingTermsandPrivacy } =
+    useAllTermsandPrivacyQuery()
+  const {
+    mutateAsync: createTermsandPrivacy,
+    isLoading: isCreatingTermsandPrivacy
+  } = useCreateTermsandPrivacyMutation()
 
   const [modalState, setModalState] = useState({
     open: false,
     type: null,
     mode: 'view'
   })
-
   const [documents, setDocuments] = useState({
-    terms: `1. Membership Agreement
-Members must follow gym rules.
-
-2. Payments
-Fees must be paid before due date.`,
-
-    privacy: `1. Data Collection
-We collect personal info for billing and operations.
-
-2. Data Protection
-Your data is secured and not shared.`
+    terms: '',
+    privacy: ''
   })
+
+  useEffect(() => {
+    if (termsandprivacyData?.content) {
+      setDocuments({
+        terms: termsandprivacyData.content
+      })
+    }
+  }, [termsandprivacyData])
 
   const initialValues = {
     app_name: brandingData?.centers?.[0]?.branding?.app_name || '',
@@ -128,7 +134,7 @@ Your data is secured and not shared.`
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-8'>
         <DocumentCard
-          title='Terms and Conditions'
+          title='Terms and Privacy'
           onView={() =>
             setModalState({ open: true, type: 'terms', mode: 'view' })
           }
@@ -137,7 +143,7 @@ Your data is secured and not shared.`
           }
         />
 
-        <DocumentCard
+        {/* <DocumentCard
           title='Privacy Policy'
           onView={() =>
             setModalState({ open: true, type: 'privacy', mode: 'view' })
@@ -145,7 +151,7 @@ Your data is secured and not shared.`
           onEdit={() =>
             setModalState({ open: true, type: 'privacy', mode: 'edit' })
           }
-        />
+        /> */}
       </div>
 
       <DocumentModal

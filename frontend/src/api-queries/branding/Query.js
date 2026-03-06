@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createBrand, getBrand } from './Urls'
+import {
+  createBrand,
+  createTermsandPrivacy,
+  getBrand,
+  getTermsandPrivacy
+} from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
 export const useAllBrandQuery = () => {
@@ -21,6 +26,32 @@ export const useCreateBrandMutation = () => {
     },
     onError: err => {
       showError(err?.response?.data?.message || 'Failed to create brand')
+      return err
+    }
+  })
+}
+
+export const useAllTermsandPrivacyQuery = () => {
+  return useQuery({
+    queryKey: ['termsandprivacy'],
+    queryFn: getTermsandPrivacy,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useCreateTermsandPrivacyMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => createTermsandPrivacy(data),
+    onSuccess: async data => {
+      query.invalidateQueries('termsandprivacy')
+      showSuccess('Terms and Privacy created successfully')
+    },
+    onError: err => {
+      showError(
+        err?.response?.data?.message || 'Failed to create terms and privacy'
+      )
       return err
     }
   })

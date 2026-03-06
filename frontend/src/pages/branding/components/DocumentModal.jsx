@@ -38,7 +38,7 @@ const DocumentModal = ({
 
       <div className='flex justify-end gap-3 mt-4'>
         <Button variant='outline_secondary' size='addbutton' onClick={onClose}>
-          Cancel
+          Close
         </Button>
 
         {mode === 'edit' && (

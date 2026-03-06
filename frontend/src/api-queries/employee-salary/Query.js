@@ -52,8 +52,12 @@ export const useDeleteSalaryMutation = () => {
     mutationFn: id => deleteSalary(id),
     onSuccess: async data => {
       query.invalidateQueries('salary')
+      showSuccess(data.detail || 'Salary deleted successfully')
     },
     onError: err => {
+      showError(
+        err?.response?.data?.message || 'Failed to delete selected salaries'
+      )
       return err
     }
   })

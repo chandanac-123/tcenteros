@@ -37,12 +37,10 @@ const MembershipPlan = () => {
             onChange={value => setActiveTab(value)}
           />
         </div>
-        <div className='flex'>
-          <Button size='addbutton' onClick={() => setOpen(true)}>
-            {' '}
-            + Create New Plan
-          </Button>
-        </div>
+        <Button size='addbutton' onClick={() => setOpen(true)}>
+          {' '}
+          + Create New Plan
+        </Button>
       </div>
       {isFetching ? (
         <div className='flex justify-center items-center py-10'>
