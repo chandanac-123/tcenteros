@@ -292,8 +292,13 @@ export const updateMemberStatusApiCall = (id, status) =>
 
 export const getVisitorApiCall = data =>
   axiosInstance.get(`/membership/center/visitors?page=${data?.page}`)
-export const getGuestApiCall = () =>
-  axiosInstance.get(`/membership/center/guests`)
+export const getGuestApiCall = (data) =>
+  axiosInstance.get(`/membership/center/guests?page=${data?.page}`)
+export const getVisitorByIdApiCall = id =>
+  axiosInstance.get(`/membership/center/visitors/${id}`)
+export const getGuestByIdApiCall = id =>
+  axiosInstance.get(`/membership/center/guests/${id}`)
+
 
 // EMPLOYEE SALARY API
 export const getSalaryApiCall = data =>

@@ -10,7 +10,7 @@ const Visitors = () => {
     search: ''
   })
   const { data } = useVisitorQuery(tableParams)
-  const { setSelectedTab, setMemberView } = useCrmStore()
+  const { setSelectedTab, setMemberView ,setSelectedVisitorId} = useCrmStore()
 
   const columns = [
     {
@@ -39,6 +39,7 @@ const Visitors = () => {
             size='addbutton'
             onClick={() => {
               setSelectedTab(1)
+              setSelectedVisitorId(row.original.id) 
               setMemberView('add')
             }}
           >

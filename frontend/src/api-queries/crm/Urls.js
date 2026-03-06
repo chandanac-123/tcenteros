@@ -9,7 +9,9 @@ import {
   getMemberCountApiCall,
   updateMemberStatusApiCall,
   getVisitorApiCall,
-  getGuestApiCall
+  getGuestApiCall,
+  getVisitorByIdApiCall,
+  getGuestByIdApiCall
 } from '../../api'
 
 export const getAllMember = async data => {
@@ -92,7 +94,7 @@ export const updateMemberStatus = async (id, status) => {
   }
 }
 
-export const getVisitor = async (data) => {
+export const getVisitor = async data => {
   try {
     const response = await getVisitorApiCall(data)
     return response.data
@@ -101,12 +103,30 @@ export const getVisitor = async (data) => {
   }
 }
 
-export const getGuestInfo = async () => {
+export const getGuestInfo = async data => {
   try {
-    const response = await getGuestApiCall()
-    console.log('response:qqq ', response);
+    const response = await getGuestApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
+
+export const getVisitorById = async id => {
+  try {
+    const response = await getVisitorByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getGuestById = async id => {
+  try {
+    const response = await getGuestByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+

@@ -6,11 +6,10 @@ import { useCrmStore } from '@store/tabStore'
 
 const Guest = () => {
   const [tableParams, setTableParams] = useState({
-    page: 1,
+    page: 1
   })
-  const { data } = useGuestQuery()
-   const { setSelectedTab, setMemberView } = useCrmStore()
-  console.log('data: ', data);
+  const { data, isLoading, error } = useGuestQuery(tableParams)
+  const { setSelectedTab, setMemberView ,setSelectedGuestId} = useCrmStore()
 
   const columns = [
     {
@@ -33,6 +32,7 @@ const Guest = () => {
           <Button
             size='addbutton'
             onClick={() => {
+              setSelectedGuestId(row.original.id)
               setSelectedTab(1)
               setMemberView('add')
             }}
@@ -48,9 +48,10 @@ const Guest = () => {
     <div className='flex flex-col mt-4'>
       <DataTable
         columns={columns}
-        data={data}
+        data={data?.guests}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={data?.total_records}
         paginationVisibile={true}
         search={false}
       />

@@ -16,27 +16,24 @@ const genderOption = [
   { id: 'other', name: 'Other' }
 ]
 
-const VisitorAdd = ({ memberId, isEdit, goBack }) => {
+const VisitorAdd = ({ goBack }) => {
   const state = useAuthStore.getState()
   const { mutateAsync: createMember } = useCreateMemberMutation()
-  const { mutateAsync: updateMember } = useUpdateMemberMutation()
-
-  const { data: memberData } = useMembersGetByIdQuery(memberId)
 
   const initialValues = {
     center_id: state?.auth?.center_id,
-    full_name: memberData?.full_name || '',
-    email: memberData?.email || '',
-    mobile: memberData?.mobile || '',
-    gender: memberData?.gender || '',
-    date_of_birth: memberData?.date_of_birth || '',
-    blood_group: memberData?.blood_group || '',
-    address_line_1: memberData?.address?.address_line_1 || '',
-    address_line_2: memberData?.address?.address_line_2 || '',
-    city: memberData?.address?.city || '',
-    state: memberData?.address?.state || '',
-    country: memberData?.address?.country || '',
-    postal_code: memberData?.address?.postal_code || '',
+    full_name: '',
+    email: '',
+    mobile: '',
+    gender: '',
+    date_of_birth: '',
+    blood_group: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
     member_status: 'visitor'
   }
 

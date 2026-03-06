@@ -8,13 +8,17 @@ import {
   useMembersTimeSlotQuery,
   useMembersGetByIdQuery,
   useUpdateMemberMutation,
-  useMembersPlanQuery
+  useMembersPlanQuery,
+  useVisitorById,
+  useGuestById
 } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'
-import { useSettingsTabStore } from '@store/tabStore'
+import { useCrmStore } from '@store/tabStore'
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { memberValidationSchema } from '@utils/validations'
 
 const paidStatus = [
   { id: 'unpaid', name: 'unpaid' },
@@ -31,10 +35,16 @@ const genderOption = [
 ]
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
-  console.log('memberId: ', memberId);
-  const state = useAuthStore.getState()
+  const {
+    selectedVisitorId,
+    setSelectedTab,
+    selectedGuestId,
+    clearSelectedIds
+  } = useCrmStore()
+  const { data: visitorData } = useVisitorById(selectedVisitorId)
+  const { data: guestData } = useGuestById(selectedGuestId)
+  const state = useAuthStore()
   const navigate = useNavigate()
-  const { setSelectedTab } = useSettingsTabStore()
   const { mutateAsync: createMember } = useCreateMemberMutation()
   const { mutateAsync: updateMember } = useUpdateMemberMutation()
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
@@ -43,45 +53,54 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const { data: memberData } = useMembersGetByIdQuery(memberId)
   const { data: memberPlan } = useMembersPlanQuery()
 
+  const sourceData = isEdit
+    ? memberData
+    : selectedVisitorId
+    ? visitorData
+    : selectedGuestId
+    ? guestData
+    : null
+
   const initialValues = {
     center_id: state?.auth?.center_id,
-    full_name: memberData?.full_name || '',
-    email: memberData?.email || '',
-    mobile: memberData?.mobile || '',
-    gender: memberData?.gender || '',
-    date_of_birth: memberData?.date_of_birth || '',
-    blood_group: memberData?.blood_group || '',
-    address_line_1: memberData?.address?.address_line_1 || '',
-    address_line_2: memberData?.address?.address_line_2 || '',
-    city: memberData?.address?.city || '',
-    state: memberData?.address?.state || '',
-    country: memberData?.address?.country || '',
-    postal_code: memberData?.address?.postal_code || '',
-    membership_id: memberData?.membership_id || '',
-    time_slot_id: memberData?.time_slot_id || '',
+    full_name: '',
+    email: '',
+    mobile: '',
+    gender: '',
+    date_of_birth: '',
+    blood_group: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
+    membership_id: '',
+    time_slot_id: '',
     member_status: 'member',
-    payment_method: memberData?.payment_method || '',
-    payment_status: memberData?.payment_status || 'unpaid',
+    payment_method: '',
+    payment_status: 'unpaid',
     password: ''
   }
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: memberValidationSchema,
     onSubmit: async values => {
       try {
         const payload = { ...values }
-
         if (payload.payment_status === 'unpaid') {
           delete payload.password
           delete payload.payment_method
         }
-
         if (isEdit) {
-          await updateMember({data:payload ,  id: memberId })
+          await updateMember({ data: payload, id: memberId })
+          clearSelectedIds()
           goBack()
         } else {
           await createMember(payload)
+          clearSelectedIds()
           formik.resetForm()
           goBack()
         }
@@ -90,6 +109,36 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       }
     }
   })
+
+  useEffect(() => {
+    if (!sourceData) return
+
+    formik.setValues({
+      center_id: state?.auth?.center_id,
+
+      full_name: sourceData?.full_name || '',
+      email: sourceData?.email || '',
+      mobile: sourceData?.mobile || '',
+      gender: sourceData?.gender || '',
+      date_of_birth: sourceData?.date_of_birth || '',
+      blood_group: sourceData?.blood_group || '',
+
+      address_line_1: sourceData?.address?.address_line_1 || '',
+      address_line_2: sourceData?.address?.address_line_2 || '',
+      city: sourceData?.address?.city || '',
+      state: sourceData?.address?.state || '',
+      country: sourceData?.address?.country || '',
+      postal_code: sourceData?.address?.postal_code || '',
+
+      membership_id: sourceData?.membership_id || '',
+      time_slot_id: sourceData?.time_slot_id || '',
+
+      member_status: 'member',
+      payment_method: sourceData?.payment_method || '',
+      payment_status: sourceData?.payment_status || 'unpaid',
+      password: ''
+    })
+  }, [sourceData])
 
   return (
     <div className='flex flex-col gap-4 pb-6'>
@@ -109,6 +158,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               value={formik.values.full_name}
               onChange={formik.handleChange}
               placeholder='Enter Your Full Name'
+              error={formik.touched.full_name && formik.errors.full_name}
             />
           </div>
           <div className='flex-1'>
@@ -118,6 +168,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               value={formik.values.email}
               onChange={formik.handleChange}
               placeholder='Enter Your Email ID'
+              error={formik.touched.email && formik.errors.email}
             />
           </div>
         </div>
@@ -129,6 +180,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               value={formik.values.mobile}
               onChange={formik.handleChange}
               placeholder='Enter Your Mobile Number'
+              error={formik.touched.mobile && formik.errors.mobile}
             />
           </div>
           <div className='flex-1'>
@@ -149,6 +201,9 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               name='date_of_birth'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
+              error={
+                formik.touched.date_of_birth && formik.errors.date_of_birth
+              }
             />
           </div>
           <div className='flex-1'>
@@ -223,6 +278,9 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               onChange={value => formik.setFieldValue('membership_id', value)}
               label='Membership Plan '
               name='membership_id'
+              error={
+                formik.touched.membership_id && formik.errors.membership_id
+              }
             />
           </div>
           <div className='flex-1'>
@@ -253,6 +311,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
                 name='password'
                 value={formik.values.password}
                 onChange={formik.handleChange}
+                error={formik.touched.password && formik.errors.password}
               />
             </div>
           </div>
@@ -265,6 +324,9 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             tabsListClass='w-40 p-[1px] rounded-full'
             tabsTriggerClass='rounded-full'
             onChange={value => formik.setFieldValue('payment_status', value)}
+            error={
+              formik.touched.payment_status && formik.errors.payment_status
+            }
           />
         </div>
         <div className='flex justify-between items-center pt-4'>
@@ -287,6 +349,9 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             selectedSlot={formik.values.time_slot_id}
             onChange={id => formik.setFieldValue('time_slot_id', id)}
           />
+          {formik.touched.time_slot_id && formik.errors.time_slot_id && (
+            <p className='text-red-500 text-sm'>{formik.errors.time_slot_id}</p>
+          )}
         </div>
 
         <div className='flex justify-center mt-4 '>

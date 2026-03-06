@@ -9,9 +9,13 @@ import {
   getMemberPlan,
   getMemberCount,
   updateMemberStatus,
-  getVisitor
+  getVisitor,
+  getGuestInfo,
+  getVisitorById,
+  getGuestById
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
+import { da } from 'date-fns/locale'
 
 export const useMembersQuery = data => {
   return useQuery({
@@ -129,10 +133,31 @@ export const useVisitorQuery = data => {
   })
 }
 
-export const useGuestQuery = () => {
+export const useGuestQuery = (data) => {
   return useQuery({
-    queryKey: ['guests'],
-    queryFn: () => getGuestInfo(),
+    queryKey: ['guests', data],
+    queryFn: () => getGuestInfo(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+
+export const useVisitorById = (id) => {
+  return useQuery({
+    queryKey: ['visitorById'],
+    queryFn: () => getVisitorById(id),
+    enabled: !!id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useGuestById = (id) => {
+  return useQuery({
+    queryKey: ['guestById'],
+    queryFn: () => getGuestById(id),
+    enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
