@@ -146,7 +146,8 @@ async def get_employee_salary_structure_by_id(
             designation_name = designation.name
 
     return {
-        "id": str(employee.id),
+
+        "employee_id": str(employee_id),   # <-- path param shown here
         "full_name": employee.full_name,
         "salary": float(employee.salary) if employee.salary else None,
         "salary_type": employee.salary_type,
