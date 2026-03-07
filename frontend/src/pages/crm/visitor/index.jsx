@@ -36,7 +36,7 @@ const Visitors = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
-            size='filterbutton'
+            size='notificationbutton'
             onClick={() => {
               setSelectedTab(1)
               setSelectedVisitorId(row.original.id) 

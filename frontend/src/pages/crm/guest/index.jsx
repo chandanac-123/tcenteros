@@ -30,7 +30,7 @@ const Guest = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
-            size='filterbutton'
+            size='notificationbutton'
             onClick={() => {
               setSelectedGuestId(row.original.id)
               setSelectedTab(1)

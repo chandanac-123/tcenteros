@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           'bg-primary text-white rounded-xl hover:bg-primary/90 font-roboto font-medium text-md justify-between',
         outline_primary:
-          'border border-input  text-primary border-primary bg-primarybglight font-medium justify-between',
+          'border border-input  text-primary border-primary bg-primary/10 font-medium justify-between',
         onboard_outline_primary:
           'border border-input  text-onboard_primary border-onboard_primary bg-onboard_primary/10 font-medium justify-between',
         outline_secondary:
@@ -30,7 +30,8 @@ const buttonVariants = cva(
         filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
         addbutton: 'h-10 px-6 rounded-lg text-sm gap-2',
         editbutton: 'h-9 w-20 px-4 rounded-2xl text-sm gap-2',
-        icon: 'h-9 w-9'
+        icon: 'h-9 w-9',
+        notificationbutton: 'h-6 px-3 rounded-lg text-xs gap-1',
       }
     },
     defaultVariants: {

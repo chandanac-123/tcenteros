@@ -5,12 +5,7 @@ import {
   PopoverTrigger,
   PopoverContent
 } from '@pages/components/ui/popover'
-import {
-  ChevronDown,
-  LogOut,
-  Settings,
-  UserRound
-} from 'lucide-react'
+import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import CustomeModal from '../CustomeModal'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
@@ -53,8 +48,9 @@ const Header = () => {
             + Add Member
           </Button>
         </div>
-
-        <img src={bell} alt='logo' className='mr-2' />
+        <button onClick={() => navigate('/notifications')}>
+          <img src={bell} alt='logo' className='mr-2' />
+        </button>
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
             <div className='flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer'>

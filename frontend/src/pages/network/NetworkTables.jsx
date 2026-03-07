@@ -58,7 +58,7 @@ const NetworkTables = ({ activeTab, data, tableParams, setTableParams, paginatio
                 onClick={() => {
                   setSelectedRow(data);
                   setApproveOpen(true);
-                }} size='addbutton'
+                }} size='notificationbutton'
                 variant='button_filled'
                 type='button'
               > Approve</Button>
