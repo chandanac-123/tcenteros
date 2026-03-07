@@ -84,3 +84,24 @@ class AllStockHistoryResponse(BaseModel):
     page_size: int
     total: int
     rows: List[StockHistoryRow]
+
+
+
+class CheckoutItemIn(BaseModel):
+    product_id: UUID
+    quantity: int
+
+class CheckoutPaymentIn(BaseModel):
+    method: Optional[str] = None
+    amount: Optional[Decimal] = None
+    details: Optional[dict] = None
+
+class CheckoutIn(BaseModel):
+    items: List[CheckoutItemIn]
+    payment: Optional[CheckoutPaymentIn] = None
+    tax_category_id: Optional[UUID] = None
+    customer_id: Optional[UUID] = None
+    client_reference: Optional[str] = None
+
+    class Config:
+        orm_mode = True
