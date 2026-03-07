@@ -1,18 +1,28 @@
-import React, { useState } from 'react'
 import CustomeModal from '@common/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import {
   useCreateProductMutation,
-  useAllSKUsQuery
+  useAllSKUsQuery,
+  useInventoryProfitQuery
 } from '@api-queries/inventory/Query'
 import { useFormik } from 'formik'
 import { productValidationSchema } from '@utils/validations'
 import CustomeSelect from '@common/CustomeSelect'
+import { useNavigate } from 'react-router-dom'
+import { useSettingsTabStore } from '@store/tabStore'
 
 const AddProductModal = ({ open, setOpen }) => {
+  const { setSelectedTab } = useSettingsTabStore()
   const { mutateAsync: createProduct, isLoading } = useCreateProductMutation()
+  const { data: inventoryProfitData, isFetching: isFetchingInventoryProfit } =
+    useInventoryProfitQuery()
+  console.log('inventoryProfitData: ', inventoryProfitData?.inventory_profit)
+
   const { data: skus } = useAllSKUsQuery()
+  const navigate = useNavigate()
+
+  const isCategoryEmpty = !skus || skus.length === 0
   const initialValues = {
     name: '',
     category: '',
@@ -54,15 +64,35 @@ const AddProductModal = ({ open, setOpen }) => {
             error={formik.touched.name && formik.errors.name}
           />
 
-          <CustomeSelect
-            label='Category'
-            placeholder='Enter Category'
-            name='category'
-            options={skus || []}
-            value={formik.values.category}
-             onChange={value => formik.setFieldValue('category', value)}
-            error={formik.touched.category && formik.errors.category}
-          />
+          {isCategoryEmpty ? (
+            <div className='col-span-2 border border-dashed rounded-lg p-4 bg-gray-50'>
+              <p className='text-sm text-gray-600'>
+                No product categories found. Please add a category from the
+                Settings before creating a product.
+              </p>
+
+              <Button
+                type='button'
+                size='addbutton'
+                onClick={() => {
+                  setSelectedTab(6)
+                  navigate('/settings')
+                }}
+              >
+                Go to Settings
+              </Button>
+            </div>
+          ) : (
+            <CustomeSelect
+              label='Category'
+              placeholder='Select Category'
+              name='category'
+              options={skus || []}
+              value={formik.values.category}
+              onChange={value => formik.setFieldValue('category', value)}
+              error={formik.touched.category && formik.errors.category}
+            />
+          )}
 
           <Input
             label='Unit Type'

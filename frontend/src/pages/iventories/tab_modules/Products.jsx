@@ -16,9 +16,7 @@ const Products = () => {
     page: 1
   })
   const { data, isFetching } = useAllProductsQuery(tableParams)
-  const { data: inventoryProfitData, isFetching: isFetchingInventoryProfit } =
-    useInventoryProfitQuery()
-  console.log('inventoryProfitData: ', inventoryProfitData?.inventory_profit);
+ 
 
   const { mutateAsync: deleteProduct } = useDeleteProductMutation()
   const [deleteOpen, setDeleteOpen] = useState(false)
