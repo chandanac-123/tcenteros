@@ -11,6 +11,7 @@ import { productValidationSchema } from '@utils/validations'
 import CustomeSelect from '@common/CustomeSelect'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
+import { useEffect } from 'react'
 
 const AddProductModal = ({ open, setOpen }) => {
   const { setSelectedTab } = useSettingsTabStore()
@@ -46,6 +47,23 @@ const AddProductModal = ({ open, setOpen }) => {
       }
     }
   })
+
+  const profitMultiplier = inventoryProfitData?.inventory_profit || 1
+
+  const suggestedSellingPrice =
+    formik.values.base_price && profitMultiplier
+      ? Number(formik.values.base_price) * Number(profitMultiplier)
+      : ''
+
+  useEffect(() => {
+    if (formik.values.base_price && profitMultiplier) {
+      const suggested =
+        Number(formik.values.base_price) * Number(profitMultiplier)
+
+      formik.setFieldValue('selling_price', suggested)
+    }
+  }, [formik.values.base_price, profitMultiplier])
+
 
   return (
     <CustomeModal open={open} onOpenChange={setOpen} header='Add Product'>
@@ -114,14 +132,25 @@ const AddProductModal = ({ open, setOpen }) => {
             error={formik.touched.base_price && formik.errors.base_price}
           />
 
-          <Input
-            label='Selling Price'
-            placeholder='₹2000'
-            name='selling_price'
-            value={formik.values.selling_price}
-            onChange={formik.handleChange}
-            error={formik.touched.selling_price && formik.errors.selling_price}
-          />
+          <div>
+            <Input
+              label='Selling Price'
+              placeholder='₹2000'
+              name='selling_price'
+              value={formik.values.selling_price}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.selling_price && formik.errors.selling_price
+              }
+            />
+
+            {formik.values.base_price && (
+              <p className='text-xs text-gray-500 mt-1'>
+                Recommended price based on profit settings: ₹
+                {suggestedSellingPrice}. You can change it if needed.
+              </p>
+            )}
+          </div>
 
           <Input
             label='Reorder Level'
