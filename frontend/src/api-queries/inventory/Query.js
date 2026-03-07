@@ -9,7 +9,8 @@ import {
   updateProduct,
   getAllStock,
   getAllStockTransactions,
-  createStockEntry
+  createStockEntry,
+  getInventoryProfit
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -135,4 +136,14 @@ export const useCreateStockEntryMutation = data => {
       return err
     }
   })
+}
+
+
+export const useInventoryProfitQuery = () => {
+  return useQuery({
+    queryKey: ['inventory-profit'],
+    queryFn: () => getInventoryProfit(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })  
 }

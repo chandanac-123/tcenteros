@@ -8,7 +8,8 @@ import {
   updateProductApiCall,
   getStockApiCall,
   getStockTransactionApiCall,
-  createStockApiCall
+  createStockApiCall,
+  getInventoryProfitApiCall
 } from '../../api/index'
 
 export const getAllSKU = async () => {
@@ -95,6 +96,15 @@ export const getAllStockTransactions = async (data) => {
 export const createStockEntry = async (data) => {
   try {
     const response = await createStockApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getInventoryProfit = async () => {
+  try {
+    const response = await getInventoryProfitApiCall()
     return response.data
   } catch (error) {
     throw error

@@ -340,3 +340,5 @@ export const deleteSKUApiCall = id =>
   axiosInstance.delete(`/settings/superadmin/center/sku-categories/${id}`)
 export const getStockTransactionApiCall = data =>
   axiosInstance.get(`/inventory/stock-transactions?page=${data?.page}`)
+export const getInventoryProfitApiCall = () =>
+  axiosInstance.get(`/settings/superadmin/settings/inventory-profit`)

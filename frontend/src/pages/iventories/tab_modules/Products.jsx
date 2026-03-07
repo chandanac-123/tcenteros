@@ -4,7 +4,8 @@ import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import {
   useAllProductsQuery,
-  useDeleteProductMutation
+  useDeleteProductMutation,
+  useInventoryProfitQuery
 } from '@api-queries/inventory/Query'
 import { Button } from '@pages/components/ui/button'
 import AddProductModal from '../components/AddProductModal'
@@ -15,6 +16,10 @@ const Products = () => {
     page: 1
   })
   const { data, isFetching } = useAllProductsQuery(tableParams)
+  const { data: inventoryProfitData, isFetching: isFetchingInventoryProfit } =
+    useInventoryProfitQuery()
+  console.log('inventoryProfitData: ', inventoryProfitData?.inventory_profit);
+
   const { mutateAsync: deleteProduct } = useDeleteProductMutation()
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
