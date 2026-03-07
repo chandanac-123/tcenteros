@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createProduct,
+  createSKU,
   deleteProduct,
+  deleteSKU,
   getAllProducts,
   getAllSKU,
-  updateProduct,
-
-
+  updateProduct
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -62,11 +62,41 @@ export const useDeleteProductMutation = () => {
   })
 }
 
-export const useAllProductsQuery = (data) => {
+export const useAllProductsQuery = data => {
   return useQuery({
     queryKey: ['Product'],
     queryFn: () => getAllProducts(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useCreateSKUMutation = data => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => createSKU(data),
+    onSuccess: async data => {
+      query.invalidateQueries('sku')
+      showSuccess('SKU created successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create SKU')
+      return err
+    }
+  })
+}
+
+export const useDeleteSKUMutation = id => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: id => deleteSKU(id),
+    onSuccess: async data => {
+      query.invalidateQueries('sku ')
+      showSuccess('SKU deleted successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to delete SKU')
+      return err
+    }
   })
 }

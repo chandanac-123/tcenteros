@@ -8,7 +8,7 @@ const Textarea = React.forwardRef(({ className, label, labelClassName = '', id, 
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={textareaId} className={cn("block mb-1 text-sm font-medium text-textblack", labelClassName)}>
+        <label htmlFor={textareaId} className={cn("block mb-1 text-sm font-normal text-textblack", labelClassName)}>
           {label}
         </label>
       )}

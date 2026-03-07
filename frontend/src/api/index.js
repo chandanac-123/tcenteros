@@ -334,3 +334,7 @@ export const createStockApiCall = data =>
   axiosInstance.post(`/inventory/stock/adjust`, data)
 export const getStockApiCall = data =>
   axiosInstance.get(`/inventory/stock-history`, data)
+export const createSKUApiCall = data =>
+  axiosInstance.post(`/settings/superadmin/center/sku-categories`, data)
+export const deleteSKUApiCall = id =>
+  axiosInstance.delete(`/settings/superadmin/center/sku-categories/${id}`)

@@ -49,11 +49,12 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
           ),
           network_enabled: values.network_enabled
         }
-        if (planData?.id) {
-          await updatePlan({ id: planData.id, ...payload })
+        if (editId) {
+          await updatePlan({ id: editId, data: payload })
         } else {
           await createPlan(payload)
         }
+
         setOpen(false)
         formik.resetForm()
       } catch (error) {
@@ -74,6 +75,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
     updated[index] = value
     formik.setFieldValue('membership_features', updated)
   }
+  console.log(formik.values, 'network_enabled')
 
   const handleRemoveFeature = index => {
     formik.setFieldValue(
@@ -104,7 +106,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 placeholder='Enter membership name'
                 value={formik.values.membership_name}
                 onChange={formik.handleChange}
-                // onBlur={formik.handleBlur}
                 error={
                   formik.touched.membership_name &&
                   formik.errors.membership_name
@@ -125,7 +126,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                     placeholder='Enter value'
                     value={formik.values.duration_count}
                     onChange={formik.handleChange}
-                    // onBlur={formik.handleBlur}
                     error={
                       formik.touched.duration_count &&
                       formik.errors.duration_count
@@ -156,7 +156,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 step='0.01'
                 value={formik.values.default_price}
                 onChange={formik.handleChange}
-                // onBlur={formik.handleBlur}
                 error={
                   formik.touched.default_price && formik.errors.default_price
                 }
@@ -183,8 +182,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
               placeholder='Enter membership description'
               value={formik.values.description}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.description && formik.errors.description}
             />
           </div>
 

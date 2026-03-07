@@ -1,6 +1,8 @@
 import {
   createProductApiCall,
+  createSKUApiCall,
   deleteProductApiCall,
+  deleteSKUApiCall,
   getProductApiCall,
   getSKUApiCall,
   updateProductApiCall
@@ -45,6 +47,24 @@ export const deleteProduct = async id => {
 export const getAllProducts = async (data) => {
   try {
     const response = await getProductApiCall(data )
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const createSKU = async (details) => {
+  try {
+    const response = await createSKUApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const deleteSKU = async id => {
+  try {
+    const response = await deleteSKUApiCall(id)
     return response.data
   } catch (error) {
     throw error

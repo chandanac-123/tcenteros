@@ -69,9 +69,6 @@ export const membershipValidationSchema = Yup.object().shape({
   default_price: Yup.number()
     .required('Price is required')
     .positive('Price must be positive'),
-  description: Yup.string()
-    .required('Description is required')
-    .min(10, 'Description must be at least 10 characters'),
   membership_features: Yup.array()
     .of(Yup.string().min(1, 'Feature cannot be empty'))
     .min(1, 'Add at least one feature')
@@ -193,7 +190,6 @@ export const salaryValidationSchema = Yup.object().shape({
   pay_cycle: Yup.string().required('Select pay cycle')
 })
 
-
 export const memberValidationSchema = Yup.object().shape({
   full_name: Yup.string()
     .trim()
@@ -215,47 +211,41 @@ export const memberValidationSchema = Yup.object().shape({
   }),
   password: Yup.string().when('payment_status', {
     is: 'paid',
-    then: schema =>
-      schema
-        .required('Password is required'),
+    then: schema => schema.required('Password is required'),
     otherwise: schema => schema.nullable()
   })
 })
 
-
 export const productValidationSchema = Yup.object().shape({
-  name: Yup.string()
-    .trim()
-    .required("Product name is required")
-,
-  category: Yup.string()
-    .trim()
-    .required("Category is required"),
+  name: Yup.string().trim().required('Product name is required'),
+  category: Yup.string().trim().required('Category is required'),
 
-  unit_of_measure: Yup.string()
-    .trim()
-    .required("Unit type is required"),
+  unit_of_measure: Yup.string().trim().required('Unit type is required'),
 
   base_price: Yup.number()
-    .typeError("Base price must be a number")
-    .required("Base price is required")
-    .min(0, "Base price cannot be negative"),
+    .typeError('Base price must be a number')
+    .required('Base price is required')
+    .min(0, 'Base price cannot be negative'),
 
   selling_price: Yup.number()
-    .typeError("Selling price must be a number")
-    .required("Selling price is required")
-    .min(0, "Selling price cannot be negative")
+    .typeError('Selling price must be a number')
+    .required('Selling price is required')
+    .min(0, 'Selling price cannot be negative')
     .test(
-      "selling-price-check",
-      "Selling price must be greater than or equal to base price",
+      'selling-price-check',
+      'Selling price must be greater than or equal to base price',
       function (value) {
-        const { base_price } = this.parent;
-        return value >= base_price;
+        const { base_price } = this.parent
+        return value >= base_price
       }
     ),
 
   reorder_level: Yup.number()
-    .typeError("Reorder level must be a number")
-    .required("Reorder level is required")
-    .min(0, "Reorder level cannot be negative"),
-});
+    .typeError('Reorder level must be a number')
+    .required('Reorder level is required')
+    .min(0, 'Reorder level cannot be negative')
+})
+
+export const productCategorySchema = Yup.object().shape({
+  name: Yup.string().required('Enter  name')
+})
