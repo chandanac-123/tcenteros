@@ -6,7 +6,10 @@ import {
   deleteSKU,
   getAllProducts,
   getAllSKU,
-  updateProduct
+  updateProduct,
+  getAllStock,
+  getAllStockTransactions,
+  createStockEntry
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -50,14 +53,14 @@ export const useUpdateProductMutation = () => {
 }
 
 export const useDeleteProductMutation = () => {
-  const query = useQueryClient()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: id => deleteProduct(id),
-    onSuccess: async data => {
-      query.invalidateQueries('Product')
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Product'] })
     },
     onError: err => {
-      return err
+      console.error(err)
     }
   })
 }
@@ -96,6 +99,39 @@ export const useDeleteSKUMutation = id => {
     },
     onError: err => {
       showError(err?.response?.data?.message || 'Failed to delete SKU')
+      return err
+    }
+  })
+}
+
+export const useAllStockQuery = data => {
+  return useQuery({
+    queryKey: ['stock'],
+    queryFn: () => getAllStock(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useAllStockTransactionsQuery = data => {
+  return useQuery({
+    queryKey: ['stock'],
+    queryFn: () => getAllStockTransactions(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useCreateStockEntryMutation = data => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => createStockEntry(data),
+    onSuccess: async data => {
+      query.invalidateQueries('stock')
+      showSuccess('Stock entry created successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create stock entry')
       return err
     }
   })

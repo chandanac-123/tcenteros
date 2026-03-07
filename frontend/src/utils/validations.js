@@ -92,25 +92,19 @@ export const branchValidationSchema = Yup.object().shape({
     .min(3, 'Branch name must be at least 3 characters')
     .max(50, 'Branch name is too long')
     .required('Enter branch name'),
-
   center_category_id: Yup.string().required('Select center category'),
-
   address_line_1: Yup.string()
     .min(5, 'Address is too short')
     .required('Enter address line 1'),
-
   address_line_2: Yup.string()
     .min(5, 'Address is too short')
     .required('Enter address line 2'),
-
   center_email: Yup.string()
     .email('Invalid email format')
     .required('Enter branch email'),
-
   password: Yup.string()
     .min(6, 'Password must be at least 6 characters')
     .required('Create password'),
-
   center_phone: Yup.string()
     .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
     .required('Enter phone number'),
@@ -219,14 +213,11 @@ export const memberValidationSchema = Yup.object().shape({
 export const productValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Product name is required'),
   category: Yup.string().trim().required('Category is required'),
-
   unit_of_measure: Yup.string().trim().required('Unit type is required'),
-
   base_price: Yup.number()
     .typeError('Base price must be a number')
     .required('Base price is required')
     .min(0, 'Base price cannot be negative'),
-
   selling_price: Yup.number()
     .typeError('Selling price must be a number')
     .required('Selling price is required')
@@ -239,7 +230,6 @@ export const productValidationSchema = Yup.object().shape({
         return value >= base_price
       }
     ),
-
   reorder_level: Yup.number()
     .typeError('Reorder level must be a number')
     .required('Reorder level is required')
@@ -248,4 +238,19 @@ export const productValidationSchema = Yup.object().shape({
 
 export const productCategorySchema = Yup.object().shape({
   name: Yup.string().required('Enter  name')
+})
+
+export const purchaseValidationSchema = Yup.object({
+  product_id: Yup.string().required('Product is required'),
+  quantity: Yup.number()
+    .typeError('Quantity must be a number')
+    .positive('Quantity must be greater than 0')
+    .required('Quantity is required'),
+  supplier_name: Yup.string().trim().required('Supplier name is required'),
+  invoice_number: Yup.string().trim().required('Invoice number is required'),
+  invoice_date: Yup.string().required('Enter  date'),
+  cost_price: Yup.number()
+    .typeError('Cost price must be a number')
+    .min(0, 'Cost price cannot be negative')
+    .required('Cost price is required')
 })

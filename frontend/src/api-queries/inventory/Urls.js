@@ -5,7 +5,10 @@ import {
   deleteSKUApiCall,
   getProductApiCall,
   getSKUApiCall,
-  updateProductApiCall
+  updateProductApiCall,
+  getStockApiCall,
+  getStockTransactionApiCall,
+  createStockApiCall
 } from '../../api/index'
 
 export const getAllSKU = async () => {
@@ -65,6 +68,33 @@ export const createSKU = async (details) => {
 export const deleteSKU = async id => {
   try {
     const response = await deleteSKUApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAllStock = async (data) => {
+  try {
+    const response = await getStockApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAllStockTransactions = async (data) => {
+  try {
+    const response = await getStockTransactionApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const createStockEntry = async (data) => {
+  try {
+    const response = await createStockApiCall(data)
     return response.data
   } catch (error) {
     throw error

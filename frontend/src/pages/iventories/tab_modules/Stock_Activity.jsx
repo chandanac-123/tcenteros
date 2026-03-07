@@ -1,25 +1,37 @@
-import React, { useState } from 'react'
-import filters from '@assets/form-icons/filter.svg'
-import FilterStockModal from '../components/FilterStockModal'
 import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { DataTable } from '@common/DataTable'
-import { Button } from '@pages/components/ui/button'
-import AddStockEntry from '../components/AddStockEntry'
+import { useAllStockTransactionsQuery } from '@api-queries/inventory/Query'
+import { useState } from 'react'
 
 const Stock_Activity = () => {
-  const [openStockEntry, setOpenStockEntry] = useState(false)
+  const [tableParams, setTableParams] = useState({ page: 1 })
+  const { data , isFetching} = useAllStockTransactionsQuery(tableParams)
 
   const columns = [
     {
-      accessorKey: 'date',
-      header: 'Date'
+      accessorKey: 'supplier_name',
+      header: 'Supplier Name'
     },
     {
-      accessorKey: 'product',
+      accessorKey: 'product_name',
       header: 'Product'
     },
+     {
+      accessorKey: 'sku_code',
+      header: 'SKU Code'
+    },
+    {
+      accessorKey: 'invoice_number',
+      header: 'Invoice Number'
+    },
+    {
+      accessorKey: 'invoice_date',
+      header: 'Date'
+    },
+
+   
     {
       accessorKey: 'transaction_type',
       header: 'Transaction Type',
@@ -50,105 +62,50 @@ const Stock_Activity = () => {
       header: 'Quantity'
     },
     {
+      accessorKey: 'unit_cost',
+      header: 'Unit Cost'
+    },
+    {
+      accessorKey: 'subtotal',
+      header: 'Subtotal'
+    },
+    {
       accessorKey: 'reference',
       header: 'Reference'
     },
     {
       accessorKey: 'balance_after',
       header: 'Balance After'
-    },
-    {
-      accessorKey: 'user',
-      header: 'User'
-    },
-    {
-      header: 'Actions',
-      cell: ({ row }) => (
-        <div className='flex items-center gap-2'>
-          <button>
-            <img src={view} alt='view' className='w-6 h-6' />
-          </button>
-          <button>
-            <img src={edit} alt='edit' className='w-6 h-6' />
-          </button>
-          <button>
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
-          </button>
-        </div>
-      )
     }
-  ]
 
-  const dummyTransactions = [
-    {
-      date: '2026-02-20',
-      product: 'Wireless Mouse',
-      transaction_type: 'In',
-      quantity: 20,
-      reference: 'PO-1021',
-      balance_after: 120,
-      user: 'Akhil'
-    },
-    {
-      date: '2026-02-21',
-      product: 'Mechanical Keyboard',
-      transaction_type: 'Out',
-      quantity: 5,
-      reference: 'SO-558',
-      balance_after: 45,
-      user: 'Rahul'
-    },
-    {
-      date: '2026-02-22',
-      product: 'USB-C Hub',
-      transaction_type: 'Return',
-      quantity: 30,
-      reference: 'PO-1025',
-      balance_after: 75,
-      user: 'Nisha'
-    },
-    {
-      date: '2026-02-23',
-      product: '27" Monitor',
-      transaction_type: 'Out',
-      quantity: 2,
-      reference: 'SO-561',
-      balance_after: 16,
-      user: 'Arjun'
-    },
-    {
-      date: '2026-02-24',
-      product: 'Laptop Stand',
-      transaction_type: 'Adjustment',
-      quantity: 3,
-      reference: 'ADJ-009',
-      balance_after: 58,
-      user: 'Meera'
-    }
+    // {
+    //   header: 'Actions',
+    //   cell: ({ row }) => (
+    //     <div className='flex items-center gap-2'>
+    //       <button>
+    //         <img src={view} alt='view' className='w-6 h-6' />
+    //       </button>
+    //       <button>
+    //         <img src={edit} alt='edit' className='w-6 h-6' />
+    //       </button>
+    //       <button>
+    //         <img src={deleteicon} alt='delete' className='w-6 h-6' />
+    //       </button>
+    //     </div>
+    //   )
+    // }
   ]
-
   return (
     <div>
       <div className='flex justify-between px-4 py-2 items-center'>
         <h1 className='text-xl font-medium'>Stock Activity List</h1>
-
-        <Button
-          size='addbutton'
-          type='submit'
-          onClick={() => setOpenStockEntry(true)}
-        >
-         + Add Stock
-        </Button>
-        <AddStockEntry
-          openStockEntry={openStockEntry}
-          setOpenStockEntry={setOpenStockEntry}
-        />
       </div>
       <div className=''>
         <DataTable
           columns={columns}
-          data={dummyTransactions}
-          pagination={31}
+          data={data?.transactions}
+          pagination={data?.total}
+          loading={isFetching}
           paginationVisibile={true}
           search={false}
         />

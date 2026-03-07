@@ -1,19 +1,23 @@
 import React, { useState } from 'react'
-import filters from '@assets/form-icons/filter.svg'
 import { DataTable } from '@common/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
-import FilterModal from '../components/FilterModal'
-import { useAllProductsQuery } from '@api-queries/inventory/Query'
+import {
+  useAllProductsQuery,
+  useDeleteProductMutation
+} from '@api-queries/inventory/Query'
 import { Button } from '@pages/components/ui/button'
 import AddProductModal from '../components/AddProductModal'
+import DeleteModal from '@common/CustomeDelete'
 
 const Products = () => {
   const [tableParams, setTableParams] = useState({
     page: 1
   })
   const { data, isFetching } = useAllProductsQuery(tableParams)
-  console.log('data: ', data)
+  const { mutateAsync: deleteProduct } = useDeleteProductMutation()
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
   const [open, setOpen] = useState(false)
 
   const columns = [
@@ -42,12 +46,10 @@ const Products = () => {
       header: 'Status',
       cell: ({ row }) => {
         const status = row.getValue('status')?.toLowerCase()
-
         const styles = {
           active: 'bg-[#DEF4E6] text-[#34C759]',
           in_active: 'bg-[#FFE6E7] text-[#A30F0F]'
         }
-
         return (
           <span
             className={`inline-flex justify-center items-center min-w-[90px] px-3 py-1 rounded-[15px] text-[12px] font-poppins font-medium capitalize ${styles[status]}`}
@@ -61,16 +63,32 @@ const Products = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <button>
+          {/* <button>
             <img src={edit} alt='edit' className='w-6 h-6' />
-          </button>
-          <button>
+          </button> */}
+          <button
+            onClick={() => {
+              setDeleteId(row.original.id)
+              setDeleteOpen(true)
+            }}
+          >
             <img src={deleteicon} alt='delete' className='w-6 h-6' />
           </button>
         </div>
       )
     }
   ]
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteProduct(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
+  }
 
   return (
     <div className='flex flex-col'>
@@ -88,10 +106,18 @@ const Products = () => {
           setTableParams={setTableParams}
           tableParams={tableParams}
           pagination={data?.total}
+          loading={isFetching}
           paginationVisibile={true}
           search={false}
         />
       </div>
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Product'
+        description='Are you sure you want to delete this Product?'
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }
