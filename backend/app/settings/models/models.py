@@ -89,6 +89,7 @@ class TaxCategory(Base, AuditMixin):
         "CenterFeatureSubscription",
         back_populates="tax_category"
     )
+    sales = relationship("Sale", back_populates="tax_category", foreign_keys="[Sale.tax_category_id]")
 
 
 # ------------------------

@@ -108,6 +108,9 @@ class Center(Base, AuditMixin):
     terms_privacies = relationship("TermsPrivacy", back_populates="center", foreign_keys="[TermsPrivacy.center_id]")
     sku_categories = relationship("SKUCategory", back_populates="center")
     skus = relationship("SKU", back_populates="center")
+    sales = relationship("Sale", back_populates="center")
+
+
 
 class CenterOnboardingTemp(Base, AuditMixin):
     __tablename__ = "center_onboarding_temp"
