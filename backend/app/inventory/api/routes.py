@@ -16,7 +16,7 @@ from sqlalchemy import select,func, update, desc, delete
 from datetime import datetime, date
 from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency
 from decimal import Decimal
-
+from sqlalchemy.orm import selectinload
 
 
 router = APIRouter()
@@ -140,15 +140,12 @@ async def list_products(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
-    # Ensure center context
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Build base query: select Product and stock quantity (left join)
-    stmt = select(Product, Stock.quantity_available).outerjoin(Stock, Stock.product_id == Product.id).where(Product.center_id == center_id)
+    stmt = select(Product, Stock).outerjoin(Stock, Stock.product_id == Product.id).where(Product.center_id == center_id)
 
-    # Collect filters
     if name:
         stmt = stmt.where(Product.name.ilike(f"%{name}%"))
     if price_min is not None:
@@ -160,31 +157,31 @@ async def list_products(
     if stock_max is not None:
         stmt = stmt.where(Stock.quantity_available <= stock_max)
 
-    # Count total (distinct products). Use a subquery to avoid duplication from join
+    # count distinct products (avoid duplication from join)
     count_subq = select(func.count()).select_from(
         select(Product.id).outerjoin(Stock, Stock.product_id == Product.id).where(Product.center_id == center_id)
-        .where(*(stmt._where_criteria or []))  # reuse where criteria (SQLAlchemy internals)
+        .where(*(stmt._where_criteria or []))
         .distinct()
         .subquery()
     )
     total_result = await db.execute(count_subq)
     total = total_result.scalar_one() or 0
 
-    # Pagination + ordering
     stmt = stmt.order_by(Product.name).offset((page - 1) * page_size).limit(page_size)
-
     result = await db.execute(stmt)
     rows = result.all()
 
     products = []
-    for prod, stock_qty in rows:
+    for prod, stock in rows:
         products.append({
             "product_id": str(prod.id),
             "sku_code": getattr(prod, "sku_code", None),
             "name": prod.name,
             "base_price": float(prod.base_price) if prod.base_price is not None else None,
             "selling_price": float(getattr(prod, "selling_price", None)) if getattr(prod, "selling_price", None) is not None else None,
-            "stock": int(stock_qty) if stock_qty is not None else 0,
+            "stock": int(stock.quantity_available) if stock and stock.quantity_available is not None else 0,
+            "stock_id": str(stock.id) if stock else None,
+            "last_cost": str(stock.last_cost) if stock and getattr(stock, "last_cost", None) is not None else None,
             "reorder_level": int(getattr(prod, "reorder_level", 0)) if getattr(prod, "reorder_level", None) is not None else 0,
             "status": prod.status.value if getattr(prod, "status", None) else None,
         })
@@ -670,44 +667,116 @@ async def _get_or_create_cart(db: AsyncSession, center_id: str, user_id: str):
     await db.flush()
     return cart
 
-# GET current cart
-@router.get("/sales/cart")
-async def get_cart(db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
+# Create a new pending cart for the center (no customer details saved)
+@router.post("/sales/carts", status_code=status.HTTP_201_CREATED)
+async def create_cart(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
-    cart = await _get_or_create_cart(db, center_id, user_id)
-    # load items
-    stmt = select(SaleItem).where(SaleItem.sale_id == cart.id)
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    cart = Sale(
+        center_id=center_id,
+        subtotal_amount=Decimal("0.00"),
+        tax_amount=Decimal("0.00"),
+        total_amount=Decimal("0.00"),
+        currency="INR",
+        status="pending",
+        created_by=user_id
+    )
+    db.add(cart)
+    try:
+        await db.flush()
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create cart")
+    return {"cart_id": str(cart.id)}
+
+
+# List all pending carts for the caller's center (center-wide, not limited to creator)
+@router.get("/sales/carts")
+async def list_carts(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    stmt = select(Sale).where(Sale.center_id == center_id, Sale.status == "pending").order_by(Sale.created_at.desc())
     res = await db.execute(stmt)
-    items = res.scalars().all()
-    items_out = []
-    for it in items:
-        items_out.append({
-            "cart_item_id": str(it.id),
-            "product_id": str(it.product_id),
-            "product_name": it.product_name,
-            "sku_code": it.sku_code,
-            "quantity": int(it.quantity),
-            "unit_price": str(it.unit_price),
-            "line_subtotal": str(it.line_subtotal),
-        })
-    return {
-        "cart_id": str(cart.id),
-        "subtotal": str(cart.subtotal_amount),
-        "tax": str(cart.tax_amount),
-        "total": str(cart.total_amount),
-        "items": items_out,
-    }
+    carts = res.unique().scalars().all()
 
-# POST add item (or increase qty if product already in cart)
+    out = []
+    for c in carts:
+        out.append({
+            "cart_id": str(c.id),
+            "subtotal": str(c.subtotal_amount),
+            "tax": str(c.tax_amount),
+            "total": str(c.total_amount),
+            "created_by": str(getattr(c, "created_by", None)) if getattr(c, "created_by", None) else None,
+            "created_at": getattr(c, "created_at", None).isoformat() if getattr(c, "created_at", None) else None,
+        })
+    return {"count": len(out), "carts": out}
+
+
+# Cancel (delete) a pending cart and its items. Only allowed for carts belonging to the same center and that are still pending.
+@router.delete("/sales/carts/{cart_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_cart(
+    cart_id: str = Path(..., description="Cart ID to cancel"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    cart = await db.get(Sale, cart_id)
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    if str(cart.center_id) != str(center_id):
+        raise HTTPException(status_code=403, detail="Not allowed to cancel this cart")
+    if cart.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending carts can be cancelled")
+
+    try:
+        # delete items first
+        await db.execute(delete(SaleItem).where(SaleItem.sale_id == cart.id))
+        # delete cart row
+        await db.execute(delete(Sale).where(Sale.id == cart.id))
+        await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to cancel cart: {exc}") from exc
+
+    return
+
+
+
+
+# POST add item(s) — corrected add_cart_item
+# - Top-level list -> create a new cart for the batch
+# - payload dict: supports 'cart_id' to add to specific cart, or 'create_cart' to force a new cart, or 'items' array, or single product_id + quantity
+# - No customer data is stored
 @router.post("/sales/cart/items", status_code=status.HTTP_201_CREATED)
-async def add_cart_item(payload: Any = Body(...), db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
+async def add_cart_item(
+    payload: Any = Body(...),
+    cart_id: Optional[str] = Query(None, description="Optional cart id. Use 'new' to create a new cart."),
+    create_cart: bool = Query(False, description="If true, always create a new cart for this request."),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
 
-    # Normalize payload to a list of lines
+    # determine incoming items and implicit create_new behavior from the body
     if isinstance(payload, list):
         lines = payload
+        body_requested_create_new = True
     elif isinstance(payload, dict):
         if "items" in payload and isinstance(payload["items"], list):
             lines = payload["items"]
@@ -715,17 +784,51 @@ async def add_cart_item(payload: Any = Body(...), db: AsyncSession = Depends(get
             lines = [payload]
         else:
             raise HTTPException(status_code=400, detail="payload must contain 'product_id' or 'items'")
+        body_requested_create_new = bool(payload.get("create_cart") or payload.get("create_new") or (isinstance(payload.get("cart_id"), str) and payload.get("cart_id").lower() == "new"))
     else:
         raise HTTPException(status_code=400, detail="invalid payload")
 
     if not lines:
         raise HTTPException(status_code=400, detail="no items provided")
 
+    # Decision precedence:
+    # 1) Query param `cart_id` if provided (and not "new")
+    # 2) Query param `create_cart` true forces new cart
+    # 3) Body top-level list or body create flags request new cart
+    # 4) Otherwise use per-user pending cart
+    created_new_cart = False
     added = []
-    try:
-        # Create/load cart and apply all item changes in one logical operation
-        cart = await _get_or_create_cart(db, center_id, user_id)
 
+    try:
+        # Create new cart when requested via query or body
+        if (cart_id and isinstance(cart_id, str) and cart_id.lower() == "new") or create_cart or body_requested_create_new:
+            if cart_id and isinstance(cart_id, str) and cart_id.lower() != "new" and create_cart:
+                raise HTTPException(status_code=400, detail="cannot specify both 'cart_id' and 'create_cart'")
+            cart = Sale(
+                center_id=center_id,
+                subtotal_amount=Decimal("0.00"),
+                tax_amount=Decimal("0.00"),
+                total_amount=Decimal("0.00"),
+                currency="INR",
+                status="pending",
+                created_by=user_id
+            )
+            db.add(cart)
+            await db.flush()
+            created_new_cart = True
+        else:
+            # Resolve cart: explicit cart_id via query -> validate; otherwise use per-user pending cart
+            if cart_id:
+                cart = await db.get(Sale, cart_id)
+                if not cart:
+                    raise HTTPException(status_code=404, detail="cart not found")
+                if str(cart.center_id) != str(center_id) or cart.status != "pending":
+                    raise HTTPException(status_code=403, detail="Not allowed to modify this cart")
+                # NOTE: ownership check relaxed — any centeradmin in same center may operate pending carts
+            else:
+                cart = await _get_or_create_cart(db, center_id, user_id)
+
+        # Add items to cart (increment existing or create new item)
         for idx, line in enumerate(lines):
             product_id = line.get("product_id")
             try:
@@ -735,45 +838,39 @@ async def add_cart_item(payload: Any = Body(...), db: AsyncSession = Depends(get
             if qty <= 0:
                 raise HTTPException(status_code=400, detail="quantity must be > 0")
 
-            # validate product & center
             prod = await db.get(Product, product_id)
             if not prod:
-                raise HTTPException(status_code=404, detail=f"Product not found: {product_id}")
+                raise HTTPException(status_code=404, detail=f"product {product_id} not found")
             if str(getattr(prod, "center_id", None)) != str(center_id):
-                raise HTTPException(status_code=403, detail=f"Not allowed to add product: {product_id}")
+                raise HTTPException(status_code=403, detail="Not allowed to add product from another center")
 
             unit_price = getattr(prod, "selling_price", None) or getattr(prod, "base_price", None)
             if unit_price is None:
-                raise HTTPException(status_code=400, detail=f"Product has no price: {product_id}")
+                raise HTTPException(status_code=400, detail=f"product {product_id} has no price")
             unit_price = Decimal(str(unit_price))
 
-            # find existing item in cart
             stmt = select(SaleItem).where(SaleItem.sale_id == cart.id, SaleItem.product_id == prod.id).limit(1)
             res = await db.execute(stmt)
             item = res.scalars().first()
 
             if item:
-                item.quantity = (item.quantity or 0) + qty
-                item.line_subtotal = (Decimal(item.quantity) * unit_price).quantize(Decimal("0.01"))
+                item.quantity = item.quantity + qty
+                item.line_subtotal = (Decimal(str(item.unit_price)) * int(item.quantity)).quantize(Decimal("0.01"))
                 db.add(item)
-                await db.flush()  # ensure item.id available
             else:
                 item = SaleItem(
                     sale_id=cart.id,
                     product_id=prod.id,
                     quantity=qty,
                     unit_price=unit_price,
-                    line_subtotal=(unit_price * qty).quantize(Decimal("0.01")),
-                    product_name=getattr(prod, "name", None),
-                    sku_code=getattr(prod, "sku_code", None),
+                    line_subtotal=(unit_price * Decimal(qty)).quantize(Decimal("0.01")),
                 )
                 db.add(item)
-                await db.flush()  # populate item.id
+                await db.flush()
 
-            # record what was added for response (include cart_item_id)
             added.append({"cart_item_id": str(item.id), "product_id": str(prod.id), "quantity": int(qty)})
 
-        # recompute cart subtotal/tax/total once
+        # Recompute totals for the cart (server-authoritative)
         stmt = select(func.coalesce(func.sum(SaleItem.line_subtotal), 0)).where(SaleItem.sale_id == cart.id)
         res = await db.execute(stmt)
         subtotal = Decimal(str(res.scalar_one() or "0.00")).quantize(Decimal("0.01"))
@@ -782,20 +879,24 @@ async def add_cart_item(payload: Any = Body(...), db: AsyncSession = Depends(get
         cart.total_amount = subtotal
         db.add(cart)
 
-        # commit the changes (single commit for the entire batch)
         await db.commit()
     except HTTPException:
-        # re-raise HTTP errors after rollback
         await db.rollback()
         raise
     except Exception as exc:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to add items to cart: {exc}") from exc
 
-    return {"message": "items added", "cart_id": str(cart.id), "added_count": len(added), "items": added}
+    return {
+        "message": "items added",
+        "cart_id": str(cart.id),
+        "created_new_cart": created_new_cart,
+        "added_count": len(added),
+        "items": added
+    }
 
 
-# PATCH update a cart item quantity (set exact quantity)
+# PATCH update a cart item quantity (ownership check relaxed)
 @router.patch("/sales/cart/items/{item_id}")
 async def update_cart_item(
     item_id: str,
@@ -810,7 +911,7 @@ async def update_cart_item(
     user_id = current_admin.get("id") or current_admin.get("user_id")
 
     try:
-        # Try treat path param as SaleItem.id first (select only columns to avoid ORM instance)
+        # Try treat path param as SaleItem.id first (select only columns)
         stmt = select(SaleItem.id, SaleItem.sale_id, SaleItem.unit_price).where(SaleItem.id == item_id).limit(1)
         res = await db.execute(stmt)
         row = res.first()
@@ -842,9 +943,7 @@ async def update_cart_item(
         if not cart or str(cart.center_id) != str(center_id) or cart.status != "pending":
             raise HTTPException(status_code=403, detail="Not allowed to modify this cart item")
 
-        # ownership check
-        if getattr(cart, "created_by", None) and str(cart.created_by) != str(user_id):
-            raise HTTPException(status_code=403, detail="Not allowed to modify this cart item")
+        # NOTE: ownership check removed — any centeradmin in same center may modify pending carts
 
         if new_qty == 0:
             await db.execute(delete(SaleItem).where(SaleItem.id == item_pk))
@@ -878,7 +977,7 @@ async def update_cart_item(
     return {"message": "cart updated", "cart_id": str(cart.id)}
 
 
-# DELETE remove cart item
+# DELETE remove cart item (ownership check relaxed)
 @router.delete("/sales/cart/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_cart_item(item_id: str, db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
     center_id = current_admin.get("center_id")
@@ -914,9 +1013,7 @@ async def delete_cart_item(item_id: str, db: AsyncSession = Depends(get_async_se
         if not cart or str(cart.center_id) != str(center_id) or cart.status != "pending":
             raise HTTPException(status_code=403, detail="Not allowed")
 
-        # ownership check
-        if getattr(cart, "created_by", None) and str(cart.created_by) != str(user_id):
-            raise HTTPException(status_code=403, detail="Not allowed")
+        # NOTE: ownership check removed — any centeradmin in same center may modify pending carts
 
         # SQL delete
         await db.execute(delete(SaleItem).where(SaleItem.id == item_pk))
@@ -1047,147 +1144,114 @@ async def get_cart_amount(
 async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
+
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
     cart_id = body.get("cart_id") if body else None
     payment = body.get("payment") if body else None
     tax_category_id = body.get("tax_category_id") if body else None
-    client_reference = body.get("client_reference") if body else None
 
-    # load cart (or create pending)
+    force_paid_flag = bool(
+        (body and body.get("force_paid"))
+        or (payment and payment.get("force_paid"))
+        or (payment and payment.get("force"))
+        or (body and body.get("force"))
+    )
+
     if cart_id:
         cart = await db.get(Sale, cart_id)
+        if not cart:
+            raise HTTPException(status_code=404, detail="Cart not found")
     else:
         cart = await _get_or_create_cart(db, center_id, user_id)
 
     if not cart or cart.status != "pending":
-        raise HTTPException(status_code=404, detail="Pending cart not found")
+        raise HTTPException(status_code=400, detail="Cart not found or not pending")
 
-    # Load items (ORM instances) for validation / update
+    # load items
     stmt = select(SaleItem).where(SaleItem.sale_id == cart.id)
     res = await db.execute(stmt)
     items = res.scalars().all()
     if not items:
-        raise HTTPException(status_code=400, detail="Cart is empty")
+        raise HTTPException(status_code=400, detail="Cart has no items")
 
-    # Recompute totals and selected tax via the shared helper
+    # recompute authoritative totals
     totals = await _compute_cart_totals(db, cart, tax_category_id)
     subtotal = totals["subtotal"]
     tax_amount = totals["tax_amount"]
     total_amount = totals["total_amount"]
-    selected_tax = totals["selected_tax"]
-    tax_percentage = totals["tax_percentage"]
 
-    # Persist authoritative unit_price and line_subtotal on each SaleItem
-    for it in items:
-        product = await db.get(Product, it.product_id)
-        if not product:
-            raise HTTPException(status_code=404, detail=f"Product not found: {it.product_id}")
-        unit_price = getattr(product, "selling_price", None) or getattr(product, "base_price", None)
-        if unit_price is None:
-            raise HTTPException(status_code=400, detail=f"Product has no price: {it.product_id}")
-        it.unit_price = Decimal(str(unit_price))
-        it.line_subtotal = (it.unit_price * int(it.quantity)).quantize(Decimal("0.01"))
-        db.add(it)
-    await db.flush()
-
-    # Determine whether payment covers the total
+    # Determine paid / payment details
     paid = False
     pay_amount = Decimal("0.00")
-    if payment and payment.get("amount"):
+    if payment and payment.get("amount") is not None:
         try:
             pay_amount = Decimal(str(payment.get("amount")))
         except Exception:
-            raise HTTPException(status_code=400, detail="Invalid payment.amount")
-        paid = pay_amount >= total_amount
+            pay_amount = Decimal("0.00")
+    if pay_amount >= total_amount and total_amount > Decimal("0.00"):
+        paid = True
+    if force_paid_flag:
+        paid = True
 
-    # Defensive conversion of payment.method into PaymentMethod (if possible)
     pm_value = None
     if payment and "method" in payment:
-        pm_raw = payment.get("method")
-        if pm_raw is not None:
-            try:
-                pm_value = PaymentMethod(pm_raw)
-            except Exception:
-                try:
-                    pm_value = getattr(PaymentMethod, pm_raw)
-                except Exception:
-                    pm_value = pm_raw
+        try:
+            pm_value = PaymentMethod[payment["method"]]
+        except Exception:
+            pm_value = None
+
+    # Safe enum helpers
+    def _pick_order_type():
+        member = getattr(OrderType, "sale", None)
+        if member is not None:
+            return member
+        return next(iter(OrderType))
+
+    def _pick_reference_schema():
+        member = getattr(ReferenceSchema, "invoice", None)
+        if member is not None:
+            return member
+        return next(iter(ReferenceSchema))
+
+    order_type_member = _pick_order_type()
+    reference_schema_member = _pick_reference_schema()
 
     created_stock_tx_ids = []
     po_id = None
-    payer_user_id = user_id
+    stock_after = {}
 
-    # encapsulate the DB changes so we can execute either inside an existing tx or inside a new one
-    async def _do_checkout_work():
-        nonlocal created_stock_tx_ids, po_id
-
-        # For each item, validate/lock stock and produce OUT transaction if inventory tracked
+    # Execute all work in ONE transaction
+    try:
+        # persist authoritative prices on items
         for it in items:
-            prod = await db.get(Product, it.product_id)
-            if getattr(prod, "track_inventory", True):
-                q = select(Stock).where(Stock.product_id == prod.id).with_for_update()
-                r = await db.execute(q)
-                stock = r.scalars().first()
-                current_qty = stock.quantity_available if stock else 0
-                if current_qty < int(it.quantity):
-                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {prod.id}")
-
-                # create stock transaction (OUT)
-                stock_tx = StockTransaction(
-                    product_id=prod.id,
-                    quantity=int(it.quantity),
-                    transaction_type="OUT",
-                    unit_cost=None,
-                    subtotal=None,
-                )
-                db.add(stock_tx)
-                await db.flush()  # populate stock_tx.id
-
-                # update stock aggregate
-                new_qty = int(current_qty) - int(it.quantity)
-                if stock:
-                    stock.quantity_available = new_qty
-                    db.add(stock)
-                else:
-                    stock = Stock(product_id=prod.id, quantity_available=new_qty)
-                    db.add(stock)
-                    await db.flush()
-
-                # set balance_after and persist transaction
-                stock_tx.balance_after = new_qty
-                db.add(stock_tx)
-                await db.flush()
-
-                created_stock_tx_ids.append(str(stock_tx.id))
-
-        # update cart totals, tax info, status and reference note
-        cart.subtotal_amount = subtotal
-        cart.tax_amount = tax_amount
-        cart.total_amount = total_amount
-        if selected_tax:
-            cart.tax_category_id = selected_tax.id
-            cart.tax_percentage = tax_percentage
-        cart.status = "paid" if paid else "pending"
-        cart.note = client_reference or cart.note
-        db.add(cart)
+            product = await db.get(Product, it.product_id)
+            if not product:
+                raise HTTPException(status_code=400, detail=f"Product {it.product_id} not found")
+            unit_price = getattr(product, "selling_price", None) or getattr(product, "base_price", None)
+            if unit_price is None:
+                raise HTTPException(status_code=400, detail=f"Product {it.product_id} has no price")
+            it.unit_price = Decimal(str(unit_price))
+            it.line_subtotal = (it.unit_price * int(it.quantity)).quantize(Decimal("0.01"))
+            db.add(it)
+        
         await db.flush()
 
-        # create PaymentOrder if payment provided
-        if payment and payment.get("amount"):
-            order_type_candidate = getattr(OrderType, "sale", None) or getattr(OrderType, "sales", None) or getattr(OrderType, "add_on", None) or getattr(OrderType, "order", None) or None
-            reference_schema_candidate = getattr(ReferenceSchema, "sale", None) or getattr(ReferenceSchema, "invoice", None) or None
-
+        # Create PaymentOrder if payment info present
+        if payment or paid:
             po = PaymentOrder(
-                payer_user_id=payer_user_id,
+                payer_user_id=user_id,
                 payer_type=PayerType.center_admin,
                 payee_type=PayeeType.center,
                 center_id=center_id,
-                order_type=order_type_candidate,
-                reference_schema=reference_schema_candidate,
+                order_type=order_type_member,
+                reference_schema=reference_schema_member,
                 reference_id=cart.id,
                 subtotal_amount=subtotal,
                 tax_amount=tax_amount,
                 total_amount=total_amount,
-                currency=getattr(cart, "currency", None) or Currency.INR,
+                currency=getattr(cart, "currency", Currency.INR),
                 status=PaymentOrderStatus.paid if paid else PaymentOrderStatus.pending,
                 payment_method=pm_value,
             )
@@ -1195,38 +1259,372 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
             await db.flush()
             po_id = getattr(po, "payment_order_id", None) or getattr(po, "id", None)
 
-    # If a transaction is already active on the session, run the work directly (avoid nested begin)
-    if getattr(db, "in_transaction", None) and db.in_transaction():
-        # run inside the already-open transaction
-        await _do_checkout_work()
-    else:
-        # start a new transaction for the checkout work
-        async with db.begin():
-            await _do_checkout_work()
+        # Only decrease stock and create OUT transactions when paid
+        if paid:
+            for it in items:
+                qty = int(it.quantity)
+                unit_cost = Decimal(str(it.unit_price or "0.00"))
 
-    # refresh cart and optionally payment order for response clarity
+                # Atomic stock decrement
+                upd = (
+                    update(Stock)
+                    .where(Stock.product_id == it.product_id, Stock.quantity_available >= qty)
+                    .values(quantity_available=Stock.quantity_available - qty, last_cost=unit_cost)
+                    .returning(Stock.id, Stock.quantity_available, Stock.last_cost)
+                )
+                result = await db.execute(upd)
+                row = result.fetchone()
+                if row is None:
+                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {it.product_id}")
+
+                stock_id, new_qty, last_cost = row
+
+                # Create OUT StockTransaction
+                stock_tx = StockTransaction(
+                    product_id=it.product_id,
+                    quantity=qty,
+                    transaction_type="OUT",
+                    unit_cost=unit_cost,
+                    subtotal=(unit_cost * qty).quantize(Decimal("0.01")),
+                    reference=f"sale:{cart.id}",
+                    balance_after=new_qty,
+                    created_by=user_id,
+                )
+                db.add(stock_tx)
+                await db.flush()
+                
+                created_stock_tx_ids.append(str(stock_tx.id))
+                stock_after[str(it.product_id)] = int(new_qty)
+
+        # Finalize sale
+        cart.subtotal_amount = subtotal
+        cart.tax_amount = tax_amount
+        cart.total_amount = total_amount
+        if paid:
+            cart.status = "completed"
+        cart.updated_at = datetime.utcnow()
+        db.add(cart)
+        
+        # CRITICAL: Commit the transaction
+        await db.commit()
+        
+    except HTTPException:
+        await db.rollback()
+        raise
+    except Exception as exc:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Checkout failed: {exc}") from exc
+
+    # Best-effort refresh
     try:
         await db.refresh(cart)
     except Exception:
         pass
 
-    if po_id:
-        try:
-            stmt = select(PaymentOrder).where((PaymentOrder.payment_order_id == po_id) | (PaymentOrder.id == po_id))
-            res = await db.execute(stmt)
-            _po = res.scalars().first()
-            if _po:
-                po_id = getattr(_po, "payment_order_id", None) or getattr(_po, "id", None)
-        except Exception:
-            pass
+    if paid:
+        payment_status = "paid"
+    elif payment:
+        payment_status = "pending"
+    else:
+        payment_status = "unpaid"
 
     return {
         "cart_id": str(cart.id),
         "sale_id": str(cart.id),
         "payment_order_id": str(po_id) if po_id else None,
+        "payment_status": payment_status,
         "subtotal": str(subtotal),
         "tax": str(tax_amount),
         "total": str(total_amount),
         "stock_transaction_ids": created_stock_tx_ids,
+        "stock_after": stock_after,
         "status": cart.status,
+    }
+
+
+
+@router.get("/pos/sales", summary="POS - List all sales transactions")
+async def list_pos_sales(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    status: Optional[str] = Query(None, description="Filter by status: pending, completed, cancelled"),
+    date_from: Optional[date] = Query(None, description="Filter sales from this date (inclusive)"),
+    date_to: Optional[date] = Query(None, description="Filter sales up to this date (inclusive)"),
+    search: Optional[str] = Query(None, description="Search by sale ID or items"),
+    payment_status: Optional[str] = Query(None, description="Filter by payment status: paid, pending, unpaid"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    POS Sales List - View all sales transactions with items and payment details.
+    Returns completed and pending sales with full details for POS display.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Build filters
+    where_clauses = [Sale.center_id == center_id]
+    
+    if status:
+        where_clauses.append(Sale.status == status.lower())
+    
+    if date_from:
+        where_clauses.append(Sale.created_at >= datetime.combine(date_from, datetime.min.time()))
+    
+    if date_to:
+        where_clauses.append(Sale.created_at <= datetime.combine(date_to, datetime.max.time()))
+    
+    if search:
+        where_clauses.append(Sale.id.cast(String).ilike(f"%{search}%"))
+
+    # Count total sales
+    count_stmt = select(func.count()).select_from(Sale).where(*where_clauses)
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Fetch sales with items (eager loading)
+    stmt = (
+        select(Sale)
+        .options(selectinload(Sale.items).selectinload(SaleItem.product))
+        .where(*where_clauses)
+        .order_by(Sale.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    
+    result = await db.execute(stmt)
+    sales = result.scalars().all()
+
+    # Fetch payment orders for these sales
+    sale_ids = [str(sale.id) for sale in sales]
+    payment_orders = {}
+    
+    if sale_ids:
+        po_stmt = select(PaymentOrder).where(
+            PaymentOrder.reference_id.in_(sale_ids),
+            PaymentOrder.reference_schema == ReferenceSchema.invoice
+        )
+        po_result = await db.execute(po_stmt)
+        pos = po_result.scalars().all()
+        payment_orders = {str(po.reference_id): po for po in pos}
+
+    # Build response
+    sales_data = []
+    for sale in sales:
+        # Get payment order
+        po = payment_orders.get(str(sale.id))
+        
+        # Determine payment status
+        if po:
+            if po.status == PaymentOrderStatus.paid:
+                payment_status_value = "paid"
+            elif po.status == PaymentOrderStatus.pending:
+                payment_status_value = "pending"
+            else:
+                payment_status_value = "unpaid"
+        else:
+            payment_status_value = "unpaid"
+        
+        # Skip if payment_status filter doesn't match
+        if payment_status and payment_status_value != payment_status.lower():
+            continue
+
+        # Build items list
+        items_list = []
+        for item in sale.items:
+            items_list.append({
+                "product_id": str(item.product_id),
+                "product_name": item.product.name if item.product else item.product_name,
+                "sku_code": item.product.sku_code if item.product else item.sku_code,
+                "quantity": int(item.quantity),
+                "unit_price": str(item.unit_price),
+                "line_subtotal": str(item.line_subtotal),
+            })
+
+        sales_data.append({
+            "sale_id": str(sale.id),
+            "sale_number": str(sale.id)[:8].upper(),  # Short display ID
+            "status": sale.status,
+            "payment_status": payment_status_value,
+            "subtotal": str(sale.subtotal_amount),
+            "tax": str(sale.tax_amount or "0.00"),
+            "total": str(sale.total_amount),
+            "currency": sale.currency or "INR",
+            "items_count": len(sale.items),
+            "items": items_list,
+            "payment_method": po.payment_method.value if po and po.payment_method else None,
+            "payment_order_id": str(po.payment_order_id) if po else None,
+            "created_at": sale.created_at.isoformat() if sale.created_at else None,
+            "created_by": str(sale.created_by) if sale.created_by else None,
+            "note": sale.note,
+        })
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "sales": sales_data,
+    }
+
+
+@router.get("/pos/sales/{sale_id}", summary="POS - Get sale details")
+async def get_pos_sale_details(
+    sale_id: str = Path(..., description="Sale ID"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get detailed information for a specific sale transaction (receipt view).
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Fetch sale with items
+    stmt = (
+        select(Sale)
+        .options(selectinload(Sale.items).selectinload(SaleItem.product))
+        .where(Sale.id == sale_id, Sale.center_id == center_id)
+    )
+    result = await db.execute(stmt)
+    sale = result.scalar_one_or_none()
+    
+    if not sale:
+        raise HTTPException(status_code=404, detail="Sale not found")
+
+    # Fetch payment order
+    po_stmt = select(PaymentOrder).where(
+        PaymentOrder.reference_id == sale.id,
+        PaymentOrder.reference_schema == ReferenceSchema.invoice
+    )
+    po_result = await db.execute(po_stmt)
+    po = po_result.scalar_one_or_none()
+
+    # Fetch stock transactions for this sale
+    st_stmt = select(StockTransaction).where(
+        StockTransaction.reference == f"sale:{sale.id}"
+    )
+    st_result = await db.execute(st_stmt)
+    stock_transactions = st_result.scalars().all()
+
+    # Payment status
+    if po:
+        if po.status == PaymentOrderStatus.paid:
+            payment_status_value = "paid"
+        elif po.status == PaymentOrderStatus.pending:
+            payment_status_value = "pending"
+        else:
+            payment_status_value = "unpaid"
+    else:
+        payment_status_value = "unpaid"
+
+    # Build items
+    items_list = []
+    for item in sale.items:
+        items_list.append({
+            "item_id": str(item.id),
+            "product_id": str(item.product_id),
+            "product_name": item.product.name if item.product else item.product_name,
+            "sku_code": item.product.sku_code if item.product else item.sku_code,
+            "quantity": int(item.quantity),
+            "unit_price": str(item.unit_price),
+            "line_subtotal": str(item.line_subtotal),
+        })
+
+    # Build stock movements
+    stock_movements = []
+    for st in stock_transactions:
+        stock_movements.append({
+            "transaction_id": str(st.id),
+            "product_id": str(st.product_id),
+            "quantity": int(st.quantity),
+            "balance_after": int(st.balance_after) if st.balance_after else None,
+            "transaction_type": st.transaction_type,
+        })
+
+    return {
+        "sale_id": str(sale.id),
+        "sale_number": str(sale.id)[:8].upper(),
+        "status": sale.status,
+        "payment_status": payment_status_value,
+        "subtotal": str(sale.subtotal_amount),
+        "tax": str(sale.tax_amount or "0.00"),
+        "tax_percentage": str(sale.tax_percentage or "0.00"),
+        "total": str(sale.total_amount),
+        "currency": sale.currency or "INR",
+        "items": items_list,
+        "stock_movements": stock_movements,
+        "payment": {
+            "payment_order_id": str(po.payment_order_id) if po else None,
+            "method": po.payment_method.value if po and po.payment_method else None,
+            "status": payment_status_value,
+            "paid_amount": str(po.total_amount) if po else "0.00",
+        } if po else None,
+        "created_at": sale.created_at.isoformat() if sale.created_at else None,
+        "updated_at": sale.updated_at.isoformat() if sale.updated_at else None,
+        "created_by": str(sale.created_by) if sale.created_by else None,
+        "note": sale.note,
+    }
+
+
+@router.get("/pos/sales/today/summary", summary="POS - Today's sales summary")
+async def get_today_sales_summary(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get summary of today's sales for POS dashboard.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    today_end = datetime.combine(date.today(), datetime.max.time())
+
+    # Total sales count and amounts
+    stmt = select(
+        func.count(Sale.id).label("total_sales"),
+        func.coalesce(func.sum(Sale.total_amount), 0).label("total_revenue"),
+        func.coalesce(func.sum(Sale.subtotal_amount), 0).label("total_subtotal"),
+        func.coalesce(func.sum(Sale.tax_amount), 0).label("total_tax"),
+    ).where(
+        Sale.center_id == center_id,
+        Sale.created_at >= today_start,
+        Sale.created_at <= today_end,
+        Sale.status == "completed"
+    )
+    
+    result = await db.execute(stmt)
+    summary = result.first()
+
+    # Completed vs pending
+    completed_stmt = select(func.count()).select_from(Sale).where(
+        Sale.center_id == center_id,
+        Sale.created_at >= today_start,
+        Sale.created_at <= today_end,
+        Sale.status == "completed"
+    )
+    completed_result = await db.execute(completed_stmt)
+    completed_count = completed_result.scalar_one() or 0
+
+    pending_stmt = select(func.count()).select_from(Sale).where(
+        Sale.center_id == center_id,
+        Sale.created_at >= today_start,
+        Sale.created_at <= today_end,
+        Sale.status == "pending"
+    )
+    pending_result = await db.execute(pending_stmt)
+    pending_count = pending_result.scalar_one() or 0
+
+    return {
+        "date": date.today().isoformat(),
+        "total_sales": summary.total_sales or 0,
+        "completed_sales": completed_count,
+        "pending_sales": pending_count,
+        "total_revenue": str(summary.total_revenue or "0.00"),
+        "total_subtotal": str(summary.total_subtotal or "0.00"),
+        "total_tax": str(summary.total_tax or "0.00"),
+        "currency": "INR",
     }
