@@ -7,9 +7,9 @@ import {
 } from '@pages/components/ui/popover'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import CustomeModal from '../CustomeModal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@pages/components/ui/button'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
 import { useCrmStore } from '@store/tabStore'
@@ -21,6 +21,20 @@ const Header = () => {
   const [logoutOpen, setLogoutOpen] = useState(false)
   const { data } = useGetProfileInfoQuery()
   const navigate = useNavigate()
+  // const [location, setLocation] = useState(null);
+
+  // useEffect(() => {
+  //   navigator.geolocation.getCurrentPosition((position) => {
+  //     const lat = position.coords.latitude;
+  //     const lng = position.coords.longitude;
+
+  //     console.log(lat);
+  //     console.log(lng);
+
+  //     setLocation({ lat, lng });
+  //   });
+  // }, []);
+
 
   const handleLogout = () => {
     const state = useAuthStore.getState()

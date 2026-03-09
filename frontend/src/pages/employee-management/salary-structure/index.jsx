@@ -14,7 +14,7 @@ const SalaryStructure = () => {
         data={salaryData?.employees || []}
         tableParams={tableParams}
         setTableParams={setTableParams}
-        pagination={1}
+        pagination={salaryData?.total}
       />
     </div>
   )

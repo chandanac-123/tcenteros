@@ -123,7 +123,7 @@ export function DataTable ({
         </div>
       )}
       <div className='flex flex-col h-[calc(100vh-220px)] rounded-md border'>
-        <div className='flex-1 overflow-y-auto'>
+        <div className='flex-1 overflow-y-auto pb-20'>
           <Table>
             <TableHeader className='sticky top-0 bg-white z-10'>
               {table?.getHeaderGroups()?.map(headerGroup => (
@@ -183,7 +183,7 @@ export function DataTable ({
             </TableBody>
           </Table>
         </div>
-        <div className='bg-white px-3 py-3 flex justify-between items-center sticky bottom-0'>
+        <div className='bg-white px-3 py-3 flex justify-between items-center sticky bottom-0 z-10'>
           {paginationVisibile && totalRecords > 10 && (
             <div className='flex justify-between items-center w-full mt-4'>
               <div className='text-grey text-sm '>

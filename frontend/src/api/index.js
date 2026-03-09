@@ -344,3 +344,14 @@ export const getInventoryProfitApiCall = () =>
   axiosInstance.get(`/settings/superadmin/settings/inventory-profit`)
 export const getProductDropdownApiCall = () =>
   axiosInstance.get(`/inventory/products/lookup`)
+
+
+//BILLING API
+export const getCartApiCall = data =>
+  axiosInstance.get(`/inventory/sales/cart`)
+export const createCartApiCall = data =>
+  axiosInstance.post(`/inventory/sales/cart/items`, data)
+export const updateCartApiCall = (details, id) =>
+  axiosInstance.patch(`/inventory/sales/cart/items${id}`, details)
+export const deleteCartApiCall = id =>
+  axiosInstance.delete(`/inventory/sales/cart/items/${id}`)

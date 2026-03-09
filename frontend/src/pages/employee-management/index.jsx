@@ -23,7 +23,7 @@ const EmployeeManagement = () => {
 
   return (
     <ContentLayout>
-      <div className='flex justify-between items-center mb-4'>
+      <div className='flex justify-between items-center'>
         <div className='flex flex-col'>
           <span>Employees</span>
           <span className='text-textgrey text-sm'>
@@ -44,29 +44,30 @@ const EmployeeManagement = () => {
           )}
         </div>
       </div>
-      <CustomeTab
-        tabList={employeeOrCenter}
-        defaultVal='Employee'
-        tabsListClass=' w-[400px] p-[1px]'
-        onChange={value => setActiveTab(value)}
-      />
-      <div className='w-full h-px bg-gray-300 my-4'></div>
-      
-      {activeTab === 'Employee' ? (
-        <Employee open={open} setOpen={setOpen} />
-      ) : (
-        <SalaryStructure />
-      )}
-      <AddEditForm
-        open={open}
-        setOpen={setOpen}
-        closeModal={() => setOpen(false)}
-      />
-      <StructureAddEdit
-        open={structureOpen}
-        setOpen={setStructureOpen}
-        closeModal={() => setStructureOpen(false)}
-      />
+      <div className=' gap-4 mt-4 flex flex-col'>
+        <CustomeTab
+          tabList={employeeOrCenter}
+          defaultVal='Employee'
+          tabsListClass=' w-[400px] p-[1px]'
+          onChange={value => setActiveTab(value)}
+        />
+
+        {activeTab === 'Employee' ? (
+          <Employee open={open} setOpen={setOpen} />
+        ) : (
+          <SalaryStructure />
+        )}
+        <AddEditForm
+          open={open}
+          setOpen={setOpen}
+          closeModal={() => setOpen(false)}
+        />
+        <StructureAddEdit
+          open={structureOpen}
+          setOpen={setStructureOpen}
+          closeModal={() => setStructureOpen(false)}
+        />
+      </div>
     </ContentLayout>
   )
 }
