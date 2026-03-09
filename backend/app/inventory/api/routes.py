@@ -17,6 +17,10 @@ from datetime import datetime, date
 from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency
 from decimal import Decimal
 from sqlalchemy.orm import selectinload
+from fastapi.responses import StreamingResponse
+from app.inventory.utils.reports import ReportGenerator
+import io
+import pandas as pd
 
 
 router = APIRouter()
@@ -1628,3 +1632,334 @@ async def get_today_sales_summary(
         "total_tax": str(summary.total_tax or "0.00"),
         "currency": "INR",
     }
+
+
+# Add these endpoints after your existing routes
+
+@router.get("/reports/types", summary="Get available report types")
+async def get_report_types(
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    List all available report types for the center admin.
+    """
+    return {
+        "report_types": [
+            {
+                "type": "sales",
+                "name": "Sales Report",
+                "description": "Detailed sales transactions report with revenue breakdown"
+            },
+            {
+                "type": "purchase",
+                "name": "Purchase Report",
+                "description": "Stock purchase history with supplier details"
+            },
+            {
+                "type": "inventory",
+                "name": "Inventory Report",
+                "description": "Current stock levels and valuation"
+            },
+            {
+                "type": "stock_movement",
+                "name": "Stock Movement Report",
+                "description": "All stock transactions (IN/OUT) with balance tracking"
+            }
+        ]
+    }
+
+
+@router.post("/reports/generate/sales", summary="Generate Sales Report")
+async def generate_sales_report(
+    date_from: date = Query(..., description="Start date for report"),
+    date_to: date = Query(..., description="End date for report"),
+    format: str = Query("json", description="Output format: json, pdf, csv"),
+    status: Optional[str] = Query(None, description="Filter by status: completed, pending"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Generate sales report for the specified date range.
+    Supports JSON (preview), PDF, and CSV formats.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Build query
+    where_clauses = [
+        Sale.center_id == center_id,
+        Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
+        Sale.created_at <= datetime.combine(date_to, datetime.max.time())
+    ]
+    
+    if status:
+        where_clauses.append(Sale.status == status.lower())
+
+    # Fetch sales data
+    stmt = (
+        select(Sale)
+        .options(selectinload(Sale.items))
+        .where(*where_clauses)
+        .order_by(Sale.created_at.desc())
+    )
+    
+    result = await db.execute(stmt)
+    sales = result.scalars().all()
+
+    # Prepare data
+    sales_data = []
+    for sale in sales:
+        sales_data.append({
+            'sale_id': str(sale.id),
+            'sale_number': str(sale.id)[:8].upper(),
+            'status': sale.status,
+            'subtotal': str(sale.subtotal_amount),
+            'tax': str(sale.tax_amount or "0.00"),
+            'total': str(sale.total_amount),
+            'items_count': len(sale.items),
+            'created_at': sale.created_at.isoformat() if sale.created_at else None,
+        })
+
+    # Return based on format
+    if format.lower() == "json":
+        total_revenue = sum(Decimal(str(s['total'])) for s in sales_data)
+        total_tax = sum(Decimal(str(s['tax'])) for s in sales_data)
+        
+        return {
+            "report_type": "sales",
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "generated_at": datetime.now().isoformat(),
+            "summary": {
+                "total_sales": len(sales_data),
+                "total_revenue": str(total_revenue),
+                "total_tax": str(total_tax)
+            },
+            "data": sales_data
+        }
+    
+    elif format.lower() == "pdf":
+        center_name = "Your Center Name"  # Fetch from center table if needed
+        pdf_bytes = ReportGenerator.generate_sales_pdf(
+            sales_data, 
+            center_name, 
+            date_from.isoformat(), 
+            date_to.isoformat()
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=sales_report_{date_from}_{date_to}.pdf"
+            }
+        )
+    
+    elif format.lower() == "csv":
+        csv_bytes = ReportGenerator.generate_sales_csv(sales_data)
+        
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=sales_report_{date_from}_{date_to}.csv"
+            }
+        )
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
+
+
+@router.post("/reports/generate/purchase", summary="Generate Purchase Report")
+async def generate_purchase_report(
+    date_from: date = Query(..., description="Start date for report"),
+    date_to: date = Query(..., description="End date for report"),
+    format: str = Query("json", description="Output format: json, pdf, csv"),
+    product_id: Optional[str] = Query(None, description="Filter by product"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Generate purchase/stock-in report for the specified date range.
+    Supports JSON (preview), PDF, and CSV formats.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Build query
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [
+        StockTransaction.product_id.in_(sku_ids_sel),
+        StockTransaction.transaction_type == "IN"
+    ]
+    
+    created_at_attr = getattr(StockTransaction, "created_at", None)
+    if created_at_attr:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+    else:
+        where_clauses.append(StockTransaction.invoice_date >= date_from)
+        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    if product_id:
+        where_clauses.append(StockTransaction.product_id == product_id)
+
+    # Fetch data
+    stmt = (
+        select(StockTransaction, Product, Stock)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+        .order_by(StockTransaction.created_at.desc() if created_at_attr else StockTransaction.invoice_date.desc())
+    )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    # Prepare data
+    purchases_data = []
+    for st, prod, stock in rows:
+        purchases_data.append({
+            'transaction_id': str(st.id),
+            'product_id': str(prod.id),
+            'product_name': prod.name,
+            'supplier_name': st.supplier_name,
+            'quantity_added': int(st.quantity or 0),
+            'cost_price': str(st.unit_cost) if st.unit_cost else "0.00",
+            'total': str(st.subtotal) if st.subtotal else "0.00",
+            'available_quantity': int(stock.quantity_available) if stock else 0,
+            'invoice_date': st.invoice_date.isoformat() if st.invoice_date else None,
+            'invoice_number': st.invoice_number,
+        })
+
+    # Return based on format
+    if format.lower() == "json":
+        total_cost = sum(Decimal(str(p['total'])) for p in purchases_data)
+        total_quantity = sum(int(p['quantity_added']) for p in purchases_data)
+        
+        return {
+            "report_type": "purchase",
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "generated_at": datetime.now().isoformat(),
+            "summary": {
+                "total_purchases": len(purchases_data),
+                "total_quantity": total_quantity,
+                "total_cost": str(total_cost)
+            },
+            "data": purchases_data
+        }
+    
+    elif format.lower() == "pdf":
+        center_name = "Your Center Name"
+        pdf_bytes = ReportGenerator.generate_purchase_pdf(
+            purchases_data,
+            center_name,
+            date_from.isoformat(),
+            date_to.isoformat()
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=purchase_report_{date_from}_{date_to}.pdf"
+            }
+        )
+    
+    elif format.lower() == "csv":
+        csv_bytes = ReportGenerator.generate_purchase_csv(purchases_data)
+        
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=purchase_report_{date_from}_{date_to}.csv"
+            }
+        )
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
+
+
+@router.post("/reports/generate/inventory", summary="Generate Inventory Report")
+async def generate_inventory_report(
+    format: str = Query("json", description="Output format: json, pdf, csv"),
+    low_stock_only: bool = Query(False, description="Show only low stock items"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Generate current inventory status report.
+    Shows current stock levels, valuation, and low stock alerts.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Fetch products with stock
+    stmt = (
+        select(Product, Stock)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(Product.center_id == center_id)
+        .order_by(Product.name)
+    )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    inventory_data = []
+    for prod, stock in rows:
+        qty = int(stock.quantity_available) if stock else 0
+        reorder = int(prod.reorder_level) if prod.reorder_level else 0
+        
+        # Filter low stock if requested
+        if low_stock_only and qty > reorder:
+            continue
+        
+        last_cost = Decimal(str(stock.last_cost)) if stock and stock.last_cost else Decimal("0.00")
+        value = last_cost * Decimal(qty)
+        
+        inventory_data.append({
+            'product_id': str(prod.id),
+            'sku_code': prod.sku_code,
+            'product_name': prod.name,
+            'current_stock': qty,
+            'reorder_level': reorder,
+            'unit_cost': str(last_cost),
+            'stock_value': str(value),
+            'status': 'Low Stock' if qty <= reorder else 'In Stock',
+        })
+
+    if format.lower() == "json":
+        total_value = sum(Decimal(str(i['stock_value'])) for i in inventory_data)
+        low_stock_count = sum(1 for i in inventory_data if i['status'] == 'Low Stock')
+        
+        return {
+            "report_type": "inventory",
+            "generated_at": datetime.now().isoformat(),
+            "summary": {
+                "total_products": len(inventory_data),
+                "low_stock_items": low_stock_count,
+                "total_inventory_value": str(total_value)
+            },
+            "data": inventory_data
+        }
+    
+    elif format.lower() == "csv":
+        df = pd.DataFrame(inventory_data)
+        buffer = io.StringIO()
+        df.to_csv(buffer, index=False)
+        
+        return StreamingResponse(
+            io.BytesIO(buffer.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=inventory_report_{datetime.now().strftime('%Y%m%d')}.csv"
+            }
+        )
+    
+    else:
+        raise HTTPException(status_code=400, detail="PDF format not yet implemented for inventory report")
