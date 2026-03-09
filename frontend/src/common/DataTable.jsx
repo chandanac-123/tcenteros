@@ -122,65 +122,68 @@ export function DataTable ({
           />
         </div>
       )}
-      <div className='overflow-hidden rounded-md border '>
-        <Table className=''>
-          <TableHeader>
-            {table?.getHeaderGroups()?.map(headerGroup => (
-              <TableRow key={headerGroup?.id}>
-                {headerGroup?.headers?.map(header => (
-                  <TableHead key={header?.id}>
-                    {header?.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header?.column?.columnDef?.header,
-                          header?.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns?.length}
-                  className='h-24 text-center'
-                >
-                  <div className='flex justify-center items-center gap-2'>
-                    <Spinner />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : table?.getRowModel()?.rows.length ? (
-              table?.getRowModel()?.rows.map(row => (
-                <TableRow
-                  key={row?.id}
-                  data-state={row?.getIsSelected() && 'selected'}
-                >
-                  {row?.getVisibleCells()?.map(cell => (
-                    <TableCell key={cell?.id}>
-                      {flexRender(
-                        cell?.column?.columnDef?.cell,
-                        cell?.getContext()
-                      )}
-                    </TableCell>
+      <div className='flex flex-col h-[calc(100vh-220px)] rounded-md border'>
+        <div className='flex-1 overflow-y-auto'>
+          <Table>
+            <TableHeader className='sticky top-0 bg-white z-10'>
+              {table?.getHeaderGroups()?.map(headerGroup => (
+                <TableRow key={headerGroup?.id}>
+                  {headerGroup?.headers?.map(header => (
+                    <TableHead key={header?.id}>
+                      {header?.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header?.column?.columnDef?.header,
+                            header?.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns?.length}
-                  className='h-24 text-center'
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <div className='py-2 flex justify-between items-center w-full px-2'>
+              ))}
+            </TableHeader>
+
+            <TableBody className='text-sm'>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns?.length}
+                    className='h-24 text-center'
+                  >
+                    <div className='flex justify-center items-center gap-2'>
+                      <Spinner />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : table?.getRowModel()?.rows.length ? (
+                table?.getRowModel()?.rows.map(row => (
+                  <TableRow
+                    key={row?.id}
+                    data-state={row?.getIsSelected() && 'selected'}
+                  >
+                    {row?.getVisibleCells()?.map(cell => (
+                      <TableCell key={cell?.id}>
+                        {flexRender(
+                          cell?.column?.columnDef?.cell,
+                          cell?.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns?.length}
+                    className='h-24 text-center'
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className='bg-white px-3 py-3 flex justify-between items-center sticky bottom-0'>
           {paginationVisibile && totalRecords > 10 && (
             <div className='flex justify-between items-center w-full mt-4'>
               <div className='text-grey text-sm '>

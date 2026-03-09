@@ -342,3 +342,5 @@ export const getStockTransactionApiCall = data =>
   axiosInstance.get(`/inventory/stock-transactions?page=${data?.page}`)
 export const getInventoryProfitApiCall = () =>
   axiosInstance.get(`/settings/superadmin/settings/inventory-profit`)
+export const getProductDropdownApiCall = () =>
+  axiosInstance.get(`/inventory/products/lookup`)

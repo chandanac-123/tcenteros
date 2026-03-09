@@ -76,8 +76,8 @@ export default function CustomeSelect ({
 
             return (
               <SelectItem
-                key={item?.id || item?.membership_id}
-                value={String(item?.id || item?.membership_id)}
+                key={item?.id || item?.membership_id|| item?.product_id}
+                value={String(item?.id || item?.membership_id || item?.product_id)}
               >
                 {label}
               </SelectItem>

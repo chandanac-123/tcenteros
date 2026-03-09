@@ -70,10 +70,6 @@ const Stock_Activity = () => {
       header: 'Subtotal'
     },
     {
-      accessorKey: 'reference',
-      header: 'Reference'
-    },
-    {
       accessorKey: 'balance_after',
       header: 'Balance After'
     }

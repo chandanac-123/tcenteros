@@ -5,12 +5,18 @@ import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import CustomDatePicker from '@common/CustomeDatepicker'
 import { purchaseValidationSchema } from '@utils/validations'
-import { useCreateStockEntryMutation } from '@api-queries/inventory/Query'
+import {
+  useCreateStockEntryMutation,
+  useProductDropdownQuery
+} from '@api-queries/inventory/Query'
 import { format } from 'date-fns'
 import CustomeSelect from '@common/CustomeSelect'
 
 const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
   const { mutateAsync: createStockEntry } = useCreateStockEntryMutation()
+  const { data: productDropdownData } = useProductDropdownQuery()
+  console.log('productDropdownData: ', productDropdownData);
+
   const initialValues = {
     product_id: '',
     quantity: '',
@@ -87,7 +93,7 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
             label='product Name'
             placeholder='Add'
             name='product_id'
-            options={ []}
+            options={productDropdownData?.products || []}
             value={formik.values.product_id}
             onChange={value => formik.setFieldValue('product_id', value)}
             error={formik.touched.product_id && formik.errors.product_id}

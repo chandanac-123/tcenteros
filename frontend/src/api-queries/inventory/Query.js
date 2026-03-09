@@ -10,7 +10,8 @@ import {
   getAllStock,
   getAllStockTransactions,
   createStockEntry,
-  getInventoryProfit
+  getInventoryProfit,
+  getProductDropdown
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -143,6 +144,16 @@ export const useInventoryProfitQuery = () => {
   return useQuery({
     queryKey: ['inventory-profit'],
     queryFn: () => getInventoryProfit(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })  
+}
+
+
+export const useProductDropdownQuery = () => {
+  return useQuery({
+    queryKey: ['Product'],
+    queryFn: () => getProductDropdown(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })  
