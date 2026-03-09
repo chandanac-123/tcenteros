@@ -7,6 +7,9 @@ from app.inventory.schema.schema import *
 from app.core.models.models import SKU
 from app.inventory.models.models import *
 from app.core.security import generate_sku_code
+from app.inventory.models.models import Sale, SaleItem, Product, Stock, StockTransaction
+from app.settings.models.models import TaxCategory, TaxScope
+from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, PaymentMethod
 import asyncio
 from uuid import uuid4
 from sqlalchemy import select,func, update, desc, delete
@@ -39,6 +42,29 @@ async def _generate_unique_sku_code(db: AsyncSession, center_id):
         return code
     # fallback different uuid if collision
     return f"SKU-{uuid4().hex[:10].upper()}"
+
+#list products endpoint for lookup (id + name only, centeradmin only)
+@router.get("/products/lookup", summary="Lookup products (id + name only)")
+async def list_products_lookup(
+    q: Optional[str] = Query(None, description="Optional name filter (partial, case-insensitive)"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of items to return"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    stmt = select(Product.id, Product.name).where(Product.center_id == center_id)
+    if q:
+        stmt = stmt.where(Product.name.ilike(f"%{q}%"))
+    stmt = stmt.order_by(Product.name).limit(limit)
+
+    res = await db.execute(stmt)
+    rows = res.all()
+
+    products = [{"product_id": str(r[0]), "name": r[1]} for r in rows]
+    return {"count": len(products), "products": products}
 
 #create product endpoint
 @router.post("/products")
@@ -914,24 +940,111 @@ async def delete_cart_item(item_id: str, db: AsyncSession = Depends(get_async_se
 
     return
 
+
+# Helper: compute subtotal, tax and total for a cart (TaxScope hardcoded to product)
+async def _compute_cart_totals(db: AsyncSession, cart, tax_category_id: Optional[str] = None):
+    from app.settings.models.models import TaxCategory, TaxScope
+    from app.inventory.models.models import SaleItem, Product
+
+    # load items
+    stmt = select(SaleItem).where(SaleItem.sale_id == cart.id)
+    res = await db.execute(stmt)
+    items = res.scalars().all()
+
+    subtotal = Decimal("0.00")
+    for it in items:
+        product = await db.get(Product, it.product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product not found: {it.product_id}")
+        unit_price = getattr(product, "selling_price", None) or getattr(product, "base_price", None)
+        if unit_price is None:
+            raise HTTPException(status_code=400, detail=f"Product has no price: {it.product_id}")
+        unit_price_dec = Decimal(str(unit_price))
+        line = (unit_price_dec * int(it.quantity)).quantize(Decimal("0.01"))
+        subtotal += line
+
+    # Tax: hardcode tax_scope == TaxScope.product
+    tax_percentage = Decimal("0.00")
+    selected_tax = None
+    if tax_category_id:
+        stmt = select(TaxCategory).where(
+            TaxCategory.id == tax_category_id,
+            TaxCategory.tax_scope == TaxScope.product,
+            TaxCategory.is_active == True
+        )
+        res = await db.execute(stmt)
+        selected_tax = res.scalar_one_or_none()
+        if selected_tax is None:
+            # Provided tax_category_id is invalid for product scope
+            raise HTTPException(status_code=400, detail="Invalid tax_category_id or tax category not applicable for products")
+        tax_percentage = Decimal(str(selected_tax.tax_percentage or "0.00"))
+    else:
+        # Pick first active product-scoped tax category if any
+        stmt = select(TaxCategory).where(
+            TaxCategory.tax_scope == TaxScope.product,
+            TaxCategory.is_active == True
+        ).limit(1)
+        res = await db.execute(stmt)
+        selected_tax = res.scalar_one_or_none()
+        if selected_tax:
+            tax_percentage = Decimal(str(selected_tax.tax_percentage or "0.00"))
+
+    tax_amount = (subtotal * (tax_percentage / Decimal("100.0"))).quantize(Decimal("0.01"))
+    total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
+
+    return {
+        "subtotal": subtotal,
+        "tax_amount": tax_amount,
+        "total_amount": total_amount,
+        "selected_tax": selected_tax,
+        "tax_percentage": tax_percentage,
+    }
+
+
+@router.get("/sales/cart/amount")
+async def get_cart_amount(
+    cart_id: Optional[str] = Query(None, description="Optional cart id. If omitted, uses caller's pending cart"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Return the previewed amounts for the cart:
+      - If `cart_id` is omitted, uses the caller's pending cart.
+      - Tax category selection is automatic: the code will pick the first active TaxCategory
+        with `tax_scope == TaxScope.product`. If none exists, tax is treated as 0.00.
+    """
+    center_id = current_admin.get("center_id")
+    user_id = current_admin.get("id") or current_admin.get("user_id")
+
+    if cart_id:
+        cart = await db.get(Sale, cart_id)
+        if not cart:
+            raise HTTPException(status_code=404, detail="Cart not found")
+    else:
+        cart = await _get_or_create_cart(db, center_id, user_id)
+
+    # preview only for pending carts
+    if not cart or cart.status != "pending":
+        raise HTTPException(status_code=404, detail="Pending cart not found")
+
+    # No tax_category_id passed — helper will pick the active product-scoped tax category if any
+    totals = await _compute_cart_totals(db, cart, tax_category_id=None)
+
+    return {
+        "cart_id": str(cart.id),
+        "subtotal": str(totals["subtotal"]),
+        "tax": str(totals["tax_amount"]),
+        "total": str(totals["total_amount"]),
+        "tax_category_id": str(totals["selected_tax"].id) if totals["selected_tax"] else None,
+        "tax_percentage": str(totals["tax_percentage"]),
+    }
+
+
+
+
 # POST checkout for an existing cart (cart_id via body or use current pending cart)
 @router.post("/sales/cart/checkout", status_code=status.HTTP_201_CREATED)
 async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
-    """
-    Checkout an existing pending cart (Sale with status 'pending'). This will:
-      - validate stock per item (lock rows)
-      - create StockTransaction (OUT), update Stock
-      - create PaymentOrder and mark sale status
-
-    Tax category selection:
-      - If caller provides `tax_category_id` it must exist, be active and have tax_scope == TaxScope.product.
-      - If caller doesn't provide it, the endpoint will pick the first active TaxCategory with tax_scope == TaxScope.product (if any).
-      - If no applicable tax category exists, tax is treated as 0.00.
-    """
-    from app.inventory.models.models import Sale, SaleItem, Product, Stock, StockTransaction
-    from app.settings.models.models import TaxCategory, TaxScope
-    from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, PaymentMethod
-
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
     cart_id = body.get("cart_id") if body else None
@@ -939,23 +1052,31 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
     tax_category_id = body.get("tax_category_id") if body else None
     client_reference = body.get("client_reference") if body else None
 
-    # load cart
+    # load cart (or create pending)
     if cart_id:
         cart = await db.get(Sale, cart_id)
     else:
         cart = await _get_or_create_cart(db, center_id, user_id)
+
     if not cart or cart.status != "pending":
         raise HTTPException(status_code=404, detail="Pending cart not found")
 
-    # load items
+    # Load items (ORM instances) for validation / update
     stmt = select(SaleItem).where(SaleItem.sale_id == cart.id)
     res = await db.execute(stmt)
     items = res.scalars().all()
     if not items:
         raise HTTPException(status_code=400, detail="Cart is empty")
 
-    # revalidate prices and compute subtotal (server authoritative)
-    subtotal = Decimal("0.00")
+    # Recompute totals and selected tax via the shared helper
+    totals = await _compute_cart_totals(db, cart, tax_category_id)
+    subtotal = totals["subtotal"]
+    tax_amount = totals["tax_amount"]
+    total_amount = totals["total_amount"]
+    selected_tax = totals["selected_tax"]
+    tax_percentage = totals["tax_percentage"]
+
+    # Persist authoritative unit_price and line_subtotal on each SaleItem
     for it in items:
         product = await db.get(Product, it.product_id)
         if not product:
@@ -966,41 +1087,40 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
         it.unit_price = Decimal(str(unit_price))
         it.line_subtotal = (it.unit_price * int(it.quantity)).quantize(Decimal("0.01"))
         db.add(it)
-        subtotal += it.line_subtotal
+    await db.flush()
 
-    # Resolve tax category and percentage:
-    tax_percentage = Decimal("0.00")
-    selected_tax = None
-    if tax_category_id:
-        # validate provided tax category: must exist, be active and have tax_scope == product
-        stmt = select(TaxCategory).where(
-            TaxCategory.id == tax_category_id,
-            TaxCategory.tax_scope == TaxScope.product,
-            TaxCategory.is_active == True
-        )
-        res = await db.execute(stmt)
-        selected_tax = res.scalar_one_or_none()
-        if selected_tax is None:
-            raise HTTPException(status_code=400, detail="Invalid tax_category_id or tax category not applicable for products")
-        tax_percentage = Decimal(str(selected_tax.tax_percentage or "0.00"))
-    else:
-        # pick a default active product-scoped tax category (if any)
-        stmt = select(TaxCategory).where(
-            TaxCategory.tax_scope == TaxScope.product,
-            TaxCategory.is_active == True
-        ).limit(1)
-        res = await db.execute(stmt)
-        selected_tax = res.scalar_one_or_none()
-        if selected_tax:
-            tax_percentage = Decimal(str(selected_tax.tax_percentage or "0.00"))
-            tax_category_id = selected_tax.id  # fill for storing on the sale/cart
+    # Determine whether payment covers the total
+    paid = False
+    pay_amount = Decimal("0.00")
+    if payment and payment.get("amount"):
+        try:
+            pay_amount = Decimal(str(payment.get("amount")))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid payment.amount")
+        paid = pay_amount >= total_amount
 
-    tax_amount = (subtotal * (tax_percentage / Decimal("100.0"))).quantize(Decimal("0.01"))
-    total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
+    # Defensive conversion of payment.method into PaymentMethod (if possible)
+    pm_value = None
+    if payment and "method" in payment:
+        pm_raw = payment.get("method")
+        if pm_raw is not None:
+            try:
+                pm_value = PaymentMethod(pm_raw)
+            except Exception:
+                try:
+                    pm_value = getattr(PaymentMethod, pm_raw)
+                except Exception:
+                    pm_value = pm_raw
 
-    # now perform stock locking and adjustments in a transaction
-    async with db.begin():
-        created_stock_tx_ids = []
+    created_stock_tx_ids = []
+    po_id = None
+    payer_user_id = user_id
+
+    # encapsulate the DB changes so we can execute either inside an existing tx or inside a new one
+    async def _do_checkout_work():
+        nonlocal created_stock_tx_ids, po_id
+
+        # For each item, validate/lock stock and produce OUT transaction if inventory tracked
         for it in items:
             prod = await db.get(Product, it.product_id)
             if getattr(prod, "track_inventory", True):
@@ -1009,61 +1129,96 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
                 stock = r.scalars().first()
                 current_qty = stock.quantity_available if stock else 0
                 if current_qty < int(it.quantity):
-                    raise HTTPException(status_code=409, detail={"product_id": str(prod.id), "available": current_qty, "required": int(it.quantity)})
-                new_qty = current_qty - int(it.quantity)
-                stock.quantity_available = new_qty
-                db.add(stock)
-                tx_unit_cost = stock.last_cost if stock and stock.last_cost is not None else it.unit_price
+                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {prod.id}")
+
+                # create stock transaction (OUT)
                 stock_tx = StockTransaction(
                     product_id=prod.id,
-                    transaction_type="OUT",
                     quantity=int(it.quantity),
-                    unit_cost=tx_unit_cost,
-                    subtotal=(Decimal(tx_unit_cost) * int(it.quantity)).quantize(Decimal("0.01")),
-                    balance_after=new_qty,
-                    reference=str(cart.id),
+                    transaction_type="OUT",
+                    unit_cost=None,
+                    subtotal=None,
                 )
                 db.add(stock_tx)
+                await db.flush()  # populate stock_tx.id
+
+                # update stock aggregate
+                new_qty = int(current_qty) - int(it.quantity)
+                if stock:
+                    stock.quantity_available = new_qty
+                    db.add(stock)
+                else:
+                    stock = Stock(product_id=prod.id, quantity_available=new_qty)
+                    db.add(stock)
+                    await db.flush()
+
+                # set balance_after and persist transaction
+                stock_tx.balance_after = new_qty
+                db.add(stock_tx)
                 await db.flush()
+
                 created_stock_tx_ids.append(str(stock_tx.id))
 
-        # update cart totals, tax info and status
+        # update cart totals, tax info, status and reference note
         cart.subtotal_amount = subtotal
         cart.tax_amount = tax_amount
         cart.total_amount = total_amount
         if selected_tax:
             cart.tax_category_id = selected_tax.id
             cart.tax_percentage = tax_percentage
-        paid = False
-        if payment and payment.get("amount"):
-            pay_amount = Decimal(str(payment.get("amount")))
-            paid = pay_amount >= total_amount
         cart.status = "paid" if paid else "pending"
         cart.note = client_reference or cart.note
         db.add(cart)
+        await db.flush()
 
-        po_id = None
+        # create PaymentOrder if payment provided
         if payment and payment.get("amount"):
-            pay_amount = Decimal(str(payment.get("amount")))
-            pm = payment.get("method")
+            order_type_candidate = getattr(OrderType, "sale", None) or getattr(OrderType, "sales", None) or getattr(OrderType, "add_on", None) or getattr(OrderType, "order", None) or None
+            reference_schema_candidate = getattr(ReferenceSchema, "sale", None) or getattr(ReferenceSchema, "invoice", None) or None
+
             po = PaymentOrder(
-                payer_user_id=user_id,
+                payer_user_id=payer_user_id,
                 payer_type=PayerType.center_admin,
                 payee_type=PayeeType.center,
                 center_id=center_id,
-                order_type=OrderType.add_on,
-                reference_schema=ReferenceSchema.invoice,
+                order_type=order_type_candidate,
+                reference_schema=reference_schema_candidate,
                 reference_id=cart.id,
                 subtotal_amount=subtotal,
                 tax_amount=tax_amount,
                 total_amount=total_amount,
-                currency=getattr(cart, "currency", "INR"),
-                status=PaymentOrderStatus.paid if pay_amount >= total_amount else PaymentOrderStatus.pending,
-                payment_method=PaymentMethod[pm] if pm and pm in PaymentMethod.__members__ else None,
+                currency=getattr(cart, "currency", None) or Currency.INR,
+                status=PaymentOrderStatus.paid if paid else PaymentOrderStatus.pending,
+                payment_method=pm_value,
             )
             db.add(po)
             await db.flush()
-            po_id = po.payment_order_id
+            po_id = getattr(po, "payment_order_id", None) or getattr(po, "id", None)
+
+    # If a transaction is already active on the session, run the work directly (avoid nested begin)
+    if getattr(db, "in_transaction", None) and db.in_transaction():
+        # run inside the already-open transaction
+        await _do_checkout_work()
+    else:
+        # start a new transaction for the checkout work
+        async with db.begin():
+            await _do_checkout_work()
+
+    # refresh cart and optionally payment order for response clarity
+    try:
+        await db.refresh(cart)
+    except Exception:
+        pass
+
+    if po_id:
+        try:
+            stmt = select(PaymentOrder).where((PaymentOrder.payment_order_id == po_id) | (PaymentOrder.id == po_id))
+            res = await db.execute(stmt)
+            _po = res.scalars().first()
+            if _po:
+                po_id = getattr(_po, "payment_order_id", None) or getattr(_po, "id", None)
+        except Exception:
+            pass
 
     return {
         "cart_id": str(cart.id),
