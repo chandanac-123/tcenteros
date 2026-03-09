@@ -48,22 +48,22 @@ const AddProductModal = ({ open, setOpen }) => {
     }
   })
 
-  const profitMultiplier = inventoryProfitData?.inventory_profit || 1
+  const profitPercent = inventoryProfitData?.inventory_profit || 0
 
   const suggestedSellingPrice =
-    formik.values.base_price && profitMultiplier
-      ? Number(formik.values.base_price) * Number(profitMultiplier)
+    formik.values.base_price && profitPercent
+      ? Number(formik.values.base_price) * (1 + Number(profitPercent) / 100)
       : ''
 
   useEffect(() => {
-    if (formik.values.base_price && profitMultiplier) {
-      const suggested =
-        Number(formik.values.base_price) * Number(profitMultiplier)
+    const base = Number(formik.values.base_price)
+    const percent = Number(inventoryProfitData?.inventory_profit || 0)
 
-      formik.setFieldValue('selling_price', suggested)
+    if (base) {
+      const sellingPrice = base + (base * percent) / 100
+      formik.setFieldValue('selling_price', sellingPrice)
     }
-  }, [formik.values.base_price, profitMultiplier])
-
+  }, [formik.values.base_price, inventoryProfitData])
 
   return (
     <CustomeModal open={open} onOpenChange={setOpen} header='Add Product'>
@@ -83,7 +83,7 @@ const AddProductModal = ({ open, setOpen }) => {
           />
 
           {isCategoryEmpty ? (
-            <div className='col-span-2 border border-dashed rounded-lg p-4 bg-gray-50'>
+            <div className='col-span-2 border border-dashed rounded-lg p-4 bg-primary/5 '>
               <p className='text-sm text-gray-600'>
                 No product categories found. Please add a category from the
                 Settings before creating a product.
