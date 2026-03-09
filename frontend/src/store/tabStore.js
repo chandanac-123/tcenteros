@@ -9,7 +9,8 @@ const createTabStore = storageKey =>
     persist(
       set => ({
         selectedTab: 1,
-        setSelectedTab: id => set({ selectedTab: id })
+        setSelectedTab: id => set({ selectedTab: id }),
+        resetSelectedTab: () => set({ selectedTab: 1 })
       }),
       {
         name: storageKey
@@ -49,6 +50,17 @@ export const useCrmStore = create(
 
     clearSelectedIds: () =>
       set({
+        selectedMemberId: null,
+        selectedVisitorId: null,
+        selectedGuestId: null
+      }),
+
+    resetCrmState: () =>
+      set({
+        selectedTab: 1,
+        memberView: 'list',
+        visitorView: 'list',
+        guestView: 'list',
         selectedMemberId: null,
         selectedVisitorId: null,
         selectedGuestId: null

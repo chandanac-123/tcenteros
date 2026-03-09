@@ -10,6 +10,7 @@ import { useCrmStore } from '@store/tabStore'
 import VisitorAdd from './visitor/VisitorAdd'
 import Visitors from './visitor'
 import Guest from './guest'
+import { useEffect } from 'react'
 
 const CRM = () => {
   const {
@@ -23,8 +24,14 @@ const CRM = () => {
     selectedMemberId,
     setSelectedMemberId,
     setSelectedTab,
-    clearSelectedIds
+    clearSelectedIds,
+    resetCrmState
   } = useCrmStore()
+
+  useEffect(() => {
+    resetCrmState()
+  }, [resetCrmState])
+
   const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
 
   return (
