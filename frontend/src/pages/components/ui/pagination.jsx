@@ -1,10 +1,6 @@
 import * as React from "react"
-import { MoreHorizontal } from "lucide-react"
-import left_arrow from "@assets/navigate-icons/pagination-left.svg"
-import right_arrow from "@assets/navigate-icons/pagination-right.svg"
-
+import { ChevronsLeft, ChevronsRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@pages/lib/utils"
-import { buttonVariants } from "@pages/components/ui/button";
 
 const Pagination = ({
   className,
@@ -60,7 +56,7 @@ const PaginationPrevious = ({
     size="default"
     className={cn("gap-1 border cursor-pointer border-secondary text-secondary flex text-center items-center justify-center w-auto px-4", className)}
     {...props}>
-    <img src={left_arrow} className="h-4 w-4 text-secondary" />
+    <ChevronsLeft className="h-4 w-4 text-secondary"/>
     <span className="">Previous</span>
   </PaginationLink>
 )
@@ -76,7 +72,7 @@ const PaginationNext = ({
     className={cn("gap-1 border cursor-pointer border-secondary text-secondary flex items-center justify-center w-auto px-4", className)}
     {...props}>
     <span className="mr-1">Next</span>
-    <img src={right_arrow} className="h-4 w-4 text-secondary" />
+    <ChevronsRight className="h-4 w-4 text-secondary"/>
   </PaginationLink>
 )
 PaginationNext.displayName = "PaginationNext"
