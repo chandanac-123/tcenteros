@@ -42,9 +42,9 @@ const messages = [
 
 const Chat = () => {
   return (
-    <div className='flex flex-col h-full bg-primary/10 rounded-lg overflow-hidden'>
+    <div className='flex flex-col  bg-primary/10 rounded-lg overflow-hidden'>
       {/* Chat messages */}
-      <div className='flex-1 overflow-y-auto p-4 space-y-4'>
+      <div className='flex-1 overflow-y-auto p-3 space-y-2'>
         {messages.map(msg => (
           <div
             key={msg.id}

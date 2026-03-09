@@ -5,15 +5,14 @@ import NetworkNotifications from './components/NetworkNotifications'
 import CenterNotifications from './components/CenterNotifications'
 import Tickets from './components/Tickets'
 
-const employeeOrMember = [
-  { id: 1, name: 'All' },
+const notificationsTabs = [
   { id: 2, name: 'Network' },
   { id: 3, name: 'Center' },
   { id: 4, name: 'Tickets' }
 ]
 
 const Notifications = () => {
-  const [activeTab, setActiveTab] = useState('All')
+  const [activeTab, setActiveTab] = useState('Network')
 
   return (
     <ContentLayout>
@@ -27,21 +26,14 @@ const Notifications = () => {
 
         <div className='flex w-auto'>
           <CustomeTab
-            tabList={employeeOrMember}
-            defaultVal='All'
+            tabList={notificationsTabs}
+            defaultVal='Network'
             tabsListClass=' w-[400px] p-[1px]'
             onChange={value => setActiveTab(value)}
           />
         </div>
 
         {/* Tab Content */}
-
-        {activeTab === 'All' && (
-          <>
-            <NetworkNotifications />
-            <CenterNotifications />
-          </>
-        )}
 
         {activeTab === 'Network' && <NetworkNotifications />}
 

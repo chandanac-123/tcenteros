@@ -55,6 +55,7 @@ const SalesReport = () => {
         columns={columns}
         data={data}
         pagination={32}
+        search={false}
          paginationVisibile={true}
       />
     </>
