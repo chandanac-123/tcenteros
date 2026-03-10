@@ -1109,10 +1109,11 @@ async def get_cart_amount(
     current_admin: dict = Depends(centeradmin_required),
 ):
     """
-    Return the previewed amounts for the cart:
+    Return the previewed amounts for the cart with product details:
       - If `cart_id` is omitted, uses the caller's pending cart.
       - Tax category selection is automatic: the code will pick the first active TaxCategory
         with `tax_scope == TaxScope.product`. If none exists, tax is treated as 0.00.
+      - Returns list of products with id, name, quantity, unit_price, and line_total
     """
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
@@ -1128,11 +1129,35 @@ async def get_cart_amount(
     if not cart or cart.status != "pending":
         raise HTTPException(status_code=404, detail="Pending cart not found")
 
+    # Load items with products
+    stmt = (
+        select(SaleItem, Product)
+        .join(Product, Product.id == SaleItem.product_id)
+        .where(SaleItem.sale_id == cart.id)
+        .order_by(SaleItem.created_at)
+    )
+    result = await db.execute(stmt)
+    items_with_products = result.all()
+
+    # Build product list with details
+    products = []
+    for item, product in items_with_products:
+        products.append({
+            "product_id": str(product.id),
+            "product_name": product.name,
+            "sku_code": product.sku_code,
+            "quantity": int(item.quantity),
+            "unit_price": str(item.unit_price),
+            "line_total": str(item.line_subtotal),
+        })
+
     # No tax_category_id passed — helper will pick the active product-scoped tax category if any
     totals = await _compute_cart_totals(db, cart, tax_category_id=None)
 
     return {
         "cart_id": str(cart.id),
+        "products": products,
+        "items_count": len(products),
         "subtotal": str(totals["subtotal"]),
         "tax": str(totals["tax_amount"]),
         "total": str(totals["total_amount"]),
