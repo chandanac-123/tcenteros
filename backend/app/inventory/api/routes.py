@@ -1113,7 +1113,7 @@ async def get_cart_amount(
       - If `cart_id` is omitted, uses the caller's pending cart.
       - Tax category selection is automatic: the code will pick the first active TaxCategory
         with `tax_scope == TaxScope.product`. If none exists, tax is treated as 0.00.
-      - Returns list of products with id, name, quantity, unit_price, and line_total
+      - Returns list of products with cart_item_id, id, name, quantity, unit_price, and line_total
     """
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
@@ -1143,6 +1143,7 @@ async def get_cart_amount(
     products = []
     for item, product in items_with_products:
         products.append({
+            "cart_item_id": str(item.id),
             "product_id": str(product.id),
             "product_name": product.name,
             "sku_code": product.sku_code,
