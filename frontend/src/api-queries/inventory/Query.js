@@ -11,7 +11,11 @@ import {
   getAllStockTransactions,
   createStockEntry,
   getInventoryProfit,
-  getProductDropdown
+  getStockReport,
+  getInventoryReport,
+  getPurchaseReport,
+  getSaleReport,
+  getGenerateSaleReport
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -139,16 +143,14 @@ export const useCreateStockEntryMutation = data => {
   })
 }
 
-
 export const useInventoryProfitQuery = () => {
   return useQuery({
     queryKey: ['inventory-profit'],
     queryFn: () => getInventoryProfit(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
-  })  
+  })
 }
-
 
 export const useProductDropdownQuery = () => {
   return useQuery({
@@ -156,5 +158,67 @@ export const useProductDropdownQuery = () => {
     queryFn: () => getProductDropdown(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
-  })  
+  })
+}
+
+
+export const useSalesReportQuery = params => {
+  return useQuery({
+    queryKey: ['sales-report', params],
+    queryFn: () => getSaleReport(params),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+
+export const usePurchaseReportQuery = params => {
+  return useQuery({
+    queryKey: ['purchase-report', params],
+    queryFn: () => getPurchaseReport(params),
+    enabled: !!params?.date_from && !!params?.date_to,
+    keepPreviousData: true
+  })
+}
+
+export const useInventoryReportQuery = params => {
+  return useQuery({
+    queryKey: ['inventory-report', params],
+    queryFn: () => getInventoryReport(params),
+    enabled: !!params?.date_from && !!params?.date_to,
+    keepPreviousData: true
+  })
+}
+
+export const useStockReportQuery = params => {
+  return useQuery({
+    queryKey: ['stock-report', params],
+    queryFn: () => getStockReport(params),
+    enabled: !!params?.date_from && !!params?.date_to,
+    keepPreviousData: true
+  })
+}
+
+export const useGenerateSaleReportMutation = () => {
+  return useMutation({
+    mutationFn: data => getGenerateSaleReport(data)
+  })
+}
+
+export const useGeneratePurchaseReportMutation = () => {
+  return useMutation({
+    mutationFn: data => getGeneratePurchaseReport(data)
+  })
+}
+
+export const useGenerateInventoryReportMutation = () => {
+  return useMutation({
+    mutationFn: data => getGenerateInventoryReport(data)
+  })
+}
+
+export const useGenerateStockReportMutation = () => {
+  return useMutation({
+    mutationFn: data => getGenerateStockReport(data)
+  })
 }

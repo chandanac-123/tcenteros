@@ -58,3 +58,20 @@ export const formatRange = (range) => ({
   from: range?.from ? format(range.from, 'yyyy-MM-dd') : null,
   to: range?.to ? format(range.to, 'yyyy-MM-dd') : null
 })
+
+export const downloadFile = (blob, filename) => {
+  const url = window.URL.createObjectURL(new Blob([blob]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', filename)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+}
+
+//2026-03-10T11:34:14.147497 to 2026-03-10
+ export const formatDate = date => {
+    if (!date) return ''
+    return new Date(date).toISOString().split('T')[0]
+  }
+  

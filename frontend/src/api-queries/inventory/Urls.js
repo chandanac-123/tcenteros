@@ -10,8 +10,16 @@ import {
   getStockTransactionApiCall,
   createStockApiCall,
   getInventoryProfitApiCall,
-  getProductDropdownApiCall
-} from '../../api/index'
+  getProductDropdownApiCall,
+  getSaleReportApiCall,
+  getPurchaseReportApiCall,
+  getInventoryReportApiCall,
+  getStockReportApiCall,
+  getGenerateStockReportApiCall,
+  getGenerateInventoryReportApiCall,
+  getGeneratePurchaseReportApiCall,
+  getGenerateSaleReportApiCall
+} from './index'
 
 export const getAllSKU = async () => {
   try {
@@ -22,7 +30,7 @@ export const getAllSKU = async () => {
   }
 }
 
-export const createProduct = async (details) => {
+export const createProduct = async details => {
   try {
     const response = await createProductApiCall(details)
     return response.data
@@ -49,16 +57,16 @@ export const deleteProduct = async id => {
   }
 }
 
-export const getAllProducts = async (data) => {
+export const getAllProducts = async data => {
   try {
-    const response = await getProductApiCall(data )
+    const response = await getProductApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const createSKU = async (details) => {
+export const createSKU = async details => {
   try {
     const response = await createSKUApiCall(details)
     return response.data
@@ -76,7 +84,7 @@ export const deleteSKU = async id => {
   }
 }
 
-export const getAllStock = async (data) => {
+export const getAllStock = async data => {
   try {
     const response = await getStockApiCall(data)
     return response.data
@@ -85,7 +93,7 @@ export const getAllStock = async (data) => {
   }
 }
 
-export const getAllStockTransactions = async (data) => {
+export const getAllStockTransactions = async data => {
   try {
     const response = await getStockTransactionApiCall(data)
     return response.data
@@ -94,7 +102,7 @@ export const getAllStockTransactions = async (data) => {
   }
 }
 
-export const createStockEntry = async (data) => {
+export const createStockEntry = async data => {
   try {
     const response = await createStockApiCall(data)
     return response.data
@@ -112,9 +120,71 @@ export const getInventoryProfit = async () => {
   }
 }
 
-export const getProductDropdown = async () => {
+export const getSaleReport = async (data) => {
   try {
-    const response = await getProductDropdownApiCall()
+    const response = await getSaleReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getPurchaseReport = async (data) => {
+  try {
+    const response = await getPurchaseReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getInventoryReport = async (data) => {
+  try {
+    const response = await getInventoryReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+
+
+export const getStockReport = async (data) => {
+  try {
+    const response = await getStockReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getGenerateSaleReport = async (data) => {
+  try {
+    const response = await getGenerateSaleReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+export const getGeneratePurchaseReport = async (data) => {
+  try {
+    const response = await getGeneratePurchaseReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+export const getGenerateInventoryReport = async (data) => {
+  try {
+    const response = await getGenerateInventoryReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+export const getGenerateStockReport = async (data) => {
+  try {
+    const response = await getGenerateStockReportApiCall(data)
     return response.data
   } catch (error) {
     throw error

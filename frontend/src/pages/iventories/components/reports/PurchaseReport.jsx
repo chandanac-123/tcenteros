@@ -1,7 +1,9 @@
-import React from 'react'
 import { DataTable } from '@common/DataTable'
+import { usePurchaseReportQuery } from '@api-queries/inventory/Query'
 
-const StockReport = () => {
+const PurchaseReport = () => {
+    const {data} = usePurchaseReportQuery()
+  
   const columns = [
     {
       accessorKey: 'date',
@@ -30,9 +32,9 @@ const StockReport = () => {
   ]
   return (
     <>
-      <DataTable columns={columns} search={false} />
+      <DataTable columns={columns} search={false} data={ []} />
     </>
   )
 }
 
-export default StockReport
+export default PurchaseReport

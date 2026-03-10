@@ -6,11 +6,11 @@ import { useInventoryStore } from "@store/networkTabstore";
 const Inventories = () => {
   const { activeTab, setActiveTab } = useInventoryStore();
 
-  console.log("Active Store", activeTab);
+  // console.log("Active Store", activeTab);
 
 
   const activeModule = inventory_modules.find(module => module.name === activeTab)
-  console.log("ActiveModule", activeModule);
+  // console.log("ActiveModule", activeModule);
 
 
 
