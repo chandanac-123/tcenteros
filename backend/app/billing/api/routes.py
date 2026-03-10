@@ -22,12 +22,12 @@ from uuid import UUID
 router = APIRouter()
 
 
-@router.get("/transactions", summary="List all billing transactions", response_model=TransactionListPaginatedResponse)
+@router.get("/transactions", summary="List all billing transactions")  # REMOVED response_model
 async def list_billing_transactions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    date_from: Optional[date] = Query(None, description="Filter from date (inclusive)"),
-    date_to: Optional[date] = Query(None, description="Filter to date (inclusive)"),
+    date_from: Optional[str] = Query(None, description="Filter from date (YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="Filter to date (YYYY-MM-DD or 'null')"),
     transaction_type: Optional[str] = Query(None, description="Filter by type: membership, product, network, service"),
     status: Optional[str] = Query(None, description="Filter by status: paid, pending, unpaid, failed, cancelled"),
     payment_method: Optional[str] = Query(None, description="Filter by payment method: cash, card, upi, bank_transfer"),
@@ -48,21 +48,37 @@ async def list_billing_transactions(
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = date.fromisoformat(date_from)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD or 'null'")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = date.fromisoformat(date_to)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD or 'null'")
+
     # Build WHERE clauses
     where_clauses = [PaymentOrder.center_id == center_id]
 
     # Date filters
-    if date_from:
-        where_clauses.append(PaymentOrder.created_at >= datetime.combine(date_from, datetime.min.time()))
-    if date_to:
-        where_clauses.append(PaymentOrder.created_at <= datetime.combine(date_to, datetime.max.time()))
+    if date_from_parsed:
+        where_clauses.append(PaymentOrder.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+    if date_to_parsed:
+        where_clauses.append(PaymentOrder.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
 
     # Type filter (order_type mapping)
     if transaction_type:
         type_mapping = {
             "membership": [OrderType.center_subscription, OrderType.renewal],
             "product": [OrderType.stock_purchase],
-            "network": [OrderType.add_on],  # You may need to add a specific network order type
+            "network": [OrderType.add_on],
             "service": [OrderType.feature_purchase],
         }
         if transaction_type in type_mapping:
@@ -97,18 +113,14 @@ async def list_billing_transactions(
     if customer_id:
         where_clauses.append(PaymentOrder.payer_user_id == customer_id)
 
-    # Search filter (will require joins)
-    # For now, skip complex search - can be added later with subqueries
-
     # Count total
     count_stmt = select(func.count()).select_from(PaymentOrder).where(*where_clauses)
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one() or 0
 
-    # Main query with eager loading
+    # Main query WITHOUT eager loading
     stmt = (
         select(PaymentOrder)
-        .options(selectinload(PaymentOrder.payer))
         .where(*where_clauses)
         .order_by(desc(PaymentOrder.created_at))
         .offset((page - 1) * page_size)
@@ -118,10 +130,21 @@ async def list_billing_transactions(
     result = await db.execute(stmt)
     payment_orders = result.scalars().all()
 
-    # Build response
+    # Fetch all unique payer user IDs
+    payer_ids = [po.payer_user_id for po in payment_orders if po.payer_user_id]
+    
+    # Fetch users in a single query
+    users_map = {}
+    if payer_ids:
+        users_stmt = select(User).where(User.id.in_(payer_ids))
+        users_result = await db.execute(users_stmt)
+        users = users_result.scalars().all()
+        users_map = {user.id: user for user in users}
+
+    # Build response - CRITICAL: Convert ALL enums to strings immediately
     transactions = []
     for po in payment_orders:
-        # Determine transaction type and source
+        # Determine transaction type
         trans_type = "product"
         if po.order_type in [OrderType.center_subscription, OrderType.renewal]:
             trans_type = "membership"
@@ -130,13 +153,44 @@ async def list_billing_transactions(
         elif po.order_type == OrderType.add_on:
             trans_type = "network"
 
-        # Get customer name
+        # Get customer name from users_map
         customer_name = None
-        if po.payer:
-            customer_name = getattr(po.payer, "full_name", None) or getattr(po.payer, "username", None) or po.payer.email
+        if po.payer_user_id and po.payer_user_id in users_map:
+            user = users_map[po.payer_user_id]
+            customer_name = getattr(user, "full_name", None) or getattr(user, "username", None) or user.email
 
-        # Generate invoice number (you may want to add this to PaymentOrder model)
+        # Generate invoice number
         invoice_number = f"INV{str(po.payment_order_id)[:8].upper()}"
+
+        # CRITICAL: Convert enums to strings BEFORE appending
+        payment_method_str = None
+        if po.payment_method:
+            try:
+                payment_method_str = str(po.payment_method.value)
+            except:
+                payment_method_str = None
+        
+        status_str = None
+        if po.status:
+            try:
+                status_str = str(po.status.value)
+            except:
+                status_str = "unknown"
+        
+        reference_schema_str = None
+        if po.reference_schema:
+            try:
+                reference_schema_str = str(po.reference_schema.value)
+            except:
+                reference_schema_str = None
+
+        # Convert datetime to ISO string
+        date_str = None
+        if po.created_at:
+            try:
+                date_str = po.created_at.isoformat()
+            except:
+                date_str = None
 
         transactions.append({
             "invoice_number": invoice_number,
@@ -144,15 +198,15 @@ async def list_billing_transactions(
             "customer_name": customer_name,
             "customer_id": str(po.payer_user_id) if po.payer_user_id else None,
             "type": trans_type,
-            "source": source or "local",  # You may want to add source field to PaymentOrder
-            "date": po.created_at,
+            "source": source or "local",
+            "date": date_str,
             "subtotal": str(po.subtotal_amount),
             "tax": str(po.tax_amount),
             "total_amount": str(po.total_amount),
-            "payment_method": po.payment_method.value if po.payment_method else None,
-            "status": po.status.value,
+            "payment_method": payment_method_str,
+            "status": status_str,
             "reference_id": str(po.reference_id) if po.reference_id else None,
-            "reference_schema": po.reference_schema.value if po.reference_schema else None,
+            "reference_schema": reference_schema_str,
         })
 
     return {
@@ -176,11 +230,10 @@ async def get_billing_transaction_detail(
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
-    # Fetch payment order with relationships
-    stmt = (
-        select(PaymentOrder)
-        .options(selectinload(PaymentOrder.payer))
-        .where(PaymentOrder.payment_order_id == transaction_id, PaymentOrder.center_id == center_id)
+    # Fetch payment order WITHOUT relationship loading
+    stmt = select(PaymentOrder).where(
+        PaymentOrder.payment_order_id == transaction_id,
+        PaymentOrder.center_id == center_id
     )
     result = await db.execute(stmt)
     po = result.scalar_one_or_none()
@@ -188,15 +241,17 @@ async def get_billing_transaction_detail(
     if not po:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    # Build customer info
+    # Fetch payer separately if exists
     customer = None
-    if po.payer:
-        customer = {
-            "id": str(po.payer.id),
-            "name": getattr(po.payer, "full_name", None) or getattr(po.payer, "username", None) or po.payer.email,
-            "email": po.payer.email,
-            "phone": getattr(po.payer, "mobile", None),
-        }
+    if po.payer_user_id:
+        payer = await db.get(User, po.payer_user_id)
+        if payer:
+            customer = {
+                "id": str(payer.id),
+                "name": getattr(payer, "full_name", None) or getattr(payer, "username", None) or payer.email,
+                "email": payer.email,
+                "phone": getattr(payer, "mobile", None),
+            }
 
     # Determine transaction type
     trans_type = "product"
@@ -225,13 +280,11 @@ async def get_billing_transaction_detail(
                 "description": product.name,
                 "quantity": int(sale_item.quantity),
                 "unit_price": str(sale_item.unit_price),
-                "tax": "0.00",  # Tax per item not stored, using total
+                "tax": "0.00",
                 "total": str(sale_item.line_subtotal),
             })
     
     elif trans_type == "membership":
-        # Fetch membership details
-        # Find MemberMembership by looking for payment around same time or by reference_id if it's stored
         items.append({
             "description": "Membership Plan",
             "quantity": 1,
@@ -241,7 +294,6 @@ async def get_billing_transaction_detail(
         })
     
     else:
-        # Generic item
         items.append({
             "description": f"{trans_type.title()} Purchase",
             "quantity": 1,
@@ -254,7 +306,7 @@ async def get_billing_transaction_detail(
     payment_details = None
     if po.status == PaymentOrderStatus.paid:
         payment_details = {
-            "transaction_ref": None,  # You may want to add this field to PaymentOrder
+            "transaction_ref": None,
             "paid_at": po.updated_at if po.updated_at else po.created_at,
         }
 
@@ -266,7 +318,7 @@ async def get_billing_transaction_detail(
         "transaction_id": str(po.payment_order_id),
         "customer": customer,
         "type": trans_type,
-        "source": "local",  # You may want to add source field
+        "source": "local",
         "date": po.created_at,
         "items": items,
         "subtotal": str(po.subtotal_amount),
@@ -275,7 +327,7 @@ async def get_billing_transaction_detail(
         "payment_method": po.payment_method.value if po.payment_method else None,
         "payment_details": payment_details,
         "status": po.status.value,
-        "notes": None,  # You may want to add notes field to PaymentOrder
+        "notes": None,
     }
 
 
@@ -329,29 +381,32 @@ async def create_billing_transaction(
 
     # Determine payment status
     payment_status = PaymentOrderStatus.pending
-    payment_method = None
+    payment_method_value = None
     
     if payload.payment:
         if payload.payment.amount >= total_amount:
             payment_status = PaymentOrderStatus.paid
-        payment_method = PaymentMethod[payload.payment.method.value]
+        try:
+            payment_method_value = PaymentMethod[payload.payment.method.value]
+        except (KeyError, AttributeError):
+            payment_method_value = None
 
     # Create PaymentOrder
     try:
         payment_order = PaymentOrder(
             payer_user_id=UUID(payload.customer_id),
-            payer_type=getattr(customer, "role", "member"),  # Adjust based on user role
+            payer_type=getattr(customer, "role", "member"),
             payee_type="center",
             center_id=UUID(center_id),
             order_type=order_type,
             reference_schema=ReferenceSchema.invoice,
-            reference_id=None,  # Can be set if linking to specific record
+            reference_id=None,
             subtotal_amount=subtotal,
             tax_amount=tax_amount,
             total_amount=total_amount,
             currency="INR",
             status=payment_status,
-            payment_method=payment_method,
+            payment_method=payment_method_value,
             created_by=UUID(user_id) if user_id else None,
         )
 
@@ -418,8 +473,6 @@ async def update_billing_transaction(
         if payload.payment_method.value in method_mapping:
             po.payment_method = method_mapping[payload.payment_method.value]
 
-    # Note: You'll need to add a notes field to PaymentOrder model if you want to store notes
-
     try:
         db.add(po)
         await db.commit()
@@ -437,7 +490,7 @@ async def update_billing_transaction(
 
 @router.get("/sales/summary/daily", summary="Get daily sales summary", response_model=DailySalesSummaryResponse)
 async def get_daily_sales_summary(
-    date_filter: Optional[date] = Query(None, description="Date for summary (default: today)"),
+    date_filter: Optional[str] = Query(None, description="Date for summary (YYYY-MM-DD or 'null', default: today)"),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
@@ -448,7 +501,14 @@ async def get_daily_sales_summary(
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
-    target_date = date_filter or date.today()
+    # Parse date parameter
+    target_date = date.today()
+    if date_filter and date_filter.lower() != "null":
+        try:
+            target_date = date.fromisoformat(date_filter)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD or 'null'")
+
     date_start = datetime.combine(target_date, datetime.min.time())
     date_end = datetime.combine(target_date, datetime.max.time())
 
