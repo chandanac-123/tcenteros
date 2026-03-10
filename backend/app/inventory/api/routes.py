@@ -12,8 +12,8 @@ from app.settings.models.models import TaxCategory, TaxScope
 from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, PaymentMethod
 import asyncio
 from uuid import uuid4
-from sqlalchemy import select,func, update, desc, delete
-from datetime import datetime, date
+from sqlalchemy import select,func, update, desc, delete, or_
+from datetime import datetime, date, timedelta
 from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency
 from decimal import Decimal
 from sqlalchemy.orm import selectinload
@@ -1796,6 +1796,161 @@ async def generate_sales_report(
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
 
+@router.get("/reports/sales", summary="Get Sales Report Data for UI Table")
+async def get_sales_report_data(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    date_from: Optional[date] = Query(None, description="Start date for report"),
+    date_to: Optional[date] = Query(None, description="End date for report"),
+    status: Optional[str] = Query(None, description="Filter by status: completed, pending, cancelled"),
+    sort_by: str = Query("created_at", description="Sort by: created_at, total_amount, items_count"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get sales report data for UI table display with pagination, filtering, and sorting.
+    Returns sales transactions with summary statistics.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Default date range: last 30 days if not specified
+    if not date_from:
+        date_from = date.today() - timedelta(days=30)
+    if not date_to:
+        date_to = date.today()
+
+    # Build WHERE clauses
+    where_clauses = [
+        Sale.center_id == center_id,
+        Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
+        Sale.created_at <= datetime.combine(date_to, datetime.max.time())
+    ]
+    
+    if status:
+        where_clauses.append(Sale.status == status.lower())
+
+    # Count total matching records
+    count_stmt = select(func.count()).select_from(Sale).where(*where_clauses)
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Build main query with items loaded
+    stmt = (
+        select(Sale)
+        .options(selectinload(Sale.items).selectinload(SaleItem.product))
+        .where(*where_clauses)
+    )
+
+    # Apply sorting
+    if sort_by == "total_amount":
+        stmt = stmt.order_by(desc(Sale.total_amount) if sort_order == "desc" else Sale.total_amount)
+    elif sort_by == "items_count":
+        # This requires a subquery or we'll sort after fetching
+        stmt = stmt.order_by(desc(Sale.created_at) if sort_order == "desc" else Sale.created_at)
+    else:  # default to created_at
+        stmt = stmt.order_by(desc(Sale.created_at) if sort_order == "desc" else Sale.created_at)
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(stmt)
+    sales = result.scalars().all()
+
+    # Fetch payment orders for these sales
+    sale_ids = [sale.id for sale in sales]
+    payment_orders = {}
+    
+    if sale_ids:
+        po_stmt = select(PaymentOrder).where(
+            PaymentOrder.reference_id.in_(sale_ids),
+            PaymentOrder.reference_schema == ReferenceSchema.invoice
+        )
+        po_result = await db.execute(po_stmt)
+        pos = po_result.scalars().all()
+        payment_orders = {po.reference_id: po for po in pos}
+
+    # Calculate summary statistics for the filtered data (all records, not just current page)
+    summary_stmt = select(
+        func.count(Sale.id).label("total_sales"),
+        func.coalesce(func.sum(Sale.total_amount), 0).label("total_revenue"),
+        func.coalesce(func.sum(Sale.subtotal_amount), 0).label("total_subtotal"),
+        func.coalesce(func.sum(Sale.tax_amount), 0).label("total_tax"),
+    ).where(*where_clauses)
+    
+    summary_result = await db.execute(summary_stmt)
+    summary = summary_result.first()
+
+    # Build sales data for table
+    sales_data = []
+    for sale in sales:
+        po = payment_orders.get(sale.id)
+        
+        # Determine payment status
+        payment_status_value = "unpaid"
+        if po:
+            if po.status == PaymentOrderStatus.paid:
+                payment_status_value = "paid"
+            elif po.status == PaymentOrderStatus.pending:
+                payment_status_value = "pending"
+
+        # Build items preview (first 3 items for table display)
+        items_preview = []
+        for idx, item in enumerate(sale.items[:3]):
+            items_preview.append({
+                "product_name": item.product.name if item.product else item.product_name,
+                "quantity": int(item.quantity),
+            })
+
+        sales_data.append({
+            "sale_id": str(sale.id),
+            "sale_number": f"INV{str(sale.id)[:8].upper()}",
+            "date": sale.created_at.isoformat() if sale.created_at else None,
+            "status": sale.status,
+            "payment_status": payment_status_value,
+            "payment_method": po.payment_method.value if po and po.payment_method else None,
+            "items_count": len(sale.items),
+            "items_preview": items_preview,
+            "has_more_items": len(sale.items) > 3,
+            "subtotal": str(sale.subtotal_amount),
+            "tax": str(sale.tax_amount or "0.00"),
+            "total": str(sale.total_amount),
+            "currency": sale.currency or "INR",
+            "created_by": str(sale.created_by) if sale.created_by else None,
+            "note": sale.note,
+        })
+
+    # Count by status for filter badges
+    status_counts = {}
+    for status_type in ["completed", "pending", "cancelled"]:
+        status_stmt = select(func.count()).select_from(Sale).where(
+            Sale.center_id == center_id,
+            Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
+            Sale.created_at <= datetime.combine(date_to, datetime.max.time()),
+            Sale.status == status_type
+        )
+        status_result = await db.execute(status_stmt)
+        status_counts[status_type] = status_result.scalar_one() or 0
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "date_from": date_from.isoformat(),
+        "date_to": date_to.isoformat(),
+        "summary": {
+            "total_sales": summary.total_sales or 0,
+            "total_revenue": str(summary.total_revenue or "0.00"),
+            "total_subtotal": str(summary.total_subtotal or "0.00"),
+            "total_tax": str(summary.total_tax or "0.00"),
+            "average_sale": str((Decimal(str(summary.total_revenue or "0.00")) / Decimal(str(summary.total_sales or 1))).quantize(Decimal("0.01"))) if summary.total_sales else "0.00",
+        },
+        "status_counts": status_counts,
+        "sales": sales_data,
+    }
+
 
 @router.post("/reports/generate/purchase", summary="Generate Purchase Report")
 async def generate_purchase_report(
@@ -1910,6 +2065,149 @@ async def generate_purchase_report(
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
 
 
+@router.get("/reports/purchase", summary="Get Purchase Report Data for UI Table")
+async def get_purchase_report_data(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    date_from: Optional[date] = Query(None, description="Start date for report"),
+    date_to: Optional[date] = Query(None, description="End date for report"),
+    product_id: Optional[str] = Query(None, description="Filter by product"),
+    supplier_name: Optional[str] = Query(None, description="Filter by supplier name"),
+    sort_by: str = Query("created_at", description="Sort by: created_at, quantity, total"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get purchase/stock-in report data for UI table display with pagination, filtering, and sorting.
+    Returns purchase transactions with summary statistics.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Default date range: last 30 days if not specified
+    if not date_from:
+        date_from = date.today() - timedelta(days=30)
+    if not date_to:
+        date_to = date.today()
+
+    # Build WHERE clauses
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [
+        StockTransaction.product_id.in_(sku_ids_sel),
+        StockTransaction.transaction_type == "IN"
+    ]
+    
+    created_at_attr = getattr(StockTransaction, "created_at", None)
+    if created_at_attr:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+    else:
+        where_clauses.append(StockTransaction.invoice_date >= date_from)
+        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    if product_id:
+        where_clauses.append(StockTransaction.product_id == product_id)
+    
+    if supplier_name:
+        where_clauses.append(StockTransaction.supplier_name.ilike(f"%{supplier_name}%"))
+
+    # Count total matching records
+    count_stmt = (
+        select(func.count())
+        .select_from(StockTransaction)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .where(*where_clauses)
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Build main query
+    stmt = (
+        select(StockTransaction, Product, Stock)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+    )
+
+    # Apply sorting
+    if sort_by == "quantity":
+        stmt = stmt.order_by(desc(StockTransaction.quantity) if sort_order == "desc" else StockTransaction.quantity)
+    elif sort_by == "total":
+        stmt = stmt.order_by(desc(StockTransaction.subtotal) if sort_order == "desc" else StockTransaction.subtotal)
+    else:  # default to created_at
+        order_col = created_at_attr if created_at_attr else StockTransaction.invoice_date
+        stmt = stmt.order_by(desc(order_col) if sort_order == "desc" else order_col)
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    # Calculate summary statistics
+    summary_stmt = select(
+        func.count(StockTransaction.id).label("total_purchases"),
+        func.coalesce(func.sum(StockTransaction.quantity), 0).label("total_quantity"),
+        func.coalesce(func.sum(StockTransaction.subtotal), 0).label("total_cost"),
+    ).select_from(StockTransaction).join(
+        Product, Product.id == StockTransaction.product_id
+    ).where(*where_clauses)
+    
+    summary_result = await db.execute(summary_stmt)
+    summary = summary_result.first()
+
+    # Build purchase data for table
+    purchases_data = []
+    for st, prod, stock in rows:
+        purchases_data.append({
+            "transaction_id": str(st.id),
+            "date": st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
+            "product_id": str(prod.id),
+            "product_name": prod.name,
+            "sku_code": prod.sku_code,
+            "supplier_name": st.supplier_name,
+            "invoice_number": st.invoice_number,
+            "quantity_added": int(st.quantity or 0),
+            "unit_cost": str(st.unit_cost) if st.unit_cost else "0.00",
+            "total": str(st.subtotal) if st.subtotal else "0.00",
+            "current_stock": int(stock.quantity_available) if stock else 0,
+        })
+
+    # Get unique suppliers for filter
+    supplier_stmt = (
+        select(StockTransaction.supplier_name)
+        .select_from(StockTransaction)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .where(
+            StockTransaction.product_id.in_(sku_ids_sel),
+            StockTransaction.transaction_type == "IN",
+            StockTransaction.supplier_name.isnot(None)
+        )
+        .distinct()
+        .limit(50)
+    )
+    supplier_result = await db.execute(supplier_stmt)
+    suppliers = [s[0] for s in supplier_result.all() if s[0]]
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "date_from": date_from.isoformat(),
+        "date_to": date_to.isoformat(),
+        "summary": {
+            "total_purchases": summary.total_purchases or 0,
+            "total_quantity": int(summary.total_quantity or 0),
+            "total_cost": str(summary.total_cost or "0.00"),
+            "average_cost": str((Decimal(str(summary.total_cost or "0.00")) / Decimal(str(summary.total_purchases or 1))).quantize(Decimal("0.01"))) if summary.total_purchases else "0.00",
+        },
+        "suppliers": suppliers,
+        "purchases": purchases_data,
+    }
+
+
 @router.post("/reports/generate/inventory", summary="Generate Inventory Report")
 async def generate_inventory_report(
     format: str = Query("json", description="Output format: json, pdf, csv"),
@@ -1990,6 +2288,121 @@ async def generate_inventory_report(
     else:
         raise HTTPException(status_code=400, detail="PDF format not yet implemented for inventory report")
     
+
+@router.get("/reports/inventory", summary="Get Inventory Report Data for UI Table")
+async def get_inventory_report_data(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    low_stock_only: bool = Query(False, description="Show only low stock items"),
+    search: Optional[str] = Query(None, description="Search by product name or SKU"),
+    sort_by: str = Query("product_name", description="Sort by: product_name, current_stock, stock_value"),
+    sort_order: str = Query("asc", description="Sort order: asc, desc"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get current inventory status data for UI table display with pagination, filtering, and sorting.
+    Shows current stock levels, valuation, and low stock alerts.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Build WHERE clauses
+    where_clauses = [Product.center_id == center_id]
+    
+    if search:
+        search_filter = or_(
+            Product.name.ilike(f"%{search}%"),
+            Product.sku_code.ilike(f"%{search}%")
+        )
+        where_clauses.append(search_filter)
+
+    # Fetch products with stock
+    base_stmt = (
+        select(Product, Stock)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+    )
+    
+    # Execute to get all matching records for filtering
+    all_result = await db.execute(base_stmt)
+    all_rows = all_result.all()
+
+    # Apply low stock filter in Python (since it depends on calculated values)
+    filtered_rows = []
+    inventory_data = []
+    total_value = Decimal("0.00")
+    low_stock_count = 0
+    out_of_stock_count = 0
+    
+    for prod, stock in all_rows:
+        qty = int(stock.quantity_available) if stock else 0
+        reorder = int(prod.reorder_level) if prod.reorder_level else 0
+        
+        # Apply low stock filter
+        if low_stock_only and qty > reorder:
+            continue
+        
+        last_cost = Decimal(str(stock.last_cost)) if stock and stock.last_cost else Decimal("0.00")
+        value = (last_cost * Decimal(qty)).quantize(Decimal("0.01"))
+        
+        # Determine status
+        if qty == 0:
+            status = "Out of Stock"
+            out_of_stock_count += 1
+        elif qty <= reorder:
+            status = "Low Stock"
+            low_stock_count += 1
+        else:
+            status = "In Stock"
+        
+        total_value += value
+        
+        row_data = {
+            "product_id": str(prod.id),
+            "sku_code": prod.sku_code,
+            "product_name": prod.name,
+            "current_stock": qty,
+            "reorder_level": reorder,
+            "unit_cost": str(last_cost),
+            "stock_value": str(value),
+            "status": status,
+            "base_price": str(prod.base_price) if prod.base_price else "0.00",
+            "selling_price": str(prod.selling_price) if prod.selling_price else "0.00",
+        }
+        
+        filtered_rows.append(row_data)
+
+    # Sort the filtered data
+    if sort_by == "current_stock":
+        filtered_rows.sort(key=lambda x: x["current_stock"], reverse=(sort_order == "desc"))
+    elif sort_by == "stock_value":
+        filtered_rows.sort(key=lambda x: Decimal(x["stock_value"]), reverse=(sort_order == "desc"))
+    else:  # product_name
+        filtered_rows.sort(key=lambda x: x["product_name"].lower(), reverse=(sort_order == "desc"))
+
+    # Apply pagination
+    total = len(filtered_rows)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated_data = filtered_rows[start_idx:end_idx]
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "summary": {
+            "total_products": len(all_rows),
+            "filtered_products": total,
+            "in_stock_items": total - low_stock_count - out_of_stock_count,
+            "low_stock_items": low_stock_count,
+            "out_of_stock_items": out_of_stock_count,
+            "total_inventory_value": str(total_value),
+        },
+        "inventory": paginated_data,
+    }
+
 
 @router.post("/reports/generate/stock-movement", summary="Generate Stock Movement Report")
 async def generate_stock_movement_report(
@@ -2114,3 +2527,176 @@ async def generate_stock_movement_report(
     
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
+    
+
+@router.get("/reports/stock-movement", summary="Get Stock Movement Report Data for UI Table")
+async def get_stock_movement_report_data(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    date_from: Optional[date] = Query(None, description="Start date for report"),
+    date_to: Optional[date] = Query(None, description="End date for report"),
+    transaction_type: Optional[str] = Query(None, description="Filter by type: IN, OUT"),
+    product_id: Optional[str] = Query(None, description="Filter by product"),
+    sort_by: str = Query("date", description="Sort by: date, quantity, total"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get stock movement report data for UI table display with pagination, filtering, and sorting.
+    Shows all stock transactions (IN/OUT) with balance tracking.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Default date range: last 30 days if not specified
+    if not date_from:
+        date_from = date.today() - timedelta(days=30)
+    if not date_to:
+        date_to = date.today()
+
+    # Build WHERE clauses
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
+    
+    created_at_attr = getattr(StockTransaction, "created_at", None)
+    if created_at_attr:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+    else:
+        where_clauses.append(StockTransaction.invoice_date >= date_from)
+        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    if transaction_type:
+        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
+    
+    if product_id:
+        where_clauses.append(StockTransaction.product_id == product_id)
+
+    # Count total matching records
+    count_stmt = (
+        select(func.count())
+        .select_from(StockTransaction)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .where(*where_clauses)
+    )
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one() or 0
+
+    # Build main query
+    stmt = (
+        select(StockTransaction, Product, Stock)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+    )
+
+    # Apply sorting
+    if sort_by == "quantity":
+        stmt = stmt.order_by(desc(StockTransaction.quantity) if sort_order == "desc" else StockTransaction.quantity)
+    elif sort_by == "total":
+        stmt = stmt.order_by(desc(StockTransaction.subtotal) if sort_order == "desc" else StockTransaction.subtotal)
+    else:  # default to date
+        order_col = created_at_attr if created_at_attr else StockTransaction.invoice_date
+        stmt = stmt.order_by(desc(order_col) if sort_order == "desc" else order_col)
+
+    # Apply pagination
+    stmt = stmt.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    # Calculate summary statistics - CORRECTED VERSION
+    from sqlalchemy import case
+    
+    summary_stmt = select(
+        func.count(StockTransaction.id).label("total_transactions"),
+        func.coalesce(func.sum(
+            case((StockTransaction.transaction_type == "IN", StockTransaction.quantity), else_=0)
+        ), 0).label("total_in_quantity"),
+        func.coalesce(func.sum(
+            case((StockTransaction.transaction_type == "OUT", StockTransaction.quantity), else_=0)
+        ), 0).label("total_out_quantity"),
+        func.coalesce(func.sum(
+            case((StockTransaction.transaction_type == "IN", StockTransaction.subtotal), else_=0)
+        ), 0).label("total_in_value"),
+        func.coalesce(func.sum(
+            case((StockTransaction.transaction_type == "OUT", StockTransaction.subtotal), else_=0)
+        ), 0).label("total_out_value"),
+    ).select_from(StockTransaction).join(
+        Product, Product.id == StockTransaction.product_id
+    ).where(*where_clauses)
+    
+    summary_result = await db.execute(summary_stmt)
+    summary = summary_result.first()
+
+    # Build stock movement data for table
+    movements_data = []
+    for st, prod, stock in rows:
+        movements_data.append({
+            "transaction_id": str(st.id),
+            "date": st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
+            "product_id": str(prod.id),
+            "product_name": prod.name,
+            "sku_code": prod.sku_code,
+            "transaction_type": st.transaction_type,
+            "quantity": int(st.quantity or 0),
+            "unit_cost": str(st.unit_cost) if st.unit_cost else "0.00",
+            "total": str(st.subtotal) if st.subtotal else "0.00",
+            "balance_after": int(st.balance_after) if st.balance_after else (int(stock.quantity_available) if stock else 0),
+            "current_stock": int(stock.quantity_available) if stock else 0,
+            "supplier_name": st.supplier_name if st.transaction_type == 'IN' else None,
+            "reference": st.reference,
+            "invoice_number": st.invoice_number,
+        })
+
+    # Count by transaction type for filter badges
+    type_counts = {}
+    for trans_type in ["IN", "OUT"]:
+        type_stmt = (
+            select(func.count())
+            .select_from(StockTransaction)
+            .join(Product, Product.id == StockTransaction.product_id)
+            .where(
+                StockTransaction.product_id.in_(sku_ids_sel),
+                StockTransaction.transaction_type == trans_type,
+            )
+        )
+        if created_at_attr:
+            type_stmt = type_stmt.where(
+                StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()),
+                StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time())
+            )
+        else:
+            type_stmt = type_stmt.where(
+                StockTransaction.invoice_date >= date_from,
+                StockTransaction.invoice_date <= date_to
+            )
+        
+        type_result = await db.execute(type_stmt)
+        type_counts[trans_type] = type_result.scalar_one() or 0
+
+    total_in_qty = int(summary.total_in_quantity or 0)
+    total_out_qty = int(summary.total_out_quantity or 0)
+    total_in_val = Decimal(str(summary.total_in_value or "0.00"))
+    total_out_val = Decimal(str(summary.total_out_value or "0.00"))
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "date_from": date_from.isoformat(),
+        "date_to": date_to.isoformat(),
+        "summary": {
+            "total_transactions": summary.total_transactions or 0,
+            "total_in_quantity": total_in_qty,
+            "total_out_quantity": total_out_qty,
+            "total_in_value": str(total_in_val),
+            "total_out_value": str(total_out_val),
+            "net_quantity": total_in_qty - total_out_qty,
+            "net_value": str((total_in_val - total_out_val).quantize(Decimal("0.01"))),
+        },
+        "transaction_type_counts": type_counts,
+        "movements": movements_data,
+    }

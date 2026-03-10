@@ -19,6 +19,12 @@ class PayeeType(enum.Enum):
     center = "center"
     trainer = "trainer"
 
+class TransactionSourceEnum(str, Enum):
+    local = "local"
+    pos = "pos"
+    visit = "visit"
+    online = "online"
+
 
 class OrderType(enum.Enum):
     center_subscription = "center_subscription"

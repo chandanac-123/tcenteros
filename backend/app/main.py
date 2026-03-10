@@ -12,7 +12,7 @@ from app.branding.api.routes import router as branding_router
 from app.branching.api.routes import router as branching_router
 from app.payrole.api.routes import router as payrole_router
 from app.inventory.api.routes import router as inventory_router
-
+from app.billing.api.routes import router as billing_router
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,3 +63,4 @@ app.include_router(branding_router, prefix="/api/branding", tags=["Branding"])
 app.include_router(branching_router, prefix="/api/branching", tags=["Branching"])
 app.include_router(payrole_router, prefix="/api/payrole", tags=["Payrole"])
 app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
+app.include_router(billing_router, prefix="/api/billing", tags=["Billing"])
