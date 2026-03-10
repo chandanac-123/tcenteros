@@ -267,3 +267,137 @@ class ReportGenerator:
         buffer = io.StringIO()
         df_export.to_csv(buffer, index=False)
         return buffer.getvalue().encode('utf-8')
+    
+
+    @staticmethod
+    def generate_stock_movement_pdf(movements_data: List[Dict], center_name: str, date_from: str, date_to: str) -> bytes:
+        """Generate Stock Movement Report PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1a1a1a'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        elements.append(Paragraph(f"{center_name}", title_style))
+        elements.append(Paragraph("Stock Movement Report", styles['Heading2']))
+        elements.append(Spacer(1, 12))
+        
+        # Date Range
+        date_style = ParagraphStyle(
+            'DateStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.grey
+        )
+        elements.append(Paragraph(f"Period: {date_from} to {date_to}", date_style))
+        elements.append(Spacer(1, 20))
+        
+        # Summary Stats
+        total_transactions = len(movements_data)
+        total_in = sum(int(m.get('quantity', 0)) for m in movements_data if m.get('transaction_type') == 'IN')
+        total_out = sum(int(m.get('quantity', 0)) for m in movements_data if m.get('transaction_type') == 'OUT')
+        total_in_value = sum(Decimal(str(m.get('subtotal', 0))) for m in movements_data if m.get('transaction_type') == 'IN')
+        total_out_value = sum(Decimal(str(m.get('subtotal', 0))) for m in movements_data if m.get('transaction_type') == 'OUT')
+        
+        summary_data = [
+            ['Total Transactions', 'IN Quantity', 'OUT Quantity', 'Net Movement'],
+            [str(total_transactions), str(total_in), str(total_out), str(total_in - total_out)]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 20))
+        
+        # Detailed Movement Table
+        if movements_data:
+            elements.append(Paragraph("Movement Details", styles['Heading3']))
+            elements.append(Spacer(1, 12))
+            
+            table_data = [['Date', 'Product', 'Type', 'Qty', 'Cost', 'Total', 'Balance']]
+            
+            for movement in movements_data:
+                table_data.append([
+                    movement.get('date', '')[:10] if movement.get('date') else '',
+                    movement.get('product_name', '')[:15],
+                    movement.get('transaction_type', ''),
+                    str(movement.get('quantity', 0)),
+                    f"₹{movement.get('unit_cost', '0.00')}",
+                    f"₹{movement.get('subtotal', '0.00')}",
+                    str(movement.get('balance_after', 0))
+                ])
+            
+            movement_table = Table(table_data, colWidths=[0.9*inch, 1.5*inch, 0.6*inch, 0.6*inch, 0.9*inch, 0.9*inch, 0.8*inch])
+            movement_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FF6B35')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                # Color code IN/OUT
+                ('TEXTCOLOR', (2, 1), (2, -1), colors.green),
+            ]))
+            elements.append(movement_table)
+        
+        # Footer
+        elements.append(Spacer(1, 30))
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.grey,
+            alignment=TA_CENTER
+        )
+        elements.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", footer_style))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    @staticmethod
+    def generate_stock_movement_csv(movements_data: List[Dict]) -> bytes:
+        """Generate Stock Movement Report CSV"""
+        df = pd.DataFrame(movements_data)
+        
+        columns_map = {
+            'date': 'Date',
+            'product_name': 'Product Name',
+            'sku_code': 'SKU Code',
+            'transaction_type': 'Type',
+            'quantity': 'Quantity',
+            'unit_cost': 'Unit Cost',
+            'subtotal': 'Total',
+            'balance_after': 'Balance After',
+            'current_stock': 'Current Stock',
+            'supplier_name': 'Supplier',
+            'reference': 'Reference'
+        }
+        
+        available_cols = [col for col in columns_map.keys() if col in df.columns]
+        df_export = df[available_cols].copy()
+        df_export.rename(columns=columns_map, inplace=True)
+        
+        buffer = io.StringIO()
+        df_export.to_csv(buffer, index=False)
+        return buffer.getvalue().encode('utf-8')

@@ -1988,3 +1988,128 @@ async def generate_inventory_report(
     
     else:
         raise HTTPException(status_code=400, detail="PDF format not yet implemented for inventory report")
+    
+
+@router.post("/reports/generate/stock-movement", summary="Generate Stock Movement Report")
+async def generate_stock_movement_report(
+    date_from: date = Query(..., description="Start date for report"),
+    date_to: date = Query(..., description="End date for report"),
+    format: str = Query("json", description="Output format: json, pdf, csv"),
+    transaction_type: Optional[str] = Query(None, description="Filter by type: IN, OUT"),
+    product_id: Optional[str] = Query(None, description="Filter by product"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Generate stock movement report for the specified date range.
+    Shows all stock transactions (IN/OUT) with balance tracking.
+    Supports JSON (preview), PDF, and CSV formats.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned to this user")
+
+    # Build query
+    sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
+    where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
+    
+    created_at_attr = getattr(StockTransaction, "created_at", None)
+    if created_at_attr:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+    else:
+        where_clauses.append(StockTransaction.invoice_date >= date_from)
+        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    if transaction_type:
+        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
+    
+    if product_id:
+        where_clauses.append(StockTransaction.product_id == product_id)
+
+    # Fetch data
+    stmt = (
+        select(StockTransaction, Product, Stock)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .outerjoin(Stock, Stock.product_id == Product.id)
+        .where(*where_clauses)
+        .order_by(StockTransaction.created_at.desc() if created_at_attr else StockTransaction.invoice_date.desc())
+    )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    # Prepare data
+    movements_data = []
+    for st, prod, stock in rows:
+        movements_data.append({
+            'transaction_id': str(st.id),
+            'date': st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
+            'product_id': str(prod.id),
+            'product_name': prod.name,
+            'sku_code': prod.sku_code,
+            'transaction_type': st.transaction_type,
+            'quantity': int(st.quantity or 0),
+            'unit_cost': str(st.unit_cost) if st.unit_cost else "0.00",
+            'subtotal': str(st.subtotal) if st.subtotal else "0.00",
+            'balance_after': int(st.balance_after) if st.balance_after else (int(stock.quantity_available) if stock else 0),
+            'current_stock': int(stock.quantity_available) if stock else 0,
+            'supplier_name': st.supplier_name if st.transaction_type == 'IN' else None,
+            'invoice_number': st.invoice_number,
+            'reference': st.reference,
+        })
+
+    # Return based on format
+    if format.lower() == "json":
+        total_in = sum(int(m['quantity']) for m in movements_data if m['transaction_type'] == 'IN')
+        total_out = sum(int(m['quantity']) for m in movements_data if m['transaction_type'] == 'OUT')
+        total_in_value = sum(Decimal(str(m['subtotal'])) for m in movements_data if m['transaction_type'] == 'IN')
+        total_out_value = sum(Decimal(str(m['subtotal'])) for m in movements_data if m['transaction_type'] == 'OUT')
+        
+        return {
+            "report_type": "stock_movement",
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "generated_at": datetime.now().isoformat(),
+            "summary": {
+                "total_transactions": len(movements_data),
+                "total_in_quantity": total_in,
+                "total_out_quantity": total_out,
+                "total_in_value": str(total_in_value),
+                "total_out_value": str(total_out_value),
+                "net_quantity": total_in - total_out,
+                "net_value": str(total_in_value - total_out_value)
+            },
+            "data": movements_data
+        }
+    
+    elif format.lower() == "pdf":
+        center_name = "Your Center Name"
+        pdf_bytes = ReportGenerator.generate_stock_movement_pdf(
+            movements_data,
+            center_name,
+            date_from.isoformat(),
+            date_to.isoformat()
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from}_{date_to}.pdf"
+            }
+        )
+    
+    elif format.lower() == "csv":
+        csv_bytes = ReportGenerator.generate_stock_movement_csv(movements_data)
+        
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from}_{date_to}.csv"
+            }
+        )
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
