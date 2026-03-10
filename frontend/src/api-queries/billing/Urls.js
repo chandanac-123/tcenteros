@@ -6,7 +6,8 @@ import {
   getCartAmountApiCall,
   checkoutCartApiCall,
   addtoCartApiCall,
-  getAllSaleApiCall
+  getAllSaleApiCall,
+  getSaleByIdApiCall
 } from './index'
 
 export const getAllSales = async data => {
@@ -65,6 +66,15 @@ export const getCartAmount = async data => {
 export const checkoutCart = async data => {
   try {
     const response = await checkoutCartApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getSaleById = async id => {
+  try {
+    const response = await getSaleByIdApiCall(id)
     return response.data
   } catch (error) {
     throw error

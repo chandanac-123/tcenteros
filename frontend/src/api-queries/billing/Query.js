@@ -6,7 +6,8 @@ import {
   cartOpen,
   getCartAmount,
   checkoutCart,
-  getAllSales
+  getAllSales,
+  getSaleById,
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -107,5 +108,13 @@ export const useCheckoutCartMutation = () => {
       showError(err?.response?.data?.message || 'Failed to checkout cart')
       return err
     }
+  })
+}
+
+export const useGetSaleByIdQuery = id => {
+  return useQuery({
+    queryKey: ['sale', id],
+    queryFn: () => getSaleById(id),
+    enabled: Boolean(id)
   })
 }

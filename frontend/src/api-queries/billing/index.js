@@ -14,3 +14,5 @@ export const getCartAmountApiCall = (id) =>
   axiosInstance.get(`/inventory/sales/cart/amount?cart_id=${id}`)
 export const checkoutCartApiCall = data =>
   axiosInstance.post(`/inventory/sales/carts`,data)
+export const getSaleByIdApiCall =( id) =>
+  axiosInstance.get(`/inventory/pos/sales/${id}`)

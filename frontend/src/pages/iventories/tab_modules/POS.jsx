@@ -1,97 +1,84 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { DataTable } from '@common/DataTable'
-import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
-import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
 import { useAllSalesQuery } from '@api-queries/billing/Query'
-
+import ViewForm from '../components/View'
 
 const POS = () => {
-    const { data, isFetching } = useAllSalesQuery()
-  console.log('data: ', data);
+  const [tableParams, setTableParams] = useState({
+    page: 1
+  })
+  const { data, isFetching } = useAllSalesQuery(tableParams)
+  const [viewopen, setViewOpen] = useState(false)
+  const [viewId, setViewId] = useState(null)
+
   const columns = [
     {
+      accessorKey: 'sale_number',
+      header: 'Sale Number'
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Sale Date',
+      cell: ({ row }) => {
+        const date = row.original.created_at
+        return <span>{date?.split('T')[0]}</span>
+      }
+    },
+    {
       accessorKey: 'product_name',
-      header: 'Product Name'
+      header: 'Sale Products',
+      cell: ({ row }) => {
+        console.log('row: ', row)
+        return (
+          <span className='flex flex-col w-16'>
+            {row?.original?.items.map(item => item.product_name).join(', ')}
+          </span>
+        )
+      }
     },
     {
-      accessorKey: 'stock_quantity',
-      header: 'Stock Quantity'
+      accessorKey: 'status',
+      header: 'Sale Status'
     },
     {
-      accessorKey: 'Price',
-      header: 'price'
-    },
-    {
-      header: 'Add',
-      cell: () => (
-        <button className="px-6 py-[2px] rounded-full border border-blue-500 text-blue-500 text-sm font-medium hover:bg-blue-50 transition">
-          Add
-        </button>
-      ),
+      accessorKey: 'total',
+      header: 'Total Amount'
     },
     {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
-          <button >
+          <button
+            onClick={() => {
+              setViewId(row.original.id)
+              setViewOpen(true)
+            }}
+          >
             <img src={view} alt='view' className='w-6 h-6' />
           </button>
-          <button  >
-            <img src={edit} alt='edit' className='w-6 h-6' />
-          </button>
-          <button  >
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
-          </button>
-          <Switch />
         </div>
       )
     }
-
   ]
-
-  const dummyProducts = [
-    {
-      product_name: "Wireless Mouse",
-      stock_quantity: 120,
-      Price: 599,
-    },
-    {
-      product_name: "Mechanical Keyboard",
-      stock_quantity: 45,
-      Price: 2499,
-    },
-    {
-      product_name: "USB-C Hub",
-      stock_quantity: 75,
-      Price: 899,
-    },
-    {
-      product_name: "27\" Monitor",
-      stock_quantity: 16,
-      Price: 14999,
-    },
-    {
-      product_name: "Laptop Stand",
-      stock_quantity: 58,
-      Price: 1099,
-    }
-  ];
 
   return (
     <div>
-      <div className="">
-        <h1 className="text-xl font-medium py-4">POS</h1>
+      <div className=''>
+        <h1 className='text-xl font-medium py-4'>POS</h1>
       </div>
-      <div className="">
+      <div className=''>
         <DataTable
           columns={columns}
-          data={dummyProducts}
-          pagination={31}
+          data={data?.sales || []}
+          setTableParams={setTableParams}
+          tableParams={tableParams}
+          pagination={data?.total}
+          search={false}
           paginationVisibile={true}
         />
       </div>
+      <ViewForm id={viewId} open={viewopen} setOpen={setViewOpen} />
     </div>
   )
 }
