@@ -1796,12 +1796,13 @@ async def generate_sales_report(
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
 
+
 @router.get("/reports/sales", summary="Get Sales Report Data for UI Table")
 async def get_sales_report_data(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    date_from: Optional[date] = Query(None, description="Start date for report"),
-    date_to: Optional[date] = Query(None, description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     status: Optional[str] = Query(None, description="Filter by status: completed, pending, cancelled"),
     sort_by: str = Query("created_at", description="Sort by: created_at, total_amount, items_count"),
     sort_order: str = Query("desc", description="Sort order: asc, desc"),
@@ -1811,26 +1812,40 @@ async def get_sales_report_data(
     """
     Get sales report data for UI table display with pagination, filtering, and sorting.
     Returns sales transactions with summary statistics.
+    If date_from and date_to are not provided or set to 'null', returns all sales data.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Default date range: last 30 days if not specified
-    if not date_from:
-        date_from = date.today() - timedelta(days=30)
-    if not date_to:
-        date_to = date.today()
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = date.fromisoformat(date_from)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD or 'null'")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = date.fromisoformat(date_to)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD or 'null'")
 
     # Build WHERE clauses
-    where_clauses = [
-        Sale.center_id == center_id,
-        Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
-        Sale.created_at <= datetime.combine(date_to, datetime.max.time())
-    ]
+    where_clauses = [Sale.center_id == center_id]
+    
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        where_clauses.append(Sale.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+    
+    if date_to_parsed:
+        where_clauses.append(Sale.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
     
     if status:
-        where_clauses.append(Sale.status == status.lower())
+        where_clauses.append(Sale.status == status)
 
     # Count total matching records
     count_stmt = select(func.count()).select_from(Sale).where(*where_clauses)
@@ -1846,12 +1861,12 @@ async def get_sales_report_data(
 
     # Apply sorting
     if sort_by == "total_amount":
-        stmt = stmt.order_by(desc(Sale.total_amount) if sort_order == "desc" else Sale.total_amount)
+        stmt = stmt.order_by(Sale.total_amount.desc() if sort_order == "desc" else Sale.total_amount.asc())
     elif sort_by == "items_count":
-        # This requires a subquery or we'll sort after fetching
-        stmt = stmt.order_by(desc(Sale.created_at) if sort_order == "desc" else Sale.created_at)
-    else:  # default to created_at
-        stmt = stmt.order_by(desc(Sale.created_at) if sort_order == "desc" else Sale.created_at)
+        # Sort by items count requires a subquery or post-fetch sorting
+        pass  # Keep created_at as fallback
+    else:  # created_at (default)
+        stmt = stmt.order_by(Sale.created_at.desc() if sort_order == "desc" else Sale.created_at.asc())
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -1869,8 +1884,8 @@ async def get_sales_report_data(
             PaymentOrder.reference_schema == ReferenceSchema.invoice
         )
         po_result = await db.execute(po_stmt)
-        pos = po_result.scalars().all()
-        payment_orders = {po.reference_id: po for po in pos}
+        for po in po_result.scalars():
+            payment_orders[po.reference_id] = po
 
     # Calculate summary statistics for the filtered data (all records, not just current page)
     summary_stmt = select(
@@ -1888,58 +1903,52 @@ async def get_sales_report_data(
     for sale in sales:
         po = payment_orders.get(sale.id)
         
-        # Determine payment status
-        payment_status_value = "unpaid"
+        # Payment status
         if po:
-            if po.status == PaymentOrderStatus.paid:
-                payment_status_value = "paid"
-            elif po.status == PaymentOrderStatus.pending:
-                payment_status_value = "pending"
-
-        # Build items preview (first 3 items for table display)
-        items_preview = []
-        for idx, item in enumerate(sale.items[:3]):
-            items_preview.append({
-                "product_name": item.product.name if item.product else item.product_name,
-                "quantity": int(item.quantity),
-            })
-
+            payment_status_value = po.status.value if po.status else "unpaid"
+            payment_method_value = po.payment_method.value if po.payment_method else None
+        else:
+            payment_status_value = "unpaid"
+            payment_method_value = None
+        
+        # Items count
+        items_count = len(sale.items) if sale.items else 0
+        
         sales_data.append({
             "sale_id": str(sale.id),
-            "sale_number": f"INV{str(sale.id)[:8].upper()}",
+            "sale_number": str(sale.id)[:8].upper(),
             "date": sale.created_at.isoformat() if sale.created_at else None,
             "status": sale.status,
-            "payment_status": payment_status_value,
-            "payment_method": po.payment_method.value if po and po.payment_method else None,
-            "items_count": len(sale.items),
-            "items_preview": items_preview,
-            "has_more_items": len(sale.items) > 3,
+            "items_count": items_count,
             "subtotal": str(sale.subtotal_amount),
             "tax": str(sale.tax_amount or "0.00"),
             "total": str(sale.total_amount),
-            "currency": sale.currency or "INR",
+            "payment_status": payment_status_value,
+            "payment_method": payment_method_value,
             "created_by": str(sale.created_by) if sale.created_by else None,
-            "note": sale.note,
         })
 
     # Count by status for filter badges
     status_counts = {}
     for status_type in ["completed", "pending", "cancelled"]:
-        status_stmt = select(func.count()).select_from(Sale).where(
+        status_count_stmt = select(func.count()).select_from(Sale).where(
             Sale.center_id == center_id,
-            Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
-            Sale.created_at <= datetime.combine(date_to, datetime.max.time()),
             Sale.status == status_type
         )
-        status_result = await db.execute(status_stmt)
-        status_counts[status_type] = status_result.scalar_one() or 0
+        if date_from_parsed:
+            status_count_stmt = status_count_stmt.where(Sale.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+        if date_to_parsed:
+            status_count_stmt = status_count_stmt.where(Sale.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
+        
+        status_count_result = await db.execute(status_count_stmt)
+        status_counts[status_type] = status_count_result.scalar_one() or 0
 
     return {
         "page": page,
         "page_size": page_size,
         "total": total,
-        "date_from": date_from.isoformat(),
-        "date_to": date_to.isoformat(),
+        "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+        "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
         "summary": {
             "total_sales": summary.total_sales or 0,
             "total_revenue": str(summary.total_revenue or "0.00"),
@@ -2069,8 +2078,8 @@ async def generate_purchase_report(
 async def get_purchase_report_data(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    date_from: Optional[date] = Query(None, description="Start date for report"),
-    date_to: Optional[date] = Query(None, description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     product_id: Optional[str] = Query(None, description="Filter by product"),
     supplier_name: Optional[str] = Query(None, description="Filter by supplier name"),
     sort_by: str = Query("created_at", description="Sort by: created_at, quantity, total"),
@@ -2081,16 +2090,27 @@ async def get_purchase_report_data(
     """
     Get purchase/stock-in report data for UI table display with pagination, filtering, and sorting.
     Returns purchase transactions with summary statistics.
+    If date_from and date_to are not provided or set to 'null', returns all purchase data.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Default date range: last 30 days if not specified
-    if not date_from:
-        date_from = date.today() - timedelta(days=30)
-    if not date_to:
-        date_to = date.today()
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = date.fromisoformat(date_from)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD or 'null'")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = date.fromisoformat(date_to)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD or 'null'")
 
     # Build WHERE clauses
     sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
@@ -2100,12 +2120,19 @@ async def get_purchase_report_data(
     ]
     
     created_at_attr = getattr(StockTransaction, "created_at", None)
-    if created_at_attr:
-        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-    else:
-        where_clauses.append(StockTransaction.invoice_date >= date_from)
-        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        if created_at_attr:
+            where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+        else:
+            where_clauses.append(StockTransaction.invoice_date >= date_from_parsed)
+    
+    if date_to_parsed:
+        if created_at_attr:
+            where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
+        else:
+            where_clauses.append(StockTransaction.invoice_date <= date_to_parsed)
     
     if product_id:
         where_clauses.append(StockTransaction.product_id == product_id)
@@ -2133,12 +2160,12 @@ async def get_purchase_report_data(
 
     # Apply sorting
     if sort_by == "quantity":
-        stmt = stmt.order_by(desc(StockTransaction.quantity) if sort_order == "desc" else StockTransaction.quantity)
+        stmt = stmt.order_by(StockTransaction.quantity.desc() if sort_order == "desc" else StockTransaction.quantity.asc())
     elif sort_by == "total":
-        stmt = stmt.order_by(desc(StockTransaction.subtotal) if sort_order == "desc" else StockTransaction.subtotal)
-    else:  # default to created_at
+        stmt = stmt.order_by(StockTransaction.subtotal.desc() if sort_order == "desc" else StockTransaction.subtotal.asc())
+    else:  # created_at
         order_col = created_at_attr if created_at_attr else StockTransaction.invoice_date
-        stmt = stmt.order_by(desc(order_col) if sort_order == "desc" else order_col)
+        stmt = stmt.order_by(order_col.desc() if sort_order == "desc" else order_col.asc())
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -2166,12 +2193,11 @@ async def get_purchase_report_data(
             "date": st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
             "product_id": str(prod.id),
             "product_name": prod.name,
-            "sku_code": prod.sku_code,
+            "quantity": int(st.quantity),
+            "unit_cost": str(st.unit_cost),
+            "total": str(st.subtotal),
             "supplier_name": st.supplier_name,
             "invoice_number": st.invoice_number,
-            "quantity_added": int(st.quantity or 0),
-            "unit_cost": str(st.unit_cost) if st.unit_cost else "0.00",
-            "total": str(st.subtotal) if st.subtotal else "0.00",
             "current_stock": int(stock.quantity_available) if stock else 0,
         })
 
@@ -2195,8 +2221,8 @@ async def get_purchase_report_data(
         "page": page,
         "page_size": page_size,
         "total": total,
-        "date_from": date_from.isoformat(),
-        "date_to": date_to.isoformat(),
+        "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+        "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
         "summary": {
             "total_purchases": summary.total_purchases or 0,
             "total_quantity": int(summary.total_quantity or 0),
@@ -2533,8 +2559,8 @@ async def generate_stock_movement_report(
 async def get_stock_movement_report_data(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    date_from: Optional[date] = Query(None, description="Start date for report"),
-    date_to: Optional[date] = Query(None, description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     transaction_type: Optional[str] = Query(None, description="Filter by type: IN, OUT"),
     product_id: Optional[str] = Query(None, description="Filter by product"),
     sort_by: str = Query("date", description="Sort by: date, quantity, total"),
@@ -2545,31 +2571,49 @@ async def get_stock_movement_report_data(
     """
     Get stock movement report data for UI table display with pagination, filtering, and sorting.
     Shows all stock transactions (IN/OUT) with balance tracking.
+    If date_from and date_to are not provided or set to 'null', returns all stock movement data.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Default date range: last 30 days if not specified
-    if not date_from:
-        date_from = date.today() - timedelta(days=30)
-    if not date_to:
-        date_to = date.today()
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = date.fromisoformat(date_from)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD or 'null'")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = date.fromisoformat(date_to)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD or 'null'")
 
     # Build WHERE clauses
     sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
     where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
     
     created_at_attr = getattr(StockTransaction, "created_at", None)
-    if created_at_attr:
-        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-    else:
-        where_clauses.append(StockTransaction.invoice_date >= date_from)
-        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        if created_at_attr:
+            where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+        else:
+            where_clauses.append(StockTransaction.invoice_date >= date_from_parsed)
+    
+    if date_to_parsed:
+        if created_at_attr:
+            where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
+        else:
+            where_clauses.append(StockTransaction.invoice_date <= date_to_parsed)
     
     if transaction_type:
-        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
+        where_clauses.append(StockTransaction.transaction_type == transaction_type)
     
     if product_id:
         where_clauses.append(StockTransaction.product_id == product_id)
@@ -2594,12 +2638,12 @@ async def get_stock_movement_report_data(
 
     # Apply sorting
     if sort_by == "quantity":
-        stmt = stmt.order_by(desc(StockTransaction.quantity) if sort_order == "desc" else StockTransaction.quantity)
+        stmt = stmt.order_by(StockTransaction.quantity.desc() if sort_order == "desc" else StockTransaction.quantity.asc())
     elif sort_by == "total":
-        stmt = stmt.order_by(desc(StockTransaction.subtotal) if sort_order == "desc" else StockTransaction.subtotal)
-    else:  # default to date
+        stmt = stmt.order_by(StockTransaction.subtotal.desc() if sort_order == "desc" else StockTransaction.subtotal.asc())
+    else:  # date
         order_col = created_at_attr if created_at_attr else StockTransaction.invoice_date
-        stmt = stmt.order_by(desc(order_col) if sort_order == "desc" else order_col)
+        stmt = stmt.order_by(order_col.desc() if sort_order == "desc" else order_col.asc())
 
     # Apply pagination
     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
@@ -2607,7 +2651,7 @@ async def get_stock_movement_report_data(
     result = await db.execute(stmt)
     rows = result.all()
 
-    # Calculate summary statistics - CORRECTED VERSION
+    # Calculate summary statistics
     from sqlalchemy import case
     
     summary_stmt = select(
@@ -2639,43 +2683,40 @@ async def get_stock_movement_report_data(
             "date": st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
             "product_id": str(prod.id),
             "product_name": prod.name,
-            "sku_code": prod.sku_code,
             "transaction_type": st.transaction_type,
-            "quantity": int(st.quantity or 0),
+            "quantity": int(st.quantity),
             "unit_cost": str(st.unit_cost) if st.unit_cost else "0.00",
             "total": str(st.subtotal) if st.subtotal else "0.00",
-            "balance_after": int(st.balance_after) if st.balance_after else (int(stock.quantity_available) if stock else 0),
-            "current_stock": int(stock.quantity_available) if stock else 0,
-            "supplier_name": st.supplier_name if st.transaction_type == 'IN' else None,
+            "balance": int(stock.quantity_available) if stock else 0,
             "reference": st.reference,
-            "invoice_number": st.invoice_number,
+            "supplier_name": st.supplier_name,
         })
 
     # Count by transaction type for filter badges
     type_counts = {}
     for trans_type in ["IN", "OUT"]:
-        type_stmt = (
+        type_count_stmt = (
             select(func.count())
             .select_from(StockTransaction)
             .join(Product, Product.id == StockTransaction.product_id)
             .where(
                 StockTransaction.product_id.in_(sku_ids_sel),
-                StockTransaction.transaction_type == trans_type,
+                StockTransaction.transaction_type == trans_type
             )
         )
-        if created_at_attr:
-            type_stmt = type_stmt.where(
-                StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()),
-                StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time())
-            )
-        else:
-            type_stmt = type_stmt.where(
-                StockTransaction.invoice_date >= date_from,
-                StockTransaction.invoice_date <= date_to
-            )
+        if date_from_parsed:
+            if created_at_attr:
+                type_count_stmt = type_count_stmt.where(StockTransaction.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+            else:
+                type_count_stmt = type_count_stmt.where(StockTransaction.invoice_date >= date_from_parsed)
+        if date_to_parsed:
+            if created_at_attr:
+                type_count_stmt = type_count_stmt.where(StockTransaction.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
+            else:
+                type_count_stmt = type_count_stmt.where(StockTransaction.invoice_date <= date_to_parsed)
         
-        type_result = await db.execute(type_stmt)
-        type_counts[trans_type] = type_result.scalar_one() or 0
+        type_count_result = await db.execute(type_count_stmt)
+        type_counts[trans_type] = type_count_result.scalar_one() or 0
 
     total_in_qty = int(summary.total_in_quantity or 0)
     total_out_qty = int(summary.total_out_quantity or 0)
@@ -2686,8 +2727,8 @@ async def get_stock_movement_report_data(
         "page": page,
         "page_size": page_size,
         "total": total,
-        "date_from": date_from.isoformat(),
-        "date_to": date_to.isoformat(),
+        "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+        "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
         "summary": {
             "total_transactions": summary.total_transactions or 0,
             "total_in_quantity": total_in_qty,
