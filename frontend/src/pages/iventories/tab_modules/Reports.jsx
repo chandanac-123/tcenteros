@@ -2,87 +2,102 @@ import React, { useState } from 'react'
 import CustomDatePicker from '@common/CustomeDatepicker'
 import StockReport from '../components/reports/StockReport'
 import SalesReport from '../components/reports/SalesReport'
-import { Download } from 'lucide-react';
+import { Download } from 'lucide-react'
 
 const Reports = () => {
-  const [reportType, setReportType] = useState("sales"); // default
+  const [reportType, setReportType] = useState('sales')
 
   return (
-    <div className="flex flex-col">
-      <div className="w-full">
-        <h1 className='p-2 text-lg'>Reports</h1>
+    <div className="flex flex-col gap-4">
+
+      {/* TITLE */}
+      <h1 className="text-lg font-semibold">Reports</h1>
+
+      {/* REPORT TYPE */}
+      <div className="flex gap-6 justify-around flex-wrap border border-gray-300 p-4 rounded-lg">
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="reportType"
+            value="sales"
+            checked={reportType === "sales"}
+            onChange={() => setReportType("sales")}
+            className="accent-blue-600"
+          />
+          <span>Sales Report</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="reportType"
+            value="purchase"
+            checked={reportType === "purchase"}
+            onChange={() => setReportType("purchase")}
+            className="accent-blue-600"
+          />
+          <span>Purchase Report</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="reportType"
+            value="inventory"
+            checked={reportType === "inventory"}
+            onChange={() => setReportType("inventory")}
+            className="accent-blue-600"
+          />
+          <span>Inventory Report</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="reportType"
+            value="stock"
+            checked={reportType === "stock"}
+            onChange={() => setReportType("stock")}
+            className="accent-blue-600"
+          />
+          <span>Stock Movement</span>
+        </label>
+
+        
       </div>
 
-      <div className='w-full flex items-stretch gap-3'>
+      {/* FILTER SECTION */}
+      <div className="flex flex-wrap w-1/2  gap-4 items-end border border-gray-300 p-4 rounded-lg">
 
-        {/* LEFT PANEL */}
-        <div className="w-[25%] border border-gray-300 flex flex-col space-y-4 p-3 rounded-lg shadow-xl">
-
-          <div className="px-2 flex flex-col gap-4">
-            <h3>Report Type</h3>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-
-              {/* SALES */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="reportType"
-                  value="sales"
-                  checked={reportType === "sales"}
-                  onChange={() => setReportType("sales")}
-                  className="accent-blue-600"
-                />
-                <span className="text-md font-medium">Sales Report</span>
-              </label>
-
-              {/* STOCK */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="reportType"
-                  value="stock"
-                  checked={reportType === "stock"}
-                  onChange={() => setReportType("stock")}
-                  className="accent-blue-600"
-                />
-                <span className="text-md font-medium">Stock Report</span>
-              </label>
-
-            </div>
-          </div>
-
-          <div className="flex flex-col space-y-1">
-            <p>Start Date</p>
-            <CustomDatePicker />
-          </div>
-
-          <div className="flex flex-col space-y-1">
-            <p>End Date</p>
-            <CustomDatePicker />
-          </div>
-
-          <button className='bg-[#E2EBFF] text-[#1452D4] border-2 font-medium border-[#1452D4] py-1 rounded-md'>
-            Generate Report
-          </button>
-
-          <button className='bg-[#F0DEFF] flex items-center justify-center gap-3 text-[#8B24E2] border-2 font-medium border-[#8A00FF] py-1 rounded-md'>
-            Download <Download/>
-          </button>
-
+        <div className="flex flex-auto">
+          <CustomDatePicker label="Start Date"
+           pickerType='range' />
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="w-[75%]">
+        <button className="bg-[#E2EBFF] text-[#1452D4] border-2 font-medium border-[#1452D4] px-4 py-1 rounded-md">
+          Generate Report
+        </button>
 
-          {reportType === "sales" ? (
-            <SalesReport />
-          ) : (
-            <StockReport />
-          )}
+        {/* <button className="bg-[#F0DEFF] flex items-center gap-2 text-[#8B24E2] border-2 font-medium border-[#8A00FF] px-4 py-1 rounded-md">
+          Download <Download size={16}/>
+        </button> */}
 
-        </div>
       </div>
+
+      {/* TABLE SECTION */}
+      <div className="border border-gray-300 rounded-lg p-4">
+
+        {reportType === "sales" && <SalesReport />}
+
+        {reportType === "stock" && <StockReport />}
+
+        {/* future reports */}
+        {reportType === "purchase" && <StockReport />}
+        {reportType === "inventory" && <StockReport />}
+
+      </div>
+
     </div>
   )
 }

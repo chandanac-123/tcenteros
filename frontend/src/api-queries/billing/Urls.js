@@ -1,22 +1,26 @@
 import {
-  getCartApiCall,
-  createCartApiCall,
-  updateCartApiCall,
-  deleteCartApiCall
-} from '../../api/index'
 
-export const getAllCarts = async data => {
+  updateCartApiCall,
+  deleteCartApiCall,
+  cartOpenApiCall,
+  getCartAmountApiCall,
+  checkoutCartApiCall,
+  addtoCartApiCall,
+  getAllSaleApiCall
+} from './index'
+
+export const getAllSales = async data => {
   try {
-    const response = await getCartApiCall(data)
+    const response = await getAllSaleApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const createCart = async details => {
+export const createCart = async (details, id) => {
   try {
-    const response = await createCartApiCall(details)
+    const response = await addtoCartApiCall(details,id)
     return response.data
   } catch (error) {
     throw error
@@ -40,11 +44,30 @@ export const deleteCart = async id => {
   }
 }
 
-// export const getSalaryById = async id => {
-//   try {
-//     const response = await getSalaryByIdApiCall(id)
-//     return response.data
-//   } catch (error) {
-//     throw error
-//   }
-// }
+export const cartOpen = async () => {
+  try {
+    const response = await cartOpenApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getCartAmount = async data => {
+  try {
+    const response = await getCartAmountApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const checkoutCart = async data => {
+  try {
+    const response = await checkoutCartApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+

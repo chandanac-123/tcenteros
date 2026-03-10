@@ -6,13 +6,16 @@ import DisplayActionCard from '../component/DisplayActionCard'
 import { useState } from 'react'
 import NewSale from '../component/NewSale'
 import RenewMembership from '../component/RenewMembership'
+import { useCartOpenMutation } from '@api-queries/billing/Query'
 
 const Overview = () => {
   const [openNewSale, setOpenNewSale] = useState(false)
   const [openRenewMember, setOpenRenewMember] = useState(false)
+  const { mutate: openCart } = useCartOpenMutation()
 
   const handleActionClick = title => {
     if (title === '+ New Sale') {
+      openCart()
       setOpenNewSale(true)
     }
     if (title === '+ Renew  Membership') {

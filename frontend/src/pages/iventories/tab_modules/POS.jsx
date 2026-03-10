@@ -4,9 +4,12 @@ import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
+import { useAllSalesQuery } from '@api-queries/billing/Query'
 
 
 const POS = () => {
+    const { data, isFetching } = useAllSalesQuery()
+  console.log('data: ', data);
   const columns = [
     {
       accessorKey: 'product_name',
