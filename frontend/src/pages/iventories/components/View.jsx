@@ -4,76 +4,91 @@ import { Spinner } from '@pages/components/ui/spinner'
 import { useGetSaleByIdQuery } from '@api-queries/billing/Query'
 
 const ViewForm = ({ open, setOpen, id }) => {
-  console.log('id: ', id);
-  const { data: saleData, isFetching: isSaleFetching } =
+  const { data: saleData, isFetching } =
     useGetSaleByIdQuery(open ? id : null)
-  console.log('saleData: ', saleData);
 
   return (
-    <CustomeModal
-      open={open}
-      onOpenChange={setOpen}
-      header='View Sale Details'
-    >
-      {isSaleFetching ? (
-        <div className='flex justify-center items-center'>
+    <CustomeModal open={open} onOpenChange={setOpen} header="View Sale Details">
+      {isFetching ? (
+        <div className="flex justify-center items-center">
           <Spinner />
         </div>
       ) : (
-        <>
-         
+        <div className="flex flex-col gap-6">
 
-          {/* <div className='flex gap-10'>
-            <div className='flex flex-col gap-2'>
-              <span className='text-sm'>City</span>
-              <span className='flex text-textgrey '>
-                {employeeData?.address?.city}
-              </span>
+          {/* SALE INFO */}
+          <div className="flex gap-10">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Sale Number</span>
+              <span className="text-textgrey">{saleData?.sale_number}</span>
             </div>
-            <div className='flex flex-col gap-1'>
-              <span className='text-sm'>Pin</span>
-              <span className='flex text-textgrey '>
-                {employeeData?.address?.pin}
-              </span>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <span className='text-sm'>Address</span>
-              <span className='flex text-textgrey '>
-                {employeeData?.address?.address}
-              </span>
-            </div>
-          </div> */}
 
-          {/* <div className='flex gap-10'>
-            <div className='flex flex-col gap-1'>
-              <span className='text-sm'>Center</span>
-              <span className='flex text-textgrey '>
-                {employeeData?.center_name}
-              </span>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <span>Join Date</span>
-              <span className='flex text-textgrey '>
-                {employeeData?.joining_date}
-              </span>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <span className='text-sm'>Status</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Status</span>
               <Badge
-                label={
-                  employeeData?.status === 'active'
-                    ? 'Active Member'
-                    : 'Inactive Member'
-                }
-                variant={
-                  employeeData?.status === 'active' ? 'active' : 'inactive'
-                }
+                label={saleData?.status}
+                variant={saleData?.status === "completed" ? "active" : "inactive"}
               />
             </div>
-          </div> */}
-        </>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Payment Status</span>
+              <span className="text-textgrey">{saleData?.payment_status}</span>
+            </div>
+          </div>
+
+          {/* AMOUNT DETAILS */}
+          <div className="flex gap-10">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Date</span>
+              <span className="text-textgrey">{saleData?.created_at?.split('T')[0]}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Subtotal</span>
+              <span className="text-textgrey">₹{saleData?.subtotal}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm">Tax</span>
+              <span className="text-textgrey">₹{saleData?.tax}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm ">Total</span>
+              <span className="text-textgrey">
+                ₹{saleData?.total}
+              </span>
+            </div>
+          </div>
+
+          {/* PRODUCTS */}
+          <div className="flex flex-col gap-3">
+            <span className="font-semibold">Products</span>
+
+            {saleData?.items?.map(item => (
+              <div
+                key={item.item_id}
+                className="flex justify-between border border-tableborder rounded-lg p-3"
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{item.product_name}</span>
+                  <span className="text-xs text-textgrey">
+                    {item.sku_code}
+                  </span>
+                </div>
+
+                <div className="flex flex-col text-right">
+                  <span>Qty: {item.quantity}</span>
+                  <span>₹{item.unit_price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
       )}
     </CustomeModal>
   )
 }
+
 export default ViewForm

@@ -51,7 +51,7 @@ const POS = () => {
         <div className='flex items-center gap-2'>
           <button
             onClick={() => {
-              setViewId(row.original.id)
+              setViewId(row.original.sale_id)
               setViewOpen(true)
             }}
           >
