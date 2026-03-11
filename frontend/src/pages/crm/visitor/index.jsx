@@ -1,4 +1,4 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { useState } from 'react'
 import { useVisitorQuery } from '@api-queries/crm/Query'
 import { Button } from '@pages/components/ui/button'

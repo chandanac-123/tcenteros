@@ -1,4 +1,4 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import {
@@ -8,7 +8,7 @@ import {
 } from '@api-queries/inventory/Query'
 import { useFormik } from 'formik'
 import { productValidationSchema } from '@utils/validations'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeSelect from '@common/components/CustomeSelect'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
 import { useEffect } from 'react'

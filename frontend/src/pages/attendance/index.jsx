@@ -1,13 +1,13 @@
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { useState } from 'react'
 import MemberAttendance from './MemberAttendance'
 import EmployeeAttendance from './EmployeeAttendance'
 import { Button } from '@pages/components/ui/button'
 import AddEmployeeAttendance from './AddEmployeeAttendace'
-import CustomFilter from '@common/CustomeFilter'
+import CustomFilter from '@common/components/CustomeFilter'
 import { useCategoriesQuery } from '@api-queries/employee-management/Query'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { formatRange } from '@utils/helper'
 
 const Attendance = () => {

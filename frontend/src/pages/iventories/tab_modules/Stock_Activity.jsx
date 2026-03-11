@@ -1,7 +1,7 @@
 import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { useAllStockTransactionsQuery } from '@api-queries/inventory/Query'
 import { useState } from 'react'
 

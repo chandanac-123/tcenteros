@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Textarea } from '@pages/components/ui/textarea'
 

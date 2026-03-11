@@ -1,6 +1,6 @@
 import ContentLayout from "@common/masterLayout/ContentLayout"
 import { inventory_modules } from "@constants/inventory_modules"
-import CustomeTab from "@common/CustomeTab";
+import CustomeTab from "@common/components/CustomeTab";
 import { useInventoryStore } from "@store/networkTabstore";
 
 const Inventories = () => {

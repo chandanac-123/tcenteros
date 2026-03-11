@@ -1,4 +1,4 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Badge } from '@pages/components/ui/badge'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useGetSaleByIdQuery } from '@api-queries/billing/Query'

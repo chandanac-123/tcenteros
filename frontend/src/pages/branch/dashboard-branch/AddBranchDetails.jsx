@@ -1,10 +1,10 @@
 import React from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
-import InputFile from '@common/CustomeFileUpload'
-import PasswordInput from '@common/PasswordInput'
+import CustomeSelect from '@common/components/CustomeSelect'
+import InputFile from '@common/components/CustomeFileUpload'
+import PasswordInput from '@common/components/PasswordInput'
 import {
   useGetPurchasedBranchesQuery,
   useGetBranchCategoriesListQuery,

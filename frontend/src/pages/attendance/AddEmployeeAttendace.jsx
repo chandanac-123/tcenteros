@@ -1,8 +1,8 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
-import CustomDatePicker from '@common/CustomeDatepicker'
-import TimePicker from '@common/Timepicker'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
+import TimePicker from '@common/components/Timepicker'
+import CustomeSelect from '@common/components/CustomeSelect'
 import {
   useCreateAttendanceMutation,
   useAllEmployeesQuery

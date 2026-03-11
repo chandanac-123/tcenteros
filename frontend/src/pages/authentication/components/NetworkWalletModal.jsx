@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import dummy from '@assets/images/dummy.png'
 import { Switch } from '@pages/components/ui/switch'

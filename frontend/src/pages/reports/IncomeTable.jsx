@@ -1,4 +1,4 @@
-import { DataTable } from "@common/DataTable"
+import { DataTable } from "@common/components/DataTable"
 
 const IncomeTable = () => {
   const columns = [

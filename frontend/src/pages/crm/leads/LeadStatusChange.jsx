@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Badge } from '@pages/components/ui/badge'
 import clsx from 'clsx'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { Button } from '@pages/components/ui/button'
 
 const LeadStatusChange = ({ open, setOpen }) => {

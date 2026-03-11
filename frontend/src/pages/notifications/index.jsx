@@ -1,6 +1,6 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { useState } from 'react'
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import NetworkNotifications from './components/NetworkNotifications'
 import CenterNotifications from './components/CenterNotifications'
 import Tickets from './components/Tickets'

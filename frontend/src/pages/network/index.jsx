@@ -1,7 +1,7 @@
 import ContentLayout from "@common/masterLayout/ContentLayout"
 import { Switch } from "@pages/components/ui/switch"
 import NetworkTables from "./NetworkTables"
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import { useState } from "react"
 import AmountForm from "./AmountForm"
 import {
@@ -11,7 +11,7 @@ import {
 } from "@api-queries/network/Query"
 import { useNetworkTabStore } from "@store/networkTabstore"
 import { format } from "date-fns"
-import CustomDatePicker from "@common/CustomeDatepicker"
+import CustomDatePicker from "@common/components/CustomeDatepicker"
 
 
 const Network = () => {

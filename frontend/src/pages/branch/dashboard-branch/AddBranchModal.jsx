@@ -1,4 +1,4 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import logo from '@assets/header-icons/logo_in_auth.svg'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'

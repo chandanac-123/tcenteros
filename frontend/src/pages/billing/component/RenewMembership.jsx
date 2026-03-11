@@ -1,6 +1,6 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 
 const RenewMembership = ({

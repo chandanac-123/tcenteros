@@ -1,5 +1,5 @@
 import { Button } from '@pages/components/ui/button'
-import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
+import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
 import { useMembersGetByIdQuery } from '@api-queries/crm/Query';
 
 const MemberView = ({ goBack,memberId }) => {

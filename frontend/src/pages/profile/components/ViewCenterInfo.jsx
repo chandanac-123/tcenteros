@@ -1,4 +1,4 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { useGetProfileByIdQuery } from '@api-queries/center-profile/Query'
 import profile from '@assets/dummy/profile.png'
 

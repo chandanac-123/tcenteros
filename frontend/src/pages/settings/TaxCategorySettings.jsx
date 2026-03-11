@@ -1,6 +1,6 @@
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
-import { DataTable } from '@common/DataTable'
+import CustomeSelect from '@common/components/CustomeSelect'
+import { DataTable } from '@common/components/DataTable'
 import { useState } from 'react'
 import { Switch } from '@radix-ui/react-switch'
 import { Button } from '@pages/components/ui/button'
@@ -17,7 +17,7 @@ import { useFormik } from 'formik'
 import { Badge } from '@pages/components/ui/badge'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 
 const TaxCategorySettings = () => {
   const [tableParams, setTableParams] = useState({

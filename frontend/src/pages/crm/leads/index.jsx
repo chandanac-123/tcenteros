@@ -1,10 +1,9 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
 import Card from '../components/Cards'
 import { leadsType } from '@constants/leads'
 import edit from '@assets/form-icons/edit.svg'
-import CustomeModal from '@common/CustomeModal'
 import LeadStatusChange from './LeadStatusChange'
 
 const Leads = () => {

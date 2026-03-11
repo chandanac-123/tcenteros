@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import SalesReport from '../components/reports/SalesReport'
 import { Download } from 'lucide-react'
 import StockMovementReport from '../components/reports/StockMovementReport'
@@ -12,7 +12,7 @@ import {
   useGenerateInventoryReportMutation,
   useGeneratePurchaseReportMutation
 } from '@api-queries/inventory/Query'
-import RadioGroup from '@common/RadioGroup'
+import RadioGroup from '@common/components/RadioGroup'
 
 const Reports = () => {
   const [reportType, setReportType] = useState('sales')

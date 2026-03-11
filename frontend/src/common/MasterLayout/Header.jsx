@@ -6,7 +6,7 @@ import {
   PopoverContent
 } from '@pages/components/ui/popover'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
-import CustomeModal from '../CustomeModal'
+import CustomeModal from '../components/CustomeModal'
 import { useEffect, useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useLocation, useNavigate } from 'react-router-dom'

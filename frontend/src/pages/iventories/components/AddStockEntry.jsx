@@ -1,16 +1,16 @@
 import React from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { purchaseValidationSchema } from '@utils/validations'
 import {
   useCreateStockEntryMutation,
   useProductDropdownQuery
 } from '@api-queries/inventory/Query'
 import { format } from 'date-fns'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeSelect from '@common/components/CustomeSelect'
 
 const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
   const { mutateAsync: createStockEntry } = useCreateStockEntryMutation()

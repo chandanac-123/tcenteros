@@ -1,4 +1,4 @@
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import IncomingNetwork from './IncomingNetwork'
 import OutgoingNetwork from './OutgoingNetwork'
 import { useState } from 'react'

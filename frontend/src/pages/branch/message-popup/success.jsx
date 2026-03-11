@@ -1,5 +1,5 @@
 import React from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import success from '@assets/payment/paymentSuccessIcon.svg'
 import { useNavigate } from 'react-router-dom'
 

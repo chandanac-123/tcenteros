@@ -1,4 +1,4 @@
-import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
+import CustomeVerticalSelect from '@common/components/CustomeVerticalSelect'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { crm_tabs } from '@constants/crmTabs'
 import { Button } from '@pages/components/ui/button'

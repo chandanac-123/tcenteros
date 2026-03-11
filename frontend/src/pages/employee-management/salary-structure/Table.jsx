@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import StructureAddEdit from './AddEdit'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import { useDeleteSalaryMutation } from '@api-queries/employee-salary/Query'
 
 const SalaryStructureTable = ({

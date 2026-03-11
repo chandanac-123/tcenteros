@@ -1,6 +1,6 @@
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
-import PasswordInput from '@common/PasswordInput'
+import PasswordInput from '@common/components/PasswordInput'
 import logo from '@assets/header-icons/logo_in_auth.svg'
 import dummy from '@assets/images/dummy.png'
 import { useState } from 'react'

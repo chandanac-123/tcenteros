@@ -1,9 +1,9 @@
 import { Input } from '@pages/components/ui/input'
-import SelectCategory from '@common/SelectCategory'
-import CustomeSelect from '@common/CustomeSelect'
+import SelectCategory from '@common/components/SelectCategory'
+import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Plus } from 'lucide-react'
 import {
   useCategoriesQuery,
@@ -11,11 +11,11 @@ import {
   useUpdateEmployeeMutation,
   useEmployeeGetByIdQuery
 } from '@api-queries/employee-management/Query'
-import InputFile from '@common/CustomeFileUpload'
+import InputFile from '@common/components/CustomeFileUpload'
 import { useAuthStore } from '@store/authStore'
 import { useFormik } from 'formik'
 import { employeeValidationSchema } from '@utils/validations'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { format } from 'date-fns'
 import AddCategory from '../category/AddCategory'
 

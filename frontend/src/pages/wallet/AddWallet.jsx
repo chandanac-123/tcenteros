@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import { useCreateWalletAmountMutation } from "@api-queries/wallet/Query"

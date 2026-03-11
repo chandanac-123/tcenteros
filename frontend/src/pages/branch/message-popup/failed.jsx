@@ -1,6 +1,6 @@
 import React from 'react'
 import failed from '@assets/payment/paymenFailedIcon.svg'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 
 
 

@@ -1,5 +1,5 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import { useState } from 'react'
 import IncomeTable from './IncomeTable'
 import ExpenseTable from './ExpenseTable'

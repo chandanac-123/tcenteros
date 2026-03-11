@@ -1,5 +1,5 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
+import CustomeVerticalSelect from '@common/components/CustomeVerticalSelect'
 import { setting_tabs } from '@constants/settingsTabs'
 import { useSettingsTabStore } from '@store/tabStore'
 import { useEffect } from 'react'

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import TimePicker from '@common/Timepicker'
+import TimePicker from '@common/components/Timepicker'
 import { days } from '@constants/days'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
@@ -11,7 +11,7 @@ import {
   useDeleteSlotMutation
 } from '@api-queries/slot/Query'
 import { useFormik } from 'formik'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import {
   useAllCenterTimeQuery,
   useCreateCenterTimeMutation,

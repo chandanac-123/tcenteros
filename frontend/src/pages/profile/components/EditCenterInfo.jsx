@@ -1,7 +1,7 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeSelect from '@common/components/CustomeSelect'
 import {
   useGetProfileByIdQuery,
   useUpdateProfileMutation

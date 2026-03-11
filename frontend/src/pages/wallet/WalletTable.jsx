@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import ViewWallet from './ViewWallet'

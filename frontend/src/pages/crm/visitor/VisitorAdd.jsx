@@ -1,7 +1,7 @@
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
-import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
+import CustomeSelect from '@common/components/CustomeSelect'
+import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
 import {
   useCreateMemberMutation,
   useMembersGetByIdQuery,

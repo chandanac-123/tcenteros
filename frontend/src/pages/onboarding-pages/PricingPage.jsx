@@ -6,7 +6,7 @@ import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import { usePricingPageQuery } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import { useState } from 'react'
 
 const PricingPage = () => {

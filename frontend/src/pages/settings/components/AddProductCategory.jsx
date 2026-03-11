@@ -1,4 +1,4 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import { Textarea } from '@pages/components/ui/textarea'

@@ -1,7 +1,7 @@
 import { Button } from '@pages/components/ui/button'
 import { Link, useNavigate } from 'react-router-dom'
 import single_arrow from '@assets/navigate-icons/single-left-arrow.svg'
-import OtpInput from '@common/OtpInput'
+import OtpInput from '@common/components/OtpInput'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
 import { useVerifyOTPforgotPasswordMutation } from '@api-queries/authentication/Query'

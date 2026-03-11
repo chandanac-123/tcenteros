@@ -1,8 +1,8 @@
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
-import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
-import CustomeTab from '@common/CustomeTab'
+import CustomeSelect from '@common/components/CustomeSelect'
+import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
+import CustomeTab from '@common/components/CustomeTab'
 import {
   useCreateMemberMutation,
   useMembersTimeSlotQuery,

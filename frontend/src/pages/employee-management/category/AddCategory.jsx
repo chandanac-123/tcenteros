@@ -1,7 +1,7 @@
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import InputFile from '@common/CustomeFileUpload'
-import CustomeModal from '@common/CustomeModal'
+import InputFile from '@common/components/CustomeFileUpload'
+import CustomeModal from '@common/components/CustomeModal'
 import {
   useCreateCategoryMutation,
   useUpdateCategoryMutation,

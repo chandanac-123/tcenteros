@@ -1,4 +1,4 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
 import view from '@assets/form-icons/view.svg'
 import { useState } from 'react'

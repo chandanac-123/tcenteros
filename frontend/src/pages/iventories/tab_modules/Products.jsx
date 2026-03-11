@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import {
@@ -9,7 +9,7 @@ import {
 } from '@api-queries/inventory/Query'
 import { Button } from '@pages/components/ui/button'
 import AddProductModal from '../components/AddProductModal'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 
 const Products = () => {
   const [tableParams, setTableParams] = useState({

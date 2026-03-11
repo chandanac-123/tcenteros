@@ -1,8 +1,8 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { galleryImageValidationSchema } from '@utils/validations'
 import { useFormik } from 'formik'
 import { useCreateGalleryMutation } from '@api-queries/gallery/Query'
-import InputFile from '@common/CustomeFileUpload'
+import InputFile from '@common/components/CustomeFileUpload'
 import { Button } from '@pages/components/ui/button'
 
 const UploadImage = ({ open, setOpen, refetch }) => {

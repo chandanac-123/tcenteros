@@ -1,6 +1,6 @@
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
-import InputFile from '@common/CustomeFileUpload'
+import InputFile from '@common/components/CustomeFileUpload'
 import { useFormik } from 'formik'
 import {
   useUpdateProfileImageMutation,

@@ -10,7 +10,7 @@ import {
     Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import CustomDatePicker from "@common/CustomeDatepicker";
+import CustomDatePicker from "@common/components/CustomeDatepicker";
 
 ChartJS.register(
     CategoryScale,

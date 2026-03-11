@@ -1,4 +1,4 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { usePurchaseReportQuery } from '@api-queries/inventory/Query'
 import { formatDate } from '@utils/helper'
 

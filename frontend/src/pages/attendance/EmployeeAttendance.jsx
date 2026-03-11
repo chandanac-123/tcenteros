@@ -1,11 +1,11 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { useEffect, useState } from 'react'
 import deleteicon from '@assets/form-icons/delete.svg'
 import {
   useAllEmployeesAttendanceQuery,
   useDeleteAttendanceMutation
 } from '@api-queries/attendance/Query'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import { convertTo12Hour, formatTo12Hour } from '@utils/helper'
 
 const EmployeeAttendance = ({ categoryId, dateRange }) => {

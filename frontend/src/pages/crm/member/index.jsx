@@ -1,11 +1,11 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
 import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import { memberType } from '@constants/members'
 import Card from '../components/Cards'
 import {

@@ -4,7 +4,7 @@ import SlotCard from './components/SlotCard'
 import { Button } from '@pages/components/ui/button'
 import AddProductCategory from './components/AddProductCategory'
 import { useDeleteSKUMutation } from '@api-queries/inventory/Query'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 
 const ProductCategory = () => {
   const { data } = useAllSKUsQuery()

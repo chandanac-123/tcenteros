@@ -1,6 +1,6 @@
 import React from 'react'
-import CustomeModal from '@common/CustomeModal'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeModal from '@common/components/CustomeModal'
+import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import {
   useCreateSalaryMutation,

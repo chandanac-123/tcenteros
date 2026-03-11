@@ -1,5 +1,5 @@
 import React from 'react'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import { useInventoryReportQuery } from '@api-queries/inventory/Query'
 import { Badge } from '@pages/components/ui/badge'
 

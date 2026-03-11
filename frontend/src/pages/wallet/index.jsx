@@ -9,7 +9,7 @@ import {
   useGetWalletTransactionsQuery
 } from "@api-queries/wallet/Query"
 import WalletFilter from "./component/WalletFilter"
-import CustomDatePicker from "@common/CustomeDatepicker"
+import CustomDatePicker from "@common/components/CustomeDatepicker"
 import { format } from "date-fns"
 import { useGetWalletAmountQuery } from "@api-queries/wallet/Query"
 

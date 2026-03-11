@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import {
   useAllHolidayQuery,
   usecreateHolidayMutation,
@@ -12,7 +12,7 @@ import {
 import { useFormik } from 'formik'
 import { holidayValidationSchema } from '@utils/validations'
 import { format } from 'date-fns'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 
 const CenterHolidays = () => {
   const [tableParams, setTableParams] = useState({

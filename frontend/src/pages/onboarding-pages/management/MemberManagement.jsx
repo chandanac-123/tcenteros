@@ -6,7 +6,7 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { useLocation, useNavigate } from 'react-router-dom'
 import OnboardHeader from '../components/OnboardHeader'
 import OnboardProgress from '../components/OnboardProgress'
-import RadioGroup from '@common/RadioGroup'
+import RadioGroup from '@common/components/RadioGroup'
 
 const MemberManagement = () => {
   const navigate = useNavigate()

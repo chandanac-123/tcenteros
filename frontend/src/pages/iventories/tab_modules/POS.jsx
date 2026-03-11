@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import view from '@assets/form-icons/view.svg'
 import { useAllSalesQuery } from '@api-queries/billing/Query'
 import ViewForm from '../components/View'

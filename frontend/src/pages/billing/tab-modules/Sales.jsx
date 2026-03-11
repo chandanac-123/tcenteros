@@ -1,5 +1,5 @@
-import { DataTable } from '@common/DataTable'
-import CustomFilter from '@common/CustomeFilter'
+import { DataTable } from '@common/components/DataTable'
+import CustomFilter from '@common/components/CustomeFilter'
 import deleteicon from '@assets/form-icons/delete.svg'
 import view from '@assets/form-icons/view.svg'
 

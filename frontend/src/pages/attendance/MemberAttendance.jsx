@@ -1,7 +1,7 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { useEffect, useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import {
   useAllMemberAttendanceQuery,
   useDeleteAttendanceMutation

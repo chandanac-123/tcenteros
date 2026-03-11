@@ -1,6 +1,6 @@
 import ContentLayout from '@common/masterLayout/ContentLayout'
 import { useState } from 'react'
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import { billing_modules } from '@constants/billing_module'
 
 const Billing = () => {

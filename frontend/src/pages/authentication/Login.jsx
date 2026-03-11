@@ -1,10 +1,10 @@
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
-import PasswordInput from '@common/PasswordInput'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
 import { useLoginMutation } from '@api-queries/authentication/Query'
+import PasswordInput from '@common/components/PasswordInput'
 
 const Login = () => {
   const { mutateAsync: login, isPending } = useLoginMutation()

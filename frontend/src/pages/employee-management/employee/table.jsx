@@ -1,4 +1,4 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
@@ -7,13 +7,13 @@ import { Badge } from '@pages/components/ui/badge'
 import { useEffect, useState } from 'react'
 import AddEditForm from './AddEditForm'
 import ViewForm from './View'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import {
   useDeleteEmployeeMutation,
   useUpdateEmployeeStatusMutation,
   useDeleteMultipleEmployeeMutation
 } from '@api-queries/employee-management/Query'
-import useTableSelection from '@common/UseTableSelection'
+import useTableSelection from '@common/components/UseTableSelection'
 
 const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
   const { selectedIds, selectionColumn, setSelectedIds } =

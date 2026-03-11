@@ -1,5 +1,5 @@
 import React from 'react'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import {
     useEditApproveNetworkMutation

@@ -1,8 +1,8 @@
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
-import CustomeSelect from '@common/CustomeSelect'
+import CustomeSelect from '@common/components/CustomeSelect'
 import { Textarea } from '@pages/components/ui/textarea'
-import CustomeModal from '@common/CustomeModal'
+import CustomeModal from '@common/components/CustomeModal'
 import { useFormik } from 'formik'
 import {
   useCreatePlanMutation,
