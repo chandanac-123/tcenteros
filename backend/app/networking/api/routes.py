@@ -511,6 +511,90 @@ async def request_networking_access(
 #         "transferred_to_network_center": float(center_share)
 #     }
 
+@router.get("/networking/requests")
+async def list_networking_requests(
+    status: str = Query(None, description="Filter by status: pending, approved, pending_settlement, rejected"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    List all networking access requests for the logged-in center admin's center.
+    Only shows requests for the admin's own center.
+    """
+    from app.auth.models.models import UserCenterMembership, Member, NetworkingStatusEnum
+    from app.center.models.models import Center
+
+    # Build base query - filter by current admin's center
+    query = (
+        select(UserCenterMembership, Member, Center)
+        .join(Member, UserCenterMembership.user_id == Member.id)
+        .outerjoin(Center, Member.home_center_id == Center.id)
+        .where(
+            UserCenterMembership.center_id == current_admin["center_id"],
+            UserCenterMembership.member_status == MemberStatusEnum.network_member
+        )
+    )
+
+    # Apply status filter if provided
+    if status:
+        try:
+            status_enum = NetworkingStatusEnum[status]
+            query = query.where(UserCenterMembership.network_status == status_enum)
+        except KeyError:
+            raise HTTPException(400, f"Invalid status: {status}")
+
+    # Get total count
+    total_query = select(func.count()).select_from(query.subquery())
+    total = (await session.execute(total_query)).scalar()
+
+    # Apply pagination
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    # Execute query
+    results = (await session.execute(query)).all()
+
+    requests = []
+    for membership, member, home_center in results:
+        # Calculate networking amount
+        if membership.start_date and membership.end_date:
+            network_center = await session.get(Center, membership.center_id)
+            per_day = Decimal(str(network_center.networking_amount or 0))
+            total_days = (membership.end_date - membership.start_date).days + 1
+            total_amount = per_day * Decimal(total_days)
+            platform_share = (total_amount * Decimal("0.15")).quantize(Decimal("0.01"))
+            center_share = (total_amount - platform_share).quantize(Decimal("0.01"))
+        else:
+            total_amount = Decimal("0.00")
+            platform_share = Decimal("0.00")
+            center_share = Decimal("0.00")
+
+        requests.append({
+            "network_membership_id": str(membership.id),
+            "member_id": str(member.id),
+            "member_full_name": member.full_name,
+            "member_mobile": member.mobile,
+            "home_center_id": str(home_center.id) if home_center else None,
+            "home_center_name": home_center.center_name if home_center else None,
+            "start_date": str(membership.start_date) if membership.start_date else None,
+            "end_date": str(membership.end_date) if membership.end_date else None,
+            "time_slot_id": str(membership.time_slot_id) if membership.time_slot_id else None,
+            "network_status": membership.network_status.value if membership.network_status else None,
+            "total_amount": float(total_amount),
+            "center_share": float(center_share),
+            "platform_share": float(platform_share),
+            "created_at": membership.created_at,
+            "updated_at": membership.updated_at
+        })
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "requests": requests
+    }
+
 
 @router.put("/networking/access/approve")
 async def approve_networking_access(
