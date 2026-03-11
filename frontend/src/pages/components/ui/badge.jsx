@@ -13,7 +13,7 @@ const badgeVariants = cva(
         inactive:
           'bg-red_bg border-none text-red_text rounded-lg text-xs font-medium justify-center w-32 px-3 py-1',
         pending:
-          'bg-badge_yellow_bg border-none text-badge_yellow rounded-lg text-xs font-medium justify-center w-32 px-3 py-1',
+          'bg-yellow/25 border-none text-yellow rounded-lg text-xs font-medium justify-center w-32 px-3 py-1',
         future_lead:
           'bg-plan_bg_purple border-none  text-plan_purple  rounded-lg text-xs font-medium justify-center w-32 px-3 py-1',
         follow_up:

@@ -18,7 +18,6 @@ import useTableSelection from '@common/UseTableSelection'
 const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
   const { selectedIds, selectionColumn, setSelectedIds } =
     useTableSelection(data)
-  console.log('selectedIds: ', selectedIds)
 
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -45,15 +44,12 @@ const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
         await deleteMultipleEmployees({
           employee_ids: selectedIds // confirm this matches backend
         })
-
         setSelectedIds([]) // clear checkbox selection
       }
-
       // SINGLE DELETE
       else if (deleteId) {
         await deleteEmployee(deleteId)
       }
-
       // Reset modal & id
       setDeleteOpen(false)
       setDeleteId(null)
@@ -81,26 +77,11 @@ const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
 
   const columns = [
     selectionColumn,
-    {
-      accessorKey: 'full_name',
-      header: 'Full Name'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Designation'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      accessorKey: 'joining_date',
-      header: 'Join Date'
-    },
+    { accessorKey: 'full_name', header: 'Full Name' },
+    { accessorKey: 'designation_name', header: 'Designation' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'mobile', header: 'Phone Number' },
+    { accessorKey: 'joining_date', header: 'Join Date' },
     {
       header: 'Status',
       accessorKey: 'status',

@@ -6,11 +6,22 @@ import StockMovementReport from '../components/reports/StockMovementReport'
 import PurchaseReport from '../components/reports/PurchaseReport'
 import InventoryReport from '../components/reports/InventoryReport'
 import { downloadFile, formatDate } from '@utils/helper'
-import { useGenerateSaleReportMutation } from '@api-queries/inventory/Query'
+import {
+  useGenerateSaleReportMutation,
+  useGenerateStockReportMutation,
+  useGenerateInventoryReportMutation,
+  useGeneratePurchaseReportMutation
+} from '@api-queries/inventory/Query'
+import { de } from 'date-fns/locale'
 
 const Reports = () => {
   const [reportType, setReportType] = useState('sales')
   const { mutateAsync: generateSalesReport } = useGenerateSaleReportMutation()
+  const { mutateAsync: generatePurchaseReport } =
+    useGeneratePurchaseReportMutation()
+  const { mutateAsync: generateInventoryReport } =
+    useGenerateInventoryReportMutation()
+  const { mutateAsync: generateStockReport } = useGenerateStockReportMutation()
   const [dateRange, setDateRange] = useState({ from: null, to: null })
   const [tableParams, setTableParams] = useState({
     page: 1,
@@ -20,20 +31,56 @@ const Reports = () => {
 
   const handleDownload = async format => {
     try {
-      const response = await generateSalesReport({
-        date_from: formatDate(dateRange?.from),
-        date_to: formatDate(dateRange?.to),
+      const payload = {
+        date_from: dateRange?.from ? formatDate(dateRange?.from) : null,
+        date_to: dateRange?.to ? formatDate(dateRange?.to) : null,
         format
-      })
+      }
 
-      const filename =
-        format === 'csv' ? 'sales-report.csv' : 'sales-report.pdf'
+      let response
+      let filename
+        console.log('reportType: ', reportType);
 
+      switch (reportType) {
+        case 'sales':
+          response = await generateSalesReport(payload)
+          filename = `sales-report.${format}`
+          break
+
+        case 'purchase':
+          response = await generatePurchaseReport(payload)
+          filename = `purchase-report.${format}`
+          break
+
+        case 'inventory':
+          response = await generateInventoryReport(payload)
+          filename = `inventory-report.${format}`
+          break
+
+        case 'stock':
+          response = await generateStockReport(payload)
+          filename = `stock-report.${format}`
+          break
+
+        default:
+          return
+      }
       downloadFile(response, filename)
     } catch (error) {
       console.error(error)
     }
   }
+
+  const changeReportType = type => {
+    setReportType(type)
+    setDateRange({ from: null, to: null })
+    setTableParams({
+      page: 1,
+      date_from: null,
+      date_to: null
+    })
+  }
+
   return (
     <div className='flex flex-col gap-4'>
       {/* TITLE */}
@@ -47,7 +94,7 @@ const Reports = () => {
             name='reportType'
             value='sales'
             checked={reportType === 'sales'}
-            onChange={() => setReportType('sales')}
+            onChange={() => changeReportType('sales')}
             className='accent-blue-600'
           />
           <span>Sales Report</span>
@@ -59,7 +106,7 @@ const Reports = () => {
             name='reportType'
             value='purchase'
             checked={reportType === 'purchase'}
-            onChange={() => setReportType('purchase')}
+            onChange={() => changeReportType('purchase')}
             className='accent-blue-600'
           />
           <span>Purchase Report</span>
@@ -71,7 +118,7 @@ const Reports = () => {
             name='reportType'
             value='inventory'
             checked={reportType === 'inventory'}
-            onChange={() => setReportType('inventory')}
+            onChange={() => changeReportType('inventory')}
             className='accent-blue-600'
           />
           <span>Inventory Report</span>
@@ -83,7 +130,7 @@ const Reports = () => {
             name='reportType'
             value='stock'
             checked={reportType === 'stock'}
-            onChange={() => setReportType('stock')}
+            onChange={() => changeReportType('stock')}
             className='accent-blue-600'
           />
           <span>Stock Movement</span>
@@ -143,7 +190,12 @@ const Reports = () => {
             setTableParams={setTableParams}
           />
         )}
-        {reportType === 'inventory' && <InventoryReport />}
+        {reportType === 'inventory' && (
+          <InventoryReport
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
+        )}
       </div>
     </div>
   )

@@ -191,11 +191,7 @@ export function DataTable ({
                 {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
               </div>
               <div className='flex items-center space-x-2'>
-                <Pagination
-                  currentPage={tableParams?.page}
-                  lastPage={tableParams?.pageSize}
-                  setPageIndex={handlePageChange}
-                >
+                <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious

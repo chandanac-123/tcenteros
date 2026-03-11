@@ -30,40 +30,48 @@ export const getProductDropdownApiCall = () =>
 
 export const getSaleReportApiCall = data =>
   axiosInstance.get(
-    `inventory/reports/sales?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}&page_size=${10}`
+    `inventory/reports/sales?page=${data?.page}&date_from=${
+      data?.date_from
+    }&date_to=${data?.date_to}&page_size=${10}`
   )
 export const getPurchaseReportApiCall = data =>
   axiosInstance.get(
-    `inventory/reports/purchases?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}`
+    `inventory/reports/purchase?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}`
   )
 export const getInventoryReportApiCall = data =>
   axiosInstance.get(
-    `inventory/reports/inventory?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}`
+    `inventory/reports/inventory?page=${data?.page}`
   )
+
 export const getStockReportApiCall = data =>
   axiosInstance.get(
     `inventory/reports/stock-movement?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}`
   )
 
-// export const getGenerateSaleReportApiCall = data =>
-//   axiosInstance.post(
-//     `inventory/reports/generate/sales?date_from=${data?.date_from}&date_to=${data?.date_to}&format=pdf`
-//   )
 export const getGenerateSaleReportApiCall = data =>
   axiosInstance.post(
     `inventory/reports/generate/sales?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
     {},
     { responseType: 'blob' }
   )
+
 export const getGeneratePurchaseReportApiCall = data =>
   axiosInstance.post(
-    `inventory/reports/generate/purchases?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`
+    `inventory/reports/generate/purchase?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
   )
+
 export const getGenerateInventoryReportApiCall = data =>
   axiosInstance.post(
-    `inventory/reports/generate/inventory?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`
+    `inventory/reports/generate/inventory?format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
   )
+
 export const getGenerateStockReportApiCall = data =>
   axiosInstance.post(
-    `inventory/reports/generate/stock-movement?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`
+    `inventory/reports/generate/stock-movement?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
   )

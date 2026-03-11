@@ -15,7 +15,10 @@ import {
   getInventoryReport,
   getPurchaseReport,
   getSaleReport,
-  getGenerateSaleReport
+  getGenerateSaleReport,
+  getGeneratePurchaseReport,
+  getGenerateInventoryReport,
+  getGenerateStockReport
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -161,7 +164,6 @@ export const useProductDropdownQuery = () => {
   })
 }
 
-
 export const useSalesReportQuery = params => {
   return useQuery({
     queryKey: ['sales-report', params],
@@ -171,13 +173,12 @@ export const useSalesReportQuery = params => {
   })
 }
 
-
 export const usePurchaseReportQuery = params => {
   return useQuery({
     queryKey: ['purchase-report', params],
     queryFn: () => getPurchaseReport(params),
-    enabled: !!params?.date_from && !!params?.date_to,
-    keepPreviousData: true
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
 
@@ -185,8 +186,8 @@ export const useInventoryReportQuery = params => {
   return useQuery({
     queryKey: ['inventory-report', params],
     queryFn: () => getInventoryReport(params),
-    enabled: !!params?.date_from && !!params?.date_to,
-    keepPreviousData: true
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
 
@@ -194,8 +195,8 @@ export const useStockReportQuery = params => {
   return useQuery({
     queryKey: ['stock-report', params],
     queryFn: () => getStockReport(params),
-    enabled: !!params?.date_from && !!params?.date_to,
-    keepPreviousData: true
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
 
