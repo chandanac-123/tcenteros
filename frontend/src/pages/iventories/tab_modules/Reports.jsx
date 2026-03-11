@@ -12,7 +12,7 @@ import {
   useGenerateInventoryReportMutation,
   useGeneratePurchaseReportMutation
 } from '@api-queries/inventory/Query'
-import { de } from 'date-fns/locale'
+import RadioGroup from '@common/RadioGroup'
 
 const Reports = () => {
   const [reportType, setReportType] = useState('sales')
@@ -38,11 +38,8 @@ const Reports = () => {
         date_to: tableParams?.date_to ? formatDate(tableParams.date_to) : null,
         format
       }
-
       let response
       let filename
-      console.log('reportType: ', reportType)
-
       switch (reportType) {
         case 'sales':
           response = await generateSalesReport(payload)
@@ -90,53 +87,19 @@ const Reports = () => {
 
       {/* REPORT TYPE */}
       <div className='flex gap-6 justify-around flex-wrap border border-gray-300 p-4 rounded-lg'>
-        <label className='flex items-center gap-2 cursor-pointer'>
-          <input
-            type='radio'
-            name='reportType'
-            value='sales'
-            checked={reportType === 'sales'}
-            onChange={() => changeReportType('sales')}
-            className='accent-blue-600'
-          />
-          <span>Sales Report</span>
-        </label>
-
-        <label className='flex items-center gap-2 cursor-pointer'>
-          <input
-            type='radio'
-            name='reportType'
-            value='purchase'
-            checked={reportType === 'purchase'}
-            onChange={() => changeReportType('purchase')}
-            className='accent-blue-600'
-          />
-          <span>Purchase Report</span>
-        </label>
-
-        <label className='flex items-center gap-2 cursor-pointer'>
-          <input
-            type='radio'
-            name='reportType'
-            value='inventory'
-            checked={reportType === 'inventory'}
-            onChange={() => changeReportType('inventory')}
-            className='accent-blue-600'
-          />
-          <span>Inventory Report</span>
-        </label>
-
-        <label className='flex items-center gap-2 cursor-pointer'>
-          <input
-            type='radio'
-            name='reportType'
-            value='stock'
-            checked={reportType === 'stock'}
-            onChange={() => changeReportType('stock')}
-            className='accent-blue-600'
-          />
-          <span>Stock Movement</span>
-        </label>
+        <RadioGroup
+          name='reportType'
+          options={[
+            { value: 'sales', label: 'Sales Report' },
+            { value: 'purchase', label: 'Purchase Report' },
+            { value: 'inventory', label: 'Inventory Report' },
+            { value: 'stock', label: 'Stock Movement' }
+          ]}
+          value={reportType}
+          checked={reportType}
+          onChange={changeReportType}
+          className='flex gap-3'
+        />
         <div className='flex flex-auto'>
           <CustomDatePicker
             label='Start and End Date'
@@ -156,7 +119,6 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* FILTER SECTION */}
       <div className='flex flex-wrap gap-4 justify-end'>
         <button
           onClick={() => handleDownload('csv')}
