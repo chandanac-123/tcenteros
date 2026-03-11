@@ -1697,8 +1697,8 @@ async def get_report_types(
 
 @router.post("/reports/generate/sales", summary="Generate Sales Report")
 async def generate_sales_report(
-    date_from: date = Query(..., description="Start date for report"),
-    date_to: date = Query(..., description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     format: str = Query("json", description="Output format: json, pdf, csv"),
     status: Optional[str] = Query(None, description="Filter by status: completed, pending"),
     db: AsyncSession = Depends(get_async_session),
@@ -1707,17 +1707,37 @@ async def generate_sales_report(
     """
     Generate sales report for the specified date range.
     Supports JSON (preview), PDF, and CSV formats.
+    If date_from and date_to are not provided or set to 'null', returns all sales data.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD.")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD.")
+
     # Build query
-    where_clauses = [
-        Sale.center_id == center_id,
-        Sale.created_at >= datetime.combine(date_from, datetime.min.time()),
-        Sale.created_at <= datetime.combine(date_to, datetime.max.time())
-    ]
+    where_clauses = [Sale.center_id == center_id]
+    
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        where_clauses.append(Sale.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+    
+    if date_to_parsed:
+        where_clauses.append(Sale.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
     
     if status:
         where_clauses.append(Sale.status == status.lower())
@@ -1754,8 +1774,8 @@ async def generate_sales_report(
         
         return {
             "report_type": "sales",
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
+            "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+            "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
             "generated_at": datetime.now().isoformat(),
             "summary": {
                 "total_sales": len(sales_data),
@@ -1770,15 +1790,15 @@ async def generate_sales_report(
         pdf_bytes = ReportGenerator.generate_sales_pdf(
             sales_data, 
             center_name, 
-            date_from.isoformat(), 
-            date_to.isoformat()
+            date_from_parsed.isoformat() if date_from_parsed else "All Time", 
+            date_to_parsed.isoformat() if date_to_parsed else "All Time"
         )
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=sales_report_{date_from}_{date_to}.pdf"
+                "Content-Disposition": f"attachment; filename=sales_report_{date_from or 'all'}_{date_to or 'all'}.pdf"
             }
         )
     
@@ -1789,7 +1809,7 @@ async def generate_sales_report(
             io.BytesIO(csv_bytes),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=sales_report_{date_from}_{date_to}.csv"
+                "Content-Disposition": f"attachment; filename=sales_report_{date_from or 'all'}_{date_to or 'all'}.csv"
             }
         )
     
@@ -1963,8 +1983,8 @@ async def get_sales_report_data(
 
 @router.post("/reports/generate/purchase", summary="Generate Purchase Report")
 async def generate_purchase_report(
-    date_from: date = Query(..., description="Start date for report"),
-    date_to: date = Query(..., description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     format: str = Query("json", description="Output format: json, pdf, csv"),
     product_id: Optional[str] = Query(None, description="Filter by product"),
     db: AsyncSession = Depends(get_async_session),
@@ -1972,101 +1992,115 @@ async def generate_purchase_report(
 ):
     """
     Generate purchase/stock-in report for the specified date range.
-    Supports JSON (preview), PDF, and CSV formats.
+    If date_from and date_to are not provided or set to 'null', returns all purchase data.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    # Build query
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD.")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD.")
+
+    # Build query for stock transactions (IN only)
     sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
     where_clauses = [
         StockTransaction.product_id.in_(sku_ids_sel),
         StockTransaction.transaction_type == "IN"
     ]
     
-    created_at_attr = getattr(StockTransaction, "created_at", None)
-    if created_at_attr:
-        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-    else:
-        where_clauses.append(StockTransaction.invoice_date >= date_from)
-        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+    
+    if date_to_parsed:
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
     
     if product_id:
         where_clauses.append(StockTransaction.product_id == product_id)
 
-    # Fetch data
+    # Fetch purchase data
     stmt = (
-        select(StockTransaction, Product, Stock)
+        select(StockTransaction, Product)
         .join(Product, Product.id == StockTransaction.product_id)
-        .outerjoin(Stock, Stock.product_id == Product.id)
         .where(*where_clauses)
-        .order_by(StockTransaction.created_at.desc() if created_at_attr else StockTransaction.invoice_date.desc())
+        .order_by(StockTransaction.created_at.desc())
     )
     
     result = await db.execute(stmt)
-    rows = result.all()
+    transactions = result.all()
 
     # Prepare data
-    purchases_data = []
-    for st, prod, stock in rows:
-        purchases_data.append({
+    purchase_data = []
+    for st, product in transactions:
+        purchase_data.append({
             'transaction_id': str(st.id),
-            'product_id': str(prod.id),
-            'product_name': prod.name,
-            'supplier_name': st.supplier_name,
-            'quantity_added': int(st.quantity or 0),
-            'cost_price': str(st.unit_cost) if st.unit_cost else "0.00",
-            'total': str(st.subtotal) if st.subtotal else "0.00",
-            'available_quantity': int(stock.quantity_available) if stock else 0,
-            'invoice_date': st.invoice_date.isoformat() if st.invoice_date else None,
-            'invoice_number': st.invoice_number,
+            'product_id': str(product.id),
+            'product_name': product.name,
+            'sku_code': product.sku_code,
+            'quantity': int(st.quantity),
+            'unit_cost': str(st.unit_cost),
+            'subtotal': str(st.subtotal),
+            'supplier_name': st.supplier_name or "N/A",
+            'invoice_number': st.invoice_number or "N/A",
+            'created_at': st.created_at.isoformat() if st.created_at else None,
         })
 
     # Return based on format
     if format.lower() == "json":
-        total_cost = sum(Decimal(str(p['total'])) for p in purchases_data)
-        total_quantity = sum(int(p['quantity_added']) for p in purchases_data)
+        total_quantity = sum(int(p['quantity']) for p in purchase_data)
+        total_cost = sum(Decimal(str(p['subtotal'])) for p in purchase_data)
         
         return {
             "report_type": "purchase",
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
+            "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+            "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
             "generated_at": datetime.now().isoformat(),
             "summary": {
-                "total_purchases": len(purchases_data),
+                "total_purchases": len(purchase_data),
                 "total_quantity": total_quantity,
                 "total_cost": str(total_cost)
             },
-            "data": purchases_data
+            "data": purchase_data
         }
     
     elif format.lower() == "pdf":
         center_name = "Your Center Name"
         pdf_bytes = ReportGenerator.generate_purchase_pdf(
-            purchases_data,
+            purchase_data,
             center_name,
-            date_from.isoformat(),
-            date_to.isoformat()
+            date_from_parsed.isoformat() if date_from_parsed else "All Time",
+            date_to_parsed.isoformat() if date_to_parsed else "All Time"
         )
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=purchase_report_{date_from}_{date_to}.pdf"
+                "Content-Disposition": f"attachment; filename=purchase_report_{date_from or 'all'}_{date_to or 'all'}.pdf"
             }
         )
     
     elif format.lower() == "csv":
-        csv_bytes = ReportGenerator.generate_purchase_csv(purchases_data)
+        csv_bytes = ReportGenerator.generate_purchase_csv(purchase_data)
         
         return StreamingResponse(
             io.BytesIO(csv_bytes),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=purchase_report_{date_from}_{date_to}.csv"
+                "Content-Disposition": f"attachment; filename=purchase_report_{date_from or 'all'}_{date_to or 'all'}.csv"
             }
         )
     
@@ -2242,69 +2276,83 @@ async def generate_inventory_report(
     current_admin: dict = Depends(centeradmin_required),
 ):
     """
-    Generate current inventory status report.
-    Shows current stock levels, valuation, and low stock alerts.
+    Generate inventory report (current stock levels).
+    This report is not date-filtered as it shows current state.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
+    # Build query
+    where_clauses = [Product.center_id == center_id]
+
     # Fetch products with stock
     stmt = (
         select(Product, Stock)
         .outerjoin(Stock, Stock.product_id == Product.id)
-        .where(Product.center_id == center_id)
+        .where(*where_clauses)
         .order_by(Product.name)
     )
     
     result = await db.execute(stmt)
-    rows = result.all()
+    products = result.all()
 
+    # Prepare data
     inventory_data = []
-    for prod, stock in rows:
-        qty = int(stock.quantity_available) if stock else 0
-        reorder = int(prod.reorder_level) if prod.reorder_level else 0
+    for product, stock in products:
+        quantity = int(stock.quantity_available) if stock else 0
+        reorder_level = int(product.reorder_level) if product.reorder_level else 0
+        is_low_stock = quantity <= reorder_level
         
-        # Filter low stock if requested
-        if low_stock_only and qty > reorder:
+        # Skip if low_stock_only filter is on and item is not low stock
+        if low_stock_only and not is_low_stock:
             continue
         
-        last_cost = Decimal(str(stock.last_cost)) if stock and stock.last_cost else Decimal("0.00")
-        value = last_cost * Decimal(qty)
-        
         inventory_data.append({
-            'product_id': str(prod.id),
-            'sku_code': prod.sku_code,
-            'product_name': prod.name,
-            'current_stock': qty,
-            'reorder_level': reorder,
-            'unit_cost': str(last_cost),
-            'stock_value': str(value),
-            'status': 'Low Stock' if qty <= reorder else 'In Stock',
+            'product_id': str(product.id),
+            'product_name': product.name,
+            'sku_code': product.sku_code,
+            'current_stock': quantity,
+            'reorder_level': reorder_level,
+            'is_low_stock': is_low_stock,
+            'unit_price': str(product.selling_price or product.base_price or "0.00"),
+            'stock_value': str((Decimal(str(product.selling_price or product.base_price or "0.00")) * Decimal(quantity)).quantize(Decimal("0.01"))),
         })
 
+    # Return based on format
     if format.lower() == "json":
-        total_value = sum(Decimal(str(i['stock_value'])) for i in inventory_data)
-        low_stock_count = sum(1 for i in inventory_data if i['status'] == 'Low Stock')
+        total_items = len(inventory_data)
+        total_value = sum(Decimal(str(item['stock_value'])) for item in inventory_data)
+        low_stock_count = sum(1 for item in inventory_data if item['is_low_stock'])
         
         return {
             "report_type": "inventory",
             "generated_at": datetime.now().isoformat(),
             "summary": {
-                "total_products": len(inventory_data),
+                "total_items": total_items,
                 "low_stock_items": low_stock_count,
                 "total_inventory_value": str(total_value)
             },
             "data": inventory_data
         }
     
-    elif format.lower() == "csv":
-        df = pd.DataFrame(inventory_data)
-        buffer = io.StringIO()
-        df.to_csv(buffer, index=False)
+    elif format.lower() == "pdf":
+        center_name = "Your Center Name"
+        pdf_bytes = ReportGenerator.generate_inventory_pdf(inventory_data, center_name)
         
         return StreamingResponse(
-            io.BytesIO(buffer.getvalue().encode('utf-8')),
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=inventory_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+            }
+        )
+    
+    elif format.lower() == "csv":
+        csv_bytes = ReportGenerator.generate_inventory_csv(inventory_data)
+        
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
             media_type="text/csv",
             headers={
                 "Content-Disposition": f"attachment; filename=inventory_report_{datetime.now().strftime('%Y%m%d')}.csv"
@@ -2312,7 +2360,7 @@ async def generate_inventory_report(
         )
     
     else:
-        raise HTTPException(status_code=400, detail="PDF format not yet implemented for inventory report")
+        raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
     
 
 @router.get("/reports/inventory", summary="Get Inventory Report Data for UI Table")
@@ -2432,8 +2480,8 @@ async def get_inventory_report_data(
 
 @router.post("/reports/generate/stock-movement", summary="Generate Stock Movement Report")
 async def generate_stock_movement_report(
-    date_from: date = Query(..., description="Start date for report"),
-    date_to: date = Query(..., description="End date for report"),
+    date_from: Optional[str] = Query(None, description="Start date for report (optional, YYYY-MM-DD or 'null')"),
+    date_to: Optional[str] = Query(None, description="End date for report (optional, YYYY-MM-DD or 'null')"),
     format: str = Query("json", description="Output format: json, pdf, csv"),
     transaction_type: Optional[str] = Query(None, description="Filter by type: IN, OUT"),
     product_id: Optional[str] = Query(None, description="Filter by product"),
@@ -2441,25 +2489,39 @@ async def generate_stock_movement_report(
     current_admin: dict = Depends(centeradmin_required),
 ):
     """
-    Generate stock movement report for the specified date range.
-    Shows all stock transactions (IN/OUT) with balance tracking.
-    Supports JSON (preview), PDF, and CSV formats.
+    Generate stock movement report showing all IN/OUT transactions.
+    If date_from and date_to are not provided or set to 'null', returns all stock movements.
     """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
+    # Parse date parameters - handle "null" string and None
+    date_from_parsed = None
+    date_to_parsed = None
+    
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD.")
+    
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD.")
+
     # Build query
     sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
     where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
     
-    created_at_attr = getattr(StockTransaction, "created_at", None)
-    if created_at_attr:
-        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
-        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
-    else:
-        where_clauses.append(StockTransaction.invoice_date >= date_from)
-        where_clauses.append(StockTransaction.invoice_date <= date_to)
+    # Only add date filters if provided and not null
+    if date_from_parsed:
+        where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
+    
+    if date_to_parsed:
+        where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
     
     if transaction_type:
         where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
@@ -2467,92 +2529,84 @@ async def generate_stock_movement_report(
     if product_id:
         where_clauses.append(StockTransaction.product_id == product_id)
 
-    # Fetch data
+    # Fetch stock movements
     stmt = (
-        select(StockTransaction, Product, Stock)
+        select(StockTransaction, Product)
         .join(Product, Product.id == StockTransaction.product_id)
-        .outerjoin(Stock, Stock.product_id == Product.id)
         .where(*where_clauses)
-        .order_by(StockTransaction.created_at.desc() if created_at_attr else StockTransaction.invoice_date.desc())
+        .order_by(StockTransaction.created_at.desc())
     )
     
     result = await db.execute(stmt)
-    rows = result.all()
+    movements = result.all()
 
     # Prepare data
-    movements_data = []
-    for st, prod, stock in rows:
-        movements_data.append({
+    movement_data = []
+    for st, product in movements:
+        movement_data.append({
             'transaction_id': str(st.id),
-            'date': st.created_at.isoformat() if created_at_attr and st.created_at else (st.invoice_date.isoformat() if st.invoice_date else None),
-            'product_id': str(prod.id),
-            'product_name': prod.name,
-            'sku_code': prod.sku_code,
+            'date': st.created_at.isoformat() if st.created_at else None,
+            'product_id': str(product.id),
+            'product_name': product.name,
+            'sku_code': product.sku_code,
             'transaction_type': st.transaction_type,
-            'quantity': int(st.quantity or 0),
+            'quantity': int(st.quantity),
+            'balance_after': int(st.balance_after) if st.balance_after else None,
             'unit_cost': str(st.unit_cost) if st.unit_cost else "0.00",
-            'subtotal': str(st.subtotal) if st.subtotal else "0.00",
-            'balance_after': int(st.balance_after) if st.balance_after else (int(stock.quantity_available) if stock else 0),
-            'current_stock': int(stock.quantity_available) if stock else 0,
-            'supplier_name': st.supplier_name if st.transaction_type == 'IN' else None,
-            'invoice_number': st.invoice_number,
-            'reference': st.reference,
+            'total': str(st.subtotal) if st.subtotal else "0.00",
+            'reference': st.reference or "",
         })
 
     # Return based on format
     if format.lower() == "json":
-        total_in = sum(int(m['quantity']) for m in movements_data if m['transaction_type'] == 'IN')
-        total_out = sum(int(m['quantity']) for m in movements_data if m['transaction_type'] == 'OUT')
-        total_in_value = sum(Decimal(str(m['subtotal'])) for m in movements_data if m['transaction_type'] == 'IN')
-        total_out_value = sum(Decimal(str(m['subtotal'])) for m in movements_data if m['transaction_type'] == 'OUT')
+        total_in = sum(int(m['quantity']) for m in movement_data if m['transaction_type'] == 'IN')
+        total_out = sum(int(m['quantity']) for m in movement_data if m['transaction_type'] == 'OUT')
         
         return {
             "report_type": "stock_movement",
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
+            "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+            "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
             "generated_at": datetime.now().isoformat(),
             "summary": {
-                "total_transactions": len(movements_data),
-                "total_in_quantity": total_in,
-                "total_out_quantity": total_out,
-                "total_in_value": str(total_in_value),
-                "total_out_value": str(total_out_value),
-                "net_quantity": total_in - total_out,
-                "net_value": str(total_in_value - total_out_value)
+                "total_movements": len(movement_data),
+                "total_in": total_in,
+                "total_out": total_out,
+                "net_movement": total_in - total_out
             },
-            "data": movements_data
+            "data": movement_data
         }
     
     elif format.lower() == "pdf":
         center_name = "Your Center Name"
         pdf_bytes = ReportGenerator.generate_stock_movement_pdf(
-            movements_data,
+            movement_data,
             center_name,
-            date_from.isoformat(),
-            date_to.isoformat()
+            date_from_parsed.isoformat() if date_from_parsed else "All Time",
+            date_to_parsed.isoformat() if date_to_parsed else "All Time"
         )
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from}_{date_to}.pdf"
+                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from or 'all'}_{date_to or 'all'}.pdf"
             }
         )
     
     elif format.lower() == "csv":
-        csv_bytes = ReportGenerator.generate_stock_movement_csv(movements_data)
+        csv_bytes = ReportGenerator.generate_stock_movement_csv(movement_data)
         
         return StreamingResponse(
             io.BytesIO(csv_bytes),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from}_{date_to}.csv"
+                "Content-Disposition": f"attachment; filename=stock_movement_report_{date_from or 'all'}_{date_to or 'all'}.csv"
             }
         )
     
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
+    
     
 
 @router.get("/reports/stock-movement", summary="Get Stock Movement Report Data for UI Table")

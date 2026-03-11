@@ -34,6 +34,7 @@ class OrderType(enum.Enum):
     add_on = "add_on"
     refund = "refund"
     stock_purchase = "stock_purchase"
+    # membership = "membership"
 
 
 class ReferenceSchema(enum.Enum):
