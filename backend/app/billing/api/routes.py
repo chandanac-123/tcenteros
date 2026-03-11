@@ -22,312 +22,447 @@ from uuid import UUID
 router = APIRouter()
 
 
-@router.get("/transactions", summary="List all billing transactions")  # REMOVED response_model
-async def list_billing_transactions(
+# Add this to your billing routes file (or create a new billing API file)
+@router.get("/billing/sales", summary="Get unified sales/billing transactions")
+async def get_unified_sales_transactions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    date_from: Optional[str] = Query(None, description="Filter from date (YYYY-MM-DD or 'null')"),
-    date_to: Optional[str] = Query(None, description="Filter to date (YYYY-MM-DD or 'null')"),
-    transaction_type: Optional[str] = Query(None, description="Filter by type: membership, product, network, service"),
-    status: Optional[str] = Query(None, description="Filter by status: paid, pending, unpaid, failed, cancelled"),
-    payment_method: Optional[str] = Query(None, description="Filter by payment method: cash, card, upi, bank_transfer"),
-    customer_id: Optional[str] = Query(None, description="Filter by customer/member ID"),
-    source: Optional[str] = Query(None, description="Filter by source: local, pos, visit, online"),
-    search: Optional[str] = Query(None, description="Search by invoice number or customer name"),
+    date_from: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    order_type: Optional[str] = Query(None, description="Filter by order type: membership, networking_access, stock_purchase"),
+    payment_status: Optional[str] = Query(None, description="Filter by status: paid, pending, unpaid, failed"),
+    payment_method_filter: Optional[str] = Query(None, description="Filter by payment method: cash, upi, card, bank_transfer, other"),
+    customer_search: Optional[str] = Query(None, description="Search by customer name or mobile"),
+    sort_by: str = Query("created_at", description="Sort by: created_at, total_amount"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
     db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required),
+    current_admin: dict = Depends(centeradmin_required)
 ):
     """
-    Unified billing transactions list - shows all types of transactions:
-    - Membership purchases/renewals
-    - Product sales (POS)
-    - Network visit charges
-    - Service charges
+    List all sales transactions: memberships, networking access, and product purchases.
     """
+    from app.auth.models.models import CenterAdmin, Employee
+    from sqlalchemy.orm import joinedload
+    
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
-    # Parse date parameters - handle "null" string and None
+    # Parse dates
     date_from_parsed = None
     date_to_parsed = None
-    
+
     if date_from and date_from.lower() != "null":
         try:
-            date_from_parsed = date.fromisoformat(date_from)
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD or 'null'")
-    
+            raise HTTPException(400, "Invalid date_from format. Use YYYY-MM-DD")
+
     if date_to and date_to.lower() != "null":
         try:
-            date_to_parsed = date.fromisoformat(date_to)
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD or 'null'")
+            raise HTTPException(400, "Invalid date_to format. Use YYYY-MM-DD")
 
     # Build WHERE clauses
     where_clauses = [PaymentOrder.center_id == center_id]
 
-    # Date filters
-    if date_from_parsed:
-        where_clauses.append(PaymentOrder.created_at >= datetime.combine(date_from_parsed, datetime.min.time()))
-    if date_to_parsed:
-        where_clauses.append(PaymentOrder.created_at <= datetime.combine(date_to_parsed, datetime.max.time()))
-
-    # Type filter (order_type mapping)
-    if transaction_type:
-        type_mapping = {
-            "membership": [OrderType.center_subscription, OrderType.renewal],
-            "product": [OrderType.stock_purchase],
-            "network": [OrderType.add_on],
-            "service": [OrderType.feature_purchase],
-        }
-        if transaction_type in type_mapping:
-            where_clauses.append(PaymentOrder.order_type.in_(type_mapping[transaction_type]))
-
-    # Status filter
-    if status:
-        status_mapping = {
-            "paid": PaymentOrderStatus.paid,
-            "pending": PaymentOrderStatus.pending,
-            "unpaid": PaymentOrderStatus.unpaid,
-            "failed": PaymentOrderStatus.failed,
-            "cancelled": PaymentOrderStatus.cancelled,
-            "refunded": PaymentOrderStatus.refunded,
-        }
-        if status in status_mapping:
-            where_clauses.append(PaymentOrder.status == status_mapping[status])
-
-    # Payment method filter
-    if payment_method:
-        method_mapping = {
-            "cash": PaymentMethod.cash,
-            "card": PaymentMethod.card,
-            "upi": PaymentMethod.upi,
-            "bank_transfer": PaymentMethod.bank_transfer,
-            "other": PaymentMethod.other,
-        }
-        if payment_method in method_mapping:
-            where_clauses.append(PaymentOrder.payment_method == method_mapping[payment_method])
-
-    # Customer filter
-    if customer_id:
-        where_clauses.append(PaymentOrder.payer_user_id == customer_id)
-
-    # Count total
-    count_stmt = select(func.count()).select_from(PaymentOrder).where(*where_clauses)
-    total_result = await db.execute(count_stmt)
-    total = total_result.scalar_one() or 0
-
-    # Main query WITHOUT eager loading
-    stmt = (
-        select(PaymentOrder)
-        .where(*where_clauses)
-        .order_by(desc(PaymentOrder.created_at))
-        .offset((page - 1) * page_size)
-        .limit(page_size)
+    # Only include specific order types (membership, networking, product sales)
+    where_clauses.append(
+        or_(
+            PaymentOrder.order_type == OrderType.membership,
+            PaymentOrder.order_type == OrderType.center_subscription,
+            PaymentOrder.order_type == OrderType.renewal,
+            PaymentOrder.order_type == OrderType.networking_access,
+            PaymentOrder.order_type == OrderType.stock_purchase,
+            PaymentOrder.order_type == OrderType.feature_purchase
+        )
     )
 
-    result = await db.execute(stmt)
+    if date_from_parsed:
+        where_clauses.append(PaymentOrder.created_at >= date_from_parsed)
+
+    if date_to_parsed:
+        where_clauses.append(PaymentOrder.created_at <= date_to_parsed)
+
+    if payment_status:
+        try:
+            status_enum = PaymentOrderStatus[payment_status]
+            where_clauses.append(PaymentOrder.status == status_enum)
+        except KeyError:
+            raise HTTPException(400, f"Invalid payment_status: {payment_status}")
+
+    if payment_method_filter:
+        try:
+            method_enum = PaymentMethod[payment_method_filter]
+            where_clauses.append(PaymentOrder.payment_method == method_enum)
+        except KeyError:
+            raise HTTPException(400, f"Invalid payment_method: {payment_method_filter}")
+
+    # Filter by specific order type
+    if order_type:
+        if order_type == "membership":
+            where_clauses.append(
+                or_(
+                    PaymentOrder.order_type == OrderType.membership,
+                    PaymentOrder.order_type == OrderType.center_subscription,
+                    PaymentOrder.order_type == OrderType.renewal
+                )
+            )
+        elif order_type == "networking_access":
+            where_clauses.append(PaymentOrder.order_type == OrderType.networking_access)
+        elif order_type == "stock_purchase":
+            where_clauses.append(
+                or_(
+                    PaymentOrder.order_type == OrderType.stock_purchase,
+                    PaymentOrder.order_type == OrderType.feature_purchase
+                )
+            )
+        else:
+            raise HTTPException(400, f"Invalid order_type. Use: membership, networking_access, or stock_purchase")
+
+    # Base query - fetch payment orders only first
+    query = select(PaymentOrder).where(*where_clauses)
+    
+    # Apply sorting
+    if sort_by == "total_amount":
+        query = query.order_by(
+            PaymentOrder.total_amount.desc() if sort_order == "desc" else PaymentOrder.total_amount.asc()
+        )
+    else:
+        query = query.order_by(
+            PaymentOrder.created_at.desc() if sort_order == "desc" else PaymentOrder.created_at.asc()
+        )
+
+    # Apply pagination
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    # Execute query
+    result = await db.execute(query)
     payment_orders = result.scalars().all()
 
-    # Fetch all unique payer user IDs
-    payer_ids = [po.payer_user_id for po in payment_orders if po.payer_user_id]
+    # Collect all unique user IDs
+    user_ids = {po.payer_user_id for po in payment_orders if po.payer_user_id}
     
-    # Fetch users in a single query
-    users_map = {}
-    if payer_ids:
-        users_stmt = select(User).where(User.id.in_(payer_ids))
-        users_result = await db.execute(users_stmt)
+    # Fetch all users in a single query
+    user_map = {}
+    if user_ids:
+        users_result = await db.execute(
+            select(User).where(User.id.in_(user_ids))
+        )
         users = users_result.scalars().all()
-        users_map = {user.id: user for user in users}
+        user_map = {user.id: user for user in users}
+    
+    # Fetch members, admins, and employees in separate queries
+    member_map = {}
+    admin_map = {}
+    employee_map = {}
+    
+    member_ids = {uid for uid, user in user_map.items() if user.role == "member"}
+    if member_ids:
+        members_result = await db.execute(
+            select(Member).where(Member.id.in_(member_ids))
+        )
+        members = members_result.scalars().all()
+        member_map = {m.id: m for m in members}
+    
+    admin_ids = {uid for uid, user in user_map.items() if user.role == "centeradmin"}
+    if admin_ids:
+        admins_result = await db.execute(
+            select(CenterAdmin).where(CenterAdmin.id.in_(admin_ids))
+        )
+        admins = admins_result.scalars().all()
+        admin_map = {a.id: a for a in admins}
+    
+    employee_ids = {uid for uid, user in user_map.items() if user.role == "employee"}
+    if employee_ids:
+        employees_result = await db.execute(
+            select(Employee).where(Employee.id.in_(employee_ids))
+        )
+        employees = employees_result.scalars().all()
+        employee_map = {e.id: e for e in employees}
 
-    # Build response - CRITICAL: Convert ALL enums to strings immediately
+    # Build response
     transactions = []
-    for po in payment_orders:
-        # Determine transaction type
-        trans_type = "product"
-        if po.order_type in [OrderType.center_subscription, OrderType.renewal]:
-            trans_type = "membership"
-        elif po.order_type == OrderType.feature_purchase:
-            trans_type = "service"
-        elif po.order_type == OrderType.add_on:
-            trans_type = "network"
-
-        # Get customer name from users_map
-        customer_name = None
-        if po.payer_user_id and po.payer_user_id in users_map:
-            user = users_map[po.payer_user_id]
-            customer_name = getattr(user, "full_name", None) or getattr(user, "username", None) or user.email
-
-        # Generate invoice number
-        invoice_number = f"INV{str(po.payment_order_id)[:8].upper()}"
-
-        # CRITICAL: Convert enums to strings BEFORE appending
-        payment_method_str = None
-        if po.payment_method:
-            try:
-                payment_method_str = str(po.payment_method.value)
-            except:
-                payment_method_str = None
+    for payment_order in payment_orders:
+        # Get user details from maps
+        customer_name = "N/A"
+        customer_mobile = None
         
-        status_str = None
-        if po.status:
-            try:
-                status_str = str(po.status.value)
-            except:
-                status_str = "unknown"
-        
-        reference_schema_str = None
-        if po.reference_schema:
-            try:
-                reference_schema_str = str(po.reference_schema.value)
-            except:
-                reference_schema_str = None
+        if payment_order.payer_user_id and payment_order.payer_user_id in user_map:
+            user = user_map[payment_order.payer_user_id]
+            customer_mobile = user.mobile
+            
+            # Get full_name based on user role
+            if user.role == "member" and payment_order.payer_user_id in member_map:
+                member = member_map[payment_order.payer_user_id]
+                customer_name = member.full_name if member.full_name else user.email
+            elif user.role == "centeradmin" and payment_order.payer_user_id in admin_map:
+                admin = admin_map[payment_order.payer_user_id]
+                customer_name = admin.full_name if admin.full_name else user.email
+            elif user.role == "employee" and payment_order.payer_user_id in employee_map:
+                employee = employee_map[payment_order.payer_user_id]
+                customer_name = employee.full_name if employee.full_name else user.email
+            else:
+                customer_name = user.email
 
-        # Convert datetime to ISO string
-        date_str = None
-        if po.created_at:
-            try:
-                date_str = po.created_at.isoformat()
-            except:
-                date_str = None
+        # Apply customer search filter in Python if needed
+        if customer_search:
+            search_lower = customer_search.lower()
+            if not (
+                (customer_name and search_lower in customer_name.lower()) or
+                (customer_mobile and search_lower in customer_mobile.lower())
+            ):
+                continue
+
+        # Determine display labels
+        if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+            type_label = "Membership"
+            source_label = "Local"
+        elif payment_order.order_type == OrderType.networking_access:
+            type_label = "Network"
+            source_label = "Visit"
+        elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+            type_label = "Product"
+            source_label = "POS"
+        else:
+            type_label = "Other"
+            source_label = "Other"
 
         transactions.append({
-            "invoice_number": invoice_number,
-            "transaction_id": str(po.payment_order_id),
+            "payment_order_id": str(payment_order.payment_order_id),
+            "invoice_number": f"INV{str(payment_order.payment_order_id)[:8].upper()}",
             "customer_name": customer_name,
-            "customer_id": str(po.payer_user_id) if po.payer_user_id else None,
-            "type": trans_type,
-            "source": source or "local",
-            "date": date_str,
-            "subtotal": str(po.subtotal_amount),
-            "tax": str(po.tax_amount),
-            "total_amount": str(po.total_amount),
-            "payment_method": payment_method_str,
-            "status": status_str,
-            "reference_id": str(po.reference_id) if po.reference_id else None,
-            "reference_schema": reference_schema_str,
+            "customer_mobile": customer_mobile,
+            "customer_id": str(payment_order.payer_user_id) if payment_order.payer_user_id else None,
+            "type": type_label,
+            "source": source_label,
+            "order_type": payment_order.order_type.value if payment_order.order_type else None,
+            "date": payment_order.created_at.date().isoformat() if payment_order.created_at else None,
+            "datetime": payment_order.created_at.isoformat() if payment_order.created_at else None,
+            "subtotal_amount": str(payment_order.subtotal_amount),
+            "tax_amount": str(payment_order.tax_amount),
+            "total_amount": str(payment_order.total_amount),
+            "currency": payment_order.currency.value if payment_order.currency else "INR",
+            "payment_method": payment_order.payment_method.value if payment_order.payment_method else "N/A",
+            "payment_status": payment_order.status.value if payment_order.status else "unknown",
+            "reference_schema": payment_order.reference_schema.value if payment_order.reference_schema else None,
+            "reference_id": str(payment_order.reference_id) if payment_order.reference_id else None,
         })
 
     return {
         "page": page,
         "page_size": page_size,
-        "total": total,
+        "total": None,
+        "has_more": len(payment_orders) == page_size,
+        "date_from": date_from_parsed.date().isoformat() if date_from_parsed else None,
+        "date_to": date_to_parsed.date().isoformat() if date_to_parsed else None,
         "transactions": transactions,
     }
 
 
-@router.get("/transactions/{transaction_id}", summary="Get billing transaction detail", response_model=TransactionDetailResponse)
-async def get_billing_transaction_detail(
-    transaction_id: str = Path(..., description="Transaction/Payment Order ID"),
+
+
+@router.get("/billing/sales/{payment_order_id}", summary="Get bill detail")
+async def get_bill_detail(
+    payment_order_id: str = Path(..., description="Payment Order ID"),
     db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required),
+    current_admin: dict = Depends(centeradmin_required)
 ):
     """
-    Get detailed information about a specific billing transaction
+    Get detailed information about a specific bill/payment order.
+    Used for the bill detail drawer when clicking on a transaction row.
     """
+    from app.billing.models.models import PaymentOrder, OrderType
+    from app.auth.models.models import Member, User, CenterAdmin, Employee
+    from app.inventory.models.models import Sale, SaleItem, Product
+    from app.membership.models.models import MemberMembership, Membership
+    from app.auth.models.models import UserCenterMembership
+    from app.center.models.models import Center
+
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
-    # Fetch payment order WITHOUT relationship loading
-    stmt = select(PaymentOrder).where(
-        PaymentOrder.payment_order_id == transaction_id,
-        PaymentOrder.center_id == center_id
+    # Get payment order using select instead of get
+    po_result = await db.execute(
+        select(PaymentOrder).where(PaymentOrder.payment_order_id == payment_order_id)
     )
-    result = await db.execute(stmt)
-    po = result.scalar_one_or_none()
+    payment_order = po_result.scalar_one_or_none()
+    
+    if not payment_order:
+        raise HTTPException(404, "Payment order not found")
+    
+    if str(payment_order.center_id) != str(center_id):
+        raise HTTPException(403, "Access denied")
 
-    if not po:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-
-    # Fetch payer separately if exists
-    customer = None
-    if po.payer_user_id:
-        payer = await db.get(User, po.payer_user_id)
-        if payer:
-            customer = {
-                "id": str(payer.id),
-                "name": getattr(payer, "full_name", None) or getattr(payer, "username", None) or payer.email,
-                "email": payer.email,
-                "phone": getattr(payer, "mobile", None),
+    # Get customer details
+    customer_info = None
+    if payment_order.payer_user_id:
+        user_result = await db.execute(
+            select(User).where(User.id == payment_order.payer_user_id)
+        )
+        customer = user_result.scalar_one_or_none()
+        
+        if customer:
+            customer_name = customer.email
+            
+            # Get full_name based on role
+            if customer.role == "member":
+                member_result = await db.execute(
+                    select(Member).where(Member.id == payment_order.payer_user_id)
+                )
+                member = member_result.scalar_one_or_none()
+                customer_name = member.full_name if member and member.full_name else customer.email
+            elif customer.role == "centeradmin":
+                admin_result = await db.execute(
+                    select(CenterAdmin).where(CenterAdmin.id == payment_order.payer_user_id)
+                )
+                admin = admin_result.scalar_one_or_none()
+                customer_name = admin.full_name if admin and admin.full_name else customer.email
+            elif customer.role == "employee":
+                employee_result = await db.execute(
+                    select(Employee).where(Employee.id == payment_order.payer_user_id)
+                )
+                employee = employee_result.scalar_one_or_none()
+                customer_name = employee.full_name if employee and employee.full_name else customer.email
+            
+            customer_info = {
+                "id": str(customer.id),
+                "full_name": customer_name,
+                "mobile": customer.mobile,
+                "email": customer.email,
             }
 
-    # Determine transaction type
-    trans_type = "product"
-    if po.order_type in [OrderType.center_subscription, OrderType.renewal]:
-        trans_type = "membership"
-    elif po.order_type == OrderType.feature_purchase:
-        trans_type = "service"
-    elif po.order_type == OrderType.add_on:
-        trans_type = "network"
-
-    # Fetch items based on reference
-    items = []
-    
-    if po.reference_schema == ReferenceSchema.invoice and po.reference_id:
-        # This is a sale - fetch sale items
-        stmt = (
-            select(SaleItem, Product)
-            .join(Product, Product.id == SaleItem.product_id)
-            .where(SaleItem.sale_id == po.reference_id)
+    # Get center details
+    center_info = None
+    if payment_order.center_id:
+        center_result = await db.execute(
+            select(Center).where(Center.id == payment_order.center_id)
         )
-        result = await db.execute(stmt)
-        sale_items = result.all()
+        center = center_result.scalar_one_or_none()
         
-        for sale_item, product in sale_items:
-            items.append({
-                "description": product.name,
-                "quantity": int(sale_item.quantity),
-                "unit_price": str(sale_item.unit_price),
-                "tax": "0.00",
-                "total": str(sale_item.line_subtotal),
-            })
+        if center:
+            center_info = {
+                "id": str(center.id),
+                "name": center.center_name,
+                "email": center.center_email,
+                "phone": center.center_phone,
+            }
+
+    # Get line items based on order type
+    line_items = []
     
-    elif trans_type == "membership":
-        items.append({
-            "description": "Membership Plan",
-            "quantity": 1,
-            "unit_price": str(po.subtotal_amount),
-            "tax": str(po.tax_amount),
-            "total": str(po.total_amount),
-        })
-    
+    if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+        # Get membership details
+        if payment_order.reference_id:
+            mm_result = await db.execute(
+                select(MemberMembership).where(MemberMembership.id == payment_order.reference_id)
+            )
+            member_membership = mm_result.scalar_one_or_none()
+            
+            if member_membership and member_membership.membership_id:
+                membership_result = await db.execute(
+                    select(Membership).where(Membership.id == member_membership.membership_id)
+                )
+                membership = membership_result.scalar_one_or_none()
+                
+                if membership:
+                    line_items.append({
+                        "description": f"{membership.membership_name} - {membership.duration_count} {membership.duration_unit.value}",
+                        "quantity": 1,
+                        "unit_price": str(member_membership.paid_amount),
+                        "total": str(member_membership.paid_amount),
+                    })
+
+    elif payment_order.order_type == OrderType.networking_access:
+        # Get networking details
+        if payment_order.reference_id:
+            ucm_result = await db.execute(
+                select(UserCenterMembership).where(UserCenterMembership.id == payment_order.reference_id)
+            )
+            network_membership = ucm_result.scalar_one_or_none()
+            
+            if network_membership:
+                network_center = None
+                if network_membership.center_id:
+                    nc_result = await db.execute(
+                        select(Center).where(Center.id == network_membership.center_id)
+                    )
+                    network_center = nc_result.scalar_one_or_none()
+                
+                days = 1
+                if network_membership.start_date and network_membership.end_date:
+                    days = (network_membership.end_date - network_membership.start_date).days + 1
+                
+                line_items.append({
+                    "description": f"Networking Access - {network_center.center_name if network_center else 'N/A'}",
+                    "quantity": days,
+                    "unit_price": str(payment_order.total_amount / Decimal(days)),
+                    "total": str(payment_order.total_amount),
+                    "period": f"{network_membership.start_date} to {network_membership.end_date}" if network_membership.start_date else None,
+                })
+
+    elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+        # Get product sale details
+        if payment_order.reference_id:
+            sale_result = await db.execute(
+                select(Sale).where(Sale.id == payment_order.reference_id)
+            )
+            sale = sale_result.scalar_one_or_none()
+            
+            if sale:
+                # Get sale items
+                sale_items_result = await db.execute(
+                    select(SaleItem, Product)
+                    .join(Product, SaleItem.product_id == Product.id)
+                    .where(SaleItem.sale_id == sale.id)
+                )
+                sale_items = sale_items_result.all()
+                
+                for sale_item, product in sale_items:
+                    line_items.append({
+                        "description": product.name if product else "Product",
+                        "quantity": int(sale_item.quantity),
+                        "unit_price": str(sale_item.unit_price),
+                        "total": str(sale_item.total_price),
+                    })
+
+    # Determine labels
+    if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+        type_label = "Membership"
+        source_label = "Local"
+    elif payment_order.order_type == OrderType.networking_access:
+        type_label = "Network"
+        source_label = "Visit"
+    elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+        type_label = "Product"
+        source_label = "POS"
     else:
-        items.append({
-            "description": f"{trans_type.title()} Purchase",
-            "quantity": 1,
-            "unit_price": str(po.subtotal_amount),
-            "tax": str(po.tax_amount),
-            "total": str(po.total_amount),
-        })
+        type_label = "Other"
+        source_label = "Other"
 
-    # Payment details
-    payment_details = None
-    if po.status == PaymentOrderStatus.paid:
-        payment_details = {
-            "transaction_ref": None,
-            "paid_at": po.updated_at if po.updated_at else po.created_at,
-        }
-
-    # Generate invoice number
-    invoice_number = f"INV{str(po.payment_order_id)[:8].upper()}"
-
+    # Build response
     return {
-        "invoice_number": invoice_number,
-        "transaction_id": str(po.payment_order_id),
-        "customer": customer,
-        "type": trans_type,
-        "source": "local",
-        "date": po.created_at,
-        "items": items,
-        "subtotal": str(po.subtotal_amount),
-        "tax_amount": str(po.tax_amount),
-        "total_amount": str(po.total_amount),
-        "payment_method": po.payment_method.value if po.payment_method else None,
-        "payment_details": payment_details,
-        "status": po.status.value,
+        "payment_order_id": str(payment_order.payment_order_id),
+        "invoice_number": f"INV{str(payment_order.payment_order_id)[:8].upper()}",
+        "order_type": payment_order.order_type.value if payment_order.order_type else None,
+        "type_label": type_label,
+        "source_label": source_label,
+        "customer": customer_info,
+        "center": center_info,
+        "date": payment_order.created_at.date().isoformat() if payment_order.created_at else None,
+        "datetime": payment_order.created_at.isoformat() if payment_order.created_at else None,
+        "subtotal_amount": str(payment_order.subtotal_amount),
+        "tax_amount": str(payment_order.tax_amount),
+        "total_amount": str(payment_order.total_amount),
+        "currency": payment_order.currency.value if payment_order.currency else "INR",
+        "payment_method": payment_order.payment_method.value if payment_order.payment_method else None,
+        "payment_status": payment_order.status.value if payment_order.status else None,
+        "line_items": line_items,
         "notes": None,
+        "reference_schema": payment_order.reference_schema.value if payment_order.reference_schema else None,
+        "reference_id": str(payment_order.reference_id) if payment_order.reference_id else None,
     }
 
 
