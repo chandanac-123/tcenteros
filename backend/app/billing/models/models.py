@@ -34,7 +34,8 @@ class OrderType(enum.Enum):
     add_on = "add_on"
     refund = "refund"
     stock_purchase = "stock_purchase"
-    # membership = "membership"
+    membership = "membership"
+    networking_access = "networking_access"
 
 
 class ReferenceSchema(enum.Enum):
@@ -42,6 +43,7 @@ class ReferenceSchema(enum.Enum):
     center_feature = "center_feature"
     wallet = "wallet"
     invoice = "invoice"
+    networking_access_request = "networking_access_request"
 
 
 class Currency(enum.Enum):

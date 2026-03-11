@@ -401,3 +401,146 @@ class ReportGenerator:
         buffer = io.StringIO()
         df_export.to_csv(buffer, index=False)
         return buffer.getvalue().encode('utf-8')
+    
+
+    @staticmethod
+    def generate_inventory_pdf(inventory_data: List[Dict], center_name: str) -> bytes:
+        """Generate Inventory Report PDF"""
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1a1a1a'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        elements.append(Paragraph(f"{center_name}", title_style))
+        elements.append(Paragraph("Inventory Report", styles['Heading2']))
+        elements.append(Spacer(1, 12))
+        
+        # Date
+        date_style = ParagraphStyle(
+            'DateStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.grey
+        )
+        elements.append(Paragraph(f"Report Date: {datetime.now().strftime('%Y-%m-%d')}", date_style))
+        elements.append(Spacer(1, 20))
+        
+        # Summary Stats
+        total_items = len(inventory_data)
+        total_value = sum(Decimal(str(item.get('stock_value', 0))) for item in inventory_data)
+        low_stock_count = sum(1 for item in inventory_data if item.get('is_low_stock', False))
+        total_stock = sum(int(item.get('current_stock', 0)) for item in inventory_data)
+        
+        summary_data = [
+            ['Total Items', 'Total Stock Units', 'Low Stock Items', 'Total Inventory Value'],
+            [str(total_items), str(total_stock), str(low_stock_count), f"₹{total_value:.2f}"]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[1.5*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 20))
+        
+        # Detailed Inventory Table
+        if inventory_data:
+            elements.append(Paragraph("Inventory Details", styles['Heading3']))
+            elements.append(Spacer(1, 12))
+            
+            table_data = [['Product Name', 'SKU', 'Stock', 'Reorder', 'Unit Price', 'Value', 'Status']]
+            
+            for item in inventory_data:
+                is_low = item.get('is_low_stock', False)
+                status = '⚠ LOW' if is_low else '✓ OK'
+                
+                table_data.append([
+                    item.get('product_name', '')[:25],
+                    item.get('sku_code', '')[:12],
+                    str(item.get('current_stock', 0)),
+                    str(item.get('reorder_level', 0)),
+                    f"₹{item.get('unit_price', '0.00')}",
+                    f"₹{item.get('stock_value', '0.00')}",
+                    status
+                ])
+            
+            inventory_table = Table(table_data, colWidths=[1.8*inch, 1*inch, 0.6*inch, 0.7*inch, 0.9*inch, 0.9*inch, 0.7*inch])
+            inventory_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFC000')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            
+            # Highlight low stock rows
+            for idx, item in enumerate(inventory_data, start=1):
+                if item.get('is_low_stock', False):
+                    inventory_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, idx), (-1, idx), colors.HexColor('#FFE6E6')),
+                        ('TEXTCOLOR', (6, idx), (6, idx), colors.red),
+                    ]))
+            
+            elements.append(inventory_table)
+        
+        # Footer
+        elements.append(Spacer(1, 30))
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.grey,
+            alignment=TA_CENTER
+        )
+        elements.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", footer_style))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    @staticmethod
+    def generate_inventory_csv(inventory_data: List[Dict]) -> bytes:
+        """Generate Inventory Report CSV"""
+        df = pd.DataFrame(inventory_data)
+        
+        columns_map = {
+            'product_name': 'Product Name',
+            'sku_code': 'SKU Code',
+            'current_stock': 'Current Stock',
+            'reorder_level': 'Reorder Level',
+            'unit_price': 'Unit Price',
+            'stock_value': 'Stock Value',
+            'is_low_stock': 'Low Stock Alert'
+        }
+        
+        available_cols = [col for col in columns_map.keys() if col in df.columns]
+        df_export = df[available_cols].copy()
+        df_export.rename(columns=columns_map, inplace=True)
+        
+        # Convert boolean to text
+        if 'Low Stock Alert' in df_export.columns:
+            df_export['Low Stock Alert'] = df_export['Low Stock Alert'].apply(lambda x: 'YES' if x else 'NO')
+        
+        buffer = io.StringIO()
+        df_export.to_csv(buffer, index=False)
+        return buffer.getvalue().encode('utf-8')
