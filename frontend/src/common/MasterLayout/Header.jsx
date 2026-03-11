@@ -35,7 +35,6 @@ const Header = () => {
   //   });
   // }, []);
 
-
   const handleLogout = () => {
     const state = useAuthStore.getState()
     if (state.clearAuth) state.clearAuth()
@@ -46,10 +45,12 @@ const Header = () => {
     <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
-          <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
-            <img src={map} className='w-5 h-5 mr-2' />
-            Fitness center
-          </span>
+          <button onClick={() => navigate('/location')}>
+            <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
+              <img src={map} className='w-5 h-5 mr-2' />
+              Fitness center
+            </span>
+          </button>
           <AddBranchButton />
           <Button
             size='addbutton'

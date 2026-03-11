@@ -9,27 +9,14 @@ const Visitors = () => {
     page: 1,
     search: ''
   })
-  const { data ,isFetching} = useVisitorQuery(tableParams)
-  const { setSelectedTab, setMemberView ,setSelectedVisitorId} = useCrmStore()
+  const { data, isFetching } = useVisitorQuery(tableParams)
+  const { setSelectedTab, setMemberView, setSelectedVisitorId } = useCrmStore()
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Name'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      accessorKey: 'visited_date',
-      header: 'Visited Date'
-    },
+    { accessorKey: 'full_name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'mobile', header: 'Phone Number' },
+    { accessorKey: 'visited_date', header: 'Visited Date' },
     {
       header: 'Action',
       accessorKey: '',
@@ -39,7 +26,7 @@ const Visitors = () => {
             size='notificationbutton'
             onClick={() => {
               setSelectedTab(1)
-              setSelectedVisitorId(row.original.id) 
+              setSelectedVisitorId(row.original.id)
               setMemberView('add')
             }}
           >

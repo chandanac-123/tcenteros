@@ -1,5 +1,4 @@
-import { getAllTicketsApiCall } from '.'
-
+import { getAllTicketsApiCall, getPendingNetworkApiCall } from '.'
 
 export const getAllTickets = async () => {
   try {
@@ -10,3 +9,11 @@ export const getAllTickets = async () => {
   }
 }
 
+export const getAllPendingNetwork = async () => {
+  try {
+    const response = await getPendingNetworkApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

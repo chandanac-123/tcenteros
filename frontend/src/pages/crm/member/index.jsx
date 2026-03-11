@@ -51,21 +51,10 @@ const Members = ({ onView, onEdit }) => {
   }
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
+    {  accessorKey: 'full_name',  header: 'Member  Name' },
+    {  accessorKey: 'email',  header: 'Email'},
+    {  accessorKey: 'mobile',  header: 'Phone Number'},
+    {  accessorKey: 'status', header: 'Status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
@@ -75,8 +64,7 @@ const Members = ({ onView, onEdit }) => {
         </span>
       )
     },
-    {
-      header: 'Action',
+    {  header: 'Action',
       accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>

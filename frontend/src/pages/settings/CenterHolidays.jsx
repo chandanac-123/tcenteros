@@ -27,18 +27,9 @@ const CenterHolidays = () => {
   const [deleteId, setDeleteId] = useState(null)
 
   const columns = [
-    {
-      accessorKey: 'holiday_name',
-      header: 'Holiday name'
-    },
-    {
-      accessorKey: 'start_date',
-      header: 'Start date'
-    },
-    {
-      accessorKey: 'end_date',
-      header: 'End date'
-    },
+    { accessorKey: 'holiday_name', header: 'Holiday name' },
+    { accessorKey: 'start_date', header: 'Start date' },
+    { accessorKey: 'end_date', header: 'End date' },
     {
       header: 'Day',
       accessorKey: 'day',
@@ -78,7 +69,7 @@ const CenterHolidays = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    validationSchema: holidayValidationSchema,  
+    validationSchema: holidayValidationSchema,
     onSubmit: async values => {
       try {
         await createHoliday(values)

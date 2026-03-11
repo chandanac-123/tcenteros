@@ -6,13 +6,16 @@ import {
   getTermsandPrivacy
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
+import { useAuthStore } from '@store/authStore'
 
 export const useAllBrandQuery = () => {
+  const accessToken = useAuthStore(state => state.accessToken)
   return useQuery({
     queryKey: ['brand'],
     queryFn: getBrand,
+    enabled: !!accessToken,
     refetchOnWindowFocus: true,
-    refetchOnMount: true
+    refetchOnMount: true,
   })
 }
 

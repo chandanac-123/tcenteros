@@ -6,7 +6,7 @@ import {
   useDeleteAttendanceMutation
 } from '@api-queries/attendance/Query'
 import DeleteModal from '@common/components/CustomeDelete'
-import { convertTo12Hour, formatTo12Hour } from '@utils/helper'
+import { formatTo12Hour } from '@utils/helper'
 
 const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
@@ -41,35 +41,18 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const { mutate: deleteAttendance } = useDeleteAttendanceMutation()
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'date',
-      header: 'Date'
-    },
-
-    {
-      accessorKey: 'designation',
-      header: 'Designation'
-    },
-    {
-      accessorKey: 'check_in_time',
-      header: 'Check In Time',
+    { accessorKey: 'full_name', header: 'Member  Name' },
+    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'designation', header: 'Designation' },
+    {accessorKey: 'check_in_time', header: 'Check In Time',
       cell: ({ row }) => formatTo12Hour(row.original.check_in_time)
     },
-    {
-      accessorKey: 'check_out_time',
+    { accessorKey: 'check_out_time',
       header: 'Check Out Time ',
       cell: ({ row }) => formatTo12Hour(row.original.check_out_time)
     },
-    {
-      accessorKey: 'duration',
-      header: 'Duration'
-    },
-    {
-      header: 'Actions',
+    { accessorKey: 'duration', header: 'Duration' },
+    {header: 'Actions',
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>

@@ -30,14 +30,8 @@ const MemberAttendance = ({ dateRange }) => {
   }, [dateRange])
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'date',
-      header: 'Date'
-    },
+    { accessorKey: 'full_name', header: 'Member  Name' },
+    { accessorKey: 'date', header: 'Date' },
     {
       accessorKey: 'check_in_time',
       header: 'Check In Time',
@@ -48,10 +42,7 @@ const MemberAttendance = ({ dateRange }) => {
       header: 'Check Out Time ',
       cell: ({ row }) => formatTo12Hour(row.original.check_out_time)
     },
-    {
-      accessorKey: 'duration',
-      header: 'Duration'
-    },
+    { accessorKey: 'duration', header: 'Duration' },
     {
       header: 'Actions',
       accessorKey: 'status',

@@ -75,10 +75,7 @@ const TaxCategorySettings = () => {
     }
   }
   const columns = [
-    {
-      accessorKey: 'name',
-      header: 'Tax Name'
-    },
+    { accessorKey: 'name', header: 'Tax Name' },
     {
       accessorKey: 'tax_type',
       header: 'Tax Type',
@@ -100,7 +97,10 @@ const TaxCategorySettings = () => {
       accessorKey: 'tax_scope',
       header: 'Tax Scope',
       cell: ({ row }) => (
-        <span className='flex gap-3'> {row.original.tax_scope.replace(/_/g, '')}</span>
+        <span className='flex gap-3'>
+          {' '}
+          {row.original.tax_scope.replace(/_/g, '')}
+        </span>
       )
     },
     {

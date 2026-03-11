@@ -12,21 +12,10 @@ const Guest = () => {
   const { setSelectedTab, setMemberView ,setSelectedGuestId} = useCrmStore()
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Name'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      header: 'Action',
-      accessorKey: '',
+    { accessorKey: 'full_name', header: 'Name' },
+    {  accessorKey: 'email',   header: 'Email'},
+    {   accessorKey: 'mobile',   header: 'Phone Number'},
+    {  header: 'Action',  accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
