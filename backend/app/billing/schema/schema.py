@@ -168,3 +168,29 @@ class DailySalesSummaryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+
+#------------billing membership schema----------------
+class MembershipRenewalRequest(BaseModel):
+    member_membership_id: str
+    discount_amount: Optional[Decimal] = Decimal("0.00")
+    payment_method: str  # cash, card, upi, bank_transfer, other
+    tax_category_id: Optional[str] = None
+
+
+class MembershipBillingResponse(BaseModel):
+    member_id: str
+    member_name: str
+    member_mobile: Optional[str]
+    plan_name: str
+    membership_id: str
+    member_membership_id: str
+    start_date: str
+    end_date: Optional[str]
+    expiry_date: Optional[str]
+    days_until_expiry: Optional[int]
+    renewal_status: str  # active, due, expired
+    total_amount: str
+    membership_status: str
