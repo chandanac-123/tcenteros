@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { format } from 'date-fns'
 
 export const hexToRgb = hex => {
   const h = hex.replace('#', '')
@@ -18,7 +18,6 @@ export const applyTheme = theme => {
 // const { data } = await getThemeConfig()
 // applyTheme(data)
 
-
 //"14:30" to "02:30 PM"
 export const convertTo12Hour = time => {
   if (!time) return ''
@@ -30,17 +29,17 @@ export const convertTo12Hour = time => {
 }
 
 //2026-02-20T12:31:15.504485 to "02:31 PM"
-export const formatTo12Hour = (isoString) => {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  return date.toLocaleString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
+export const formatTo12Hour = isoString => {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  return date.toLocaleString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
+}
 
-export const convert12To24WithSeconds = (time) => {
+export const convert12To24WithSeconds = time => {
   if (!time) return null
 
   const [timePart, period] = time.split(' ')
@@ -54,7 +53,7 @@ export const convert12To24WithSeconds = (time) => {
   return `${hour.toString().padStart(2, '0')}:${minutes}:00`
 }
 
-export const formatRange = (range) => ({
+export const formatRange = range => ({
   from: range?.from ? format(range.from, 'yyyy-MM-dd') : null,
   to: range?.to ? format(range.to, 'yyyy-MM-dd') : null
 })
@@ -70,8 +69,7 @@ export const downloadFile = (blob, filename) => {
 }
 
 //2026-03-10T11:34:14.147497 to 2026-03-10
- export const formatDate = date => {
-    if (!date) return ''
-    return new Date(date).toISOString().split('T')[0]
-  }
-  
+export const formatDate = date => {
+  if (!date) return null
+  return format(new Date(date), 'yyyy-MM-dd')
+}

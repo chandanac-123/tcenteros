@@ -32,14 +32,16 @@ const Reports = () => {
   const handleDownload = async format => {
     try {
       const payload = {
-        date_from: dateRange?.from ? formatDate(dateRange?.from) : null,
-        date_to: dateRange?.to ? formatDate(dateRange?.to) : null,
+        date_from: tableParams?.date_from
+          ? formatDate(tableParams.date_from)
+          : null,
+        date_to: tableParams?.date_to ? formatDate(tableParams.date_to) : null,
         format
       }
 
       let response
       let filename
-        console.log('reportType: ', reportType);
+      console.log('reportType: ', reportType)
 
       switch (reportType) {
         case 'sales':
