@@ -110,6 +110,13 @@ class Center(Base, AuditMixin):
     skus = relationship("SKU", back_populates="center")
     sales = relationship("Sale", back_populates="center")
 
+    #accounting relationships
+    chart_of_accounts = relationship("ChartOfAccounts", back_populates="center", cascade="all, delete-orphan")
+    journal_entries = relationship("JournalEntry", back_populates="center", cascade="all, delete-orphan")
+    general_ledger = relationship("GeneralLedger", back_populates="center", cascade="all, delete-orphan")
+    fiscal_periods = relationship("FiscalPeriod", back_populates="center", cascade="all, delete-orphan")
+    tax_ledger = relationship("TaxLedger", back_populates="center", cascade="all, delete-orphan")
+
 
 
 class CenterOnboardingTemp(Base, AuditMixin):

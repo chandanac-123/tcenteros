@@ -9,11 +9,18 @@ from app.billing.schema.schema import *
 from app.billing.models.models import PaymentOrder, PaymentOrderStatus, ReferenceSchema, PaymentMethod, OrderType
 from app.inventory.models.models import Sale, SaleItem, Product
 from app.membership.models.models import MemberMembership, Membership, DurationUnitEnum
-from app.auth.models.models import Member, User, UserCenterMembership, NetworkingStatusEnum
-from app.settings.models.models import TaxCategory
+from app.auth.models.models import Member, User, UserCenterMembership, NetworkingStatusEnum, Employee
+from app.settings.models.models import TaxCategory, CenterOperationalSetting, Designation
 from app.center.models.models import Center, CenterWallet, WalletTransaction
 from sqlalchemy.orm import selectinload
 from uuid import UUID
+from calendar import monthrange
+from fastapi.responses import StreamingResponse
+import io
+import csv
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+
 
 
 
@@ -1296,6 +1303,133 @@ async def get_outgoing_network_visits(
     }
 
 
+
+
+@router.get("/billing/network-visits/summary", summary="Get network visits summary")
+async def get_network_visits_summary(
+    date_from: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Get summary of network visits: total incoming, total outgoing, earnings, payments.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="No center assigned")
+
+    # Parse dates
+    date_from_parsed = None
+    date_to_parsed = None
+
+    if date_from and date_from.lower() != "null":
+        try:
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(400, "Invalid date_from format. Use YYYY-MM-DD")
+
+    if date_to and date_to.lower() != "null":
+        try:
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(400, "Invalid date_to format. Use YYYY-MM-DD")
+
+    platform_fee_percentage = Decimal("0.15")
+
+    # Incoming visits
+    incoming_where = [UserCenterMembership.center_id == center_id]
+    if date_from_parsed:
+        incoming_where.append(UserCenterMembership.start_date >= date_from_parsed)
+    if date_to_parsed:
+        incoming_where.append(UserCenterMembership.start_date <= date_to_parsed)
+
+    incoming_result = await db.execute(
+        select(UserCenterMembership).where(*incoming_where)
+    )
+    incoming_visits = incoming_result.scalars().all()
+
+    # Get payments for incoming
+    incoming_ids = {v.id for v in incoming_visits}
+    incoming_payments = []
+    if incoming_ids:
+        incoming_pay_result = await db.execute(
+            select(PaymentOrder).where(
+                and_(
+                    PaymentOrder.reference_id.in_(incoming_ids),
+                    PaymentOrder.order_type == OrderType.networking_access
+                )
+            )
+        )
+        incoming_payments = incoming_pay_result.scalars().all()
+
+    incoming_total = sum(Decimal(str(p.total_amount)) for p in incoming_payments)
+    incoming_fee = (incoming_total * platform_fee_percentage).quantize(Decimal("0.01"))
+    incoming_earn = (incoming_total - incoming_fee).quantize(Decimal("0.01"))
+
+    # Outgoing visits
+    members_result = await db.execute(
+        select(Member).where(Member.home_center_id == center_id)
+    )
+    center_members = members_result.scalars().all()
+    center_member_ids = {m.id for m in center_members}
+
+    outgoing_where = [
+        UserCenterMembership.user_id.in_(center_member_ids) if center_member_ids else UserCenterMembership.id == None,
+        UserCenterMembership.center_id != center_id
+    ]
+    if date_from_parsed:
+        outgoing_where.append(UserCenterMembership.start_date >= date_from_parsed)
+    if date_to_parsed:
+        outgoing_where.append(UserCenterMembership.start_date <= date_to_parsed)
+
+    outgoing_result = await db.execute(
+        select(UserCenterMembership).where(*outgoing_where)
+    )
+    outgoing_visits = outgoing_result.scalars().all()
+
+    # Get payments for outgoing
+    outgoing_ids = {v.id for v in outgoing_visits}
+    outgoing_payments = []
+    if outgoing_ids:
+        outgoing_pay_result = await db.execute(
+            select(PaymentOrder).where(
+                and_(
+                    PaymentOrder.reference_id.in_(outgoing_ids),
+                    PaymentOrder.order_type == OrderType.networking_access
+                )
+            )
+        )
+        outgoing_payments = outgoing_pay_result.scalars().all()
+
+    outgoing_total = sum(Decimal(str(p.total_amount)) for p in outgoing_payments)
+    outgoing_fee = (outgoing_total * platform_fee_percentage).quantize(Decimal("0.01"))
+
+    return {
+        "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
+        "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
+        "incoming": {
+            "total_visits": len(incoming_visits),
+            "total_charge": str(incoming_total),
+            "platform_fee": str(incoming_fee),
+            "total_earn": str(incoming_earn),
+            "pending_count": sum(1 for v in incoming_visits if v.network_status == NetworkingStatusEnum.pending),
+            "completed_count": sum(1 for v in incoming_visits if v.network_status == NetworkingStatusEnum.completed),
+        },
+        "outgoing": {
+            "total_visits": len(outgoing_visits),
+            "total_charge": str(outgoing_total),
+            "platform_fee": str(outgoing_fee),
+            "total_paid": str(outgoing_total),
+            "pending_count": sum(1 for v in outgoing_visits if v.network_status == NetworkingStatusEnum.pending),
+            "completed_count": sum(1 for v in outgoing_visits if v.network_status == NetworkingStatusEnum.completed),
+        },
+        "net_balance": str(incoming_earn - outgoing_total),
+    }
+
+
+
+
 @router.get("/billing/network-visits/{network_membership_id}", summary="Get network visit detail")
 async def get_network_visit_detail(
     network_membership_id: str = Path(..., description="Network Membership ID"),
@@ -1438,124 +1572,1919 @@ async def get_network_visit_detail(
     }
 
 
-@router.get("/billing/network-visits/summary", summary="Get network visits summary")
-async def get_network_visits_summary(
+
+#--------------Settlement APIs for Billing Module------------
+
+
+# ============================================================================
+# HELPER FUNCTIONS FOR SETTLEMENT
+# ============================================================================
+
+def get_period_key(date_obj: date, period_type: str) -> str:
+    """Generate period key for grouping."""
+    if period_type == "weekly":
+        year, week, _ = date_obj.isocalendar()
+        return f"{year}-W{week:02d}"
+    elif period_type == "monthly":
+        return f"{date_obj.year}-{date_obj.month:02d}"
+    else:
+        return date_obj.isoformat()
+
+
+def parse_period_key(period_key: str, period_type: str) -> tuple:
+    """Parse period key back to start/end dates."""
+    if period_type == "weekly":
+        year, week = period_key.split("-W")
+        year = int(year)
+        week = int(week)
+        
+        jan4 = date(year, 1, 4)
+        week_one_monday = jan4 - timedelta(days=jan4.weekday())
+        period_start = week_one_monday + timedelta(weeks=week - 1)
+        period_end = period_start + timedelta(days=6)
+        
+        return period_start, period_end
+    elif period_type == "monthly":
+        year, month = period_key.split("-")
+        year = int(year)
+        month = int(month)
+        
+        period_start = date(year, month, 1)
+        last_day = monthrange(year, month)[1]
+        period_end = date(year, month, last_day)
+        
+        return period_start, period_end
+    else:
+        d = datetime.strptime(period_key, "%Y-%m-%d").date()
+        return d, d
+
+
+def format_period_label(start: date, end: date) -> str:
+    """Format period label for display."""
+    if start.month == end.month:
+        return f"{start.strftime('%b')} {start.day}–{end.day}"
+    else:
+        return f"{start.strftime('%b %d')}–{end.strftime('%b %d')}"
+
+
+async def get_payroll_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Calculate employee payroll expenses for the period.
+    Based on center's payroll_cycle_day setting.
+    """
+    ops_settings_query = select(CenterOperationalSetting).where(
+        CenterOperationalSetting.center_id == center_id
+    )
+    ops_result = await db.execute(ops_settings_query)
+    ops_settings = ops_result.scalar_one_or_none()
+    
+    payroll_cycle_day = ops_settings.payroll_cycle_day if ops_settings else 1
+    
+    employees_query = select(Employee).where(
+        and_(
+            Employee.center_id == center_id,
+            Employee.status == "active",
+            Employee.salary.isnot(None)
+        )
+    )
+    employees_result = await db.execute(employees_query)
+    employees = employees_result.scalars().all()
+    
+    designation_ids = {e.designation_id for e in employees if e.designation_id}
+    designation_map = {}
+    if designation_ids:
+        designations_query = select(Designation).where(Designation.id.in_(designation_ids))
+        designations_result = await db.execute(designations_query)
+        designations = designations_result.scalars().all()
+        designation_map = {d.id: d for d in designations}
+    
+    payroll_list = []
+    total_payroll = Decimal("0.00")
+    
+    current_date = period_start
+    payroll_dates_in_period = []
+    
+    while current_date <= period_end:
+        try:
+            payroll_date = date(current_date.year, current_date.month, payroll_cycle_day)
+        except ValueError:
+            # Handle invalid dates like Feb 30
+            payroll_date = date(current_date.year, current_date.month, 28)
+        
+        if period_start <= payroll_date <= period_end:
+            payroll_dates_in_period.append(payroll_date)
+        
+        if current_date.month == 12:
+            current_date = date(current_date.year + 1, 1, 1)
+        else:
+            current_date = date(current_date.year, current_date.month + 1, 1)
+    
+    for payroll_date in payroll_dates_in_period:
+        for employee in employees:
+            # Skip if employee joined after this payroll date
+            # FIX: Remove .date() call since joining_date is already a date object
+            if employee.joining_date and employee.joining_date > payroll_date:
+                continue
+            
+            designation = designation_map.get(employee.designation_id)
+            
+            payroll_list.append({
+                "employee_id": str(employee.id),
+                "employee_name": employee.full_name if employee.full_name else "N/A",
+                "designation": designation.designation_name if designation else "N/A",
+                "salary": str(employee.salary),
+                "payroll_date": payroll_date.isoformat()
+            })
+            
+            total_payroll += Decimal(str(employee.salary))
+    
+    return {
+        "payroll_transactions": payroll_list,
+        "total_payroll_expenses": str(total_payroll),
+        "employee_count": len(set(p["employee_id"] for p in payroll_list)),
+        "payment_count": len(payroll_list)
+    }
+
+
+async def get_branching_expenses_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get branching expenses - payments for creating sub-branches.
+    OrderType.add_on payments.
+    """
+    branching_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type == OrderType.add_on,
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status.in_([PaymentOrderStatus.paid, PaymentOrderStatus.processing])
+        )
+    )
+    branching_result = await db.execute(branching_query)
+    branching_payments = branching_result.scalars().all()
+    
+    branch_ids = {bp.reference_id for bp in branching_payments if bp.reference_id}
+    branch_map = {}
+    if branch_ids:
+        branches_query = select(Center).where(Center.id.in_(branch_ids))
+        branches_result = await db.execute(branches_query)
+        branches = branches_result.scalars().all()
+        branch_map = {b.id: b for b in branches}
+    
+    branching_list = []
+    total_branching = Decimal("0.00")
+    
+    for payment in branching_payments:
+        branch = branch_map.get(payment.reference_id) if payment.reference_id else None
+        
+        branching_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "branch_name": branch.center_name if branch else "Branch Creation",
+            "amount": str(payment.total_amount),
+            "payment_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_branching += Decimal(str(payment.total_amount))
+    
+    return {
+        "branching_expenses": branching_list,
+        "total_branching_expenses": str(total_branching),
+        "branch_count": len(branching_list)
+    }
+
+
+async def get_membership_income_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get membership income - new memberships and renewals.
+    OrderType.membership and OrderType.renewal payments.
+    """
+    membership_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal]),
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    membership_result = await db.execute(membership_query)
+    membership_payments = membership_result.scalars().all()
+    
+    # Fetch member details
+    member_membership_ids = {mp.reference_id for mp in membership_payments if mp.reference_id}
+    member_map = {}
+    if member_membership_ids:
+        mm_query = select(MemberMembership).where(MemberMembership.id.in_(member_membership_ids))
+        mm_result = await db.execute(mm_query)
+        member_memberships = mm_result.scalars().all()
+        
+        user_ids = {mm.member_id for mm in member_memberships}
+        if user_ids:
+            users_query = select(User).where(User.id.in_(user_ids))
+            users_result = await db.execute(users_query)
+            users = users_result.scalars().all()
+            user_map = {u.id: u for u in users}
+            
+            members_query = select(Member).where(Member.id.in_(user_ids))
+            members_result = await db.execute(members_query)
+            members = members_result.scalars().all()
+            member_map = {m.id: (m, user_map.get(m.id)) for m in members}
+    
+    membership_list = []
+    total_membership = Decimal("0.00")
+    
+    for payment in membership_payments:
+        member_info = member_map.get(payment.payer_user_id)
+        member_name = "Unknown"
+        if member_info:
+            member, user = member_info
+            member_name = member.full_name if member.full_name else (user.email if user else "Unknown")
+        
+        membership_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "member_name": member_name,
+            "order_type": payment.order_type.value,
+            "amount": str(payment.total_amount),
+            "payment_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_membership += Decimal(str(payment.total_amount))
+    
+    return {
+        "membership_sales": membership_list,
+        "total_membership_income": str(total_membership),
+        "membership_count": len(membership_list)
+    }
+
+
+async def get_inventory_transactions_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get inventory sales and purchases.
+    - Sales: OrderType.stock_purchase payments (sales to members)
+    - Purchases: Need to track separately (you may need a Purchase model or negative Sale quantities)
+    """
+    # INVENTORY SALES (to members)
+    sales_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type == OrderType.stock_purchase,
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    sales_result = await db.execute(sales_query)
+    sales_payments = sales_result.scalars().all()
+    
+    # Fetch sale details
+    sale_ids = {sp.reference_id for sp in sales_payments if sp.reference_id}
+    sale_map = {}
+    if sale_ids:
+        sales_detail_query = select(Sale).where(Sale.sale_id.in_(sale_ids))
+        sales_detail_result = await db.execute(sales_detail_query)
+        sales_details = sales_detail_result.scalars().all()
+        sale_map = {s.sale_id: s for s in sales_details}
+    
+    sales_list = []
+    total_sales = Decimal("0.00")
+    
+    for payment in sales_payments:
+        sale = sale_map.get(payment.reference_id)
+        
+        sales_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "sale_id": str(payment.reference_id) if payment.reference_id else None,
+            "invoice_number": sale.invoice_number if sale else "N/A",
+            "amount": str(payment.total_amount),
+            "sale_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_sales += Decimal(str(payment.total_amount))
+    
+    # INVENTORY PURCHASES (stock bought by center)
+    # Note: You may need to create a Purchase model or track this differently
+    # For now, we'll look for Sales with negative quantities or specific transaction types
+    # This is a placeholder - adjust based on your actual purchase tracking
+    
+    purchases_list = []
+    total_purchases = Decimal("0.00")
+    
+    # If you track purchases via Sale table with transaction_type or negative quantities:
+    # purchase_query = select(Sale).where(
+    #     and_(
+    #         Sale.center_id == center_id,
+    #         Sale.transaction_type == "purchase",  # if you have this field
+    #         Sale.created_at >= datetime.combine(period_start, datetime.min.time()),
+    #         Sale.created_at <= datetime.combine(period_end, datetime.max.time())
+    #     )
+    # )
+    # Or track via separate Purchase table/PaymentOrder type
+    
+    return {
+        "inventory_sales": sales_list,
+        "total_inventory_sales": str(total_sales),
+        "sales_count": len(sales_list),
+        "inventory_purchases": purchases_list,
+        "total_inventory_purchases": str(total_purchases),
+        "purchase_count": len(purchases_list)
+    }
+
+
+# ============================================================================
+# API 1: GET SETTLEMENT PERIODS LIST (COMPREHENSIVE)
+# ============================================================================
+
+# Add to /app/billing/api/routes.py
+
+from app.auth.models.models import Employee
+from app.center.models.models import Center
+from app.settings.models.models import CenterOperationalSetting, Designation
+from app.inventory.models.models import Sale, SaleItem, Product
+from app.membership.models.models import MemberMembership
+from calendar import monthrange
+
+
+# ============================================================================
+# HELPER FUNCTIONS FOR SETTLEMENT
+# ============================================================================
+
+def get_period_key(date_obj: date, period_type: str) -> str:
+    """Generate period key for grouping."""
+    if period_type == "weekly":
+        year, week, _ = date_obj.isocalendar()
+        return f"{year}-W{week:02d}"
+    elif period_type == "monthly":
+        return f"{date_obj.year}-{date_obj.month:02d}"
+    else:
+        return date_obj.isoformat()
+
+
+def parse_period_key(period_key: str, period_type: str) -> tuple:
+    """Parse period key back to start/end dates."""
+    if period_type == "weekly":
+        year, week = period_key.split("-W")
+        year = int(year)
+        week = int(week)
+        
+        jan4 = date(year, 1, 4)
+        week_one_monday = jan4 - timedelta(days=jan4.weekday())
+        period_start = week_one_monday + timedelta(weeks=week - 1)
+        period_end = period_start + timedelta(days=6)
+        
+        return period_start, period_end
+    elif period_type == "monthly":
+        year, month = period_key.split("-")
+        year = int(year)
+        month = int(month)
+        
+        period_start = date(year, month, 1)
+        last_day = monthrange(year, month)[1]
+        period_end = date(year, month, last_day)
+        
+        return period_start, period_end
+    else:
+        d = datetime.strptime(period_key, "%Y-%m-%d").date()
+        return d, d
+
+
+def format_period_label(start: date, end: date) -> str:
+    """Format period label for display."""
+    if start.month == end.month:
+        return f"{start.strftime('%b')} {start.day}–{end.day}"
+    else:
+        return f"{start.strftime('%b %d')}–{end.strftime('%b %d')}"
+
+
+async def get_payroll_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Calculate employee payroll expenses for the period.
+    Based on center's payroll_cycle_day setting.
+    """
+    ops_settings_query = select(CenterOperationalSetting).where(
+        CenterOperationalSetting.center_id == center_id
+    )
+    ops_result = await db.execute(ops_settings_query)
+    ops_settings = ops_result.scalar_one_or_none()
+    
+    payroll_cycle_day = ops_settings.payroll_cycle_day if ops_settings else 1
+    
+    employees_query = select(Employee).where(
+        and_(
+            Employee.center_id == center_id,
+            Employee.status == "active",
+            Employee.salary.isnot(None)
+        )
+    )
+    employees_result = await db.execute(employees_query)
+    employees = employees_result.scalars().all()
+    
+    designation_ids = {e.designation_id for e in employees if e.designation_id}
+    designation_map = {}
+    if designation_ids:
+        designations_query = select(Designation).where(Designation.id.in_(designation_ids))
+        designations_result = await db.execute(designations_query)
+        designations = designations_result.scalars().all()
+        designation_map = {d.id: d for d in designations}
+    
+    payroll_list = []
+    total_payroll = Decimal("0.00")
+    
+    current_date = period_start
+    payroll_dates_in_period = []
+    
+    while current_date <= period_end:
+        try:
+            payroll_date = date(current_date.year, current_date.month, payroll_cycle_day)
+        except ValueError:
+            last_day = monthrange(current_date.year, current_date.month)[1]
+            payroll_date = date(current_date.year, current_date.month, last_day)
+        
+        if period_start <= payroll_date <= period_end:
+            payroll_dates_in_period.append(payroll_date)
+        
+        if current_date.month == 12:
+            current_date = date(current_date.year + 1, 1, 1)
+        else:
+            current_date = date(current_date.year, current_date.month + 1, 1)
+    
+    for payroll_date in payroll_dates_in_period:
+        for employee in employees:
+            if not employee.salary:
+                continue
+            
+            if employee.joining_date and employee.joining_date > payroll_date:
+                continue
+            
+            designation = designation_map.get(employee.designation_id)
+            salary = Decimal(str(employee.salary))
+            
+            payroll_list.append({
+                "employee_id": str(employee.id),
+                "employee_name": employee.full_name if employee.full_name else "Unknown",
+                "designation": designation.name if designation else "N/A",
+                "gross_salary": str(salary),
+                "net_salary": str(salary),
+                "payroll_date": payroll_date.isoformat(),
+            })
+            
+            total_payroll += salary
+    
+    return {
+        "payroll_transactions": payroll_list,
+        "total_payroll_expenses": str(total_payroll),
+        "employee_count": len(set(p["employee_id"] for p in payroll_list)),
+        "payment_count": len(payroll_list)
+    }
+
+
+async def get_branching_expenses_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get branching expenses - payments for creating sub-branches.
+    OrderType.add_on payments.
+    """
+    branching_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type == OrderType.add_on,
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status.in_([PaymentOrderStatus.paid, PaymentOrderStatus.processing])
+        )
+    )
+    branching_result = await db.execute(branching_query)
+    branching_payments = branching_result.scalars().all()
+    
+    branch_ids = {bp.reference_id for bp in branching_payments if bp.reference_id}
+    branch_map = {}
+    if branch_ids:
+        branches_query = select(Center).where(Center.id.in_(branch_ids))
+        branches_result = await db.execute(branches_query)
+        branches = branches_result.scalars().all()
+        branch_map = {b.id: b for b in branches}
+    
+    branching_list = []
+    total_branching = Decimal("0.00")
+    
+    for payment in branching_payments:
+        branch = branch_map.get(payment.reference_id) if payment.reference_id else None
+        
+        branching_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "branch_name": branch.center_name if branch else "Branch Creation",
+            "amount": str(payment.total_amount),
+            "payment_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_branching += Decimal(str(payment.total_amount))
+    
+    return {
+        "branching_expenses": branching_list,
+        "total_branching_expenses": str(total_branching),
+        "branch_count": len(branching_list)
+    }
+
+
+async def get_membership_income_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get membership income - new memberships and renewals.
+    OrderType.membership and OrderType.renewal payments.
+    """
+    membership_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal]),
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    membership_result = await db.execute(membership_query)
+    membership_payments = membership_result.scalars().all()
+    
+    # Fetch member details
+    member_membership_ids = {mp.reference_id for mp in membership_payments if mp.reference_id}
+    member_map = {}
+    if member_membership_ids:
+        mm_query = select(MemberMembership).where(MemberMembership.id.in_(member_membership_ids))
+        mm_result = await db.execute(mm_query)
+        member_memberships = mm_result.scalars().all()
+        
+        user_ids = {mm.member_id for mm in member_memberships}
+        if user_ids:
+            users_query = select(User).where(User.id.in_(user_ids))
+            users_result = await db.execute(users_query)
+            users = users_result.scalars().all()
+            user_map = {u.id: u for u in users}
+            
+            members_query = select(Member).where(Member.id.in_(user_ids))
+            members_result = await db.execute(members_query)
+            members = members_result.scalars().all()
+            member_map = {m.id: (m, user_map.get(m.id)) for m in members}
+    
+    membership_list = []
+    total_membership = Decimal("0.00")
+    
+    for payment in membership_payments:
+        member_info = member_map.get(payment.payer_user_id)
+        member_name = "Unknown"
+        if member_info:
+            member, user = member_info
+            member_name = member.full_name if member.full_name else (user.email if user else "Unknown")
+        
+        membership_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "member_name": member_name,
+            "order_type": payment.order_type.value,
+            "amount": str(payment.total_amount),
+            "payment_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_membership += Decimal(str(payment.total_amount))
+    
+    return {
+        "membership_sales": membership_list,
+        "total_membership_income": str(total_membership),
+        "membership_count": len(membership_list)
+    }
+
+
+async def get_inventory_transactions_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get inventory sales and purchases.
+    - Sales: OrderType.stock_purchase payments (sales to members)
+    - Purchases: Need to track separately (you may need a Purchase model or negative Sale quantities)
+    """
+    # INVENTORY SALES (to members)
+    sales_query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type == OrderType.stock_purchase,
+            PaymentOrder.created_at >= datetime.combine(period_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(period_end, datetime.max.time()),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    sales_result = await db.execute(sales_query)
+    sales_payments = sales_result.scalars().all()
+    
+    # Fetch sale details
+    sale_ids = {sp.reference_id for sp in sales_payments if sp.reference_id}
+    sale_map = {}
+    if sale_ids:
+        sales_detail_query = select(Sale).where(Sale.id.in_(sale_ids))
+        sales_detail_result = await db.execute(sales_detail_query)
+        sales_details = sales_detail_result.scalars().all()
+        sale_map = {s.id: s for s in sales_details}
+    
+    sales_list = []
+    total_sales = Decimal("0.00")
+    
+    for payment in sales_payments:
+        sale = sale_map.get(payment.reference_id)
+        
+        sales_list.append({
+            "payment_order_id": str(payment.payment_order_id),
+            "sale_id": str(payment.reference_id) if payment.reference_id else None,
+            "invoice_number": sale.invoice_number if sale else "N/A",
+            "amount": str(payment.total_amount),
+            "sale_date": payment.created_at.date().isoformat() if payment.created_at else None,
+        })
+        
+        total_sales += Decimal(str(payment.total_amount))
+    
+    # INVENTORY PURCHASES (stock bought by center)
+    # Note: You may need to create a Purchase model or track this differently
+    # For now, we'll look for Sales with negative quantities or specific transaction types
+    # This is a placeholder - adjust based on your actual purchase tracking
+    
+    purchases_list = []
+    total_purchases = Decimal("0.00")
+    
+    # If you track purchases via Sale table with transaction_type or negative quantities:
+    # purchase_query = select(Sale).where(
+    #     and_(
+    #         Sale.center_id == center_id,
+    #         Sale.transaction_type == "purchase",  # if you have this field
+    #         Sale.created_at >= datetime.combine(period_start, datetime.min.time()),
+    #         Sale.created_at <= datetime.combine(period_end, datetime.max.time())
+    #     )
+    # )
+    # Or track via separate Purchase table/PaymentOrder type
+    
+    return {
+        "inventory_sales": sales_list,
+        "total_inventory_sales": str(total_sales),
+        "sales_count": len(sales_list),
+        "inventory_purchases": purchases_list,
+        "total_inventory_purchases": str(total_purchases),
+        "purchase_count": len(purchases_list)
+    }
+
+
+# ============================================================================
+# API 1: GET SETTLEMENT PERIODS LIST (COMPREHENSIVE)
+# ============================================================================
+
+@router.get("/billing/settlements", summary="Get comprehensive settlement periods")
+async def get_settlements_list(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
     date_from: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     date_to: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    status_filter: Optional[str] = Query(None, description="Filter by: pending, processing, completed"),
+    period_type: str = Query("monthly", description="Period grouping: weekly, monthly"),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
     """
-    Get summary of network visits: total incoming, total outgoing, earnings, payments.
+    Comprehensive settlement periods including:
+    
+    INCOME:
+    - Network visits (incoming)
+    - Membership sales (new + renewals)
+    - Inventory sales (products sold)
+    
+    EXPENSES:
+    - Network visits (outgoing)
+    - Employee payroll
+    - Branching expenses
+    - Inventory purchases (stock bought)
+    
+    Net = Total Income - Total Expenses
     """
     center_id = current_admin.get("center_id")
     if not center_id:
-        raise HTTPException(status_code=403, detail="No center assigned")
-
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
     # Parse dates
     date_from_parsed = None
     date_to_parsed = None
-
+    
     if date_from and date_from.lower() != "null":
         try:
-            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
         except ValueError:
-            raise HTTPException(400, "Invalid date_from format. Use YYYY-MM-DD")
-
+            raise HTTPException(status_code=400, detail="Invalid date_from format")
+    
     if date_to and date_to.lower() != "null":
         try:
-            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
         except ValueError:
-            raise HTTPException(400, "Invalid date_to format. Use YYYY-MM-DD")
-
-    platform_fee_percentage = Decimal("0.15")
-
-    # Incoming visits
-    incoming_where = [UserCenterMembership.center_id == center_id]
-    if date_from_parsed:
-        incoming_where.append(UserCenterMembership.start_date >= date_from_parsed)
-    if date_to_parsed:
-        incoming_where.append(UserCenterMembership.start_date <= date_to_parsed)
-
-    incoming_result = await db.execute(
-        select(UserCenterMembership).where(*incoming_where)
+            raise HTTPException(status_code=400, detail="Invalid date_to format")
+    
+    if not date_to_parsed:
+        date_to_parsed = datetime.now()
+    if not date_from_parsed:
+        date_from_parsed = date_to_parsed - timedelta(days=90)
+    
+    # ========== FETCH NETWORK VISITS ==========
+    
+    incoming_query = select(UserCenterMembership).where(
+        and_(
+            UserCenterMembership.center_id == center_id,
+            UserCenterMembership.start_date >= date_from_parsed.date(),
+            UserCenterMembership.start_date <= date_to_parsed.date(),
+            UserCenterMembership.network_status.in_([
+                NetworkingStatusEnum.approved,
+                NetworkingStatusEnum.paid,
+                NetworkingStatusEnum.completed,
+                NetworkingStatusEnum.pending_settlement
+            ])
+        )
     )
+    incoming_result = await db.execute(incoming_query)
     incoming_visits = incoming_result.scalars().all()
-
-    # Get payments for incoming
-    incoming_ids = {v.id for v in incoming_visits}
-    incoming_payments = []
-    if incoming_ids:
-        incoming_pay_result = await db.execute(
-            select(PaymentOrder).where(
-                and_(
-                    PaymentOrder.reference_id.in_(incoming_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
-                )
+    
+    members_query = select(Member.id).where(Member.home_center_id == center_id)
+    members_result = await db.execute(members_query)
+    member_ids = [m for m in members_result.scalars().all()]
+    
+    outgoing_visits = []
+    if member_ids:
+        outgoing_query = select(UserCenterMembership).where(
+            and_(
+                UserCenterMembership.user_id.in_(member_ids),
+                UserCenterMembership.center_id != center_id,
+                UserCenterMembership.start_date >= date_from_parsed.date(),
+                UserCenterMembership.start_date <= date_to_parsed.date(),
+                UserCenterMembership.network_status.in_([
+                    NetworkingStatusEnum.approved,
+                    NetworkingStatusEnum.paid,
+                    NetworkingStatusEnum.completed,
+                    NetworkingStatusEnum.pending_settlement
+                ])
             )
         )
-        incoming_payments = incoming_pay_result.scalars().all()
-
-    incoming_total = sum(Decimal(str(p.total_amount)) for p in incoming_payments)
-    incoming_fee = (incoming_total * platform_fee_percentage).quantize(Decimal("0.01"))
-    incoming_earn = (incoming_total - incoming_fee).quantize(Decimal("0.01"))
-
-    # Outgoing visits
-    members_result = await db.execute(
-        select(Member).where(Member.home_center_id == center_id)
-    )
-    center_members = members_result.scalars().all()
-    center_member_ids = {m.id for m in center_members}
-
-    outgoing_where = [
-        UserCenterMembership.user_id.in_(center_member_ids) if center_member_ids else UserCenterMembership.id == None,
-        UserCenterMembership.center_id != center_id
-    ]
-    if date_from_parsed:
-        outgoing_where.append(UserCenterMembership.start_date >= date_from_parsed)
-    if date_to_parsed:
-        outgoing_where.append(UserCenterMembership.start_date <= date_to_parsed)
-
-    outgoing_result = await db.execute(
-        select(UserCenterMembership).where(*outgoing_where)
-    )
-    outgoing_visits = outgoing_result.scalars().all()
-
-    # Get payments for outgoing
-    outgoing_ids = {v.id for v in outgoing_visits}
-    outgoing_payments = []
-    if outgoing_ids:
-        outgoing_pay_result = await db.execute(
-            select(PaymentOrder).where(
-                and_(
-                    PaymentOrder.reference_id.in_(outgoing_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
-                )
+        outgoing_result = await db.execute(outgoing_query)
+        outgoing_visits = outgoing_result.scalars().all()
+    
+    all_visit_ids = [v.id for v in incoming_visits] + [v.id for v in outgoing_visits]
+    payment_orders_map = {}
+    if all_visit_ids:
+        po_query = select(PaymentOrder).where(
+            and_(
+                PaymentOrder.reference_id.in_(all_visit_ids),
+                PaymentOrder.order_type == OrderType.networking_access,
+                PaymentOrder.status.in_([PaymentOrderStatus.paid, PaymentOrderStatus.processing])
             )
         )
-        outgoing_payments = outgoing_pay_result.scalars().all()
-
-    outgoing_total = sum(Decimal(str(p.total_amount)) for p in outgoing_payments)
-    outgoing_fee = (outgoing_total * platform_fee_percentage).quantize(Decimal("0.01"))
-
+        po_result = await db.execute(po_query)
+        payment_orders = po_result.scalars().all()
+        payment_orders_map = {po.reference_id: po for po in payment_orders}
+    
+    # ========== GROUP BY PERIOD ==========
+    
+    period_groups = {}
+    platform_fee_percentage = Decimal("0.15")
+    
+    # Process incoming visits
+    for visit in incoming_visits:
+        if visit.start_date:
+            period_key = get_period_key(visit.start_date, period_type)
+            if period_key not in period_groups:
+                period_groups[period_key] = {
+                    # INCOME
+                    "incoming_visits_total": Decimal("0.00"),
+                    "incoming_visits_count": 0,
+                    "membership_income_total": Decimal("0.00"),
+                    "membership_count": 0,
+                    "inventory_sales_total": Decimal("0.00"),
+                    "inventory_sales_count": 0,
+                    # EXPENSES
+                    "outgoing_visits_total": Decimal("0.00"),
+                    "outgoing_visits_count": 0,
+                    "payroll_total": Decimal("0.00"),
+                    "payroll_count": 0,
+                    "branching_total": Decimal("0.00"),
+                    "branching_count": 0,
+                    "inventory_purchases_total": Decimal("0.00"),
+                    "inventory_purchases_count": 0,
+                    # FEES
+                    "platform_fee_total": Decimal("0.00"),
+                }
+            
+            po = payment_orders_map.get(visit.id)
+            if po:
+                charge = Decimal(str(po.total_amount))
+                platform_fee = (charge * platform_fee_percentage).quantize(Decimal("0.01"))
+                earned = charge - platform_fee
+                
+                period_groups[period_key]["incoming_visits_total"] += earned
+                period_groups[period_key]["platform_fee_total"] += platform_fee
+                period_groups[period_key]["incoming_visits_count"] += 1
+    
+    # Process outgoing visits
+    for visit in outgoing_visits:
+        if visit.start_date:
+            period_key = get_period_key(visit.start_date, period_type)
+            if period_key not in period_groups:
+                period_groups[period_key] = {
+                    "incoming_visits_total": Decimal("0.00"),
+                    "incoming_visits_count": 0,
+                    "membership_income_total": Decimal("0.00"),
+                    "membership_count": 0,
+                    "inventory_sales_total": Decimal("0.00"),
+                    "inventory_sales_count": 0,
+                    "outgoing_visits_total": Decimal("0.00"),
+                    "outgoing_visits_count": 0,
+                    "payroll_total": Decimal("0.00"),
+                    "payroll_count": 0,
+                    "branching_total": Decimal("0.00"),
+                    "branching_count": 0,
+                    "inventory_purchases_total": Decimal("0.00"),
+                    "inventory_purchases_count": 0,
+                    "platform_fee_total": Decimal("0.00"),
+                }
+            
+            po = payment_orders_map.get(visit.id)
+            if po:
+                charge = Decimal(str(po.total_amount))
+                period_groups[period_key]["outgoing_visits_total"] += charge
+                period_groups[period_key]["outgoing_visits_count"] += 1
+    
+    # ========== ADD OTHER INCOME/EXPENSES TO EACH PERIOD ==========
+    
+    for period_key in list(period_groups.keys()):
+        period_start, period_end = parse_period_key(period_key, period_type)
+        
+        # Payroll
+        payroll_data = await get_payroll_for_period(UUID(center_id), period_start, period_end, db)
+        period_groups[period_key]["payroll_total"] = Decimal(payroll_data["total_payroll_expenses"])
+        period_groups[period_key]["payroll_count"] = payroll_data["payment_count"]
+        
+        # Branching
+        branching_data = await get_branching_expenses_for_period(UUID(center_id), period_start, period_end, db)
+        period_groups[period_key]["branching_total"] = Decimal(branching_data["total_branching_expenses"])
+        period_groups[period_key]["branching_count"] = branching_data["branch_count"]
+        
+        # Membership income
+        membership_data = await get_membership_income_for_period(UUID(center_id), period_start, period_end, db)
+        period_groups[period_key]["membership_income_total"] = Decimal(membership_data["total_membership_income"])
+        period_groups[period_key]["membership_count"] = membership_data["membership_count"]
+        
+        # Inventory transactions
+        inventory_data = await get_inventory_transactions_for_period(UUID(center_id), period_start, period_end, db)
+        period_groups[period_key]["inventory_sales_total"] = Decimal(inventory_data["total_inventory_sales"])
+        period_groups[period_key]["inventory_sales_count"] = inventory_data["sales_count"]
+        period_groups[period_key]["inventory_purchases_total"] = Decimal(inventory_data["total_inventory_purchases"])
+        period_groups[period_key]["inventory_purchases_count"] = inventory_data["purchase_count"]
+    
+    # ========== BUILD SETTLEMENT LIST ==========
+    
+    settlements = []
+    for period_key, data in period_groups.items():
+        # Calculate totals
+        total_income = (
+            data["incoming_visits_total"] + 
+            data["membership_income_total"] + 
+            data["inventory_sales_total"]
+        )
+        
+        total_expenses = (
+            data["outgoing_visits_total"] + 
+            data["payroll_total"] + 
+            data["branching_total"] + 
+            data["inventory_purchases_total"]
+        )
+        
+        net_amount = total_income - total_expenses
+        
+        # Determine status based on whether all network visits are completed
+        all_visits_in_period = [v for v in incoming_visits if v.start_date and get_period_key(v.start_date, period_type) == period_key]
+        all_visits_in_period += [v for v in outgoing_visits if v.start_date and get_period_key(v.start_date, period_type) == period_key]
+        
+        if all_visits_in_period:
+            # Check if all visits are completed
+            all_completed = all(
+                v.network_status == NetworkingStatusEnum.completed 
+                for v in all_visits_in_period
+            )
+            status = "completed" if all_completed else "processing"
+        else:
+            # No network visits - check if there are any other transactions
+            has_transactions = (
+                data["membership_count"] > 0 or 
+                data["inventory_sales_count"] > 0 or
+                data["payroll_count"] > 0 or
+                data["branching_count"] > 0
+            )
+            status = "processing" if has_transactions else "pending"
+        
+        period_start, period_end = parse_period_key(period_key, period_type)
+        
+        settlements.append({
+            "period_key": period_key,
+            "period_label": format_period_label(period_start, period_end),
+            "period_start": period_start.isoformat(),
+            "period_end": period_end.isoformat(),
+            
+            # INCOME
+            "incoming_visits_total": str(data["incoming_visits_total"]),
+            "incoming_visits_count": data["incoming_visits_count"],
+            "membership_income_total": str(data["membership_income_total"]),
+            "membership_count": data["membership_count"],
+            "inventory_sales_total": str(data["inventory_sales_total"]),
+            "inventory_sales_count": data["inventory_sales_count"],
+            "total_income": str(total_income),
+            
+            # EXPENSES
+            "outgoing_visits_total": str(data["outgoing_visits_total"]),
+            "outgoing_visits_count": data["outgoing_visits_count"],
+            "payroll_total": str(data["payroll_total"]),
+            "payroll_count": data["payroll_count"],
+            "branching_total": str(data["branching_total"]),
+            "branching_count": data["branching_count"],
+            "inventory_purchases_total": str(data["inventory_purchases_total"]),
+            "inventory_purchases_count": data["inventory_purchases_count"],
+            "total_expenses": str(total_expenses),
+            
+            # NET
+            "platform_fee_total": str(data["platform_fee_total"]),
+            "net_amount": str(net_amount),
+            "status": status
+        })
+    
+    if status_filter:
+        settlements = [s for s in settlements if s["status"] == status_filter]
+    
+    settlements.sort(key=lambda x: x["period_start"], reverse=True)
+    
+    total = len(settlements)
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated = settlements[start_idx:end_idx]
+    
+    summary = {
+        "total_income_all_periods": str(sum(Decimal(s["total_income"]) for s in settlements)),
+        "total_expenses_all_periods": str(sum(Decimal(s["total_expenses"]) for s in settlements)),
+        "net_all_periods": str(sum(Decimal(s["net_amount"]) for s in settlements)),
+        "platform_fees_all_periods": str(sum(Decimal(s["platform_fee_total"]) for s in settlements))
+    }
+    
     return {
-        "date_from": date_from_parsed.isoformat() if date_from_parsed else None,
-        "date_to": date_to_parsed.isoformat() if date_to_parsed else None,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "period_type": period_type,
+        "date_from": date_from_parsed.date().isoformat(),
+        "date_to": date_to_parsed.date().isoformat(),
+        "settlements": paginated,
+        "summary": summary
+    }
+
+
+# ============================================================================
+# API 2: GET SETTLEMENT PERIOD DETAIL (COMPREHENSIVE)
+# ============================================================================
+
+@router.get("/billing/settlements/{period_key}", summary="Get comprehensive settlement detail")
+async def get_settlement_detail(
+    period_key: str = Path(..., description="Period key (e.g., 2026-02)"),
+    period_type: str = Query("monthly", description="Period type: weekly, monthly"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Detailed breakdown of a settlement period with all income and expense line items.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    try:
+        period_start, period_end = parse_period_key(period_key, period_type)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid period_key: {str(e)}")
+    
+    # Fetch all data for the period
+    incoming_query = select(UserCenterMembership).where(
+        and_(
+            UserCenterMembership.center_id == center_id,
+            UserCenterMembership.start_date >= period_start,
+            UserCenterMembership.start_date <= period_end,
+            UserCenterMembership.network_status.in_([
+                NetworkingStatusEnum.approved, NetworkingStatusEnum.paid,
+                NetworkingStatusEnum.completed, NetworkingStatusEnum.pending_settlement
+            ])
+        )
+    )
+    incoming_result = await db.execute(incoming_query)
+    incoming_visits = incoming_result.scalars().all()
+    
+    members_query = select(Member.id).where(Member.home_center_id == center_id)
+    members_result = await db.execute(members_query)
+    member_ids = [m for m in members_result.scalars().all()]
+    
+    outgoing_visits = []
+    if member_ids:
+        outgoing_query = select(UserCenterMembership).where(
+            and_(
+                UserCenterMembership.user_id.in_(member_ids),
+                UserCenterMembership.center_id != center_id,
+                UserCenterMembership.start_date >= period_start,
+                UserCenterMembership.start_date <= period_end,
+                UserCenterMembership.network_status.in_([
+                    NetworkingStatusEnum.approved, NetworkingStatusEnum.paid,
+                    NetworkingStatusEnum.completed, NetworkingStatusEnum.pending_settlement
+                ])
+            )
+        )
+        outgoing_result = await db.execute(outgoing_query)
+        outgoing_visits = outgoing_result.scalars().all()
+    
+    # Fetch payment orders
+    all_visit_ids = [v.id for v in incoming_visits + outgoing_visits]
+    payment_orders_map = {}
+    if all_visit_ids:
+        po_query = select(PaymentOrder).where(
+            and_(
+                PaymentOrder.reference_id.in_(all_visit_ids),
+                PaymentOrder.order_type == OrderType.networking_access
+            )
+        )
+        po_result = await db.execute(po_query)
+        payment_orders = po_result.scalars().all()
+        payment_orders_map = {po.reference_id: po for po in payment_orders}
+    
+    # Batch fetch users/members/centers for visits
+    user_ids = {v.user_id for v in incoming_visits + outgoing_visits}
+    user_map = {}
+    member_map = {}
+    if user_ids:
+        users_query = select(User).where(User.id.in_(user_ids))
+        users_result = await db.execute(users_query)
+        users = users_result.scalars().all()
+        user_map = {u.id: u for u in users}
+        
+        members_query = select(Member).where(Member.id.in_(user_ids))
+        members_result = await db.execute(members_query)
+        members = members_result.scalars().all()
+        member_map = {m.id: m for m in members}
+    
+    center_ids = {v.center_id for v in outgoing_visits} | {member_map[v.user_id].home_center_id for v in incoming_visits if v.user_id in member_map and member_map[v.user_id].home_center_id}
+    center_map = {}
+    if center_ids:
+        centers_query = select(Center).where(Center.id.in_(center_ids))
+        centers_result = await db.execute(centers_query)
+        centers = centers_result.scalars().all()
+        center_map = {c.id: c for c in centers}
+    
+    # Build lists
+    platform_fee_percentage = Decimal("0.15")
+    
+    incoming_list = []
+    incoming_total = Decimal("0.00")
+    platform_fee_total = Decimal("0.00")
+    
+    for visit in incoming_visits:
+        po = payment_orders_map.get(visit.id)
+        charge = Decimal(str(po.total_amount)) if po else Decimal("0.00")
+        platform_fee = (charge * platform_fee_percentage).quantize(Decimal("0.01"))
+        earned = charge - platform_fee
+        
+        user = user_map.get(visit.user_id)
+        member = member_map.get(visit.user_id)
+        member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
+        home_center = center_map.get(member.home_center_id) if member and member.home_center_id else None
+        
+        incoming_list.append({
+            "member_name": member_name,
+            "home_center_name": home_center.center_name if home_center else "N/A",
+            "visit_date": visit.start_date.isoformat(),
+            "charge": str(charge),
+            "platform_fee": str(platform_fee),
+            "earned": str(earned),
+        })
+        
+        incoming_total += earned
+        platform_fee_total += platform_fee
+    
+    outgoing_list = []
+    outgoing_total = Decimal("0.00")
+    
+    for visit in outgoing_visits:
+        po = payment_orders_map.get(visit.id)
+        charge = Decimal(str(po.total_amount)) if po else Decimal("0.00")
+        
+        user = user_map.get(visit.user_id)
+        member = member_map.get(visit.user_id)
+        member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
+        visited_center = center_map.get(visit.center_id)
+        
+        outgoing_list.append({
+            "member_name": member_name,
+            "visited_center_name": visited_center.center_name if visited_center else "Unknown",
+            "visit_date": visit.start_date.isoformat(),
+            "charge": str(charge),
+        })
+        
+        outgoing_total += charge
+    
+    # Get other data
+    payroll_data = await get_payroll_for_period(UUID(center_id), period_start, period_end, db)
+    branching_data = await get_branching_expenses_for_period(UUID(center_id), period_start, period_end, db)
+    membership_data = await get_membership_income_for_period(UUID(center_id), period_start, period_end, db)
+    inventory_data = await get_inventory_transactions_for_period(UUID(center_id), period_start, period_end, db)
+    
+    payroll_total = Decimal(payroll_data["total_payroll_expenses"])
+    branching_total = Decimal(branching_data["total_branching_expenses"])
+    membership_total = Decimal(membership_data["total_membership_income"])
+    inventory_sales_total = Decimal(inventory_data["total_inventory_sales"])
+    inventory_purchases_total = Decimal(inventory_data["total_inventory_purchases"])
+    
+    total_income = incoming_total + membership_total + inventory_sales_total
+    total_expenses = outgoing_total + payroll_total + branching_total + inventory_purchases_total
+    net_amount = total_income - total_expenses
+    
+    return {
+        "period_key": period_key,
+        "period_label": format_period_label(period_start, period_end),
+        "period_start": period_start.isoformat(),
+        "period_end": period_end.isoformat(),
+        
+        "summary": {
+            "total_income": str(total_income),
+            "total_expenses": str(total_expenses),
+            "net_amount": str(net_amount),
+            "platform_fee_total": str(platform_fee_total),
+        },
+        
+        "income_breakdown": {
+            "incoming_visits": {"total": str(incoming_total), "count": len(incoming_list), "items": incoming_list},
+            "membership_sales": {"total": str(membership_total), "count": len(membership_data["membership_sales"]), "items": membership_data["membership_sales"]},
+            "inventory_sales": {"total": str(inventory_sales_total), "count": len(inventory_data["inventory_sales"]), "items": inventory_data["inventory_sales"]},
+        },
+        
+        "expenses_breakdown": {
+            "outgoing_visits": {"total": str(outgoing_total), "count": len(outgoing_list), "items": outgoing_list},
+            "employee_payroll": {"total": str(payroll_total), "count": len(payroll_data["payroll_transactions"]), "items": payroll_data["payroll_transactions"]},
+            "branching_expenses": {"total": str(branching_total), "count": len(branching_data["branching_expenses"]), "items": branching_data["branching_expenses"]},
+            "inventory_purchases": {"total": str(inventory_purchases_total), "count": len(inventory_data["inventory_purchases"]), "items": inventory_data["inventory_purchases"]},
+        }
+    }
+
+
+# ============================================================================
+# API 3: MARK SETTLEMENT AS COMPLETED
+# ============================================================================
+
+@router.post("/billing/settlements/{period_key}/mark-completed")
+async def mark_settlement_completed(
+    period_key: str = Path(...),
+    period_type: str = Query("monthly"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """Mark settlement period as completed."""
+    from sqlalchemy import update
+    
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    try:
+        period_start, period_end = parse_period_key(period_key, period_type)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid period_key: {str(e)}")
+    
+    # Update network visits to completed
+    await db.execute(
+        update(UserCenterMembership)
+        .where(
+            and_(
+                UserCenterMembership.center_id == center_id,
+                UserCenterMembership.start_date >= period_start,
+                UserCenterMembership.start_date <= period_end,
+                UserCenterMembership.network_status.in_([NetworkingStatusEnum.pending_settlement, NetworkingStatusEnum.paid])
+            )
+        )
+        .values(network_status=NetworkingStatusEnum.completed)
+    )
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Settlement for {period_key} marked as completed",
+        "period_key": period_key
+    }
+
+
+#-----------REPORTS API ENDPOINTS-----------
+
+
+# ============================================================================
+# 1. DAILY SALES REPORT
+# ============================================================================
+
+@router.get("/billing/reports/daily-sales", summary="Get daily sales report")
+async def get_daily_sales_report(
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Daily sales report with breakdown by day.
+    Shows total sales, count, and payment methods per day.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    try:
+        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Get all sales transactions
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.order_type.in_([
+                OrderType.membership,
+                OrderType.renewal,
+                OrderType.stock_purchase,
+                OrderType.networking_access
+            ]),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    ).order_by(PaymentOrder.created_at)
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Group by day
+    daily_data = {}
+    
+    for payment in payments:
+        day_key = payment.created_at.date().isoformat()
+        
+        if day_key not in daily_data:
+            daily_data[day_key] = {
+                "date": day_key,
+                "total_sales": Decimal("0.00"),
+                "transaction_count": 0,
+                "cash": Decimal("0.00"),
+                "upi": Decimal("0.00"),
+                "card": Decimal("0.00"),
+                "bank_transfer": Decimal("0.00"),
+                "other": Decimal("0.00"),
+                "membership_sales": Decimal("0.00"),
+                "inventory_sales": Decimal("0.00"),
+                "network_sales": Decimal("0.00"),
+            }
+        
+        amount = Decimal(str(payment.total_amount))
+        daily_data[day_key]["total_sales"] += amount
+        daily_data[day_key]["transaction_count"] += 1
+        
+        # By payment method
+        if payment.payment_method:
+            method_key = payment.payment_method.value.lower()
+            if method_key in daily_data[day_key]:
+                daily_data[day_key][method_key] += amount
+        
+        # By order type
+        if payment.order_type in [OrderType.membership, OrderType.renewal]:
+            daily_data[day_key]["membership_sales"] += amount
+        elif payment.order_type == OrderType.stock_purchase:
+            daily_data[day_key]["inventory_sales"] += amount
+        elif payment.order_type == OrderType.networking_access:
+            daily_data[day_key]["network_sales"] += amount
+    
+    # Convert to list and sort
+    daily_list = sorted(daily_data.values(), key=lambda x: x["date"])
+    
+    # Calculate totals
+    total_sales = sum(Decimal(d["total_sales"]) for d in daily_list)
+    total_transactions = sum(d["transaction_count"] for d in daily_list)
+    
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
+        "total_sales": str(total_sales),
+        "total_transactions": total_transactions,
+        "daily_breakdown": [
+            {**d, "total_sales": str(d["total_sales"]), 
+             "cash": str(d["cash"]), "upi": str(d["upi"]), 
+             "card": str(d["card"]), "bank_transfer": str(d["bank_transfer"]), 
+             "other": str(d["other"]), "membership_sales": str(d["membership_sales"]),
+             "inventory_sales": str(d["inventory_sales"]), "network_sales": str(d["network_sales"])}
+            for d in daily_list
+        ]
+    }
+
+
+# ============================================================================
+# 2. MEMBERSHIP REVENUE REPORT
+# ============================================================================
+
+@router.get("/billing/reports/membership-revenue", summary="Get membership revenue report")
+async def get_membership_revenue_report(
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Membership revenue report.
+    Shows new memberships vs renewals, revenue by plan.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    try:
+        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Get membership payments
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal]),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Get member memberships for plan details
+    member_membership_ids = {p.reference_id for p in payments if p.reference_id}
+    membership_map = {}
+    plan_stats = {}
+    
+    if member_membership_ids:
+        mm_query = select(MemberMembership).where(MemberMembership.id.in_(member_membership_ids))
+        mm_result = await db.execute(mm_query)
+        member_memberships = mm_result.scalars().all()
+        
+        membership_ids = {mm.membership_id for mm in member_memberships}
+        if membership_ids:
+            m_query = select(Membership).where(Membership.membership_id.in_(membership_ids))
+            m_result = await db.execute(m_query)
+            memberships = m_result.scalars().all()
+            membership_map = {m.membership_id: m for m in memberships}
+    
+    # Calculate stats
+    new_memberships = [p for p in payments if p.order_type == OrderType.membership]
+    renewals = [p for p in payments if p.order_type == OrderType.renewal]
+    
+    new_revenue = sum(Decimal(str(p.total_amount)) for p in new_memberships)
+    renewal_revenue = sum(Decimal(str(p.total_amount)) for p in renewals)
+    total_revenue = new_revenue + renewal_revenue
+    
+    # Revenue by plan
+    for payment in payments:
+        if payment.reference_id and payment.reference_id in [mm.id for mm in member_memberships]:
+            mm = next((mm for mm in member_memberships if mm.id == payment.reference_id), None)
+            if mm and mm.membership_id in membership_map:
+                plan = membership_map[mm.membership_id]
+                plan_name = plan.membership_name
+                
+                if plan_name not in plan_stats:
+                    plan_stats[plan_name] = {
+                        "plan_name": plan_name,
+                        "new_count": 0,
+                        "renewal_count": 0,
+                        "total_revenue": Decimal("0.00")
+                    }
+                
+                if payment.order_type == OrderType.membership:
+                    plan_stats[plan_name]["new_count"] += 1
+                else:
+                    plan_stats[plan_name]["renewal_count"] += 1
+                
+                plan_stats[plan_name]["total_revenue"] += Decimal(str(payment.total_amount))
+    
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
+        "summary": {
+            "total_revenue": str(total_revenue),
+            "new_memberships_revenue": str(new_revenue),
+            "renewals_revenue": str(renewal_revenue),
+            "new_memberships_count": len(new_memberships),
+            "renewals_count": len(renewals),
+            "total_count": len(payments)
+        },
+        "by_plan": [
+            {**stats, "total_revenue": str(stats["total_revenue"])}
+            for stats in plan_stats.values()
+        ]
+    }
+
+
+# ============================================================================
+# 3. INVENTORY SALES REPORT
+# ============================================================================
+
+@router.get("/billing/reports/inventory-sales", summary="Get inventory sales report")
+async def get_inventory_sales_report(
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Inventory/product sales report.
+    Shows sales by product, quantities sold, revenue.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    try:
+        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Get inventory sales payments
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.order_type == OrderType.stock_purchase,
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Get sales and products
+    sale_ids = {p.reference_id for p in payments if p.reference_id}
+    product_stats = {}
+    
+    if sale_ids:
+        # Get sales
+        sales_query = select(Sale).where(Sale.sale_id.in_(sale_ids))
+        sales_result = await db.execute(sales_query)
+        sales = sales_result.scalars().all()
+        
+        # Get sale items
+        sale_items_query = select(SaleItem).where(SaleItem.sale_id.in_(sale_ids))
+        sale_items_result = await db.execute(sale_items_query)
+        sale_items = sale_items_result.scalars().all()
+        
+        # Get products
+        product_ids = {si.product_id for si in sale_items if si.product_id}
+        if product_ids:
+            products_query = select(Product).where(Product.id.in_(product_ids))
+            products_result = await db.execute(products_query)
+            products = products_result.scalars().all()
+            product_map = {p.id: p for p in products}
+            
+            # Calculate stats by product
+            for item in sale_items:
+                if item.product_id in product_map:
+                    product = product_map[item.product_id]
+                    product_name = product.product_name
+                    
+                    if product_name not in product_stats:
+                        product_stats[product_name] = {
+                            "product_name": product_name,
+                            "quantity_sold": 0,
+                            "total_revenue": Decimal("0.00"),
+                            "sales_count": 0
+                        }
+                    
+                    product_stats[product_name]["quantity_sold"] += item.quantity
+                    product_stats[product_name]["total_revenue"] += Decimal(str(item.unit_price)) * item.quantity
+                    product_stats[product_name]["sales_count"] += 1
+    
+    total_revenue = sum(Decimal(str(p.total_amount)) for p in payments)
+    
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
+        "summary": {
+            "total_revenue": str(total_revenue),
+            "total_transactions": len(payments),
+            "total_products_sold": sum(stats["quantity_sold"] for stats in product_stats.values())
+        },
+        "by_product": [
+            {**stats, "total_revenue": str(stats["total_revenue"])}
+            for stats in sorted(product_stats.values(), key=lambda x: x["total_revenue"], reverse=True)
+        ]
+    }
+
+
+# ============================================================================
+# 4. NETWORK EARNINGS REPORT
+# ============================================================================
+
+@router.get("/billing/reports/network-earnings", summary="Get network earnings report")
+async def get_network_earnings_report(
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Network visits earnings report.
+    Shows incoming vs outgoing visits, platform fees, net earnings.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    try:
+        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    platform_fee_percentage = Decimal("0.15")
+    
+    # Incoming visits
+    incoming_query = select(UserCenterMembership).where(
+        and_(
+            UserCenterMembership.center_id == center_id,
+            UserCenterMembership.start_date >= date_from_parsed,
+            UserCenterMembership.start_date <= date_to_parsed,
+            UserCenterMembership.network_status.in_([
+                NetworkingStatusEnum.approved,
+                NetworkingStatusEnum.paid,
+                NetworkingStatusEnum.completed,
+                NetworkingStatusEnum.pending_settlement
+            ])
+        )
+    )
+    incoming_result = await db.execute(incoming_query)
+    incoming_visits = incoming_result.scalars().all()
+    
+    # Outgoing visits
+    members_query = select(Member.id).where(Member.home_center_id == center_id)
+    members_result = await db.execute(members_query)
+    member_ids = [m for m in members_result.scalars().all()]
+    
+    outgoing_visits = []
+    if member_ids:
+        outgoing_query = select(UserCenterMembership).where(
+            and_(
+                UserCenterMembership.user_id.in_(member_ids),
+                UserCenterMembership.center_id != center_id,
+                UserCenterMembership.start_date >= date_from_parsed,
+                UserCenterMembership.start_date <= date_to_parsed,
+                UserCenterMembership.network_status.in_([
+                    NetworkingStatusEnum.approved,
+                    NetworkingStatusEnum.paid,
+                    NetworkingStatusEnum.completed,
+                    NetworkingStatusEnum.pending_settlement
+                ])
+            )
+        )
+        outgoing_result = await db.execute(outgoing_query)
+        outgoing_visits = outgoing_result.scalars().all()
+    
+    # Get payment orders
+    all_visit_ids = [v.id for v in incoming_visits + outgoing_visits]
+    payment_orders_map = {}
+    if all_visit_ids:
+        po_query = select(PaymentOrder).where(
+            and_(
+                PaymentOrder.reference_id.in_(all_visit_ids),
+                PaymentOrder.order_type == OrderType.networking_access
+            )
+        )
+        po_result = await db.execute(po_query)
+        payment_orders = po_result.scalars().all()
+        payment_orders_map = {po.reference_id: po for po in payment_orders}
+    
+    # Calculate earnings
+    incoming_total = Decimal("0.00")
+    incoming_platform_fees = Decimal("0.00")
+    
+    for visit in incoming_visits:
+        po = payment_orders_map.get(visit.id)
+        if po:
+            charge = Decimal(str(po.total_amount))
+            platform_fee = (charge * platform_fee_percentage).quantize(Decimal("0.01"))
+            earned = charge - platform_fee
+            
+            incoming_total += earned
+            incoming_platform_fees += platform_fee
+    
+    outgoing_total = Decimal("0.00")
+    for visit in outgoing_visits:
+        po = payment_orders_map.get(visit.id)
+        if po:
+            outgoing_total += Decimal(str(po.total_amount))
+    
+    net_earnings = incoming_total - outgoing_total
+    
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
         "incoming": {
-            "total_visits": len(incoming_visits),
-            "total_charge": str(incoming_total),
-            "platform_fee": str(incoming_fee),
-            "total_earn": str(incoming_earn),
-            "pending_count": sum(1 for v in incoming_visits if v.network_status == NetworkingStatusEnum.pending),
-            "completed_count": sum(1 for v in incoming_visits if v.network_status == NetworkingStatusEnum.completed),
+            "visits_count": len(incoming_visits),
+            "gross_revenue": str(incoming_total + incoming_platform_fees),
+            "platform_fees": str(incoming_platform_fees),
+            "net_revenue": str(incoming_total)
         },
         "outgoing": {
-            "total_visits": len(outgoing_visits),
-            "total_charge": str(outgoing_total),
-            "platform_fee": str(outgoing_fee),
-            "total_paid": str(outgoing_total),
-            "pending_count": sum(1 for v in outgoing_visits if v.network_status == NetworkingStatusEnum.pending),
-            "completed_count": sum(1 for v in outgoing_visits if v.network_status == NetworkingStatusEnum.completed),
+            "visits_count": len(outgoing_visits),
+            "total_paid": str(outgoing_total)
         },
-        "net_balance": str(incoming_earn - outgoing_total),
+        "net_earnings": str(net_earnings),
+        "platform_fee_percentage": "15"
     }
+
+
+# ============================================================================
+# 5. TAX SUMMARY REPORT
+# ============================================================================
+
+@router.get("/billing/reports/tax-summary", summary="Get tax summary report")
+async def get_tax_summary_report(
+    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Tax summary report.
+    Shows tax collected by category, total taxable amount, total tax.
+    """
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    try:
+        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Get all paid transactions
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    )
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Get tax categories
+    tax_category_ids = {p.tax_category_id for p in payments if p.tax_category_id}
+    tax_category_map = {}
+    
+    if tax_category_ids:
+        tax_query = select(TaxCategory).where(TaxCategory.id.in_(tax_category_ids))
+        tax_result = await db.execute(tax_query)
+        tax_categories = tax_result.scalars().all()
+        tax_category_map = {tc.id: tc for tc in tax_categories}
+    
+    # Calculate tax stats
+    tax_stats = {}
+    total_taxable = Decimal("0.00")
+    total_tax = Decimal("0.00")
+    
+    for payment in payments:
+        subtotal = Decimal(str(payment.subtotal_amount))
+        tax_amount = Decimal(str(payment.tax_amount))
+        
+        total_taxable += subtotal
+        total_tax += tax_amount
+        
+        if payment.tax_category_id and payment.tax_category_id in tax_category_map:
+            tax_cat = tax_category_map[payment.tax_category_id]
+            cat_name = tax_cat.tax_name
+            
+            if cat_name not in tax_stats:
+                tax_stats[cat_name] = {
+                    "tax_category": cat_name,
+                    "tax_rate": str(tax_cat.rate),
+                    "taxable_amount": Decimal("0.00"),
+                    "tax_collected": Decimal("0.00"),
+                    "transaction_count": 0
+                }
+            
+            tax_stats[cat_name]["taxable_amount"] += subtotal
+            tax_stats[cat_name]["tax_collected"] += tax_amount
+            tax_stats[cat_name]["transaction_count"] += 1
+    
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
+        "summary": {
+            "total_taxable_amount": str(total_taxable),
+            "total_tax_collected": str(total_tax),
+            "total_transactions": len(payments)
+        },
+        "by_tax_category": [
+            {**stats, "taxable_amount": str(stats["taxable_amount"]), 
+             "tax_collected": str(stats["tax_collected"])}
+            for stats in tax_stats.values()
+        ]
+    }
+
+
+# ============================================================================
+# 6. EXPORT EXCEL - Daily Sales
+# ============================================================================
+
+@router.get("/billing/reports/daily-sales/export-excel", summary="Export daily sales to Excel")
+async def export_daily_sales_excel(
+    date_from: str = Query(...),
+    date_to: str = Query(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """Export daily sales report as Excel file."""
+    
+    # Get report data (reuse the daily sales logic)
+    center_id = current_admin.get("center_id")
+    date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal, OrderType.stock_purchase, OrderType.networking_access]),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    ).order_by(PaymentOrder.created_at)
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Create Excel workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Daily Sales Report"
+    
+    # Header
+    headers = ["Date", "Total Sales", "Transactions", "Cash", "UPI", "Card", "Bank Transfer", "Membership", "Inventory", "Network"]
+    ws.append(headers)
+    
+    # Style header
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Group data by day
+    daily_data = {}
+    for payment in payments:
+        day_key = payment.created_at.date().isoformat()
+        if day_key not in daily_data:
+            daily_data[day_key] = {
+                "total": Decimal("0.00"), "count": 0,
+                "cash": Decimal("0.00"), "upi": Decimal("0.00"),
+                "card": Decimal("0.00"), "bank_transfer": Decimal("0.00"),
+                "membership": Decimal("0.00"), "inventory": Decimal("0.00"), "network": Decimal("0.00")
+            }
+        
+        amount = Decimal(str(payment.total_amount))
+        daily_data[day_key]["total"] += amount
+        daily_data[day_key]["count"] += 1
+        
+        if payment.payment_method:
+            method_key = payment.payment_method.value.lower()
+            if method_key in daily_data[day_key]:
+                daily_data[day_key][method_key] += amount
+        
+        if payment.order_type in [OrderType.membership, OrderType.renewal]:
+            daily_data[day_key]["membership"] += amount
+        elif payment.order_type == OrderType.stock_purchase:
+            daily_data[day_key]["inventory"] += amount
+        elif payment.order_type == OrderType.networking_access:
+            daily_data[day_key]["network"] += amount
+    
+    # Add data rows
+    for day in sorted(daily_data.keys()):
+        d = daily_data[day]
+        ws.append([
+            day,
+            float(d["total"]),
+            d["count"],
+            float(d["cash"]),
+            float(d["upi"]),
+            float(d["card"]),
+            float(d["bank_transfer"]),
+            float(d["membership"]),
+            float(d["inventory"]),
+            float(d["network"])
+        ])
+    
+    # Save to bytes
+    excel_file = io.BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+    
+    return StreamingResponse(
+        excel_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=daily_sales_{date_from}_to_{date_to}.xlsx"}
+    )
+
+
+# ============================================================================
+# 7. EXPORT CSV - Daily Sales
+# ============================================================================
+
+@router.get("/billing/reports/daily-sales/export-csv", summary="Export daily sales to CSV")
+async def export_daily_sales_csv(
+    date_from: str = Query(...),
+    date_to: str = Query(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """Export daily sales report as CSV file."""
+    
+    # Get report data (same as Excel)
+    center_id = current_admin.get("center_id")
+    date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+    
+    query = select(PaymentOrder).where(
+        and_(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
+            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal, OrderType.stock_purchase, OrderType.networking_access]),
+            PaymentOrder.status == PaymentOrderStatus.paid
+        )
+    ).order_by(PaymentOrder.created_at)
+    
+    result = await db.execute(query)
+    payments = result.scalars().all()
+    
+    # Create CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(["Date", "Total Sales", "Transactions", "Cash", "UPI", "Card", "Bank Transfer", "Membership", "Inventory", "Network"])
+    
+    # Group data
+    daily_data = {}
+    for payment in payments:
+        day_key = payment.created_at.date().isoformat()
+        if day_key not in daily_data:
+            daily_data[day_key] = {
+                "total": Decimal("0.00"), "count": 0,
+                "cash": Decimal("0.00"), "upi": Decimal("0.00"),
+                "card": Decimal("0.00"), "bank_transfer": Decimal("0.00"),
+                "membership": Decimal("0.00"), "inventory": Decimal("0.00"), "network": Decimal("0.00")
+            }
+        
+        amount = Decimal(str(payment.total_amount))
+        daily_data[day_key]["total"] += amount
+        daily_data[day_key]["count"] += 1
+        
+        if payment.payment_method:
+            method_key = payment.payment_method.value.lower()
+            if method_key in daily_data[day_key]:
+                daily_data[day_key][method_key] += amount
+        
+        if payment.order_type in [OrderType.membership, OrderType.renewal]:
+            daily_data[day_key]["membership"] += amount
+        elif payment.order_type == OrderType.stock_purchase:
+            daily_data[day_key]["inventory"] += amount
+        elif payment.order_type == OrderType.networking_access:
+            daily_data[day_key]["network"] += amount
+    
+    # Write rows
+    for day in sorted(daily_data.keys()):
+        d = daily_data[day]
+        writer.writerow([
+            day, str(d["total"]), d["count"],
+            str(d["cash"]), str(d["upi"]), str(d["card"]), str(d["bank_transfer"]),
+            str(d["membership"]), str(d["inventory"]), str(d["network"])
+        ])
+    
+    # Return CSV
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=daily_sales_{date_from}_to_{date_to}.csv"}
+    )
