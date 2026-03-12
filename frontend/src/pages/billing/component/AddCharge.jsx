@@ -3,28 +3,27 @@ import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import { useRenewMembershipMutation } from '@api-queries/billing/Query'
+import { Textarea } from '@pages/components/ui/textarea'
 
-const AddCharge = ({ open, setOpen }) => {
+const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
   const { mutateAsync: renew_membership, isPending } =
     useRenewMembershipMutation()
   return (
-    <CustomeModal header='Add Charge' open={open} onOpenChange={setOpen}>
+    <CustomeModal
+      header='Add Charge'
+      open={openAddCharge}
+      onOpenChange={setOpenAddCharge}
+    >
       <form className='flex flex-col gap-2 lg:w-96 w-full'>
         <CustomeSelect
-          label='Plan'
+          label='Select Member'
           name='center_id'
           placeholder='Select Plan'
         />
-        <Input
-          className='w-full'
-          label='Discount'
-          placeholder='Enter  ₹'
-          name='name'
-        />
-        <Input
-          className='w-full'
-          label='Total: ₹____'
-          placeholder='Enter  ₹'
+        <Input label='Amount' placeholder='Enter amount' name='name' />
+        <Textarea
+          label='Description'
+          placeholder='Enter Description'
           name='name'
         />
         <div className='flex justify-end mt-4 '>

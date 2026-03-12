@@ -7,7 +7,7 @@ const cardValue = [
   { title: '+ New Sale', value: '₹12,540', image: new_sale },
   { title: '+ Renew  Membership', value: '₹8,320', image: renew_membership },
   { title: '+ Add Charge', value: '₹5,210', image: add_charge },
-  { title: '+ Record Payment', value: '₹26,070', image: record_payment }
+  // { title: '+ Record Payment', value: '₹26,070', image: record_payment }
 ]
 
 const DisplayActionCard = ({onActionClick }) => {
