@@ -9,7 +9,14 @@ import {
   getSales,
   getSaleById,
   getAllSales,
-  getAllSaleById
+  getAllSaleById,
+  getMembershipById,
+  getAllMemberships,
+  getNetworkById,
+  getOutgoingNetwork,
+  getIncomingNetwork,
+  getRenewMembershipById,
+  renewMembership
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -134,6 +141,72 @@ export const useGetAllSaleByIdQuery = id => {
   return useQuery({
     queryKey: ['allSale', id],
     queryFn: () => getAllSaleById(id),
+    enabled: Boolean(id)
+  })
+}
+
+export const useGetAllMembershipsQuery = data => {
+  return useQuery({
+    queryKey: ['membership', data],
+    queryFn: () => getAllMemberships(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useGetMembershipByIdQuery = id => {
+  return useQuery({
+    queryKey: ['membership', id],
+    queryFn: () => getMembershipById(id),
+    enabled: Boolean(id)
+  })
+}
+
+export const useRenewMembershipMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ data, id }) => renewMembership(data, id),
+    onSuccess: () => {
+      query.invalidateQueries(['membership'])
+      showSuccess('Membership renewed successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to renew membership')
+      return err
+    }
+  })
+}
+
+export const useGetRenewMembershipByIdQuery = id => {
+  return useQuery({
+    queryKey: ['renewMembership', id],
+    queryFn: () => getRenewMembershipById(id),
+    enabled: Boolean(id)
+  })
+}
+
+export const useIncomingNetworkQuery = data => {
+  return useQuery({
+    queryKey: ['incomingNetwork', data],
+    queryFn: () => getIncomingNetwork(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useOutgoingNetworkQuery = data => {
+  return useQuery({
+    queryKey: ['outgoingNetwork', data],
+    queryFn: () => getOutgoingNetwork(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useGetNetworkByIdQuery = id => {
+  return useQuery({
+    queryKey: ['network', id],
+    queryFn: () => getNetworkById(id),
     enabled: Boolean(id)
   })
 }

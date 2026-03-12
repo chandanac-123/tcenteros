@@ -9,7 +9,13 @@ import {
   getSaleApiCall,
   getSaleByIdApiCall,
   getAllSaleApiCall,
-  getAllSaleByIdApiCall
+  getAllSaleByIdApiCall,
+  getMembershipByIdApiCall,
+  getAllMembershipApiCall,
+  getRenewMembershipByIdApiCall,
+  renewMembershipApiCall,
+  getIncomingNetworkApiCall,
+  getNetworkByIdApiCall
 } from './index'
 
 export const getSales = async data => {
@@ -94,6 +100,69 @@ export const getAllSales = async data => {
 export const getAllSaleById = async id => {
   try {
     const response = await getAllSaleByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAllMemberships = async (data) => {
+  try {
+    const response = await getAllMembershipApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getMembershipById = async id => {
+  try {
+    const response = await getMembershipByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const renewMembership = async (data,id) => {
+  try {
+    const response = await renewMembershipApiCall(data,id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getRenewMembershipById = async id => {
+  try {
+    const response = await getRenewMembershipByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getIncomingNetwork = async (data) => {
+  try {
+    const response = await getIncomingNetworkApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getOutgoingNetwork = async (data) => {
+  try {
+    const response = await getOutgoingNetworkApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getNetworkById = async id => {
+  try {
+    const response = await getNetworkByIdApiCall(id)
     return response.data
   } catch (error) {
     throw error

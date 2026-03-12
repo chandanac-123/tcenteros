@@ -3,45 +3,22 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import view from '@assets/form-icons/view.svg'
 import { useState } from 'react'
 import RenewMembership from '../component/RenewMembership'
-const data = [
-  {
-    full_name: 'Arjun Nair',
-    plan_name: 'Gold Plan',
-    expiry_date: '15 Mar 2026',
-    renewal_due: '₹1,500',
-    amount: '₹1,500',
-    status: 'Active',
-    actions: 'View'
-  }
-]
+import { useGetAllMembershipsQuery } from '@api-queries/billing/Query'
+
 const Memberships = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1
+  })
   const [renewOpen, setRenewOpen] = useState(false)
+  const { data, isFetching } = useGetAllMembershipsQuery(tableParams)
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member Name'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Plan'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Expiry Date'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Renewal Due'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Amount'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Status'
-    },
+    { accessorKey: 'full_name', header: 'Member Name' },
+    { accessorKey: 'designation_name', header: 'Plan' },
+    { accessorKey: 'email', header: 'Expiry Date' },
+    { accessorKey: 'mobile', header: 'Renewal Due' },
+    { accessorKey: 'center_name', header: 'Amount' },
+    { accessorKey: 'center_name', header: 'Status' },
     {
       header: 'Actions',
       accessorKey: 'status',
@@ -66,7 +43,7 @@ const Memberships = () => {
   return (
     <div className='gap-4 flex flex-col'>
       <span className='font-semibold text-lg'>Membership Listing</span>
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columns} data={[]} />
       <RenewMembership open={renewOpen} setOpen={setRenewOpen} />
     </div>
   )

@@ -2,6 +2,10 @@ import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
+import {
+  useRenewMembershipMutation,
+  useGetRenewMembershipByIdQuery
+} from '@api-queries/billing/Query'
 
 const RenewMembership = ({
   open,
@@ -10,6 +14,9 @@ const RenewMembership = ({
   openRenewMember,
   setOpenRenewMember
 }) => {
+  const { data, isFetching } = useGetRenewMembershipByIdQuery()
+  const { mutateAsync: renew_membership, isPending } =
+    useRenewMembershipMutation()
   return (
     <CustomeModal
       header='Renew Membership'
