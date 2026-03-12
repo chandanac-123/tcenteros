@@ -34,9 +34,9 @@ const Overview = () => {
         <StatusDisplayCard />
       </div>
 
-      <div className='flex flex-col lg:flex-row w-full gap-4 items-stretch'>
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
         {/* Left Section */}
-        <div className='w-2/3'>
+        <div className='lg:col-span-2'>
           <Card className='p-4 h-full'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
               <span className='font-semibold text-base'>
@@ -72,7 +72,7 @@ const Overview = () => {
         </div>
 
         {/* Right Section */}
-        <div className='w-full lg:w-1/3'>
+        <div className='lg:col-span-1'>
           <DisplayActionCard onActionClick={handleActionClick} />
         </div>
       </div>

@@ -8,10 +8,13 @@ const TimeslotChange = ({ open, setOpen, handleApprove }) => {
       <CustomeModal
         open={open}
         onOpenChange={setOpen}
-        header='Are you sure you want to Approve this request?'
+        header=''
       >
         <form className='space-y-5' onSubmit={handleApprove}>
-          <p>Accepting this request will Change the time slot.</p>
+           <h2 className='text-md font-semibold'>
+            Are you sure you want to Approve this request?
+          </h2>
+          <p className='text-sm justify-center flex'>Accepting this request will Change the time slot.</p>
           <div className='flex justify-end gap-3'>
             <Button
               size='addbutton'

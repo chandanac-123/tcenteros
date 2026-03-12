@@ -45,7 +45,7 @@ const Dashboard = () => {
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-4'>
           {/* Chart Section */}
           <div className='lg:col-span-2'>
-            <Card className='p-4 h-full'>
+            <Card className='p-4 h-full ' >
               <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
                 <span className='font-semibold text-base'>
                   Total Revenue Summary

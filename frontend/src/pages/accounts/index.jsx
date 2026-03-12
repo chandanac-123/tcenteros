@@ -79,47 +79,26 @@ const Accounts = () => {
   ]
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Center Name'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Transaction Date'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Description'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Debit'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Credit'
-    },
-    {
-      accessorKey: 'joining_date',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'joining_date',
-      header: 'Action'
-    }
+    { accessorKey: 'full_name', header: 'Center Name' },
+    { accessorKey: 'designation_name', header: 'Transaction Date' },
+    { accessorKey: 'email', header: 'Description' },
+    { accessorKey: 'mobile', header: 'Debit' },
+    { accessorKey: 'center_name', header: 'Credit' },
+    { accessorKey: 'joining_date', header: 'Payroll Date' },
+    { accessorKey: 'joining_date', header: 'Action' }
   ]
 
   return (
     <ContentLayout>
-      <div className='flex flex-col lg:flex-row gap-4 items-stretch lg:min-h-[88vh] '>
-        <div className='flex flex-col w-full lg:w-3/5 gap-4'>
+      <div className='grid grid-cols-1 lg:grid-cols-5 gap-4 lg:min-h-[88vh]'>
+        <div className='lg:col-span-3 flex flex-col gap-4"'>
           <Card className='lg:flex-1'>
             <div className='flex flex-col p-4 h-full'>
               <span className='text-lg font-semibold text-textblack'>
                 Account Overview
               </span>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2  xl:grid-cols-4 gap-4'>
                 {summaryData.map((item, index) => (
                   <SummaryCard
                     key={index}
@@ -157,7 +136,7 @@ const Accounts = () => {
           </Card>
         </div>
 
-        <div className='flex flex-col w-full lg:w-2/5 gap-4'>
+        <div className='lg:col-span-2 flex flex-col gap-4'>
           <Card className='lg:flex-1'>
             <div className='flex flex-col p-4 h-full'>
               <div className='flex justify-between py-2'>
