@@ -21,6 +21,8 @@ const Overview = () => {
     if (title === '+ Renew  Membership') {
       setOpenRenewMember(true)
     }
+    if (title === '+ Add Charge') {
+    }
   }
 
   return (

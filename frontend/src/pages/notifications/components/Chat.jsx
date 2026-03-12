@@ -1,5 +1,6 @@
 import React from 'react'
 import { Send } from 'lucide-react'
+import { useTicketByIdQuery,useSendMessageMutation } from '@api-queries/notifictaions/Query'
 
 const messages = [
   {
@@ -41,6 +42,9 @@ const messages = [
 ]
 
 const Chat = () => {
+  // const { data, isFetching } = useTicketByIdQuery()
+  // const { mutateAsync: sendMessageMutation ,isPending} = useSendMessageMutation()
+
   return (
     <div className='flex flex-col  bg-primary/10 rounded-lg overflow-hidden'>
       {/* Chat messages */}

@@ -5,39 +5,18 @@ import { useIncomingNetworkQuery } from '@api-queries/billing/Query'
 import { useState } from 'react'
 
 const IncomingNetwork = () => {
-  const [tableParams ,setTableParams]=useState({
-    page:1
+  const [tableParams, setTableParams] = useState({
+    page: 1
   })
-  const {data,isFetching}=useIncomingNetworkQuery(tableParams)
+  const { data, isFetching } = useIncomingNetworkQuery(tableParams)
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member Name'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Home Center'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Visit Date'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Charge'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Fee(15%)'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Earn'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Status'
-    },
+    { accessorKey: 'full_name', header: 'Member Name' },
+    { accessorKey: 'designation_name', header: 'Home Center' },
+    { accessorKey: 'email', header: 'Visit Date' },
+    { accessorKey: 'mobile', header: 'Charge' },
+    { accessorKey: 'center_name', header: 'Fee(15%)' },
+    { accessorKey: 'center_name', header: 'Earn' },
+    { accessorKey: 'center_name', header: 'Status' },
     {
       header: 'Actions',
       accessorKey: 'status',

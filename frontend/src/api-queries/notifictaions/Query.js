@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getAllTickets ,getAllPendingNetwork} from './Urls'
+import {
+  getAllTickets,
+  getAllPendingNetwork,
+  getTicketById,
+  sendMessage,
+  closeMessage,
+  getTimeSlot,
+  approveTimeSlot
+} from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
 export const useAllTicketsQuery = () => {
@@ -11,6 +19,43 @@ export const useAllTicketsQuery = () => {
   })
 }
 
+export const useTicketByIdQuery = id => {
+  return useQuery({
+    queryKey: ['tickets', id],
+    queryFn: () => getTicketById(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useSendMessageMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ data, id }) => sendMessage(data, id),
+    onSuccess: () => {
+      query.invalidateQueries(['tickets'])
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to send message')
+      return err
+    }
+  })
+}
+
+export const useCloseMessageMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ data, id }) => closeMessage(data, id),
+    onSuccess: () => {
+      query.invalidateQueries(['tickets'])
+      showSuccess('Chat closed successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to close chat message')
+      return err
+    }
+  })
+}
 
 export const useAllPendingNetworkQuery = () => {
   return useQuery({
@@ -18,5 +63,29 @@ export const useAllPendingNetworkQuery = () => {
     queryFn: getAllPendingNetwork,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useTimeSlotQuery = () => {
+  return useQuery({
+    queryKey: ['timeSlot'],
+    queryFn: getTimeSlot,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useApproveTimeSlotMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ data, id }) => approveTimeSlot(data, id),
+    onSuccess: () => {
+      query.invalidateQueries(['timeSlot'])
+      showSuccess('Time slot approved successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to approve time slot')
+      return err
+    }
   })
 }
