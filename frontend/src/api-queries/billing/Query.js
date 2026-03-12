@@ -6,16 +6,18 @@ import {
   cartOpen,
   getCartAmount,
   checkoutCart,
-  getAllSales,
+  getSales,
   getSaleById,
+  getAllSales,
+  getAllSaleById
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
 
-export const useAllSalesQuery = data => {
+export const useSalesQuery = data => {
   return useQuery({
     queryKey: ['cart', data],
-    queryFn: () => getAllSales(data),
+    queryFn: () => getSales(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
@@ -115,6 +117,23 @@ export const useGetSaleByIdQuery = id => {
   return useQuery({
     queryKey: ['sale', id],
     queryFn: () => getSaleById(id),
+    enabled: Boolean(id)
+  })
+}
+
+export const useGetAllSalesQuery = data => {
+  return useQuery({
+    queryKey: ['allSales', data],
+    queryFn: () => getAllSales(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useGetAllSaleByIdQuery = id => {
+  return useQuery({
+    queryKey: ['allSale', id],
+    queryFn: () => getAllSaleById(id),
     enabled: Boolean(id)
   })
 }

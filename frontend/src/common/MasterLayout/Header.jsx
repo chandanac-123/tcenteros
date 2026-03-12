@@ -1,4 +1,5 @@
 import bell from '@assets/header-icons/bell.svg'
+import bell_active from '@assets/header-icons/bell-inactive.svg'
 import map from '@assets/header-icons/map.svg'
 import {
   Popover,
@@ -7,9 +8,9 @@ import {
 } from '@pages/components/ui/popover'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import CustomeModal from '../components/CustomeModal'
-import { useEffect, useState } from 'react'
+import {  useState } from 'react'
 import { Button } from '@pages/components/ui/button'
-import { useLocation, useNavigate } from 'react-router-dom'
+import {  useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
 import { useCrmStore } from '@store/tabStore'
@@ -64,7 +65,7 @@ const Header = () => {
           </Button>
         </div>
         <button onClick={() => navigate('/notifications')}>
-          <img src={bell} alt='logo' className='mr-2' />
+          <img src={bell_active} alt='logo' className='mr-2' />
         </button>
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>

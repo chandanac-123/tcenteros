@@ -6,13 +6,15 @@ import {
   getCartAmountApiCall,
   checkoutCartApiCall,
   addtoCartApiCall,
+  getSaleApiCall,
+  getSaleByIdApiCall,
   getAllSaleApiCall,
-  getSaleByIdApiCall
+  getAllSaleByIdApiCall
 } from './index'
 
-export const getAllSales = async data => {
+export const getSales = async data => {
   try {
-    const response = await getAllSaleApiCall(data)
+    const response = await getSaleApiCall(data)
     return response.data
   } catch (error) {
     throw error
@@ -81,3 +83,19 @@ export const getSaleById = async id => {
   }
 }
 
+export const getAllSales = async data => {
+  try {
+    const response = await getAllSaleApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+export const getAllSaleById = async id => {
+  try {
+    const response = await getAllSaleByIdApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { DataTable } from '@common/components/DataTable'
 import view from '@assets/form-icons/view.svg'
-import { useAllSalesQuery } from '@api-queries/billing/Query'
+import { useSalesQuery } from '@api-queries/billing/Query'
 import ViewForm from '../components/View'
 
 const POS = () => {
   const [tableParams, setTableParams] = useState({
     page: 1
   })
-  const { data, isFetching } = useAllSalesQuery(tableParams)
+  const { data, isFetching } = useSalesQuery(tableParams)
   const [viewopen, setViewOpen] = useState(false)
   const [viewId, setViewId] = useState(null)
 
