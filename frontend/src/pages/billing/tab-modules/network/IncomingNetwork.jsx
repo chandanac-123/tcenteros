@@ -6,7 +6,8 @@ import { useState } from 'react'
 
 const IncomingNetwork = () => {
   const [tableParams, setTableParams] = useState({
-    page: 1
+    page: 1,
+    search: '',
   })
   const { data, isFetching } = useIncomingNetworkQuery(tableParams)
   const columns = [
@@ -45,7 +46,6 @@ const IncomingNetwork = () => {
         loading={isFetching}
         pagination={data?.total_records}
         paginationVisibile={true}
-        search={false}
       />
     </>
   )

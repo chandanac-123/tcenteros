@@ -43,17 +43,25 @@ export const getRenewMembershipByIdApiCall = id =>
 
 export const getIncomingNetworkApiCall = data =>
   axiosInstance.get(
-    `/billing/billing/network-visits/incoming?page=${data?.page || 1}`
+    `/billing/billing/network-visits/incoming?page=${data?.page || 1}&search=${
+      data?.search || ''
+    }`
   )
 export const getOutgoingNetworkApiCall = data =>
   axiosInstance.get(
-    `/billing/billing/network-visits/outgoing?page=${data?.page || 1}`
+    `/billing/billing/network-visits/outgoing?page=${data?.page || 1}&search=${
+      data?.search || ''
+    }`
   )
 export const getNetworkByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/network-visits/${id}`)
 
 export const getSettlementApiCall = data =>
-  axiosInstance.get(`/billing/billing/settlements?page=${data?.page || 1}`)
+  axiosInstance.get(
+    `/billing/billing/settlements?page=${data?.page || 1}&status_filter=${
+      data?.payment_status || ''
+    }&period_type=${data?.period_type || ''}`
+  )
 export const getSettlementByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/settlements/${id}`)
 export const completeSettlementApiCall = (id, data) =>
@@ -62,10 +70,10 @@ export const completeSettlementApiCall = (id, data) =>
 export const getSaleReportApiCall = data =>
   axiosInstance.get(`/billing/billing/reports/daily-sales`)
 export const getMembershipRevenueReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+  axiosInstance.get(`/billing/billing/reports/membership-revenue`)
 export const getInventorySaleReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+  axiosInstance.get(`/billing/billing/reports/inventory-sales`)
 export const getNetworkEarningReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+  axiosInstance.get(`/billing/billing/reports/network-earnings`)
 export const getTaxSummaryReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+  axiosInstance.get(`/billing/billing/reports/tax-summary`)

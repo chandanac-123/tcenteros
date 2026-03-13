@@ -6,7 +6,8 @@ import { useState } from 'react'
 
 const OutgoingNetwork = () => {
   const [tableParams, setTableParams] = useState({
-    page: 1
+    page: 1,
+    search:''
   })
   const { data, isFetching } = useOutgoingNetworkQuery(tableParams)
 
@@ -43,7 +44,6 @@ const OutgoingNetwork = () => {
         loading={isFetching}
         pagination={data?.total_records}
         paginationVisibile={true}
-        search={false}
       />
     </>
   )
