@@ -11,6 +11,6 @@ export const getPendingNetworkApiCall = () =>
   axiosInstance.get('/networking/networking/requests?status=pending')
 
 
-export const getTimeSlotApiCall = () => axiosInstance.get('/membership/center/time-slots')
+export const getTimeSlotApiCall = () => axiosInstance.get('/membership/admin/time-slot-change-requests')
 export const approveTimeSlotApiCall = (data, id) =>
   axiosInstance.post(`/membership/admin/approve-time-slot-change/${id}`, data)

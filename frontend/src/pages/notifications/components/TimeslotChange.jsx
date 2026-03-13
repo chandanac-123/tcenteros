@@ -24,7 +24,7 @@ const TimeslotChange = ({ open, setOpen, handleApprove }) => {
             >
               Cancel
             </Button>
-            <Button size='addbutton' type='submit'>
+            <Button size='addbutton' type='button' onClick={handleApprove}>
               Approve
             </Button>
           </div>
