@@ -344,6 +344,10 @@ async def create_member(
     current_user=Depends(centeradmin_required)
 ):
     from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
+    from app.accounts.helpers import auto_record_payment_in_accounts
+    from app.settings.models.models import TaxCategory, TaxScope
+    import traceback
+
     # Get logged-in centeradmin and their center_id
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
@@ -443,6 +447,12 @@ async def create_member(
     # Only create MemberMembership and PaymentOrder if member_status is "member" or "lead" and membership is provided
     member_membership = None
     payment_order = None
+    subtotal_amount = 0.0
+    tax_amount = 0.0
+    total_amount = 0.0
+    applied_tax_rate = 0.0
+    tax_warning_message = None
+
     if payload.member_status in ["member", "lead"] and membership:
         start_date = date.today()
         duration_unit = membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit
@@ -454,10 +464,35 @@ async def create_member(
             end_date = start_date + relativedelta(days=membership.duration_count)
         else:
             end_date = None
+        
+        # Automatically fetch tax category with tax_scope = "membership"
+        subtotal_amount = float(membership.default_price)
+        tax_amount = 0.0
+        tax_category_id = None
+        applied_tax_rate = 0.0
+        tax_warning_message = None
 
-        # Set total_amount from membership.default_price
-        total_amount = float(membership.default_price)
+        # Query for active tax category with tax_scope = "membership"
+        tax_result = await db.execute(
+            select(TaxCategory).where(
+                TaxCategory.tax_scope == TaxScope.membership,
+                TaxCategory.is_active == True
+            ).limit(1)
+        )
+        tax_category = tax_result.scalar_one_or_none()
 
+        if tax_category:
+            # Tax category found - calculate tax
+            tax_amount = subtotal_amount * (float(tax_category.tax_percentage) / 100)
+            tax_category_id = tax_category.id
+            applied_tax_rate = float(tax_category.tax_percentage)
+        else:
+            # No tax category found - set warning message
+            tax_warning_message = "Tax category for membership not found. Please add it in settings."
+        
+        total_amount = subtotal_amount + tax_amount
+
+        # Create MemberMembership with tax info
         member_membership = MemberMembership(
             id=uuid4(),
             member_id=member.id,
@@ -465,6 +500,7 @@ async def create_member(
             center_id=target_center.id,
             start_date=start_date,
             end_date=end_date,
+            tax_category_id=tax_category_id,
             total_amount=total_amount,
             membership_status=StatusEnum.active,
             created_by=current_user["user_id"],
@@ -473,31 +509,35 @@ async def create_member(
             updated_at=datetime.utcnow(),
         )
         db.add(member_membership)
+        await db.flush()
 
         # Only create PaymentOrder if payment_status is "paid"
         if hasattr(payload, "payment_status") and payload.payment_status == "paid":
             if not hasattr(payload, "payment_method") or not payload.payment_method:
                 raise HTTPException(status_code=400, detail="payment_method required for paid member")
+            
             try:
                 payment_status_enum = PaymentOrderStatus(payload.payment_status)
             except Exception:
                 raise HTTPException(status_code=400, detail="Invalid payment_status")
+            
             try:
                 payment_method_enum = PaymentMethod(payload.payment_method)
             except Exception:
                 raise HTTPException(status_code=400, detail="Invalid payment_method")
 
             payment_order = PaymentOrder(
+                payment_order_id=uuid4(),
                 payer_user_id=member.id,
                 payer_type="user",
                 payee_type="center",
-                center_id=target_center.id,
+                center_id=target_center.id,  # ✅ CORRECT: Use center_id
                 order_type="membership",
-                reference_schema="center",
-                reference_id=target_center.id,
-                subtotal_amount=float(membership.default_price),
-                tax_amount=0.00,
-                total_amount=float(membership.default_price),
+                reference_schema="center",  # ✅ CORRECT: Use valid enum value
+                reference_id=member_membership.id,
+                subtotal_amount=subtotal_amount,
+                tax_amount=tax_amount,
+                total_amount=total_amount,
                 currency="INR",
                 status=payment_status_enum,
                 payment_method=payment_method_enum,
@@ -507,11 +547,30 @@ async def create_member(
                 updated_at=datetime.utcnow(),
             )
             db.add(payment_order)
+            await db.flush()
+            
+            # ✅ AUTO-RECORD IN ACCOUNTING MODULE
+            if payment_order.status == PaymentOrderStatus.paid:
+                try:
+                    await auto_record_payment_in_accounts(
+                        db=db,
+                        payment_order=payment_order,
+                        created_by=str(current_user["user_id"])
+                    )
+                    print(f"✅ Accounting entry created for payment order: {payment_order.payment_order_id}")
+                except Exception as e:
+                    # Log the error but don't fail the member creation
+                    print(f"❌ Failed to record payment in accounts: {str(e)}")
+                    traceback.print_exc()
+                    # Optionally add warning to response
+                    if not tax_warning_message:
+                        tax_warning_message = f"Accounting error: {str(e)}"
 
     await db.commit()
     await db.refresh(member)
 
-    return {
+    # Build response
+    response_data = {
         "id": str(member.id),
         "email": member.email,
         "full_name": member.full_name,
@@ -529,13 +588,24 @@ async def create_member(
         "membership_id": str(payload.membership_id) if payload.membership_id else None,
         "time_slot_id": str(member.time_slot_id) if member.time_slot_id else None,
         "member_status": member.member_status.value,
-        "payment_method": payload.payment_method if payload.member_status == "member" and hasattr(payload, "payment_method") else None,
-        "payment_status": payload.payment_status if payload.member_status == "member" and hasattr(payload, "payment_status") else None,
+        "payment_method": payload.payment_method if hasattr(payload, "payment_method") else None,
+        "payment_status": payload.payment_status if hasattr(payload, "payment_status") else None,
         "payment_order_id": str(payment_order.payment_order_id) if payment_order else None,
-        "total_amount": float(membership.default_price) if membership else None,
+        "subtotal_amount": subtotal_amount if membership else None,
+        "tax_amount": tax_amount if membership else None,
+        "tax_rate": applied_tax_rate if membership else None,
+        "total_amount": total_amount if membership else None,
         "password": password if password else None,
         "status": member.status.value,
     }
+
+    # Add tax warning message if tax category not found
+    if tax_warning_message:
+        response_data["tax_warning"] = tax_warning_message
+
+    return response_data
+
+
 
 #Get Member by ID (centeradmin can get their own and sub-branch members; sub-branch admin only their own)
 @router.get("/center/members/{member_id}")
@@ -1583,6 +1653,139 @@ async def approve_time_slot_change(
 
     await session.commit()
     return {"detail": "Time slot change request approved"}
+
+
+# Add this endpoint after the existing time-slot change request endpoints
+@router.get("/admin/time-slot-change-requests")
+async def list_time_slot_change_requests_for_admin(
+    status: Optional[str] = Query(None, description="Filter by status: pending, approved, rejected"),
+    change_type: Optional[str] = Query(None, description="Filter by type: temporary, permanent"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    List all time-slot change requests for members in the center admin's center.
+    Supports filtering by status and change_type, with pagination.
+    """
+    from sqlalchemy import and_
+    
+    # Get center admin's center_id
+    center_admin = await session.get(CenterAdmin, current_admin["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    center_id = center_admin.center_id
+
+    # Build base query - get all requests for members in this center
+    query = (
+        select(TimeSlotChangeRequest)
+        .join(Member, TimeSlotChangeRequest.member_id == Member.id)
+        .where(Member.home_center_id == center_id)
+        .order_by(TimeSlotChangeRequest.created_at.desc())
+    )
+
+    # Apply filters
+    filters = []
+    if status:
+        try:
+            status_enum = TimeSlotChangeStatus(status)
+            filters.append(TimeSlotChangeRequest.status == status_enum)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid status value")
+    
+    if change_type:
+        try:
+            change_type_enum = TimeSlotChangeType(change_type)
+            filters.append(TimeSlotChangeRequest.change_type == change_type_enum)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid change_type value")
+    
+    if filters:
+        query = query.where(and_(*filters))
+
+    # Get total count
+    count_query = (
+        select(func.count())
+        .select_from(TimeSlotChangeRequest)
+        .join(Member, TimeSlotChangeRequest.member_id == Member.id)
+        .where(Member.home_center_id == center_id)
+    )
+    if filters:
+        count_query = count_query.where(and_(*filters))
+    
+    total_result = await session.execute(count_query)
+    total = total_result.scalar()
+
+    # Apply pagination
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await session.execute(query)
+    requests = result.scalars().all()
+
+    # Collect slot IDs and member IDs for bulk fetching
+    slot_ids = set()
+    member_ids = set()
+    for req in requests:
+        member_ids.add(req.member_id)
+        if req.old_time_slot_id:
+            slot_ids.add(req.old_time_slot_id)
+        if req.new_time_slot_id:
+            slot_ids.add(req.new_time_slot_id)
+
+    # Fetch all time slots
+    slot_details = {}
+    if slot_ids:
+        slots_result = await session.execute(
+            select(CenterTimeSlot).where(CenterTimeSlot.id.in_(slot_ids))
+        )
+        for slot in slots_result.scalars().all():
+            slot_details[slot.id] = {
+                "id": str(slot.id),
+                "start_time": slot.start_time,
+                "end_time": slot.end_time,
+                "slot_capacity": slot.slot_capacity
+            }
+
+    # Fetch all members
+    member_details = {}
+    if member_ids:
+        members_result = await session.execute(
+            select(Member).where(Member.id.in_(member_ids))
+        )
+        for member in members_result.scalars().all():
+            member_details[member.id] = {
+                "id": str(member.id),
+                "full_name": member.full_name,
+                "email": member.email,
+                "mobile": member.mobile
+            }
+
+    # Build response
+    requests_list = [
+        {
+            "id": str(req.id),
+            "member": member_details.get(req.member_id),
+            "old_time_slot": slot_details.get(req.old_time_slot_id),
+            "new_time_slot": slot_details.get(req.new_time_slot_id),
+            "change_type": req.change_type.value,
+            "start_date": str(req.start_date),
+            "end_date": str(req.end_date) if req.end_date else None,
+            "reason": req.reason,
+            "status": req.status.value,
+            "approved_by": str(req.approved_by) if req.approved_by else None,
+            "created_at": str(req.created_at),
+            "updated_at": str(req.updated_at)
+        }
+        for req in requests
+    ]
+
+    return {
+        "requests": requests_list,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": (total + page_size - 1) // page_size if total > 0 else 0
+    }
 
 
 @router.get("/member/time-slot-change-requests")
