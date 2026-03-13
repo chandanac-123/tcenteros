@@ -14,18 +14,18 @@ const transactionTypes = [
 const paymentTypes = [
   { value: 'cash', label: 'Cash' },
   { value: 'upi', label: 'UPI' },
-  { value: 'other', label: 'Others' },
+  { value: 'other', label: 'Others' }
 ]
 const Sales = () => {
   const [open, setOpen] = useState(false)
   const [viewId, setViewId] = useState(null)
-  const [tableParam, setTableParams] = useState({
+  const [tableParams, setTableParams] = useState({
     page: 1,
+    search: '',
     payment_method: '',
-    status: '',
     transaction_type: ''
   })
-  const { data, isFetching } = useGetAllSalesQuery(tableParam)
+  const { data, isFetching } = useGetAllSalesQuery(tableParams)
 
   const columns = [
     { accessorKey: 'customer_name', header: 'Customer Name' },
@@ -53,16 +53,41 @@ const Sales = () => {
     }
   ]
 
+  const updateFilter = (key, value) => {
+    setTableParams(prev => ({
+      ...prev,
+      page: 1,
+      [key]: value
+    }))
+  }
   return (
     <div>
       <div className='w-full flex justify-between mb-4'>
         <span className='font-semibold text-lg'>Sale Listing</span>
         <div className='flex gap-1'>
-          <CustomFilter filterName='Type' options={transactionTypes}/>
-          <CustomFilter filterName='Payment Mode' options={paymentTypes}/>
+          <CustomFilter
+            filterName='Type'
+            options={transactionTypes}
+            value={tableParams.transaction_type}
+            onApply={value => updateFilter('transaction_type', value)}
+          />
+
+          <CustomFilter
+            filterName='Payment Mode'
+            options={paymentTypes}
+            value={tableParams.payment_method}
+            onApply={value => updateFilter('payment_method', value)}
+          />
         </div>
       </div>
-      <DataTable columns={columns} data={data?.transactions || []} />
+      <DataTable
+        columns={columns}
+        data={data?.transactions || []}
+        tableParams={tableParams}
+        setTableParams={setTableParams}
+        pagination={data?.total}
+        paginationVisibile={true}
+      />
       <SaleViewPage open={open} setOpen={setOpen} id={viewId} />
     </div>
   )

@@ -10,13 +10,16 @@ const IncomingNetwork = () => {
   })
   const { data, isFetching } = useIncomingNetworkQuery(tableParams)
   const columns = [
-    { accessorKey: 'full_name', header: 'Member Name' },
-    { accessorKey: 'designation_name', header: 'Home Center' },
-    { accessorKey: 'email', header: 'Visit Date' },
-    { accessorKey: 'mobile', header: 'Charge' },
-    { accessorKey: 'center_name', header: 'Fee(15%)' },
-    { accessorKey: 'center_name', header: 'Earn' },
-    { accessorKey: 'center_name', header: 'Status' },
+    { accessorKey: 'member_name', header: 'Member Name' },
+    { accessorKey: 'home_center_name', header: 'Home Center' },
+    { accessorKey: 'visit_date', header: 'Visit Date' },
+    { accessorKey: 'start_date', header: 'Start Date' },
+    { accessorKey: 'end_date', header: 'End Date' },
+    { accessorKey: 'total_charge', header: 'Charge' },
+    { accessorKey: 'platform_fee_percentage', header: 'Fee(15%)' },
+    { accessorKey: 'platform_fee', header: 'Platform fee' },
+    { accessorKey: 'earn', header: 'Earn' },
+    { accessorKey: 'status', header: 'Status' },
     {
       header: 'Actions',
       accessorKey: 'status',
@@ -34,7 +37,16 @@ const IncomingNetwork = () => {
   ]
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.visits || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isFetching}
+        pagination={data?.total_records}
+        paginationVisibile={true}
+        search={false}
+      />
     </>
   )
 }

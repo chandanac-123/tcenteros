@@ -18,12 +18,22 @@ export const getSaleByIdApiCall = id =>
   axiosInstance.get(`/inventory/pos/sales/${id}`)
 
 export const getAllSaleApiCall = data =>
-  axiosInstance.get(`/billing/billing/sales?page=${data?.page || 1}`)
+  axiosInstance.get(
+    `/billing/billing/sales?page=${data?.page || 1}&customer_search=${
+      data?.search || ''
+    }&payment_method_filter=${data?.payment_method || ''}&order_type=${
+      data?.transaction_type || ''
+    }`
+  )
 export const getAllSaleByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/sales/${id}`)
 
 export const getAllMembershipApiCall = data =>
-  axiosInstance.get(`/billing/billing/memberships?page=${data?.page || 1}`)
+  axiosInstance.get(
+    `/billing/billing/memberships?page=${data?.page || 1}&search=${
+      data?.search || ''
+    }`
+  )
 export const getMembershipByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/memberships/${id}`)
 export const renewMembershipApiCall = (details, id) =>
@@ -31,10 +41,31 @@ export const renewMembershipApiCall = (details, id) =>
 export const getRenewMembershipByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/memberships/${id}/renewal-details`)
 
-
 export const getIncomingNetworkApiCall = data =>
-  axiosInstance.get(`/billing/billing/network-visits/incoming?page=${data?.page || 1}`)
+  axiosInstance.get(
+    `/billing/billing/network-visits/incoming?page=${data?.page || 1}`
+  )
 export const getOutgoingNetworkApiCall = data =>
-  axiosInstance.get(`/billing/billing/network-visits/outgoing?page=${data?.page || 1}`)
+  axiosInstance.get(
+    `/billing/billing/network-visits/outgoing?page=${data?.page || 1}`
+  )
 export const getNetworkByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/network-visits/${id}`)
+
+export const getSettlementApiCall = data =>
+  axiosInstance.get(`/billing/billing/settlements?page=${data?.page || 1}`)
+export const getSettlementByIdApiCall = id =>
+  axiosInstance.get(`/billing/billing/settlements/${id}`)
+export const completeSettlementApiCall = (id, data) =>
+  axiosInstance.post(`/billing/billing/settlements/${id}/mark-completed`, data)
+
+export const getSaleReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+export const getMembershipRevenueReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+export const getInventorySaleReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+export const getNetworkEarningReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+export const getTaxSummaryReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/daily-sales`)

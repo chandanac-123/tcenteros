@@ -18,6 +18,8 @@ const CenterNotifications = () => {
   const [isTimeslotModalOpen, setIsTimeslotModalOpen] = useState(false)
   const { data: timeSlotData, isLoading: isTimeSlotLoading } =
     useTimeSlotQuery()
+  console.log('timeSlotData: ', timeSlotData);
+
   const { mutate: approveTimeSlot } = useApproveTimeSlotMutation()
   const status = 'approved' // this will come from API
 

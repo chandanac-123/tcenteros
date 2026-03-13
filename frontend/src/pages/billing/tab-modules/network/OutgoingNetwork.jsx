@@ -5,19 +5,21 @@ import { useOutgoingNetworkQuery } from '@api-queries/billing/Query'
 import { useState } from 'react'
 
 const OutgoingNetwork = () => {
-    const [tableParams ,setTableParams]=useState({
-      page:1
-    })
+  const [tableParams, setTableParams] = useState({
+    page: 1
+  })
   const { data, isFetching } = useOutgoingNetworkQuery(tableParams)
+
   const columns = [
-    { accessorKey: 'full_name',   header: 'Member Name' },
-    {     accessorKey: 'designation_name',    header: 'Visited Center'   },
-    {    accessorKey: 'email',    header: 'Visit Date'  },
-    {   accessorKey: 'mobile',   header: 'Charge' },
-    {  accessorKey: 'center_name',   header: 'Fee' },
-    {  accessorKey: 'center_name',   header: 'Paid' },
-    {   accessorKey: 'center_name',   header: 'Status' },
-    {   header: 'Actions',
+    { accessorKey: 'member_name', header: 'Member Name' },
+    { accessorKey: 'designation_name', header: 'Visited Center' },
+    { accessorKey: 'visit_date', header: 'Visit Date' },
+    { accessorKey: 'total_charge', header: 'Charge' },
+    { accessorKey: 'platform_fee', header: 'Fee' },
+    { accessorKey: 'paid', header: 'Paid' },
+    { accessorKey: 'status', header: 'Status' },
+    {
+      header: 'Actions',
       accessorKey: 'status',
       cell: ({ row }) => (
         <div className='flex gap-3'>
@@ -33,7 +35,16 @@ const OutgoingNetwork = () => {
   ]
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.visits || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isFetching}
+        pagination={data?.total_records}
+        paginationVisibile={true}
+        search={false}
+      />
     </>
   )
 }

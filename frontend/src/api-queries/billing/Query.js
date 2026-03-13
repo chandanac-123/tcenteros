@@ -16,7 +16,15 @@ import {
   getOutgoingNetwork,
   getIncomingNetwork,
   getRenewMembershipById,
-  renewMembership
+  renewMembership,
+  getSaleReport,
+  getMembershipRevenueReport,
+  getInventorySaleReport,
+  getNetworkEarningReport,
+  getTaxSummaryReport,
+  getSettlementById,
+  completeSettlement,
+  getSettlements
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -208,5 +216,84 @@ export const useGetNetworkByIdQuery = id => {
     queryKey: ['network', id],
     queryFn: () => getNetworkById(id),
     enabled: Boolean(id)
+  })
+}
+
+export const useSettlementsQuery = data => {
+  return useQuery({
+    queryKey: ['settlements', data],
+    queryFn: () => getSettlements(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useSettlementByIdQuery = id => {
+  return useQuery({
+    queryKey: ['settlement', id],
+    queryFn: () => getSettlementById(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    enabled: id ? true : false
+  })
+}
+
+export const useCompleteSettlementMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => completeSettlement(id, data),
+    onSuccess: () => {
+      query.invalidateQueries(['settlements'])
+      showSuccess('Settlement completed successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to complete settlement')
+      return err
+    }
+  })
+}
+
+export const useSaleReportQuery = data => {
+  return useQuery({
+    queryKey: ['saleReport', data],
+    queryFn: () => getSaleReport(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useMembershipRevenueReportQuery = data => {
+  return useQuery({
+    queryKey: ['membershipRevenueReport', data],
+    queryFn: () => getMembershipRevenueReport(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useInventorySaleReportQuery = data => {
+  return useQuery({
+    queryKey: ['inventorySaleReport', data],
+    queryFn: () => getInventorySaleReport(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useNetworkEarningReportQuery = data => {
+  return useQuery({
+    queryKey: ['networkEarningReport', data],
+    queryFn: () => getNetworkEarningReport(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useTaxSummaryReportQuery = data => {
+  return useQuery({
+    queryKey: ['taxSummaryReport', data],
+    queryFn: () => getTaxSummaryReport(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }
