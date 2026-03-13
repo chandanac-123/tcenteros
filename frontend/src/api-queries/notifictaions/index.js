@@ -3,7 +3,11 @@ import axiosInstance from '@api/axiosInstance'
 export const getAllTicketsApiCall = () => axiosInstance.get('/support/tickets')
 export const getTicketByIdApiCall = id => axiosInstance.get(`/support/ticket/${id}`)
 export const sendMessageApiCall = (data, id) =>
-  axiosInstance.post(`/support/ticket/${id}/message`, data)
+  axiosInstance.post(`/support/ticket/${id}/message`, data,{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
 export const closeMessageApiCall = (data, id) =>
   axiosInstance.post(`/support/ticket/${id}/close`, data)
 
