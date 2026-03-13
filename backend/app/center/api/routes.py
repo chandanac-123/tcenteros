@@ -255,7 +255,13 @@ async def finalize_onboarding(
         db.add(center)
         await db.flush()
 
-        # 5. Create CenterAdmin (this will also create the User row)
+        # 5. Initialize Accounts for the new center
+        from app.accounts.init_accounts import initialize_center_accounts
+        await initialize_center_accounts(db, center.id)
+        print(f"✅ Initialized 28 standard accounts for center: {center.center_name}")
+
+
+        # 6. Create CenterAdmin (this will also create the User row)
         center_admin = CenterAdmin(
             id=uuid4(),
             email=onboarding_temp.center_email,
@@ -282,7 +288,7 @@ async def finalize_onboarding(
         center_admin.updated_by = center_admin.id
         await db.flush()
 
-        # 6. Create PaymentOrder
+        # 7. Create PaymentOrder
         payment_order = PaymentOrder(
             payment_order_id=uuid4(),
             center_id=center.id,
@@ -305,7 +311,7 @@ async def finalize_onboarding(
         db.add(payment_order)
         await db.flush()
 
-        # 7. Now create CenterFeatureSubscriptions with payment_order_id
+        # 8. Now create CenterFeatureSubscriptions with payment_order_id
         feature_subscriptions = []
         from collections import OrderedDict
         feature_ids = list(OrderedDict.fromkeys(onboarding_temp.platform_feature_ids))
@@ -334,17 +340,19 @@ async def finalize_onboarding(
             feature_subscriptions.append(subscription)
         await db.flush()
 
-        # 8. Commit transaction
+        # 9. Commit transaction
         await db.commit()
 
-        # 9. Prepare response
+        # 10. Prepare response
         response = OnboardingFinalizeResponse(
+            message="Center onboarding completed successfully",  # ADD THIS LINE
             center=CenterInfo.from_orm(center),
             center_admin=CenterAdminInfo.from_orm(center_admin),
             payment=PaymentOrderInfo.from_orm(payment_order),
             feature_subscriptions=[
                 FeatureSubscriptionInfo.from_orm(fs) for fs in feature_subscriptions
             ],
+            accounts_initialized=True  # ADD THIS LINE
         )
         return response
 

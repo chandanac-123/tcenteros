@@ -135,10 +135,12 @@ class FeatureSubscriptionInfo(BaseModel):
         from_attributes = True
 
 class OnboardingFinalizeResponse(BaseModel):
+    message: str
     center: CenterInfo
     center_admin: CenterAdminInfo
     payment: PaymentOrderInfo
     feature_subscriptions: List[FeatureSubscriptionInfo]
+    accounts_initialized: bool = True
 
     class Config:
         from_attributes = True
