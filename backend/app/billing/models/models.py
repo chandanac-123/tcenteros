@@ -1,6 +1,7 @@
 from sqlalchemy import (
-    Column, Enum, Numeric, ForeignKey, String
+    Column, Enum, Numeric, ForeignKey, String, ARRAY, Text, Date
 )
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.models.base import AuditMixin, Base
@@ -161,3 +162,96 @@ class PaymentOrder(Base, AuditMixin):
     feature_subscriptions = relationship("CenterFeatureSubscription", back_populates="payment_order")
 
 
+
+
+
+
+class MiscellaneousTransaction(Base, AuditMixin):
+    """
+    Track miscellaneous income/expenses like rent, electricity, maintenance, etc.
+    Each transaction is linked to a PaymentOrder for unified tracking.
+    """
+    __tablename__ = "miscellaneous_transactions"
+    __table_args__ = {"schema": "billing"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    center_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("center.centers.id"),
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction classification - now as String instead of Enum
+    transaction_type = Column(
+        String(50),
+        nullable=False,
+        index=True
+    )
+    
+    # Category as string for flexibility
+    category = Column(
+        String(100),
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction details
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Amount details
+    amount = Column(Numeric(10, 2), nullable=False)
+    tax_amount = Column(Numeric(10, 2), default=0.00)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+
+    tax_category_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("settings.tax_categories.id"),
+        nullable=True,
+        index=True
+    )
+    
+    # Payment info
+    payment_order_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("billing.payment_orders.payment_order_id"),
+        nullable=True,
+        unique=True,
+        index=True
+    )
+    
+    payment_method = Column(
+        postgresql.ENUM('cash', 'bank_transfer', 'upi', 'card', 'other', name='payroll_payment_method', schema='public', create_type=False),
+        nullable=True
+    )
+    
+    payment_status = Column(
+        Enum(PaymentOrderStatus),
+        default=PaymentOrderStatus.pending,
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction date
+    transaction_date = Column(Date, nullable=False, index=True)
+    
+    # Vendor/Party details
+    party_name = Column(String(255), nullable=True)
+    party_contact = Column(String(50), nullable=True)
+    
+    # Document tracking
+    invoice_number = Column(String(100), nullable=True)
+    receipt_number = Column(String(100), nullable=True)
+    
+    # Attachments (URLs to S3 or file storage)
+    attachment_urls = Column(ARRAY(String), nullable=True)
+    
+    # Notes
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    center = relationship("Center", foreign_keys=[center_id], backref="miscellaneous_transactions")
+    payment_order = relationship("PaymentOrder", foreign_keys=[payment_order_id], backref="miscellaneous_transaction")
+    tax_category = relationship("TaxCategory", foreign_keys=[tax_category_id], backref="miscellaneous_transactions")

@@ -1,8 +1,11 @@
-from pydantic import BaseModel, Field
+from uuid import UUID
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
+
+from app.billing.models.models import PaymentOrderStatus
 
 
 # Define Pydantic-compatible enums (DO NOT import from models)
@@ -194,3 +197,17 @@ class MembershipBillingResponse(BaseModel):
     renewal_status: str  # active, due, expired
     total_amount: str
     membership_status: str
+
+
+
+#------------Add Charge Schema----------------    
+
+class MiscellaneousTransactionCreate(BaseModel):
+    # Required fields
+    transaction_type: str  # "income" or "expense"
+    category: str
+    title: str
+    amount: float
+    payment_method: str  # cash, bank_transfer, upi, card, other
+
+    
