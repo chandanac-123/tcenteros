@@ -1,5 +1,3 @@
-# /home/chayaza/Desktop/Tcenteros_Project/tcenteros/backend/app/report/api/routes.py
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
@@ -16,6 +14,16 @@ from app.inventory.models.models import Sale
 from app.membership.models.models import MemberMembership
 
 router = APIRouter()
+
+
+def parse_date_param(date_str: Optional[str]) -> Optional[date]:
+    """Convert string date or 'null' to date object or None"""
+    if date_str is None or date_str.lower() == 'null':
+        return None
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {date_str}. Use YYYY-MM-DD or null")
 
 
 async def get_center_ids_for_admin(
@@ -72,8 +80,8 @@ async def get_center_details_map(center_ids: List[str], db: AsyncSession) -> dic
 
 @router.get("/consolidated-income")
 async def get_consolidated_income_report(
-    start_date: date = Query(..., description="Start date for report (YYYY-MM-DD)"),
-    end_date: date = Query(..., description="End date for report (YYYY-MM-DD)"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD) or null for all time"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD) or null for all time"),
     include_sub_branches: bool = Query(True, description="Include sub-branches in report"),
     group_by: Optional[str] = Query("category", description="Group by: category, center, payment_method"),
     db: AsyncSession = Depends(get_async_session),
@@ -91,6 +99,10 @@ async def get_consolidated_income_report(
     - Other revenue
     """
     
+    # Parse date parameters
+    start_date_parsed = parse_date_param(start_date)
+    end_date_parsed = parse_date_param(end_date)
+    
     # Get admin's center
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
@@ -102,62 +114,80 @@ async def get_consolidated_income_report(
     center_ids = await get_center_ids_for_admin(admin_center_id, include_sub_branches, db)
     center_details = await get_center_details_map(center_ids, db)
     
+    # Build date filter conditions
+    date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at) >= start_date_parsed)
+    elif end_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at) <= end_date_parsed)
+    
     # ===== 1. MEMBERSHIP INCOME (from PaymentOrder) =====
-    membership_income_query = await db.execute(
-        select(
-            PaymentOrder.center_id,
-            PaymentOrder.order_type,
-            PaymentOrder.payment_method,
-            func.sum(PaymentOrder.subtotal_amount).label("subtotal"),
-            func.sum(PaymentOrder.tax_amount).label("tax"),
-            func.sum(PaymentOrder.total_amount).label("total"),
-            func.count(PaymentOrder.payment_order_id).label("transaction_count")
-        )
-        .where(
-            PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.order_type.in_(['membership', 'renewal', 'upgrade']),
-            PaymentOrder.status == PaymentOrderStatus.paid,
-            func.date(PaymentOrder.created_at).between(start_date, end_date)
-        )
-        .group_by(PaymentOrder.center_id, PaymentOrder.order_type, PaymentOrder.payment_method)
+    membership_query = select(
+        PaymentOrder.center_id,
+        PaymentOrder.order_type,
+        PaymentOrder.payment_method,
+        func.sum(PaymentOrder.subtotal_amount).label("subtotal"),
+        func.sum(PaymentOrder.tax_amount).label("tax"),
+        func.sum(PaymentOrder.total_amount).label("total"),
+        func.count(PaymentOrder.payment_order_id).label("transaction_count")
+    ).where(
+        PaymentOrder.center_id.in_(center_ids),
+        PaymentOrder.order_type.in_(['membership', 'renewal', 'upgrade']),
+        PaymentOrder.status == PaymentOrderStatus.paid
     )
-    membership_income = membership_income_query.all()
+    
+    if date_conditions:
+        membership_query = membership_query.where(and_(*date_conditions))
+    
+    membership_query = membership_query.group_by(PaymentOrder.center_id, PaymentOrder.order_type, PaymentOrder.payment_method)
+    membership_income_result = await db.execute(membership_query)
+    membership_income = membership_income_result.all()
     
     # ===== 2. INVENTORY SALES INCOME =====
-    sales_income_query = await db.execute(
-        select(
-            Sale.center_id,
-            func.sum(Sale.total_amount).label("revenue"),
-            func.count(Sale.id).label("transaction_count")
-        )
-        .where(
-            Sale.center_id.in_(center_ids),
-            func.date(Sale.created_at).between(start_date, end_date)
-        )
-        .group_by(Sale.center_id)
-    )
-    sales_income = sales_income_query.all()
+    sales_date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        sales_date_conditions.append(func.date(Sale.created_at).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        sales_date_conditions.append(func.date(Sale.created_at) >= start_date_parsed)
+    elif end_date_parsed:
+        sales_date_conditions.append(func.date(Sale.created_at) <= end_date_parsed)
+    
+    sales_query = select(
+        Sale.center_id,
+        func.sum(Sale.total_amount).label("revenue"),
+        func.count(Sale.id).label("transaction_count")
+    ).where(Sale.center_id.in_(center_ids))
+    
+    if sales_date_conditions:
+        sales_query = sales_query.where(and_(*sales_date_conditions))
+    
+    sales_query = sales_query.group_by(Sale.center_id)
+    sales_income_result = await db.execute(sales_query)
+    sales_income = sales_income_result.all()
     
     # ===== 3. OTHER INCOME (networking, add-ons, features) =====
-    other_income_query = await db.execute(
-        select(
-            PaymentOrder.center_id,
-            PaymentOrder.order_type,
-            PaymentOrder.payment_method,
-            func.sum(PaymentOrder.subtotal_amount).label("subtotal"),
-            func.sum(PaymentOrder.tax_amount).label("tax"),
-            func.sum(PaymentOrder.total_amount).label("total"),
-            func.count(PaymentOrder.payment_order_id).label("transaction_count")
-        )
-        .where(
-            PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.order_type.in_(['networking_access', 'add_on', 'feature_purchase', 'center_subscription']),
-            PaymentOrder.status == PaymentOrderStatus.paid,
-            func.date(PaymentOrder.created_at).between(start_date, end_date)
-        )
-        .group_by(PaymentOrder.center_id, PaymentOrder.order_type, PaymentOrder.payment_method)
+    other_query = select(
+        PaymentOrder.center_id,
+        PaymentOrder.order_type,
+        PaymentOrder.payment_method,
+        func.sum(PaymentOrder.subtotal_amount).label("subtotal"),
+        func.sum(PaymentOrder.tax_amount).label("tax"),
+        func.sum(PaymentOrder.total_amount).label("total"),
+        func.count(PaymentOrder.payment_order_id).label("transaction_count")
+    ).where(
+        PaymentOrder.center_id.in_(center_ids),
+        PaymentOrder.order_type.in_(['networking_access', 'add_on', 'feature_purchase', 'center_subscription']),
+        PaymentOrder.status == PaymentOrderStatus.paid
     )
-    other_income = other_income_query.all()
+    
+    if date_conditions:
+        other_query = other_query.where(and_(*date_conditions))
+    
+    other_query = other_query.group_by(PaymentOrder.center_id, PaymentOrder.order_type, PaymentOrder.payment_method)
+    other_income_result = await db.execute(other_query)
+    other_income = other_income_result.all()
     
     # ===== BUILD RESPONSE STRUCTURE =====
     
@@ -236,8 +266,8 @@ async def get_consolidated_income_report(
     return {
         "report_type": "consolidated_income",
         "report_period": {
-            "start_date": str(start_date),
-            "end_date": str(end_date)
+            "start_date": str(start_date_parsed) if start_date_parsed else "all_time",
+            "end_date": str(end_date_parsed) if end_date_parsed else "all_time"
         },
         "parent_center_id": admin_center_id,
         "includes_sub_branches": include_sub_branches,
@@ -259,8 +289,8 @@ async def get_consolidated_income_report(
 
 @router.get("/consolidated-expenses")
 async def get_consolidated_expense_report(
-    start_date: date = Query(..., description="Start date for report (YYYY-MM-DD)"),
-    end_date: date = Query(..., description="End date for report (YYYY-MM-DD)"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD) or null for all time"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD) or null for all time"),
     include_sub_branches: bool = Query(True, description="Include sub-branches in report"),
     db: AsyncSession = Depends(get_async_session),
     current_user = Depends(centeradmin_required)
@@ -277,6 +307,10 @@ async def get_consolidated_expense_report(
     from app.payrole.models.models import PayrollRecord
     from app.inventory.models.models import StockTransaction
     
+    # Parse date parameters
+    start_date_parsed = parse_date_param(start_date)
+    end_date_parsed = parse_date_param(end_date)
+    
     # Get admin's center
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
@@ -289,39 +323,55 @@ async def get_consolidated_expense_report(
     center_details = await get_center_details_map(center_ids, db)
     
     # ===== 1. PAYROLL EXPENSES =====
-    payroll_expenses_query = await db.execute(
-        select(
-            PayrollRecord.center_id,
-            PayrollRecord.payment_method,
-            func.sum(PayrollRecord.gross_salary).label("gross_salary"),
-            func.sum(PayrollRecord.total_deductions).label("deductions"),
-            func.sum(PayrollRecord.net_salary).label("net_salary"),
-            func.count(PayrollRecord.id).label("employee_count")
-        )
-        .where(
-            PayrollRecord.center_id.in_(center_ids),
-            func.date(PayrollRecord.paid_date).between(start_date, end_date),
-            PayrollRecord.status == 'paid'
-        )
-        .group_by(PayrollRecord.center_id, PayrollRecord.payment_method)
+    payroll_date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        payroll_date_conditions.append(func.date(PayrollRecord.paid_date).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        payroll_date_conditions.append(func.date(PayrollRecord.paid_date) >= start_date_parsed)
+    elif end_date_parsed:
+        payroll_date_conditions.append(func.date(PayrollRecord.paid_date) <= end_date_parsed)
+    
+    payroll_query = select(
+        PayrollRecord.center_id,
+        PayrollRecord.payment_method,
+        func.sum(PayrollRecord.gross_salary).label("gross_salary"),
+        func.sum(PayrollRecord.total_deductions).label("deductions"),
+        func.sum(PayrollRecord.net_salary).label("net_salary"),
+        func.count(PayrollRecord.id).label("employee_count")
+    ).where(
+        PayrollRecord.center_id.in_(center_ids),
+        PayrollRecord.status == 'paid'
     )
-    payroll_expenses = payroll_expenses_query.all()
+    
+    if payroll_date_conditions:
+        payroll_query = payroll_query.where(and_(*payroll_date_conditions))
+    
+    payroll_query = payroll_query.group_by(PayrollRecord.center_id, PayrollRecord.payment_method)
+    payroll_expenses_result = await db.execute(payroll_query)
+    payroll_expenses = payroll_expenses_result.all()
     
     # ===== 2. STOCK PURCHASE EXPENSES =====
-    stock_expenses_query = await db.execute(
-        select(
-            StockTransaction.product_id,
-            func.sum(StockTransaction.subtotal).label("total_cost"),
-            func.sum(StockTransaction.quantity).label("total_quantity"),
-            func.count(StockTransaction.id).label("transaction_count")
-        )
-        .where(
-            StockTransaction.transaction_type == 'purchase',
-            func.date(StockTransaction.created_at).between(start_date, end_date)
-        )
-        .group_by(StockTransaction.product_id)
-    )
-    stock_expenses_raw = stock_expenses_query.all()
+    stock_date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        stock_date_conditions.append(func.date(StockTransaction.created_at).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        stock_date_conditions.append(func.date(StockTransaction.created_at) >= start_date_parsed)
+    elif end_date_parsed:
+        stock_date_conditions.append(func.date(StockTransaction.created_at) <= end_date_parsed)
+    
+    stock_query = select(
+        StockTransaction.product_id,
+        func.sum(StockTransaction.subtotal).label("total_cost"),
+        func.sum(StockTransaction.quantity).label("total_quantity"),
+        func.count(StockTransaction.id).label("transaction_count")
+    ).where(StockTransaction.transaction_type == 'purchase')
+    
+    if stock_date_conditions:
+        stock_query = stock_query.where(and_(*stock_date_conditions))
+    
+    stock_query = stock_query.group_by(StockTransaction.product_id)
+    stock_expenses_result = await db.execute(stock_query)
+    stock_expenses_raw = stock_expenses_result.all()
     
     # Map stock expenses to centers through products
     from app.inventory.models.models import Product
@@ -345,41 +395,59 @@ async def get_consolidated_expense_report(
                 stock_expenses_by_center[center_id].append(row)
     
     # ===== 3. REFUNDS (as expense) =====
-    refund_expenses_query = await db.execute(
-        select(
-            PaymentOrder.center_id,
-            PaymentOrder.payment_method,
-            func.sum(PaymentOrder.total_amount).label("total"),
-            func.count(PaymentOrder.payment_order_id).label("refund_count")
-        )
-        .where(
-            PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.order_type == 'refund',
-            func.date(PaymentOrder.created_at).between(start_date, end_date)
-        )
-        .group_by(PaymentOrder.center_id, PaymentOrder.payment_method)
+    refund_date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        refund_date_conditions.append(func.date(PaymentOrder.created_at).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        refund_date_conditions.append(func.date(PaymentOrder.created_at) >= start_date_parsed)
+    elif end_date_parsed:
+        refund_date_conditions.append(func.date(PaymentOrder.created_at) <= end_date_parsed)
+    
+    refund_query = select(
+        PaymentOrder.center_id,
+        PaymentOrder.payment_method,
+        func.sum(PaymentOrder.total_amount).label("total"),
+        func.count(PaymentOrder.payment_order_id).label("refund_count")
+    ).where(
+        PaymentOrder.center_id.in_(center_ids),
+        PaymentOrder.order_type == 'refund'
     )
-    refund_expenses = refund_expenses_query.all()
+    
+    if refund_date_conditions:
+        refund_query = refund_query.where(and_(*refund_date_conditions))
+    
+    refund_query = refund_query.group_by(PaymentOrder.center_id, PaymentOrder.payment_method)
+    refund_expenses_result = await db.execute(refund_query)
+    refund_expenses = refund_expenses_result.all()
     
     # ===== 4. OPERATING EXPENSES (from MiscellaneousTransaction) =====
     from app.billing.models.models import MiscellaneousTransaction
     
-    operating_expenses_query = await db.execute(
-        select(
-            MiscellaneousTransaction.center_id,
-            MiscellaneousTransaction.category,
-            func.sum(MiscellaneousTransaction.total_amount).label("total"),
-            func.count(MiscellaneousTransaction.id).label("transaction_count")
-        )
-        .where(
-            MiscellaneousTransaction.center_id.in_(center_ids),
-            MiscellaneousTransaction.transaction_type == 'expense',
-            func.date(MiscellaneousTransaction.transaction_date).between(start_date, end_date),
-            MiscellaneousTransaction.payment_status == PaymentOrderStatus.paid
-        )
-        .group_by(MiscellaneousTransaction.center_id, MiscellaneousTransaction.category)
+    operating_date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        operating_date_conditions.append(func.date(MiscellaneousTransaction.transaction_date).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        operating_date_conditions.append(func.date(MiscellaneousTransaction.transaction_date) >= start_date_parsed)
+    elif end_date_parsed:
+        operating_date_conditions.append(func.date(MiscellaneousTransaction.transaction_date) <= end_date_parsed)
+    
+    operating_query = select(
+        MiscellaneousTransaction.center_id,
+        MiscellaneousTransaction.category,
+        func.sum(MiscellaneousTransaction.total_amount).label("total"),
+        func.count(MiscellaneousTransaction.id).label("transaction_count")
+    ).where(
+        MiscellaneousTransaction.center_id.in_(center_ids),
+        MiscellaneousTransaction.transaction_type == 'expense',
+        MiscellaneousTransaction.payment_status == PaymentOrderStatus.paid
     )
-    operating_expenses = operating_expenses_query.all()
+    
+    if operating_date_conditions:
+        operating_query = operating_query.where(and_(*operating_date_conditions))
+    
+    operating_query = operating_query.group_by(MiscellaneousTransaction.center_id, MiscellaneousTransaction.category)
+    operating_expenses_result = await db.execute(operating_query)
+    operating_expenses = operating_expenses_result.all()
     
     # ===== BUILD RESPONSE STRUCTURE =====
     
@@ -470,8 +538,8 @@ async def get_consolidated_expense_report(
     return {
         "report_type": "consolidated_expenses",
         "report_period": {
-            "start_date": str(start_date),
-            "end_date": str(end_date)
+            "start_date": str(start_date_parsed) if start_date_parsed else "all_time",
+            "end_date": str(end_date_parsed) if end_date_parsed else "all_time"
         },
         "parent_center_id": admin_center_id,
         "includes_sub_branches": include_sub_branches,
@@ -494,8 +562,8 @@ async def get_consolidated_expense_report(
 
 @router.get("/consolidated-settlements")
 async def get_consolidated_settlement_report(
-    start_date: date = Query(..., description="Start date for report (YYYY-MM-DD)"),
-    end_date: date = Query(..., description="End date for report (YYYY-MM-DD)"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD) or null for all time"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD) or null for all time"),
     include_sub_branches: bool = Query(True, description="Include sub-branches in report"),
     settlement_status: Optional[str] = Query(None, description="Filter by: paid, unpaid, pending, all"),
     db: AsyncSession = Depends(get_async_session),
@@ -510,6 +578,10 @@ async def get_consolidated_settlement_report(
     - Pending (processing)
     - By payment method (cash, bank_transfer, upi, card, other)
     """
+    
+    # Parse date parameters
+    start_date_parsed = parse_date_param(start_date)
+    end_date_parsed = parse_date_param(end_date)
     
     # Get admin's center
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
@@ -532,31 +604,41 @@ async def get_consolidated_settlement_report(
     else:
         status_filter = [PaymentOrderStatus.paid, PaymentOrderStatus.unpaid, PaymentOrderStatus.pending]
     
+    # Build date filter conditions
+    date_conditions = []
+    if start_date_parsed and end_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at).between(start_date_parsed, end_date_parsed))
+    elif start_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at) >= start_date_parsed)
+    elif end_date_parsed:
+        date_conditions.append(func.date(PaymentOrder.created_at) <= end_date_parsed)
+    
     # ===== SETTLEMENTS BY STATUS AND PAYMENT METHOD =====
-    settlements_query = await db.execute(
-        select(
-            PaymentOrder.center_id,
-            PaymentOrder.status,
-            PaymentOrder.payment_method,
-            PaymentOrder.order_type,
-            func.sum(PaymentOrder.total_amount).label("total_amount"),
-            func.sum(PaymentOrder.subtotal_amount).label("subtotal_amount"),
-            func.sum(PaymentOrder.tax_amount).label("tax_amount"),
-            func.count(PaymentOrder.payment_order_id).label("transaction_count")
-        )
-        .where(
-            PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.status.in_(status_filter),
-            func.date(PaymentOrder.created_at).between(start_date, end_date)
-        )
-        .group_by(
-            PaymentOrder.center_id,
-            PaymentOrder.status,
-            PaymentOrder.payment_method,
-            PaymentOrder.order_type
-        )
+    settlements_query = select(
+        PaymentOrder.center_id,
+        PaymentOrder.status,
+        PaymentOrder.payment_method,
+        PaymentOrder.order_type,
+        func.sum(PaymentOrder.total_amount).label("total_amount"),
+        func.sum(PaymentOrder.subtotal_amount).label("subtotal_amount"),
+        func.sum(PaymentOrder.tax_amount).label("tax_amount"),
+        func.count(PaymentOrder.payment_order_id).label("transaction_count")
+    ).where(
+        PaymentOrder.center_id.in_(center_ids),
+        PaymentOrder.status.in_(status_filter)
     )
-    settlements = settlements_query.all()
+    
+    if date_conditions:
+        settlements_query = settlements_query.where(and_(*date_conditions))
+    
+    settlements_query = settlements_query.group_by(
+        PaymentOrder.center_id,
+        PaymentOrder.status,
+        PaymentOrder.payment_method,
+        PaymentOrder.order_type
+    )
+    settlements_result = await db.execute(settlements_query)
+    settlements = settlements_result.all()
     
     # ===== BUILD RESPONSE STRUCTURE =====
     
@@ -658,8 +740,8 @@ async def get_consolidated_settlement_report(
     return {
         "report_type": "consolidated_settlements",
         "report_period": {
-            "start_date": str(start_date),
-            "end_date": str(end_date)
+            "start_date": str(start_date_parsed) if start_date_parsed else "all_time",
+            "end_date": str(end_date_parsed) if end_date_parsed else "all_time"
         },
         "parent_center_id": admin_center_id,
         "includes_sub_branches": include_sub_branches,
