@@ -14,6 +14,7 @@ from app.payrole.api.routes import router as payrole_router
 from app.inventory.api.routes import router as inventory_router
 from app.billing.api.routes import router as billing_router
 from app.accounts.api.routes import router as accounts_router
+from app.report.api.routes import router as report_router
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,3 +67,4 @@ app.include_router(payrole_router, prefix="/api/payrole", tags=["Payrole"])
 app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
 app.include_router(billing_router, prefix="/api/billing", tags=["Billing"])
 app.include_router(accounts_router, prefix="/api/accounts", tags=["Accounts"])
+app.include_router(report_router, prefix="/api/reports", tags=["Reports"])
