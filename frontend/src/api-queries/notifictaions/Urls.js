@@ -37,7 +37,7 @@ export const sendMessage = async (data, id) => {
 
 export const closeMessage = async (data, id) => {
   try {
-    const response = await closeMessageApiCall()
+    const response = await closeMessageApiCall(data,id)
     return response.data
   } catch (error) {
     throw error
