@@ -41,7 +41,7 @@ const ExpenseTable = () => {
   ]
   return (
     <div>
-      <DataTable columns={columns} data={[]} paginationVisibile={true} />
+      <DataTable columns={columns} data={[]} paginationVisibile={true} search={false}/>
     </div>
   )
 }

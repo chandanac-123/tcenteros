@@ -90,6 +90,7 @@ const EmployeeAttendance = ({ categoryId, dateRange }) => {
         pagination={employees?.total}
         loading={isEmployeesLoading}
         paginationVisibile={true}
+        search={false}
       />
       <DeleteModal
         open={deleteOpen}

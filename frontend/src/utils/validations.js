@@ -254,3 +254,13 @@ export const purchaseValidationSchema = Yup.object({
     .min(0, 'Cost price cannot be negative')
     .required('Cost price is required')
 })
+
+export const addChargeSchema = Yup.object({
+  transaction_type: Yup.string().required('Transaction type is required'),
+  payment_method: Yup.string().required('Payment method is required'),
+  category: Yup.string().required('Category is required'),
+  amount: Yup.number()
+    .typeError('Amount must be a number')
+    .required('Amount is required'),
+  title: Yup.string().required('Title is required')
+})

@@ -82,6 +82,7 @@ const MemberAttendance = ({ dateRange }) => {
         pagination={members?.total}
         loading={isMembersLoading}
         paginationVisibile={true}
+        search={false}
       />
       <DeleteModal
         open={deleteOpen}
