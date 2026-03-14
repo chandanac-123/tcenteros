@@ -1,10 +1,13 @@
-import { DataTable } from "@common/components/DataTable"
+import { DataTable } from '@common/components/DataTable'
+import { useConsolidatedSettlementsReportQuery } from '@api-queries/report/Query'
 
-const SettlementTable = () => {
+const SettlementTable = ({ tableParams, setTableParams }) => {
+  const { data, isFetching } = useConsolidatedSettlementsReportQuery()
+
   const columns = [
     {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
+      accessorKey: 'center_name',
+      header: 'Center Name'
     },
     {
       accessorKey: 'date',
@@ -12,36 +15,27 @@ const SettlementTable = () => {
     },
     {
       accessorKey: 'check_in_time',
-      header: 'Check In Time',
+      header: 'Check In Time'
     },
     {
       accessorKey: 'check_out_time',
-      header: 'Check Out Time ',
+      header: 'Check Out Time '
     },
-    {
-      accessorKey: 'duration',
-      header: 'Duration'
-    },
-    {
-      header: 'Actions',
-      accessorKey: 'status',
-    //   cell: ({ row }) => (
-    //     <span className='flex gap-3'>
-    //       <button
-    //         onClick={() => {
-    //           setDeleteId(row.original.id)
-    //           setDeleteOpen(true)
-    //         }}
-    //       >
-    //         <img src={deleteicon} alt='delete' />
-    //       </button>
-    //     </span>
-    //   )
+     {
+      accessorKey: 'total_income',
+      header: 'Total Income'
     }
   ]
   return (
     <div>
-      <DataTable columns={columns} data={[]} paginationVisibile={true} search={false} />
+      <DataTable
+        columns={columns}
+        data={data?.by_center || []}
+        paginationVisibile={true}
+        search={false}
+        tableParams={tableParams}
+        setTableParams={setTableParams}
+      />
     </div>
   )
 }
