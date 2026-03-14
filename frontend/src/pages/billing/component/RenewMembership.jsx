@@ -1,58 +1,78 @@
 import CustomeModal from '@common/components/CustomeModal'
-import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import {
   useRenewMembershipMutation,
   useGetRenewMembershipByIdQuery
 } from '@api-queries/billing/Query'
+import { useMembersPlanQuery } from '@api-queries/crm/Query'
+import { useFormik } from 'formik'
+import { Checkbox } from '@pages/components/ui/checkbox'
 
-const RenewMembership = ({
-  open,
-  setOpen,
-  overview,
-  openRenewMember,
-  setOpenRenewMember
-}) => {
-  const { data, isFetching } = useGetRenewMembershipByIdQuery()
+const paymentTypes = [
+  { id: 'cash', label: 'Cash' },
+  { id: 'upi', label: 'UPI' },
+  { id: 'other', label: 'Others' }
+]
+
+const RenewMembership = ({ open, setOpen, membershipId }) => {
+  const { data, isFetching } = useGetRenewMembershipByIdQuery(membershipId)
+  const { data: memberPlan } = useMembersPlanQuery()
   const { mutateAsync: renew_membership, isPending } =
     useRenewMembershipMutation()
+
+  const initialValues = {
+    membership_id: data?.member_membership_id || '',
+    payment_method: '',
+    payment_status: 'paid'
+  }
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      try {
+        await renew_membership({ data: values, id: data?.member_id })
+        setOpen(false)
+        formik.resetForm()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
+
   return (
-    <CustomeModal
-      header='Renew Membership'
-      open={overview ? openRenewMember : open}
-      onOpenChange={overview ? setOpenRenewMember : setOpen}
-    >
-      <form className='flex flex-col gap-2 lg:w-96 w-full'>
-        {overview && (
-          <CustomeSelect
-            label='Select Member'
-            name='center_id'
-            placeholder='Select Plan'
-          />
-        )}
+    <CustomeModal header='Renew Membership' open={open} onOpenChange={setOpen}>
+      <form
+        className='flex flex-col gap-2 lg:w-96 w-full'
+        onSubmit={formik.handleSubmit}
+      >
+        <div className='flex items-center gap-2'>
+          <span className='text-sm font-semibold'>Current Plan : </span>
+          <p className='text-sm font-semibold text-red_text'>
+            {data?.plan_name}
+          </p>
+        </div>
         <CustomeSelect
-          label='Plan'
-          name='center_id'
+          label='Choose your Plan'
+          name='membership_id'
           placeholder='Select Plan'
+          options={memberPlan}
+          value={formik.values.membership_id}
+          onChange={value => formik.setFieldValue('membership_id', value)}
         />
         <CustomeSelect
-          label='Duration'
-          name='center_id'
-          placeholder='Select Duration'
+          label='Payment Type'
+          name='payment_method'
+          placeholder='Select Payment Type'
+          value={formik.values.payment_method}
+          onChange={value => formik.setFieldValue('payment_method', value)}
+          options={paymentTypes}
         />
-        <Input
-          className='w-full'
-          label='Discount'
-          placeholder='Enter  ₹'
-          name='name'
-        />
-        <Input
-          className='w-full'
-          label='Total: ₹____'
-          placeholder='Enter  ₹'
-          name='name'
-        />
+        <div className='flex gap-2 items-center justify-end'>
+          <Checkbox checked={true} />
+          <p>Mark as Paid</p>
+        </div>
         <div className='flex justify-end mt-4 '>
           <Button size='addbutton' variant='default' type='submit'>
             Renew Membership

@@ -37,7 +37,7 @@ export const getAllMembershipApiCall = data =>
 export const getMembershipByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/memberships/${id}`)
 export const renewMembershipApiCall = (details, id) =>
-  axiosInstance.post(`/billing/billing/memberships/${id}/renew`, details)
+  axiosInstance.post(`/membership/center/members/${id}/renew-membership`, details)
 export const getRenewMembershipByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/memberships/${id}/renewal-details`)
 

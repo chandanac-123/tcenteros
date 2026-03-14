@@ -15,7 +15,6 @@ import {
   getGuestById
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
-import { da } from 'date-fns/locale'
 
 export const useMembersQuery = data => {
   return useQuery({

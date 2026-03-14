@@ -49,8 +49,7 @@ export default function CustomeSelect ({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
 
-        <SelectContent>
-          {/* Search */}
+        <SelectContent className='max-h-[180px] overflow-y-auto'>
           {search && (
             <div className='p-2'>
               <input
@@ -64,7 +63,6 @@ export default function CustomeSelect ({
             </div>
           )}
 
-          {/* Options */}
           {filteredOptions.map(item => {
             const label =
               item?.label ||
@@ -76,8 +74,10 @@ export default function CustomeSelect ({
 
             return (
               <SelectItem
-                key={item?.id || item?.membership_id|| item?.product_id}
-                value={String(item?.id || item?.membership_id || item?.product_id)}
+                key={item?.id || item?.membership_id || item?.product_id ||item?.member_membership_id}
+                value={String(
+                  item?.id || item?.membership_id || item?.product_id || item?.member_membership_id
+                )}
               >
                 {label}
               </SelectItem>
@@ -90,3 +90,4 @@ export default function CustomeSelect ({
     </div>
   )
 }
+

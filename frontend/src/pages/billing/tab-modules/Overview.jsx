@@ -5,13 +5,11 @@ import StatusDisplayCard from '../component/StatusDisplayCard'
 import DisplayActionCard from '../component/DisplayActionCard'
 import { useState } from 'react'
 import NewSale from '../component/NewSale'
-import RenewMembership from '../component/RenewMembership'
 import { useCartOpenMutation } from '@api-queries/billing/Query'
 import AddCharge from '../component/AddCharge'
 
 const Overview = () => {
   const [openNewSale, setOpenNewSale] = useState(false)
-  const [openRenewMember, setOpenRenewMember] = useState(false)
   const [openAddCharge, setOpenAddCharge] = useState(false)
   const { mutate: openCart } = useCartOpenMutation()
 
@@ -19,9 +17,6 @@ const Overview = () => {
     if (title === '+ New Sale') {
       openCart()
       setOpenNewSale(true)
-    }
-    if (title === '+ Renew  Membership') {
-      setOpenRenewMember(true)
     }
     if (title === '+ Add Charge') {
       setOpenAddCharge(true)
@@ -78,11 +73,6 @@ const Overview = () => {
        
       </div>
       <NewSale saleOpen={openNewSale} setSaleOpen={setOpenNewSale} />
-      <RenewMembership
-        overview={true}
-        openRenewMember={openRenewMember}
-        setOpenRenewMember={setOpenRenewMember}
-      />
       <AddCharge
         openAddCharge={openAddCharge}
         setOpenAddCharge={setOpenAddCharge}

@@ -11,6 +11,7 @@ const Memberships = () => {
     search: ''
   })
   const [renewOpen, setRenewOpen] = useState(false)
+  const [renewId, setRenewId] = useState(null)
   const { data, isFetching } = useGetAllMembershipsQuery(tableParams)
 
   const columns = [
@@ -29,7 +30,10 @@ const Memberships = () => {
         <div className='flex gap-3'>
           <button
             className='border-2 border-primary rounded-md px-4 py-1 text-primary'
-            onClick={() => setRenewOpen(true)}
+            onClick={() => {
+              setRenewId(row.original.member_membership_id)
+              setRenewOpen(true)
+            }}
           >
             Renew
           </button>
@@ -55,7 +59,7 @@ const Memberships = () => {
         tableParams={tableParams}
         loading={isFetching}
       />
-      <RenewMembership open={renewOpen} setOpen={setRenewOpen} />
+      <RenewMembership open={renewOpen} setOpen={setRenewOpen} membershipId={renewId} />
     </div>
   )
 }
