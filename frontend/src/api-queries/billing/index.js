@@ -66,6 +66,8 @@ export const getSettlementByIdApiCall = id =>
   axiosInstance.get(`/billing/billing/settlements/${id}`)
 export const completeSettlementApiCall = (id, data) =>
   axiosInstance.post(`/billing/billing/settlements/${id}/mark-completed`, data)
+export const addChargeApiCall = (data) =>
+  axiosInstance.post(`/billing/billing/miscellaneous-transactions`, data)
 
 export const getSaleReportApiCall = data =>
   axiosInstance.get(`/billing/billing/reports/daily-sales`)

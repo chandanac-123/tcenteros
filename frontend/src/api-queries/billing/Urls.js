@@ -22,7 +22,8 @@ import {
   getTaxSummaryReportApiCall,
   getSettlementByIdApiCall,
   completeSettlementApiCall,
-  getSettlementApiCall
+  getSettlementApiCall,
+  addChargeApiCall
 } from './index'
 
 export const getSales = async data => {
@@ -242,6 +243,15 @@ export const getNetworkEarningReport = async (data) => {
 export const getTaxSummaryReport = async (data) => {
   try {
     const response = await getTaxSummaryReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const addCharge = async (data) => {
+  try {
+    const response = await addChargeApiCall(data)
     return response.data
   } catch (error) {
     throw error

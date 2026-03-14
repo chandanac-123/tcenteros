@@ -2,24 +2,23 @@ import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
-import { useRenewMembershipMutation } from '@api-queries/billing/Query'
 import { Textarea } from '@pages/components/ui/textarea'
 import { useFormik } from 'formik'
 import { addChargeSchema } from '@utils/validations'
+import { useAddChargeMutation } from '@api-queries/billing/Query'
 
 const paymentTypes = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'upi', label: 'UPI' },
-  { value: 'other', label: 'Others' }
+  { id: 'cash', label: 'Cash' },
+  { id: 'upi', label: 'UPI' },
+  { id: 'other', label: 'Others' }
 ]
 const transactionTypes = [
-  { value: 'income', label: 'Income' },
-  { value: 'expense', label: 'Expense' }
+  { id: 'income', label: 'Income' },
+  { id: 'expense', label: 'Expense' }
 ]
 
 const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
-  const { mutateAsync: renew_membership, isPending } =
-    useRenewMembershipMutation()
+  const { mutateAsync: add_charge, isPending } = useAddChargeMutation()
 
   const initialValues = {
     transaction_type: '',
@@ -35,8 +34,8 @@ const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
     validationSchema: addChargeSchema,
     onSubmit: async values => {
       try {
-        await renew_membership(values)
-        setOpen(false)
+        await add_charge(values)
+        setOpenAddCharge(false)
         formik.resetForm()
       } catch (error) {
         console.error(error)
@@ -59,9 +58,11 @@ const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
           name='transaction_type'
           placeholder='Select Transaction Type'
           value={formik.values.transaction_type}
-           onChange={value => formik.setFieldValue('transaction_type', value)}
+          onChange={value => formik.setFieldValue('transaction_type', value)}
           options={transactionTypes}
-          error={formik.touched.transaction_type && formik.errors.transaction_type}
+          error={
+            formik.touched.transaction_type && formik.errors.transaction_type
+          }
         />
         <Input
           label='Category'

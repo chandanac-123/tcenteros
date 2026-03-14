@@ -34,7 +34,11 @@ const Overview = () => {
         <StatusDisplayCard />
       </div>
 
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+        <div className='flex justify-end'>
+          <DisplayActionCard onActionClick={handleActionClick} />
+        </div>
+
+      <div className=''>
         {/* Left Section */}
         <div className='lg:col-span-2'>
           <Card className='p-4 h-full'>
@@ -71,10 +75,7 @@ const Overview = () => {
           </Card>
         </div>
 
-        {/* Right Section */}
-        <div className='lg:col-span-1'>
-          <DisplayActionCard onActionClick={handleActionClick} />
-        </div>
+       
       </div>
       <NewSale saleOpen={openNewSale} setSaleOpen={setOpenNewSale} />
       <RenewMembership

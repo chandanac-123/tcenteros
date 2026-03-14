@@ -24,7 +24,8 @@ import {
   getTaxSummaryReport,
   getSettlementById,
   completeSettlement,
-  getSettlements
+  getSettlements,
+  addCharge
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -295,5 +296,20 @@ export const useTaxSummaryReportQuery = data => {
     queryFn: () => getTaxSummaryReport(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useAddChargeMutation = (details) => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: (details ) => addCharge(details),
+    onSuccess: async data => {
+      query.invalidateQueries('cart')
+      showSuccess(data?.message || 'Charge added successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to add charge')
+      return err
+    }
   })
 }
