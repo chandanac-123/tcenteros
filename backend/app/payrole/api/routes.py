@@ -8,12 +8,12 @@ from app.core.dependencies import centeradmin_required
 from sqlalchemy import select, or_, and_, func
 from pydantic import UUID4
 from typing import Optional
-# from app.payrole.models.models import PayrollRecord, PayrollStatus, PaymentMethod
-from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency
+from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, Currency, PaymentMethod
 from app.accounts.helpers import auto_record_payroll_payment
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from app.settings.models.models import CenterOperationalSetting
+from app.payrole.models.models import PayrollRecord, PayrollStatus, PayrollPaymentMethod
 from decimal import Decimal
 from uuid import uuid4
 
@@ -233,296 +233,296 @@ async def delete_employee_salary_structure(
 
 
 
-# @router.post("/payroll/run", status_code=201)
-# async def run_payroll(
-#     payment_method: str = Query("bank_transfer", pattern="^(cash|bank_transfer|upi|other)$"),
-#     db: AsyncSession = Depends(get_async_session),
-#     current_user=Depends(centeradmin_required)
-# ):
-#     """
-#     Run payroll for all active employees of the center.
-#     Creates PaymentOrder and records in accounts module as expense.
+
+@router.post("/payroll/run", status_code=201)
+async def run_payroll(
+    payment_method: str = Query("bank_transfer", pattern="^(cash|bank_transfer|upi|card|other)$"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    """
+    Run payroll for all active employees of the center.
+    Creates PaymentOrder and records in accounts module as expense.
     
-#     Flow:
-#     1. Validate if payroll can be run (based on payroll_cycle_day)
-#     2. Get all active employees
-#     3. Calculate salary (with deductions like TDS if applicable)
-#     4. Create PayrollRecord for each employee
-#     5. Create PaymentOrder for center (expense)
-#     6. Record in accounts module:
-#        Dr 5000 Salary Expense [total_salary]
-#        Dr 2300 TDS Payable [tds_amount] (if applicable)
-#            Cr 1200 Bank Account [net_payable]
-#     """
-#     import traceback
+    Flow:
+    1. Validate if payroll can be run (based on payroll_cycle_day)
+    2. Get all active employees
+    3. Calculate salary (with deductions like TDS if applicable)
+    4. Create PayrollRecord for each employee
+    5. Create PaymentOrder for center (expense)
+    6. Record in accounts module:
+       Dr 5000 Salary Expense [total_salary]
+       Dr 2300 TDS Payable [tds_amount] (if applicable)
+           Cr 1200 Bank Account [net_payable]
+    """
+    import traceback
     
-#     # Get center admin and center details
-#     center_admin = await db.get(CenterAdmin, current_user["user_id"])
-#     if not center_admin:
-#         raise HTTPException(status_code=403, detail="Not a center admin")
+    # Get center admin and center details
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
     
-#     center_id = center_admin.center_id
+    center_id = center_admin.center_id
     
-#     # Get operational settings
-#     settings_result = await db.execute(
-#         select(CenterOperationalSetting).where(
-#             CenterOperationalSetting.center_id == center_id
-#         )
-#     )
-#     settings = settings_result.scalar_one_or_none()
+    # Get operational settings
+    settings_result = await db.execute(
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
+    )
+    settings = settings_result.scalar_one_or_none()
     
-#     if not settings:
-#         raise HTTPException(
-#             status_code=400, 
-#             detail="Operational settings not configured. Please set payroll cycle day in settings."
-#         )
+    if not settings:
+        raise HTTPException(
+            status_code=400, 
+            detail="Operational settings not configured. Please set payroll cycle day in settings."
+        )
     
-#     # Validate payroll cycle day
-#     today = date.today()
-#     payroll_cycle_day = settings.payroll_cycle_day
+    # Validate payroll cycle day
+    today = date.today()
+    payroll_cycle_day = settings.payroll_cycle_day
     
-#     # Check if today is the payroll day
-#     if today.day != payroll_cycle_day:
-#         raise HTTPException(
-#             status_code=400,
-#             detail=f"Payroll can only be run on day {payroll_cycle_day} of the month. Today is day {today.day}."
-#         )
+    # Check if today is the payroll day
+    if today.day != payroll_cycle_day:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payroll can only be run on day {payroll_cycle_day} of the month. Today is day {today.day}."
+        )
     
-#     # Calculate payroll period (previous month)
-#     payroll_month = today.replace(day=1) - relativedelta(days=1)  # Last month
-#     period_start = payroll_month.replace(day=1)
-#     period_end = payroll_month.replace(day=payroll_month.day)
+    # Calculate payroll period (previous month)
+    payroll_month = today.replace(day=1) - relativedelta(days=1)  # Last month
+    period_start = payroll_month.replace(day=1)
+    period_end = payroll_month.replace(day=payroll_month.day)
     
-#     # Check if payroll already run for this period
-#     existing_payroll = await db.execute(
-#         select(PayrollRecord).where(
-#             and_(
-#                 PayrollRecord.center_id == center_id,
-#                 PayrollRecord.payroll_month == payroll_month.month,
-#                 PayrollRecord.payroll_year == payroll_month.year,
-#                 PayrollRecord.status == PayrollStatus.paid
-#             )
-#         )
-#     )
-#     if existing_payroll.scalar_one_or_none():
-#         raise HTTPException(
-#             status_code=400,
-#             detail=f"Payroll already processed for {payroll_month.strftime('%B %Y')}"
-#         )
+    # Check if payroll already run for this period
+    existing_payroll = await db.execute(
+        select(PayrollRecord).where(
+            and_(
+                PayrollRecord.center_id == center_id,
+                PayrollRecord.payroll_month == payroll_month.month,
+                PayrollRecord.payroll_year == payroll_month.year,
+                PayrollRecord.status == PayrollStatus.paid
+            )
+        )
+    )
+    if existing_payroll.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payroll already processed for {payroll_month.strftime('%B %Y')}"
+        )
     
-#     # Get all active employees for this center
-#     employees_result = await db.execute(
-#         select(Employee).where(
-#             and_(
-#                 Employee.center_id == center_id,
-#                 Employee.status == "active"
-#             )
-#         )
-#     )
-#     employees = employees_result.scalars().all()
+    # Get all active employees for this center
+    employees_result = await db.execute(
+        select(Employee).where(
+            and_(
+                Employee.center_id == center_id,
+                Employee.status == "active"
+            )
+        )
+    )
+    employees = employees_result.scalars().all()
     
-#     if not employees:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="No active employees found for this center"
-#         )
+    if not employees:
+        raise HTTPException(
+            status_code=400,
+            detail="No active employees found for this center"
+        )
     
-#     # Calculate salaries
-#     payroll_records = []
-#     total_gross_salary = Decimal('0')
-#     total_deductions = Decimal('0')
-#     total_net_salary = Decimal('0')
+    # Calculate salaries
+    payroll_records = []
+    total_gross_salary = Decimal('0')
+    total_deductions = Decimal('0')
+    total_net_salary = Decimal('0')
     
-#     for employee in employees:
-#         # Basic salary calculation
-#         gross_salary = Decimal(str(employee.salary))
+    for employee in employees:
+        # Basic salary calculation
+        gross_salary = Decimal(str(employee.salary))
         
-#         # Calculate deductions (TDS: 10% if salary > 50000)
-#         tds_amount = Decimal('0')
-#         if gross_salary > 50000:
-#             tds_amount = gross_salary * Decimal('0.10')  # 10% TDS
+        # Calculate deductions (TDS: 10% if salary > 50000)
+        tds_amount = Decimal('0')
+        if gross_salary > 50000:
+            tds_amount = gross_salary * Decimal('0.10')  # 10% TDS
         
-#         # Other deductions (from employee model if exists)
-#         other_deductions = Decimal(str(getattr(employee, 'deductions', 0)))
+        # Other deductions (from employee model if exists)
+        other_deductions = Decimal(str(getattr(employee, 'deductions', 0)))
         
-#         total_deductions_emp = tds_amount + other_deductions
-#         net_salary = gross_salary - total_deductions_emp
+        total_deductions_emp = tds_amount + other_deductions
+        net_salary = gross_salary - total_deductions_emp
         
-#         # Create payroll record
-#         payroll_record = PayrollRecord(
-#             id=uuid4(),
-#             employee_id=employee.id,
-#             center_id=center_id,
-#             payroll_month=payroll_month.month,
-#             payroll_year=payroll_month.year,
-#             period_start=period_start,
-#             period_end=period_end,
-#             gross_salary=gross_salary,
-#             tds_amount=tds_amount,
-#             other_deductions=other_deductions,
-#             total_deductions=total_deductions_emp,
-#             net_salary=net_salary,
-#             payment_method=PaymentMethod(payment_method),
-#             status=PayrollStatus.paid,
-#             paid_date=today,
-#             created_by=current_user["user_id"],
-#             updated_by=current_user["user_id"],
-#             created_at=datetime.utcnow(),
-#             updated_at=datetime.utcnow()
-#         )
-#         db.add(payroll_record)
-#         payroll_records.append(payroll_record)
+        # Create payroll record - Use PayrollPaymentMethod
+        payroll_record = PayrollRecord(
+            id=uuid4(),
+            employee_id=employee.id,
+            center_id=center_id,
+            payroll_month=payroll_month.month,
+            payroll_year=payroll_month.year,
+            period_start=period_start,
+            period_end=period_end,
+            gross_salary=gross_salary,
+            tds_amount=tds_amount,
+            other_deductions=other_deductions,
+            total_deductions=total_deductions_emp,
+            net_salary=net_salary,
+            payment_method=PayrollPaymentMethod(payment_method),  # Use PayrollPaymentMethod
+            status=PayrollStatus.paid,
+            paid_date=today,
+            created_by=current_user["user_id"],
+            updated_by=current_user["user_id"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.add(payroll_record)
+        payroll_records.append(payroll_record)
         
-#         total_gross_salary += gross_salary
-#         total_deductions += total_deductions_emp
-#         total_net_salary += net_salary
+        total_gross_salary += gross_salary
+        total_deductions += total_deductions_emp
+        total_net_salary += net_salary
     
-#     await db.flush()
+    await db.flush()
     
-#     # Create PaymentOrder (Expense for center)
-#     payment_order = PaymentOrder(
-#         payment_order_id=uuid4(),
-#         payer_user_id=center_admin.id,  # Center admin pays
-#         payer_type=PayerType.center_admin,
-#         payee_type=PayeeType.center,  # Paid by center
-#         center_id=center_id,
-#         order_type=OrderType.add_on,  # Using add_on for payroll expense
-#         reference_schema=ReferenceSchema.center,
-#         reference_id=center_id,
-#         subtotal_amount=float(total_gross_salary),
-#         tax_amount=0.00,  # No tax on salary payment
-#         total_amount=float(total_gross_salary),
-#         currency=Currency.INR,
-#         status=PaymentOrderStatus.paid,
-#         payment_method=PaymentMethod(payment_method),
-#         created_by=current_user["user_id"],
-#         updated_by=current_user["user_id"],
-#         created_at=datetime.utcnow(),
-#         updated_at=datetime.utcnow()
-#     )
-#     db.add(payment_order)
-#     await db.flush()
+    # Create PaymentOrder (Expense for center) - Use BillingPaymentMethod
+    payment_order = PaymentOrder(
+        payment_order_id=uuid4(),
+        payer_user_id=center_admin.id,  # Center admin pays
+        payer_type=PayerType.center_admin,
+        payee_type=PayeeType.center,  # Paid by center
+        center_id=center_id,
+        order_type=OrderType.add_on,  # Using add_on for payroll expense
+        reference_schema=ReferenceSchema.center,
+        reference_id=center_id,
+        subtotal_amount=float(total_gross_salary),
+        tax_amount=0.00,  # No tax on salary payment
+        total_amount=float(total_gross_salary),
+        currency=Currency.INR,
+        status=PaymentOrderStatus.paid,
+        payment_method=PaymentMethod(payment_method),  # Use BillingPaymentMethod
+        created_by=current_user["user_id"],
+        updated_by=current_user["user_id"],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    db.add(payment_order)
+    await db.flush()
     
-#     # Record in accounts module
-#     try:
-#         await auto_record_payroll_payment(
-#             db=db,
-#             payment_order=payment_order,
-#             total_salary=total_gross_salary,
-#             tds_amount=total_deductions,
-#             net_payable=total_net_salary,
-#             created_by=str(current_user["user_id"])
-#         )
-#         print(f"✅ Payroll accounting entry created for {payroll_month.strftime('%B %Y')}")
-#     except Exception as e:
-#         print(f"❌ Failed to record payroll in accounts: {str(e)}")
-#         traceback.print_exc()
-#         # Don't fail payroll run, just log the error
+    # Record in accounts module
+    try:
+        await auto_record_payroll_payment(
+            db=db,
+            payment_order=payment_order,
+            total_salary=total_gross_salary,
+            tds_amount=total_deductions,
+            net_payable=total_net_salary,
+            created_by=str(current_user["user_id"])
+        )
+        print(f"✅ Payroll accounting entry created for {payroll_month.strftime('%B %Y')}")
+    except Exception as e:
+        print(f"❌ Failed to record payroll in accounts: {str(e)}")
+        traceback.print_exc()
+        # Don't fail payroll run, just log the error
     
-#     await db.commit()
+    await db.commit()
     
-#     # Build response
-#     return {
-#         "message": f"Payroll processed successfully for {payroll_month.strftime('%B %Y')}",
-#         "payroll_period": {
-#             "month": payroll_month.month,
-#             "year": payroll_month.year,
-#             "period_start": str(period_start),
-#             "period_end": str(period_end)
-#         },
-#         "summary": {
-#             "total_employees": len(employees),
-#             "total_gross_salary": float(total_gross_salary),
-#             "total_deductions": float(total_deductions),
-#             "total_net_salary": float(total_net_salary)
-#         },
-#         "payment_order_id": str(payment_order.payment_order_id),
-#         "payment_method": payment_method,
-#         "payroll_records": [
-#             {
-#                 "id": str(record.id),
-#                 "employee_id": str(record.employee_id),
-#                 "employee_name": next(
-#                     (emp.full_name for emp in employees if emp.id == record.employee_id), 
-#                     "Unknown"
-#                 ),
-#                 "gross_salary": float(record.gross_salary),
-#                 "deductions": float(record.total_deductions),
-#                 "net_salary": float(record.net_salary)
-#             }
-#             for record in payroll_records
-#         ]
-#     }
+    # Build response
+    return {
+        "message": f"Payroll processed successfully for {payroll_month.strftime('%B %Y')}",
+        "payroll_period": {
+            "month": payroll_month.month,
+            "year": payroll_month.year,
+            "period_start": str(period_start),
+            "period_end": str(period_end)
+        },
+        "summary": {
+            "total_employees": len(employees),
+            "total_gross_salary": float(total_gross_salary),
+            "total_deductions": float(total_deductions),
+            "total_net_salary": float(total_net_salary)
+        },
+        "payment_order_id": str(payment_order.payment_order_id),
+        "payment_method": payment_method,
+        "payroll_records": [
+            {
+                "id": str(record.id),
+                "employee_id": str(record.employee_id),
+                "employee_name": next(
+                    (emp.full_name for emp in employees if emp.id == record.employee_id), 
+                    "Unknown"
+                ),
+                "gross_salary": float(record.gross_salary),
+                "deductions": float(record.total_deductions),
+                "net_salary": float(record.net_salary)
+            }
+            for record in payroll_records
+        ]
+    }
 
 
-# @router.get("/payroll/history")
-# async def get_payroll_history(
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(10, ge=1, le=100),
-#     month: Optional[int] = Query(None, ge=1, le=12),
-#     year: Optional[int] = Query(None, ge=2020),
-#     db: AsyncSession = Depends(get_async_session),
-#     current_user=Depends(centeradmin_required)
-# ):
-#     """Get payroll history for the center"""
-#     center_admin = await db.get(CenterAdmin, current_user["user_id"])
-#     if not center_admin:
-#         raise HTTPException(status_code=403, detail="Not a center admin")
+@router.get("/payroll/history")
+async def get_payroll_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2020),
+    db: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    """Get payroll history for the center"""
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
     
-#     # Build query
-#     query = select(PayrollRecord).where(
-#         PayrollRecord.center_id == center_admin.center_id
-#     )
+    # Build query
+    query = select(PayrollRecord).where(
+        PayrollRecord.center_id == center_admin.center_id
+    )
     
-#     if month:
-#         query = query.where(PayrollRecord.payroll_month == month)
-#     if year:
-#         query = query.where(PayrollRecord.payroll_year == year)
+    if month:
+        query = query.where(PayrollRecord.payroll_month == month)
+    if year:
+        query = query.where(PayrollRecord.payroll_year == year)
     
-#     # Get total count
-#     count_result = await db.execute(
-#         select(func.count()).select_from(PayrollRecord).where(
-#             PayrollRecord.center_id == center_admin.center_id
-#         )
-#     )
-#     total = count_result.scalar_one()
+    # Get total count
+    count_result = await db.execute(
+        select(func.count()).select_from(PayrollRecord).where(
+            PayrollRecord.center_id == center_admin.center_id
+        )
+    )
+    total = count_result.scalar_one()
     
-#     # Apply pagination
-#     query = query.order_by(
-#         PayrollRecord.payroll_year.desc(),
-#         PayrollRecord.payroll_month.desc()
-#     ).offset((page - 1) * page_size).limit(page_size)
+    # Apply pagination
+    query = query.order_by(
+        PayrollRecord.payroll_year.desc(),
+        PayrollRecord.payroll_month.desc()
+    ).offset((page - 1) * page_size).limit(page_size)
     
-#     result = await db.execute(query)
-#     records = result.scalars().all()
+    result = await db.execute(query)
+    records = result.scalars().all()
     
-#     # Get employee details
-#     from app.payrole.models.models import Employee
-#     employee_ids = [record.employee_id for record in records]
-#     employees_result = await db.execute(
-#         select(Employee).where(Employee.id.in_(employee_ids))
-#     )
-#     employees = {emp.id: emp for emp in employees_result.scalars().all()}
+    # Get employee details
+    employee_ids = [record.employee_id for record in records]
+    employees_result = await db.execute(
+        select(Employee).where(Employee.id.in_(employee_ids))
+    )
+    employees = {emp.id: emp for emp in employees_result.scalars().all()}
     
-#     return {
-#         "payroll_records": [
-#             {
-#                 "id": str(record.id),
-#                 "employee_id": str(record.employee_id),
-#                 "employee_name": employees.get(record.employee_id).full_name if employees.get(record.employee_id) else "Unknown",
-#                 "payroll_month": record.payroll_month,
-#                 "payroll_year": record.payroll_year,
-#                 "period": f"{record.payroll_month}/{record.payroll_year}",
-#                 "gross_salary": float(record.gross_salary),
-#                 "deductions": float(record.total_deductions),
-#                 "net_salary": float(record.net_salary),
-#                 "payment_method": record.payment_method.value,
-#                 "status": record.status.value,
-#                 "paid_date": str(record.paid_date) if record.paid_date else None
-#             }
-#             for record in records
-#         ],
-#         "page": page,
-#         "page_size": page_size,
-#         "total": total
-#     }
+    return {
+        "payroll_records": [
+            {
+                "id": str(record.id),
+                "employee_id": str(record.employee_id),
+                "employee_name": employees.get(record.employee_id).full_name if employees.get(record.employee_id) else "Unknown",
+                "payroll_month": record.payroll_month,
+                "payroll_year": record.payroll_year,
+                "period": f"{record.payroll_month}/{record.payroll_year}",
+                "gross_salary": float(record.gross_salary),
+                "deductions": float(record.total_deductions),
+                "net_salary": float(record.net_salary),
+                "payment_method": record.payment_method.value,
+                "status": record.status.value,
+                "paid_date": str(record.paid_date) if record.paid_date else None
+            }
+            for record in records
+        ],
+        "page": page,
+        "page_size": page_size,
+        "total": total
+    }

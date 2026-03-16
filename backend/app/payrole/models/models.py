@@ -17,6 +17,15 @@ class PayrollStatus(enum.Enum):
     cancelled = "cancelled"
 
 
+class PayrollPaymentMethod(enum.Enum):
+    cash = "cash"
+    bank_transfer = "bank_transfer"
+    upi = "upi"
+    card = "card"
+    other = "other"
+
+
+
 class PayrollRecord(Base, AuditMixin):
     __tablename__ = "payroll_records"
     __table_args__ = {"schema": "payrole"}
@@ -52,7 +61,7 @@ class PayrollRecord(Base, AuditMixin):
     
     # Payment details
     payment_method = Column(
-        Enum("cash", "bank_transfer", "upi", "card", "other", name="payroll_payment_method"),
+        Enum(PayrollPaymentMethod, name="payroll_payment_method"),  # Specify the existing enum name
         nullable=True
     )
     

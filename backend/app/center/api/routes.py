@@ -27,7 +27,7 @@ from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
 from math import radians, cos, sin, asin, sqrt
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 import sqlalchemy as sa
 
 
@@ -47,6 +47,164 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * asin(sqrt(a))
     km = 6371 * c
     return km
+
+@router.get("/center/dashboard", summary="Get Center Dashboard Data")
+async def get_center_dashboard(
+    db: AsyncSession = Depends(get_async_session),
+    current_user = Depends(centeradmin_required)
+):
+    """
+    Get comprehensive dashboard data for logged-in center admin.
+    
+    Returns:
+    - Total employees
+    - Total members
+    - Active memberships
+    - Total guests (networking visits)
+    - Today's attendance
+    - Total revenue
+    - Total expenses
+    - Net profit
+    """
+    from app.auth.models.models import CenterAdmin, Employee, Member
+    from app.membership.models.models import MemberMembership
+    from app.auth.models.models import UserCenterMembership
+    from app.attendance.models.models import Attendance
+    from app.billing.models.models import PaymentOrder, PaymentOrderStatus
+    from app.payrole.models.models import PayrollRecord
+    from app.inventory.models.models import Sale
+    from datetime import date as date_type, timedelta
+    
+    # Get center admin and center_id
+    center_admin = await db.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+    
+    center_id = center_admin.center_id
+    today = date_type.today()
+    
+    # ===== 1. TOTAL EMPLOYEES =====
+    employees_query = select(func.count(Employee.id)).where(
+        Employee.center_id == center_id,
+        Employee.status == "active"
+    )
+    employees_result = await db.execute(employees_query)
+    total_employees = employees_result.scalar_one() or 0
+    
+    # ===== 2. TOTAL MEMBERS =====
+    members_query = select(func.count(Member.id)).where(
+        Member.home_center_id == center_id,
+        Member.is_active == True
+    )
+    members_result = await db.execute(members_query)
+    total_members = members_result.scalar_one() or 0
+    
+    # ===== 3. ACTIVE MEMBERSHIPS =====
+    active_memberships_query = select(func.count(MemberMembership.id)).where(
+        MemberMembership.center_id == center_id,
+        MemberMembership.status == StatusEnum.active
+    )
+    active_memberships_result = await db.execute(active_memberships_query)
+    active_memberships = active_memberships_result.scalar_one() or 0
+    
+    # ===== 4. TOTAL GUESTS (Networking Visits) =====
+    guests_query = select(func.count(func.distinct(UserCenterMembership.user_id))).where(
+        UserCenterMembership.host_center_id == center_id
+    )
+    guests_result = await db.execute(guests_query)
+    total_guests = guests_result.scalar_one() or 0
+    
+    # ===== 5. TODAY'S ATTENDANCE =====
+    today_attendance_query = select(func.count(Attendance.id)).where(
+        Attendance.center_id == center_id,
+        func.date(Attendance.check_in_time) == today
+    )
+    today_attendance_result = await db.execute(today_attendance_query)
+    today_attendance = today_attendance_result.scalar_one() or 0
+    
+    # ===== 6. TOTAL REVENUE =====
+    revenue_query = select(
+        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+    ).where(
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.status == PaymentOrderStatus.paid,
+        PaymentOrder.order_type.in_([
+            'membership', 'renewal', 'upgrade', 
+            'networking_access', 'add_on', 'feature_purchase'
+        ])
+    )
+    revenue_result = await db.execute(revenue_query)
+    total_revenue_from_orders = revenue_result.scalar_one() or 0
+    
+    # Add sales revenue
+    sales_revenue_query = select(
+        func.coalesce(func.sum(Sale.total_amount), 0)
+    ).where(
+        Sale.center_id == center_id,
+        Sale.status == "completed"
+    )
+    sales_revenue_result = await db.execute(sales_revenue_query)
+    total_sales_revenue = sales_revenue_result.scalar_one() or 0
+    
+    total_revenue = float(total_revenue_from_orders) + float(total_sales_revenue)
+    
+    # ===== 7. TOTAL EXPENSES =====
+    payroll_expense_query = select(
+        func.coalesce(func.sum(PayrollRecord.net_salary), 0)
+    ).where(
+        PayrollRecord.center_id == center_id,
+        PayrollRecord.status == 'paid'
+    )
+    payroll_expense_result = await db.execute(payroll_expense_query)
+    total_payroll_expense = payroll_expense_result.scalar_one() or 0
+    
+    # Stock purchases
+    from app.inventory.models.models import StockTransaction
+    from app.core.models.models import SKU
+    
+    sku_ids_query = select(SKU.id).where(SKU.center_id == center_id)
+    sku_ids_result = await db.execute(sku_ids_query)
+    sku_ids = [str(row[0]) for row in sku_ids_result.all()]
+    
+    total_stock_expense = 0
+    if sku_ids:
+        stock_expense_query = select(
+            func.coalesce(func.sum(StockTransaction.subtotal), 0)
+        ).where(
+            StockTransaction.product_id.in_(sku_ids),
+            StockTransaction.transaction_type == 'purchase'
+        )
+        stock_expense_result = await db.execute(stock_expense_query)
+        total_stock_expense = stock_expense_result.scalar_one() or 0
+    
+    # Refunds
+    refund_expense_query = select(
+        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+    ).where(
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.order_type == 'refund'
+    )
+    refund_expense_result = await db.execute(refund_expense_query)
+    total_refund_expense = refund_expense_result.scalar_one() or 0
+    
+    total_expenses = float(total_payroll_expense) + float(total_stock_expense) + float(total_refund_expense)
+    
+    # Net profit
+    net_profit = total_revenue - total_expenses
+    
+    return {
+        "center_id": str(center_id),
+        "generated_at": datetime.now().isoformat(),
+        "total_employees": int(total_employees),
+        "total_members": int(total_members),
+        "active_memberships": int(active_memberships),
+        "total_guests": int(total_guests),
+        "today_attendance": int(today_attendance),
+        "total_revenue": round(total_revenue, 2),
+        "total_expenses": round(total_expenses, 2),
+        "net_profit": round(net_profit, 2)
+    }
+
 
 # 1. POST /center/onboarding/temp
 @router.post("/onboarding/temp", response_model=CenterOnboardingTempOut)
