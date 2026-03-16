@@ -273,6 +273,8 @@ export const updateCentersProfileImageApiCall = details =>
   }) // For updating centers and sub-branchs image from center information page
 export const getCenterProfileInfoApiCall = () =>
   axiosInstance.get(`/center/centeradmin/profile`)
+export const fetchCenterLocationApiCall = (details) =>
+  axiosInstance.post(`/api/center/center-location/`, details)
 
 //CRM API
 export const getMemberApiCall = data =>

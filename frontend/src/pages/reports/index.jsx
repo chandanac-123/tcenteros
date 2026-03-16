@@ -10,9 +10,9 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('Income')
   const employeeOrMember = [
-    { id: 1, name: 'Income', component: <IncomeTable /> },
-    { id: 2, name: 'Expenses ', component: <ExpenseTable /> },
-    { id: 3, name: 'Settlement', component: <SettlementTable /> }
+    { id: 1, name: 'Income' },
+    { id: 2, name: 'Expenses '},
+    { id: 3, name: 'Settlement' }
   ]
   const [dateRange, setDateRange] = useState({ from: null, to: null })
   const [tableParams, setTableParams] = useState({

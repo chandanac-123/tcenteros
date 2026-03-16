@@ -17,8 +17,7 @@ const StatusDisplayCard = () => {
         <div
           key={index}
           className='flex items-center gap-4 border border-tab_bg 
-                     rounded-lg p-4 cursor-pointer 
-                     hover:shadow-md transition-all duration-200 
+                     rounded-lg p-4 cursor-pointer  shadow-primary-shadow
                      bg-white'
         >
           <img

@@ -8,13 +8,14 @@ import {
 } from '@pages/components/ui/popover'
 import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
 import CustomeModal from '../components/CustomeModal'
-import {  useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
-import {  useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import AddBranchButton from '@pages/branch'
 import { useCrmStore } from '@store/tabStore'
 import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
+import GoogleMapComponent from '../components/GoogleMapComponent'
 
 const Header = () => {
   const { setSelectedTab, setMemberView } = useCrmStore()
@@ -22,19 +23,7 @@ const Header = () => {
   const [logoutOpen, setLogoutOpen] = useState(false)
   const { data } = useGetProfileInfoQuery()
   const navigate = useNavigate()
-  // const [location, setLocation] = useState(null);
-
-  // useEffect(() => {
-  //   navigator.geolocation.getCurrentPosition((position) => {
-  //     const lat = position.coords.latitude;
-  //     const lng = position.coords.longitude;
-
-  //     console.log(lat);
-  //     console.log(lng);
-
-  //     setLocation({ lat, lng });
-  //   });
-  // }, []);
+  const [locationOpen, setLocationOpen] = useState(false)
 
   const handleLogout = () => {
     const state = useAuthStore.getState()
@@ -46,12 +35,16 @@ const Header = () => {
     <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
-          <button onClick={() => navigate('/location')}>
+          <button onClick={() => setLocationOpen(true)}>
             <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
               <img src={map} className='w-5 h-5 mr-2' />
               Fitness center
             </span>
           </button>
+          <GoogleMapComponent
+            open={locationOpen}
+            setLocationOpen={setLocationOpen}
+          />
           <AddBranchButton />
           <Button
             size='addbutton'

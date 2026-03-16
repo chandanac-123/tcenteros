@@ -9,6 +9,9 @@ export default {
         poppins: ['Poppins', 'sans-serif'],
         stick: ['"Stick No Bills"', 'sans-serif']
       },
+      boxShadow: {
+        'primary-shadow': '0px 2px 8px rgba(99, 99, 99, 0.2)',
+      },
       backgroundImage: {
         'primary-bg': "url('/src/assets/images/landingprimary.svg')",
         'secondary-bg': "url('/src/assets/images/landingsecondary.svg')",

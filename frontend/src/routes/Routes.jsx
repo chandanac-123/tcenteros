@@ -55,7 +55,6 @@ import {
 } from 'lucide-react'
 import Reports from '@pages/reports'
 import Notifications from '@pages/notifications'
-import GoogleLocation from '@pages/Location'
 
 export const routes = [
   { key: 1, path: '/', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permission: true },
@@ -101,5 +100,4 @@ export const routes = [
   { key: 40, path: '/settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Settings', component: Settings, menubar: false, permission: true },
   { key: 41, path: '/profile', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Profile', component: ProfilePage, menubar: false, permission: true },
   { key: 42, path: '/notifications', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Notifications', component: Notifications, menubar: false, permission: true },
-  { key: 43, path: '/location', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Location', component: GoogleLocation, menubar: false, permission: true },
 ]

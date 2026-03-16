@@ -41,7 +41,7 @@ const SubCard = ({ label, value }) => {
   const color = CARD_COLORS[getColorIndex(label)]
 
   return (
-    <div className='h-16 w-full flex items-center justify-between px-4 bg-textwhite rounded-xl shadow-md'>
+    <div className='h-16 w-full flex items-center justify-between px-4 bg-textwhite rounded-xl shadow-primary-shadow'>
       {/* Label */}
       <span className='text-sm font-medium text-textblack'>{label}</span>
 

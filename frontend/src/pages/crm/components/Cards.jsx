@@ -1,6 +1,6 @@
 const Card = ({ label, value }) => {
   return (
-    <div className="h-16 w-full flex items-center justify-between px-4 bg-textwhite rounded-xl shadow-md">
+    <div className="h-16 w-full flex items-center justify-between px-4 bg-textwhite rounded-xl shadow-primary-shadow">
       <span className="text-sm font-medium leading-tight whitespace-pre-line">
         {label}
       </span>

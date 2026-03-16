@@ -4,7 +4,8 @@ import {
   getCenterProfileByIdApiCall,
   updateCenterProfilePicApiCall,
   updateCentersProfileImageApiCall,
-  getCenterProfileInfoApiCall
+  getCenterProfileInfoApiCall,
+  fetchCenterLocationApiCall
 } from '../../api/index'
 
 export const getProfile = async () => {
@@ -55,6 +56,15 @@ export const updateProfileImage = async details => {
 export const getProfileInfo = async details => {
   try {
     const response = await getCenterProfileInfoApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const fetchCenterLocation = async details => {
+  try {
+    const response = await fetchCenterLocationApiCall(details)
     return response.data
   } catch (error) {
     throw error

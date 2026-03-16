@@ -5,7 +5,8 @@ import {
   getProfileById,
   updateProfilePic,
   updateProfileImage,
-  getProfileInfo
+  getProfileInfo,
+  fetchCenterLocation
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -81,5 +82,20 @@ export const useGetProfileInfoQuery = () => {
     queryFn: getProfileInfo,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useFetchCenterLocationMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => fetchCenterLocation(data),
+    onSuccess: async data => {
+      query.invalidateQueries('profile')
+      showSuccess('Center location fetched successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to fetch center location')
+      return err
+    }
   })
 }
