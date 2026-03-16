@@ -70,7 +70,7 @@ export const addChargeApiCall = (data) =>
   axiosInstance.post(`/billing/billing/miscellaneous-transactions`, data)
 
 export const getSaleReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/sales?page=${data?.page || 1}`)
+  axiosInstance.get(`/billing/billing/reports/sales?page=${data?.page || 1}&date_from=${data?.date_from}&date_to=${data?.date_to}`)
 export const getGenerateSaleReportApiCall = data =>
   axiosInstance.post(
     `billing/billing/reports/generate/sales?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
@@ -78,11 +78,30 @@ export const getGenerateSaleReportApiCall = data =>
     { responseType: 'blob' }
   )
 
-export const getMembershipRevenueReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/membership-revenue`)
-export const getInventorySaleReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/inventory-sales`)
-export const getNetworkEarningReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/network-earnings`)
-export const getTaxSummaryReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/tax-summary`)
+export const getMembershipReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/memberships?page=${data?.page || 1}&date_from=${data?.date_from}&date_to=${data?.date_to}`)
+export const getGenerateMembershipReportApiCall = data =>
+  axiosInstance.post(
+    `billing/billing/reports/generate/memberships?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
+  )
+
+export const getNetworkReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/networking?page=${data?.page || 1}&date_from=${data?.date_from}&date_to=${data?.date_to}`)
+export const getGenerateNetworkReportApiCall = data =>
+  axiosInstance.post(
+    `billing/billing/reports/generate/networking?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
+  )
+
+
+export const getSettlementReportApiCall = data =>
+  axiosInstance.get(`/billing/billing/reports/settlements?page=${data?.page || 1}&date_from=${data?.date_from}&date_to=${data?.date_to}`)
+export const getGenerateSettlementReportApiCall = data =>
+  axiosInstance.post(
+    `billing/billing/reports/generate/settlements?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
+  )

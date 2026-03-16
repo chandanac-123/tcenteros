@@ -18,15 +18,17 @@ import {
   getRenewMembershipById,
   renewMembership,
   getSaleReport,
-  getMembershipRevenueReport,
-  getInventorySaleReport,
-  getNetworkEarningReport,
-  getTaxSummaryReport,
+  getMembershipReport,
+  getNetworkReport,
+  generateSettlementReport,
   getSettlementById,
   completeSettlement,
   getSettlements,
   addCharge,
-  generateSaleReport
+  generateSaleReport,
+  generateMembershipReport,
+  generateNetworkReport,
+  getSettlementReport
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -255,6 +257,8 @@ export const useCompleteSettlementMutation = () => {
   })
 }
 
+//REPORTS
+
 export const useSaleReportQuery = data => {
   return useQuery({
     queryKey: ['saleReport', data],
@@ -269,39 +273,46 @@ export const useGenerateSaleReportMutation = () => {
     mutationFn: data => generateSaleReport(data)
   })
 }
-export const useMembershipRevenueReportQuery = data => {
+export const useMembershipReportQuery = data => {
   return useQuery({
-    queryKey: ['membershipRevenueReport', data],
-    queryFn: () => getMembershipRevenueReport(data),
+    queryKey: ['membershipReport', data],
+    queryFn: () => getMembershipReport(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
 
-export const useInventorySaleReportQuery = data => {
+export const useGenerateMembershipReportMutation = () => {
+  return useMutation({
+    mutationFn: data => generateMembershipReport(data)
+  })
+}
+
+export const useNetworkReportQuery = data => {
   return useQuery({
-    queryKey: ['inventorySaleReport', data],
-    queryFn: () => getInventorySaleReport(data),
+    queryKey: ['networkReport', data],
+    queryFn: () => getNetworkReport(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
+export const useGenerateNetworkReportMutation = () => {
+  return useMutation({
+    mutationFn: data => generateNetworkReport(data)
+  })
+}
 
-export const useNetworkEarningReportQuery = data => {
+export const useSettlementReportQuery = data => {
   return useQuery({
-    queryKey: ['networkEarningReport', data],
-    queryFn: () => getNetworkEarningReport(data),
+    queryKey: ['settlementReport', data],
+    queryFn: () => getSettlementReport(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
 }
-
-export const useTaxSummaryReportQuery = data => {
-  return useQuery({
-    queryKey: ['taxSummaryReport', data],
-    queryFn: () => getTaxSummaryReport(data),
-    refetchOnWindowFocus: true,
-    refetchOnMount: true
+export const useGenerateSettlementReportMutation = () => {
+  return useMutation({
+    mutationFn: data => generateSettlementReport(data)
   })
 }
 

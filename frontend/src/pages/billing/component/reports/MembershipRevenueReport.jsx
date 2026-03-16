@@ -1,44 +1,55 @@
 import React from 'react'
 import { DataTable } from '@common/components/DataTable'
-import { useSalesReportQuery } from '@api-queries/inventory/Query'
-import { formatDate } from '@utils/helper'
 import { Badge } from '@pages/components/ui/badge'
+import { useMembershipReportQuery } from '@api-queries/billing/Query'
 
-  const statusVariantMap = {
-    completed: 'active',
-    pending: 'pending'
-  }
+const paymentStatusVariantMap = {
+  paid: 'active',
+  unpaid: 'inactive',
+}
+
+const membershipStatusVariantMap = {
+  active: 'active',
+  expired: 'inactive',
+}
 
 const MembershipRevenueReport = ({ tableParams, setTableParams }) => {
-  const { data, isLoading } = useSalesReportQuery(tableParams)
+  const { data, isLoading } = useMembershipReportQuery(tableParams)
 
   const columns = [
+    { accessorKey: 'member_name', header: 'Member Name' },
+    { accessorKey: 'member_mobile', header: 'Member Mobile' },
+    { accessorKey: 'plan_name', header: 'Plan Name' },
+    { accessorKey: 'start_date', header: 'Start Date' },
+    { accessorKey: 'end_date', header: 'End Date' },
+    { accessorKey: 'total_amount', header: 'Total Amount' },
+    { accessorKey: 'paid_amount', header: 'Paid Amount' },
     {
-      accessorKey: 'date',
-      header: 'Date',
+      accessorKey: 'payment_status',
+      header: 'Payment Status',
       cell: ({ row }) => (
-        <span className='flex gap-3'>{formatDate(row.original.date)}</span>
-      )
-    },
-    { accessorKey: 'sale_number', header: 'Sales Number' },
-    { accessorKey: 'items_count', header: 'Items' },
-    { accessorKey: 'subtotal', header: 'Sub Total' },
-    { accessorKey: 'tax', header: 'Tax' },
-    { accessorKey: 'total', header: 'Total' },
-    { accessorKey: 'status', header: 'Status',
-       cell: ({ row }) => (
         <Badge
-          label={row.original.status.replace('_', ' ').toUpperCase()}
-          variant={statusVariantMap[row.original.status] || 'inactive'}
+          label={row.original.payment_status?.replace('_', ' ').toUpperCase()}
+          variant={paymentStatusVariantMap[row.original.payment_status] || 'inactive'}
         />
       )
-     }
+    },
+    {
+      accessorKey: 'membership_status',
+      header: 'Membership Status',
+      cell: ({ row }) => (
+        <Badge
+          label={row.original.membership_status?.replace('_', ' ').toUpperCase()}
+          variant={membershipStatusVariantMap[row.original.membership_status] || 'inactive'}
+        />
+      )
+    }
   ]
 
   return (
     <DataTable
       columns={columns}
-      data={data?.sales || []}
+      data={data?.memberships || []}
       tableParams={tableParams}
       setTableParams={setTableParams}
       pagination={data?.total || 0}

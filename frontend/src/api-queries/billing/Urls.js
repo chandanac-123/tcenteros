@@ -17,14 +17,17 @@ import {
   getNetworkByIdApiCall,
   getOutgoingNetworkApiCall,
   getSaleReportApiCall,
-  getMembershipRevenueReportApiCall,
-  getNetworkEarningReportApiCall,
-  getTaxSummaryReportApiCall,
+  getMembershipReportApiCall,
+  getNetworkReportApiCall,
+  getSettlementReportApiCall,
   getSettlementByIdApiCall,
   completeSettlementApiCall,
   getSettlementApiCall,
   addChargeApiCall,
-  getGenerateSaleReportApiCall
+  getGenerateSaleReportApiCall,
+  getGenerateMembershipReportApiCall,
+  getGenerateNetworkReportApiCall,
+  getGenerateSettlementReportApiCall
 } from './index'
 
 export const getSales = async data => {
@@ -223,36 +226,54 @@ export const generateSaleReport = async (data) => {
   }
 }
 
-export const getMembershipRevenueReport = async (data) => {
+export const getMembershipReport = async (data) => {
   try {
-    const response = await getMembershipRevenueReportApiCall(data)
+    const response = await getMembershipReportApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const getInventorySaleReport = async (data) => {
+export const generateMembershipReport = async (data) => {
   try {
-    const response = await getInventorySaleReportApiCall(data)
+    const response = await getGenerateMembershipReportApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const getNetworkEarningReport = async (data) => {
+export const getNetworkReport = async (data) => {
   try {
-    const response = await getNetworkEarningReportApiCall(data)
+    const response = await getNetworkReportApiCall(data)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const getTaxSummaryReport = async (data) => {
+export const generateNetworkReport = async (data) => {
   try {
-    const response = await getTaxSummaryReportApiCall(data)
+    const response = await getGenerateNetworkReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getSettlementReport = async (data) => {
+  try {
+    const response = await getSettlementReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const generateSettlementReport = async (data) => {
+  try {
+    const response = await getGenerateSettlementReportApiCall(data)
     return response.data
   } catch (error) {
     throw error

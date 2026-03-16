@@ -5,28 +5,24 @@ import { downloadFile, formatDate } from '@utils/helper'
 import RadioGroup from '@common/components/RadioGroup'
 import NetworkEarningReport from '../component/reports/NetworkEarningReport'
 import MembershipRevenueReport from '../component/reports/MembershipRevenueReport'
-import InventorySaleReport from '../component/reports/InventorySaleReport'
-import TaxSummaryReport from '../component/reports/TaxSummaryReport'
 import SalesReport from '../component/reports/SalesReport'
 import {
-  useInventorySaleReportQuery,
-  useMembershipRevenueReportQuery,
-  useNetworkEarningReportQuery,
-  useSaleReportQuery,
-  useTaxSummaryReportQuery
+  useGenerateSaleReportMutation,
+  useGenerateMembershipReportMutation,
+  useGenerateNetworkReportMutation,
+  useGenerateSettlementReportMutation
 } from '@api-queries/billing/Query'
-import { useGenerateSaleReportMutation } from '@api-queries/billing/Query'
+import SettlementReport from '../component/reports/SettlementReport'
 
 const BillingReports = () => {
   const [reportType, setReportType] = useState('sales')
   const { mutateAsync: generateSalesReport } = useGenerateSaleReportMutation()
-  const { mutateAsync: generateMembershipRevenueReport } =
-    useMembershipRevenueReportQuery()
+  const { mutateAsync: generateMembershipReport } =
+    useGenerateMembershipReportMutation()
   const { mutateAsync: generateNetworkEarningReport } =
-    useNetworkEarningReportQuery()
-  const { mutateAsync: generateTaxSummaryReport } = useTaxSummaryReportQuery()
-  const { mutateAsync: generateInventorySaleReport } =
-    useInventorySaleReportQuery()
+    useGenerateNetworkReportMutation()
+  const { mutateAsync: generateSettlementReport } =
+    useGenerateSettlementReportMutation()
 
   const [dateRange, setDateRange] = useState({ from: null, to: null })
   const [tableParams, setTableParams] = useState({
@@ -35,53 +31,47 @@ const BillingReports = () => {
     date_to: null
   })
 
- const handleDownload = async (format) => {
-  try {
-    const payload = {
-      date_from: tableParams?.date_from || null,
-      date_to: tableParams?.date_to || null,
-      format
+  const handleDownload = async format => {
+    try {
+      const payload = {
+        date_from: tableParams?.date_from || null,
+        date_to: tableParams?.date_to || null,
+        format
+      }
+
+      let response
+      let filename
+
+      switch (reportType) {
+        case 'sales':
+          response = await generateSalesReport(payload)
+          filename = `daily-sales-report.${format}`
+          break
+
+        case 'membership':
+          response = await generateMembershipReport(payload)
+          filename = `membership-revenue-report.${format}`
+          break
+
+        case 'network':
+          response = await generateNetworkEarningReport(payload)
+          filename = `network-earning-report.${format}`
+          break
+
+        case 'settlements':
+          response = await generateSettlementReport(payload)
+          filename = `settlements-summary-report.${format}`
+          break
+
+        default:
+          return
+      }
+
+      downloadFile(response, filename)
+    } catch (error) {
+      console.error('Download failed:', error)
     }
-
-    let response
-    let filename
-
-    switch (reportType) {
-      case 'sales':
-        response = await generateSalesReport(payload)
-        filename = `daily-sales-report.${format}`
-        break
-
-      case 'inventory':
-        response = await generateInventorySaleReport(payload)
-        filename = `inventory-sale-report.${format}`
-        break
-
-      case 'membership':
-        response = await generateMembershipRevenueReport(payload)
-        filename = `membership-revenue-report.${format}`
-        break
-
-      case 'network':
-        response = await generateNetworkEarningReport(payload)
-        filename = `network-earning-report.${format}`
-        break
-
-      case 'tax':
-        response = await generateTaxSummaryReport(payload)
-        filename = `tax-summary-report.${format}`
-        break
-
-      default:
-        return
-    }
-
-    downloadFile(response, filename)
-
-  } catch (error) {
-    console.error('Download failed:', error)
   }
-}
 
   const changeReportType = type => {
     setReportType(type)
@@ -104,10 +94,9 @@ const BillingReports = () => {
           name='reportType'
           options={[
             { value: 'sales', label: 'Daily Sales' },
-            { value: 'inventory', label: 'Inventory Sale' },
             { value: 'membership', label: 'Membership Revenue' },
             { value: 'network', label: 'Network Earning' },
-            { value: 'tax', label: 'Tax Summary' }
+            { value: 'settlements', label: 'Settlements' }
           ]}
           value={reportType}
           checked={reportType}
@@ -168,14 +157,8 @@ const BillingReports = () => {
             setTableParams={setTableParams}
           />
         )}
-        {reportType === 'inventory' && (
-          <InventorySaleReport
-            tableParams={tableParams}
-            setTableParams={setTableParams}
-          />
-        )}
-        {reportType === 'tax' && (
-          <TaxSummaryReport
+        {reportType === 'settlements' && (
+          <SettlementReport
             tableParams={tableParams}
             setTableParams={setTableParams}
           />
