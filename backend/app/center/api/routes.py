@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.membership.models.models import Membership
-from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage
+from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage, CenterStatus
 from app.settings.models.models import CenterCategory,Designation, Address, TaxCategory, CenterOperationalSetting
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
@@ -27,7 +27,7 @@ from app.core.security import get_password_hash
 from app.s3.service import upload_file, get_file_url
 from fastapi.concurrency import run_in_threadpool
 from math import radians, cos, sin, asin, sqrt
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 import sqlalchemy as sa
 
 
@@ -1711,3 +1711,82 @@ async def get_center_whatsapp_number(
         raise HTTPException(status_code=403, detail="Not authorized")
     
 
+
+#List all accessible centers for the current center admin.
+@router.get("/centers/accessible-centers", summary="List centers (ID and name only) for center admin")
+async def list_centers_for_admin(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    List all accessible centers for the current center admin.
+    - If parent center admin: returns parent center + all active sub-centers
+    - If sub-center admin: returns only their own center
+    
+    Returns only center ID and name for dropdown/lookup purposes.
+    """
+    from app.auth.models.models import CenterAdmin
+    
+    # Get center_id from current_admin
+    admin_center_id = current_admin.get("center_id")
+    if not admin_center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Get the admin's center details
+    admin_center_query = select(Center).where(Center.id == admin_center_id)
+    admin_center_result = await db.execute(admin_center_query)
+    admin_center = admin_center_result.scalar_one_or_none()
+    
+    if not admin_center:
+        raise HTTPException(status_code=404, detail="Center not found")
+    
+    centers_list = []
+    
+    # Check if this is a parent center (parent_center_id is None)
+    if admin_center.parent_center_id is None:
+        # This is a parent center admin - include parent + all sub-centers
+        
+        # Add parent center
+        centers_list.append({
+            "id": str(admin_center.id),
+            "center_name": admin_center.center_name,
+            "is_parent": True,
+            "center_status": admin_center.center_status.value if hasattr(admin_center.center_status, 'value') else str(admin_center.center_status)
+        })
+        
+        # Get all active sub-centers
+        sub_centers_query = select(Center).where(
+            and_(
+                Center.parent_center_id == admin_center_id,
+                Center.center_status == CenterStatus.active
+            )
+        ).order_by(Center.center_name)
+        
+        sub_centers_result = await db.execute(sub_centers_query)
+        sub_centers = sub_centers_result.scalars().all()
+        
+        for sub_center in sub_centers:
+            centers_list.append({
+                "id": str(sub_center.id),
+                "center_name": sub_center.center_name,
+                "is_parent": False,
+                "parent_center_id": str(sub_center.parent_center_id),
+                "center_status": sub_center.center_status.value if hasattr(sub_center.center_status, 'value') else str(sub_center.center_status)
+            })
+    
+    else:
+        # This is a sub-center admin - return only their own center
+        centers_list.append({
+            "id": str(admin_center.id),
+            "center_name": admin_center.center_name,
+            "is_parent": False,
+            "parent_center_id": str(admin_center.parent_center_id),
+            "center_status": admin_center.center_status.value if hasattr(admin_center.center_status, 'value') else str(admin_center.center_status)
+        })
+    
+    return {
+        "total_centers": len(centers_list),
+        "admin_center_id": str(admin_center_id),
+        "is_parent_admin": admin_center.parent_center_id is None,
+        "centers": centers_list
+    }
