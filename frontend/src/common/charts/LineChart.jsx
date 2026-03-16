@@ -109,6 +109,7 @@ const LineChart = ({
         max: yMax,
         grid: { display: false },
         ticks: {
+          stepSize: 20,
           callback: tickFormat
         }
       }

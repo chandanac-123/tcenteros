@@ -6,20 +6,32 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import DashboardTable from './components/DashboardTable'
 import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
-
-const cardsData = [
-  { label: 'Total employees', value: 354 },
-  { label: 'Total Members', value: 298 },
-  { label: 'Active Memberships', value: 56 },
-  { label: 'Active Leads', value: 12 },
-  { label: 'Total Guests', value: 87 },
-  { label: 'Today Attendance', value: 14 },
-  { label: 'Total Revenue', value: 23 },
-  { label: 'Total Expense', value: 5 },
-  { label: 'Pending Dues', value: 5 }
-]
+import { useDashboardQuery } from '@api-queries/Dashboard/Query'
 
 const Dashboard = () => {
+  const { data, isLoading, error } = useDashboardQuery()
+  console.log('data: ', data)
+  const cardsData = [
+    { label: 'Total Employees', value: data?.total_employees || 0 },
+    { label: 'Total Members', value: data?.total_members || 0 },
+    { label: 'Active Memberships', value: data?.active_memberships || 0 },
+    { label: 'Active Leads', value: 12 },
+    { label: 'Total Guests', value: data?.total_guests || 0 },
+    { label: 'Today Attendance', value: data?.today_attendance || 0 },
+    { label: 'Total Revenue', value: data?.total_revenue || 0 },
+    { label: 'Total Expense', value: data?.total_expenses || 0 },
+    { label: 'Net Profit', value: data?.net_profit || 0 }
+  ]
+
+  const revenueLabels = data?.revenue_trend?.map(i => i.month) || []
+
+  const incomeData = data?.revenue_trend?.map(i => i.income) || []
+
+  const expenseData = data?.revenue_trend?.map(i => i.expense) || []
+  const attendanceLabels = data?.attendance_chart?.map(i => i.month) || []
+
+  const attendanceData =
+    data?.attendance_chart?.map(i => i.attendance_percentage) || []
   return (
     <ContentLayout>
       <div className='gap-4 flex flex-col w-full'>
@@ -28,7 +40,10 @@ const Dashboard = () => {
             <span>Good Morning!</span>
             <span className='text-xs'>Center Admin</span>
           </div>
-          <div> <BranchDetailsButton /></div>
+          <div>
+            {' '}
+            <BranchDetailsButton />
+          </div>
         </div>
 
         <div className='grid gap-4   grid-cols-[repeat(auto-fit,minmax(220px,1fr))]'>
@@ -45,7 +60,7 @@ const Dashboard = () => {
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-4'>
           {/* Chart Section */}
           <div className='lg:col-span-2'>
-            <Card className='p-4 h-full ' >
+            <Card className='p-4 h-full '>
               <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
                 <span className='font-semibold text-base'>
                   Total Revenue Summary
@@ -87,7 +102,12 @@ const Dashboard = () => {
                   <CustomDatePicker pickerType='year' />
                 </span>
               </div>
-              <BarChart variant='dashboard' />
+              <BarChart
+                variant='dashboard'
+                labels={revenueLabels}
+                incomeData={incomeData}
+                expenseData={expenseData}
+              />
             </Card>
           </div>
         </div>
@@ -101,30 +121,22 @@ const Dashboard = () => {
               </span>
             </div>
             <LineChart
+              labels={attendanceLabels}
               datasets={[
                 {
-                  label: 'Morning',
-                  data: [20, 10, 90, 60, 30],
+                  label: 'Attendance %',
+                  data: attendanceData,
                   borderColor: '#3B82F6'
-                },
-                {
-                  label: 'Afternoon',
-                  data: [55, 58, 60, 62, 59],
-                  borderColor: '#FACC15'
-                },
-                {
-                  label: 'Evening',
-                  data: [10, 8, 25, 18, 22],
-                  borderColor: '#55EFC2'
                 }
               ]}
               yMin={0}
               yMax={100}
+              stepSize={20}
               tickFormat={v => v + '%'}
             />
           </Card>
         </div>
-        <DashboardTable />
+        {/* <DashboardTable /> */}
       </div>
     </ContentLayout>
   )

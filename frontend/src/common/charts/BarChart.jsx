@@ -12,7 +12,12 @@ import { Bar } from 'react-chartjs-2'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-const BarChart = ({ variant = 'accounts' }) => {
+const BarChart = ({
+  labels = [],
+  incomeData = [],
+  expenseData = [],
+  variant = 'accounts'
+}) => {
   const [showIncome, setShowIncome] = useState(true)
   const [showExpense, setShowExpense] = useState(true)
 
@@ -37,10 +42,7 @@ const BarChart = ({ variant = 'accounts' }) => {
       {
         label: 'Income',
         data: isDashboard
-          ? [
-              12500, 5500, 17500, 12500, 9000, 15000, 8000, 14000, 11000, 9000,
-              12000, 16000
-            ]
+          ? incomeData
           : [25, 70, 100, 80, 60, 90, 75, 95, 85, 65, 70, 100],
         backgroundColor: isDashboard ? '#15CAB8' : '#4581FF',
         borderRadius: isDashboard ? 0 : 8,
@@ -50,10 +52,7 @@ const BarChart = ({ variant = 'accounts' }) => {
       {
         label: 'Expenses',
         data: isDashboard
-          ? [
-              5000, 3000, 7000, 1200, 6000, 4000, 3500, 8000, 5000, 6000, 7000,
-              9000
-            ]
+          ? expenseData
           : [15, 40, 60, 50, 30, 70, 55, 65, 60, 45, 50, 80],
         backgroundColor: isDashboard ? '#377CF6' : '#8A00FF',
         borderRadius: isDashboard ? 0 : 8,
