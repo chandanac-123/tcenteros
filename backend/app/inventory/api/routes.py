@@ -47,6 +47,229 @@ async def _generate_unique_sku_code(db: AsyncSession, center_id):
     # fallback different uuid if collision
     return f"SKU-{uuid4().hex[:10].upper()}"
 
+
+@router.get("/dashboard", summary="Inventory Dashboard")
+async def get_inventory_dashboard(
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Get comprehensive inventory dashboard data.
+    
+    Returns:
+    - Total products
+    - Total stock quantity
+    - Total stock value
+    - Low stock items count
+    - Today's sales
+    - Stock distribution chart (monthly: in stock, low stock, out of stock)
+    - Sales trend chart (monthly sales and purchases)
+    """
+    from sqlalchemy import extract, case
+    from calendar import monthrange
+    
+    center_id = current_admin["center_id"]
+    today = date.today()
+    current_year = today.year
+    
+    # ===== 1. TOTAL PRODUCTS =====
+    total_products_query = select(func.count(Product.id)).where(
+        Product.center_id == center_id,
+        Product.status == "active"
+    )
+    total_products_result = await db.execute(total_products_query)
+    total_products = total_products_result.scalar_one() or 0
+    
+    # ===== 2. TOTAL STOCK QUANTITY =====
+    # Join Product with Stock to get total quantity
+    total_stock_query = select(
+        func.coalesce(func.sum(Stock.quantity_available), 0)
+    ).select_from(Product).join(
+        Stock, Product.id == Stock.product_id
+    ).where(
+        Product.center_id == center_id,
+        Product.status == "active"
+    )
+    total_stock_result = await db.execute(total_stock_query)
+    total_stock_quantity = int(total_stock_result.scalar_one() or 0)
+    
+    # ===== 3. TOTAL STOCK VALUE =====
+    # Stock value = quantity_available * base_price (from SKU parent)
+    stock_value_query = select(
+        func.coalesce(
+            func.sum(Stock.quantity_available * Product.base_price), 
+            0
+        )
+    ).select_from(Product).join(
+        Stock, Product.id == Stock.product_id
+    ).where(
+        Product.center_id == center_id,
+        Product.status == "active"
+    )
+    stock_value_result = await db.execute(stock_value_query)
+    total_stock_value = float(stock_value_result.scalar_one() or 0)
+    
+    # ===== 4. LOW STOCK ITEMS =====
+    # Products where quantity_available <= reorder_level
+    low_stock_query = select(func.count(Product.id)).select_from(
+        Product
+    ).join(
+        Stock, Product.id == Stock.product_id
+    ).where(
+        Product.center_id == center_id,
+        Product.status == "active",
+        Stock.quantity_available <= Product.reorder_level,
+        Stock.quantity_available > 0
+    )
+    low_stock_result = await db.execute(low_stock_query)
+    low_stock_items = int(low_stock_result.scalar_one() or 0)
+    
+    # ===== 5. TODAY'S SALES =====
+    # Count completed sales for today
+    today_sales_query = select(
+        func.count(Sale.id)
+    ).where(
+        Sale.center_id == center_id,
+        Sale.status == "completed",
+        func.date(Sale.created_at) == today
+    )
+    today_sales_result = await db.execute(today_sales_query)
+    today_sales = int(today_sales_result.scalar_one() or 0)
+    
+    # Today's sales amount
+    today_sales_amount_query = select(
+        func.coalesce(func.sum(Sale.total_amount), 0)
+    ).where(
+        Sale.center_id == center_id,
+        Sale.status == "completed",
+        func.date(Sale.created_at) == today
+    )
+    today_sales_amount_result = await db.execute(today_sales_amount_query)
+    today_sales_amount = float(today_sales_amount_result.scalar_one() or 0)
+    
+    # ===== 6. STOCK DISTRIBUTION CHART (Monthly) =====
+    # For each month, calculate:
+    # - In stock: products with quantity > reorder_level
+    # - Low stock: products with 0 < quantity <= reorder_level
+    # - Out of stock: products with quantity = 0
+    
+    month_names = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ]
+    
+    stock_distribution_chart = []
+    
+    for month_num in range(1, 13):
+        # Get the last day of the month
+        days_in_month = monthrange(current_year, month_num)[1]
+        
+        # For historical months, we'd need to track stock history
+        # For simplicity, we'll use current stock levels for all months
+        # In a production system, you'd want to snapshot stock levels or use stock_transactions
+        
+        # If month is in the future, show zero
+        if month_num > today.month and current_year == today.year:
+            stock_distribution_chart.append({
+                "month": month_names[month_num - 1],
+                "in_stock": 0,
+                "low_stock": 0,
+                "out_of_stock": 0
+            })
+            continue
+        
+        # Count products by stock status for this month
+        # Using current stock levels as a proxy (ideal would be historical snapshots)
+        stock_status_query = select(
+            func.count(case(
+                (Stock.quantity_available > Product.reorder_level, 1)
+            )).label("in_stock"),
+            func.count(case(
+                (
+                    (Stock.quantity_available > 0) & 
+                    (Stock.quantity_available <= Product.reorder_level), 
+                    1
+                )
+            )).label("low_stock"),
+            func.count(case(
+                (Stock.quantity_available == 0, 1)
+            )).label("out_of_stock")
+        ).select_from(Product).join(
+            Stock, Product.id == Stock.product_id
+        ).where(
+            Product.center_id == center_id,
+            Product.status == "active"
+        )
+        
+        stock_status_result = await db.execute(stock_status_query)
+        stock_status = stock_status_result.one()
+        
+        stock_distribution_chart.append({
+            "month": month_names[month_num - 1],
+            "in_stock": int(stock_status.in_stock or 0),
+            "low_stock": int(stock_status.low_stock or 0),
+            "out_of_stock": int(stock_status.out_of_stock or 0)
+        })
+    
+    # ===== 7. SALES TREND CHART (Monthly Sales and Purchases) =====
+    # Monthly sales data
+    monthly_sales_query = select(
+        extract('month', Sale.created_at).label('month'),
+        func.coalesce(func.sum(Sale.total_amount), 0).label('sales_amount')
+    ).where(
+        Sale.center_id == center_id,
+        Sale.status == "completed",
+        extract('year', Sale.created_at) == current_year
+    ).group_by('month')
+    
+    sales_result = await db.execute(monthly_sales_query)
+    monthly_sales = {int(row.month): float(row.sales_amount) for row in sales_result}
+    
+    # Monthly purchases data (from StockTransaction with transaction_type = 'purchase')
+    # Get product IDs for this center first
+    product_ids_query = select(Product.id).where(Product.center_id == center_id)
+    product_ids_result = await db.execute(product_ids_query)
+    product_ids = [str(row[0]) for row in product_ids_result.all()]
+    
+    monthly_purchases = {}
+    if product_ids:
+        monthly_purchases_query = select(
+            extract('month', StockTransaction.created_at).label('month'),
+            func.coalesce(func.sum(StockTransaction.subtotal), 0).label('purchase_amount')
+        ).where(
+            StockTransaction.product_id.in_(product_ids),
+            StockTransaction.transaction_type == 'IN',
+            extract('year', StockTransaction.created_at) == current_year
+        ).group_by('month')
+        
+        purchases_result = await db.execute(monthly_purchases_query)
+        monthly_purchases = {int(row.month): float(row.purchase_amount) for row in purchases_result}
+    
+    # Build sales trend array for all 12 months
+    sales_trend_chart = []
+    for month_num in range(1, 13):
+        sales_trend_chart.append({
+            "month": month_names[month_num - 1],
+            "sales": round(monthly_sales.get(month_num, 0), 2),
+            "purchases": round(monthly_purchases.get(month_num, 0), 2)
+        })
+    
+    return {
+        "center_id": str(center_id),
+        "generated_at": datetime.now().isoformat(),
+        "total_products": int(total_products),
+        "total_stock_quantity": total_stock_quantity,
+        "total_stock_value": round(total_stock_value, 2),
+        "low_stock_items": low_stock_items,
+        "today_sales": {
+            "count": today_sales,
+            "amount": round(today_sales_amount, 2)
+        },
+        "stock_distribution_chart": stock_distribution_chart,
+        "sales_trend_chart": sales_trend_chart
+    }
+
+
 #list products endpoint for lookup (id + name only, centeradmin only)
 @router.get("/products/lookup", summary="Lookup products (id + name only)")
 async def list_products_lookup(
