@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 from app.core.dependencies import get_async_session, centeradmin_required
 from app.billing.schema.schema import *
-from app.billing.models.models import Currency, PaymentOrder, PaymentOrderStatus, ReferenceSchema, PaymentMethod, OrderType, MiscellaneousTransaction
+from app.billing.models.models import Currency, PaymentOrder, PaymentOrderStatus, ReferenceSchema, PaymentMethod, OrderType, MiscellaneousTransaction, PayerType
 from app.inventory.models.models import Sale, SaleItem, Product
 from app.membership.models.models import MemberMembership, Membership, DurationUnitEnum
 from app.auth.models.models import Member, User, UserCenterMembership, NetworkingStatusEnum, Employee
@@ -17,6 +17,7 @@ from uuid import UUID
 from uuid import uuid4
 from calendar import monthrange
 from fastapi.responses import StreamingResponse
+from app.billing.utils.reports import BillingReportGenerator
 import io
 import csv
 from openpyxl import Workbook
@@ -2771,725 +2772,6 @@ async def mark_settlement_completed(
     }
 
 
-#-----------REPORTS API ENDPOINTS-----------
-
-
-# ============================================================================
-# 1. DAILY SALES REPORT
-# ============================================================================
-
-@router.get("/billing/reports/daily-sales", summary="Get daily sales report")
-async def get_daily_sales_report(
-    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Daily sales report with breakdown by day.
-    Shows total sales, count, and payment methods per day.
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=403, detail="Center ID not found")
-    
-    # Parse dates
-    try:
-        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
-    
-    # Get all sales transactions
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.order_type.in_([
-                OrderType.membership,
-                OrderType.renewal,
-                OrderType.stock_purchase,
-                OrderType.networking_access
-            ]),
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    ).order_by(PaymentOrder.created_at)
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Group by day
-    daily_data = {}
-    
-    for payment in payments:
-        day_key = payment.created_at.date().isoformat()
-        
-        if day_key not in daily_data:
-            daily_data[day_key] = {
-                "date": day_key,
-                "total_sales": Decimal("0.00"),
-                "transaction_count": 0,
-                "cash": Decimal("0.00"),
-                "upi": Decimal("0.00"),
-                "card": Decimal("0.00"),
-                "bank_transfer": Decimal("0.00"),
-                "other": Decimal("0.00"),
-                "membership_sales": Decimal("0.00"),
-                "inventory_sales": Decimal("0.00"),
-                "network_sales": Decimal("0.00"),
-            }
-        
-        amount = Decimal(str(payment.total_amount))
-        daily_data[day_key]["total_sales"] += amount
-        daily_data[day_key]["transaction_count"] += 1
-        
-        # By payment method
-        if payment.payment_method:
-            method_key = payment.payment_method.value.lower()
-            if method_key in daily_data[day_key]:
-                daily_data[day_key][method_key] += amount
-        
-        # By order type
-        if payment.order_type in [OrderType.membership, OrderType.renewal]:
-            daily_data[day_key]["membership_sales"] += amount
-        elif payment.order_type == OrderType.stock_purchase:
-            daily_data[day_key]["inventory_sales"] += amount
-        elif payment.order_type == OrderType.networking_access:
-            daily_data[day_key]["network_sales"] += amount
-    
-    # Convert to list and sort
-    daily_list = sorted(daily_data.values(), key=lambda x: x["date"])
-    
-    # Calculate totals
-    total_sales = sum(Decimal(d["total_sales"]) for d in daily_list)
-    total_transactions = sum(d["transaction_count"] for d in daily_list)
-    
-    return {
-        "date_from": date_from,
-        "date_to": date_to,
-        "total_sales": str(total_sales),
-        "total_transactions": total_transactions,
-        "daily_breakdown": [
-            {**d, "total_sales": str(d["total_sales"]), 
-             "cash": str(d["cash"]), "upi": str(d["upi"]), 
-             "card": str(d["card"]), "bank_transfer": str(d["bank_transfer"]), 
-             "other": str(d["other"]), "membership_sales": str(d["membership_sales"]),
-             "inventory_sales": str(d["inventory_sales"]), "network_sales": str(d["network_sales"])}
-            for d in daily_list
-        ]
-    }
-
-
-# ============================================================================
-# 2. MEMBERSHIP REVENUE REPORT
-# ============================================================================
-
-@router.get("/billing/reports/membership-revenue", summary="Get membership revenue report")
-async def get_membership_revenue_report(
-    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Membership revenue report.
-    Shows new memberships vs renewals, revenue by plan.
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=403, detail="Center ID not found")
-    
-    # Parse dates
-    try:
-        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
-    
-    # Get membership payments
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal]),
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    )
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Get member memberships for plan details
-    member_membership_ids = {p.reference_id for p in payments if p.reference_id}
-    membership_map = {}
-    plan_stats = {}
-    
-    if member_membership_ids:
-        mm_query = select(MemberMembership).where(MemberMembership.id.in_(member_membership_ids))
-        mm_result = await db.execute(mm_query)
-        member_memberships = mm_result.scalars().all()
-        
-        membership_ids = {mm.membership_id for mm in member_memberships}
-        if membership_ids:
-            m_query = select(Membership).where(Membership.membership_id.in_(membership_ids))
-            m_result = await db.execute(m_query)
-            memberships = m_result.scalars().all()
-            membership_map = {m.membership_id: m for m in memberships}
-    
-    # Calculate stats
-    new_memberships = [p for p in payments if p.order_type == OrderType.membership]
-    renewals = [p for p in payments if p.order_type == OrderType.renewal]
-    
-    new_revenue = sum(Decimal(str(p.total_amount)) for p in new_memberships)
-    renewal_revenue = sum(Decimal(str(p.total_amount)) for p in renewals)
-    total_revenue = new_revenue + renewal_revenue
-    
-    # Revenue by plan
-    for payment in payments:
-        if payment.reference_id and payment.reference_id in [mm.id for mm in member_memberships]:
-            mm = next((mm for mm in member_memberships if mm.id == payment.reference_id), None)
-            if mm and mm.membership_id in membership_map:
-                plan = membership_map[mm.membership_id]
-                plan_name = plan.membership_name
-                
-                if plan_name not in plan_stats:
-                    plan_stats[plan_name] = {
-                        "plan_name": plan_name,
-                        "new_count": 0,
-                        "renewal_count": 0,
-                        "total_revenue": Decimal("0.00")
-                    }
-                
-                if payment.order_type == OrderType.membership:
-                    plan_stats[plan_name]["new_count"] += 1
-                else:
-                    plan_stats[plan_name]["renewal_count"] += 1
-                
-                plan_stats[plan_name]["total_revenue"] += Decimal(str(payment.total_amount))
-    
-    return {
-        "date_from": date_from,
-        "date_to": date_to,
-        "summary": {
-            "total_revenue": str(total_revenue),
-            "new_memberships_revenue": str(new_revenue),
-            "renewals_revenue": str(renewal_revenue),
-            "new_memberships_count": len(new_memberships),
-            "renewals_count": len(renewals),
-            "total_count": len(payments)
-        },
-        "by_plan": [
-            {**stats, "total_revenue": str(stats["total_revenue"])}
-            for stats in plan_stats.values()
-        ]
-    }
-
-
-# ============================================================================
-# 3. INVENTORY SALES REPORT
-# ============================================================================
-
-@router.get("/billing/reports/inventory-sales", summary="Get inventory sales report")
-async def get_inventory_sales_report(
-    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Inventory/product sales report.
-    Shows sales by product, quantities sold, revenue.
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=403, detail="Center ID not found")
-    
-    # Parse dates
-    try:
-        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
-    
-    # Get inventory sales payments
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.order_type == OrderType.stock_purchase,
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    )
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Get sales and products
-    sale_ids = {p.reference_id for p in payments if p.reference_id}
-    product_stats = {}
-    
-    if sale_ids:
-        # Get sales
-        sales_query = select(Sale).where(Sale.sale_id.in_(sale_ids))
-        sales_result = await db.execute(sales_query)
-        sales = sales_result.scalars().all()
-        
-        # Get sale items
-        sale_items_query = select(SaleItem).where(SaleItem.sale_id.in_(sale_ids))
-        sale_items_result = await db.execute(sale_items_query)
-        sale_items = sale_items_result.scalars().all()
-        
-        # Get products
-        product_ids = {si.product_id for si in sale_items if si.product_id}
-        if product_ids:
-            products_query = select(Product).where(Product.id.in_(product_ids))
-            products_result = await db.execute(products_query)
-            products = products_result.scalars().all()
-            product_map = {p.id: p for p in products}
-            
-            # Calculate stats by product
-            for item in sale_items:
-                if item.product_id in product_map:
-                    product = product_map[item.product_id]
-                    product_name = product.product_name
-                    
-                    if product_name not in product_stats:
-                        product_stats[product_name] = {
-                            "product_name": product_name,
-                            "quantity_sold": 0,
-                            "total_revenue": Decimal("0.00"),
-                            "sales_count": 0
-                        }
-                    
-                    product_stats[product_name]["quantity_sold"] += item.quantity
-                    product_stats[product_name]["total_revenue"] += Decimal(str(item.unit_price)) * item.quantity
-                    product_stats[product_name]["sales_count"] += 1
-    
-    total_revenue = sum(Decimal(str(p.total_amount)) for p in payments)
-    
-    return {
-        "date_from": date_from,
-        "date_to": date_to,
-        "summary": {
-            "total_revenue": str(total_revenue),
-            "total_transactions": len(payments),
-            "total_products_sold": sum(stats["quantity_sold"] for stats in product_stats.values())
-        },
-        "by_product": [
-            {**stats, "total_revenue": str(stats["total_revenue"])}
-            for stats in sorted(product_stats.values(), key=lambda x: x["total_revenue"], reverse=True)
-        ]
-    }
-
-
-# ============================================================================
-# 4. NETWORK EARNINGS REPORT
-# ============================================================================
-
-@router.get("/billing/reports/network-earnings", summary="Get network earnings report")
-async def get_network_earnings_report(
-    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Network visits earnings report.
-    Shows incoming vs outgoing visits, platform fees, net earnings.
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=403, detail="Center ID not found")
-    
-    # Parse dates
-    try:
-        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
-        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
-    
-    platform_fee_percentage = Decimal("0.15")
-    
-    # Incoming visits
-    incoming_query = select(UserCenterMembership).where(
-        and_(
-            UserCenterMembership.center_id == center_id,
-            UserCenterMembership.start_date >= date_from_parsed,
-            UserCenterMembership.start_date <= date_to_parsed,
-            UserCenterMembership.network_status.in_([
-                NetworkingStatusEnum.approved,
-                NetworkingStatusEnum.paid,
-                NetworkingStatusEnum.completed,
-                NetworkingStatusEnum.pending_settlement
-            ])
-        )
-    )
-    incoming_result = await db.execute(incoming_query)
-    incoming_visits = incoming_result.scalars().all()
-    
-    # Outgoing visits
-    members_query = select(Member.id).where(Member.home_center_id == center_id)
-    members_result = await db.execute(members_query)
-    member_ids = [m for m in members_result.scalars().all()]
-    
-    outgoing_visits = []
-    if member_ids:
-        outgoing_query = select(UserCenterMembership).where(
-            and_(
-                UserCenterMembership.user_id.in_(member_ids),
-                UserCenterMembership.center_id != center_id,
-                UserCenterMembership.start_date >= date_from_parsed,
-                UserCenterMembership.start_date <= date_to_parsed,
-                UserCenterMembership.network_status.in_([
-                    NetworkingStatusEnum.approved,
-                    NetworkingStatusEnum.paid,
-                    NetworkingStatusEnum.completed,
-                    NetworkingStatusEnum.pending_settlement
-                ])
-            )
-        )
-        outgoing_result = await db.execute(outgoing_query)
-        outgoing_visits = outgoing_result.scalars().all()
-    
-    # Get payment orders
-    all_visit_ids = [v.id for v in incoming_visits + outgoing_visits]
-    payment_orders_map = {}
-    if all_visit_ids:
-        po_query = select(PaymentOrder).where(
-            and_(
-                PaymentOrder.reference_id.in_(all_visit_ids),
-                PaymentOrder.order_type == OrderType.networking_access
-            )
-        )
-        po_result = await db.execute(po_query)
-        payment_orders = po_result.scalars().all()
-        payment_orders_map = {po.reference_id: po for po in payment_orders}
-    
-    # Calculate earnings
-    incoming_total = Decimal("0.00")
-    incoming_platform_fees = Decimal("0.00")
-    
-    for visit in incoming_visits:
-        po = payment_orders_map.get(visit.id)
-        if po:
-            charge = Decimal(str(po.total_amount))
-            platform_fee = (charge * platform_fee_percentage).quantize(Decimal("0.01"))
-            earned = charge - platform_fee
-            
-            incoming_total += earned
-            incoming_platform_fees += platform_fee
-    
-    outgoing_total = Decimal("0.00")
-    for visit in outgoing_visits:
-        po = payment_orders_map.get(visit.id)
-        if po:
-            outgoing_total += Decimal(str(po.total_amount))
-    
-    net_earnings = incoming_total - outgoing_total
-    
-    return {
-        "date_from": date_from,
-        "date_to": date_to,
-        "incoming": {
-            "visits_count": len(incoming_visits),
-            "gross_revenue": str(incoming_total + incoming_platform_fees),
-            "platform_fees": str(incoming_platform_fees),
-            "net_revenue": str(incoming_total)
-        },
-        "outgoing": {
-            "visits_count": len(outgoing_visits),
-            "total_paid": str(outgoing_total)
-        },
-        "net_earnings": str(net_earnings),
-        "platform_fee_percentage": "15"
-    }
-
-
-# ============================================================================
-# 5. TAX SUMMARY REPORT
-# ============================================================================
-
-@router.get("/billing/reports/tax-summary", summary="Get tax summary report")
-async def get_tax_summary_report(
-    date_from: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    date_to: str = Query(..., description="End date (YYYY-MM-DD)"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Tax summary report.
-    Shows tax collected by category, total taxable amount, total tax.
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=403, detail="Center ID not found")
-    
-    # Parse dates
-    try:
-        date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-        date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format")
-    
-    # Get all paid transactions
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    )
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Get tax categories
-    tax_category_ids = {p.tax_category_id for p in payments if p.tax_category_id}
-    tax_category_map = {}
-    
-    if tax_category_ids:
-        tax_query = select(TaxCategory).where(TaxCategory.id.in_(tax_category_ids))
-        tax_result = await db.execute(tax_query)
-        tax_categories = tax_result.scalars().all()
-        tax_category_map = {tc.id: tc for tc in tax_categories}
-    
-    # Calculate tax stats
-    tax_stats = {}
-    total_taxable = Decimal("0.00")
-    total_tax = Decimal("0.00")
-    
-    for payment in payments:
-        subtotal = Decimal(str(payment.subtotal_amount))
-        tax_amount = Decimal(str(payment.tax_amount))
-        
-        total_taxable += subtotal
-        total_tax += tax_amount
-        
-        if payment.tax_category_id and payment.tax_category_id in tax_category_map:
-            tax_cat = tax_category_map[payment.tax_category_id]
-            cat_name = tax_cat.tax_name
-            
-            if cat_name not in tax_stats:
-                tax_stats[cat_name] = {
-                    "tax_category": cat_name,
-                    "tax_rate": str(tax_cat.rate),
-                    "taxable_amount": Decimal("0.00"),
-                    "tax_collected": Decimal("0.00"),
-                    "transaction_count": 0
-                }
-            
-            tax_stats[cat_name]["taxable_amount"] += subtotal
-            tax_stats[cat_name]["tax_collected"] += tax_amount
-            tax_stats[cat_name]["transaction_count"] += 1
-    
-    return {
-        "date_from": date_from,
-        "date_to": date_to,
-        "summary": {
-            "total_taxable_amount": str(total_taxable),
-            "total_tax_collected": str(total_tax),
-            "total_transactions": len(payments)
-        },
-        "by_tax_category": [
-            {**stats, "taxable_amount": str(stats["taxable_amount"]), 
-             "tax_collected": str(stats["tax_collected"])}
-            for stats in tax_stats.values()
-        ]
-    }
-
-
-# ============================================================================
-# 6. EXPORT EXCEL - Daily Sales
-# ============================================================================
-
-@router.get("/billing/reports/daily-sales/export-excel", summary="Export daily sales to Excel")
-async def export_daily_sales_excel(
-    date_from: str = Query(...),
-    date_to: str = Query(...),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """Export daily sales report as Excel file."""
-    
-    # Get report data (reuse the daily sales logic)
-    center_id = current_admin.get("center_id")
-    date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-    date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal, OrderType.stock_purchase, OrderType.networking_access]),
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    ).order_by(PaymentOrder.created_at)
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Create Excel workbook
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Daily Sales Report"
-    
-    # Header
-    headers = ["Date", "Total Sales", "Transactions", "Cash", "UPI", "Card", "Bank Transfer", "Membership", "Inventory", "Network"]
-    ws.append(headers)
-    
-    # Style header
-    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)
-    
-    for cell in ws[1]:
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = Alignment(horizontal="center")
-    
-    # Group data by day
-    daily_data = {}
-    for payment in payments:
-        day_key = payment.created_at.date().isoformat()
-        if day_key not in daily_data:
-            daily_data[day_key] = {
-                "total": Decimal("0.00"), "count": 0,
-                "cash": Decimal("0.00"), "upi": Decimal("0.00"),
-                "card": Decimal("0.00"), "bank_transfer": Decimal("0.00"),
-                "membership": Decimal("0.00"), "inventory": Decimal("0.00"), "network": Decimal("0.00")
-            }
-        
-        amount = Decimal(str(payment.total_amount))
-        daily_data[day_key]["total"] += amount
-        daily_data[day_key]["count"] += 1
-        
-        if payment.payment_method:
-            method_key = payment.payment_method.value.lower()
-            if method_key in daily_data[day_key]:
-                daily_data[day_key][method_key] += amount
-        
-        if payment.order_type in [OrderType.membership, OrderType.renewal]:
-            daily_data[day_key]["membership"] += amount
-        elif payment.order_type == OrderType.stock_purchase:
-            daily_data[day_key]["inventory"] += amount
-        elif payment.order_type == OrderType.networking_access:
-            daily_data[day_key]["network"] += amount
-    
-    # Add data rows
-    for day in sorted(daily_data.keys()):
-        d = daily_data[day]
-        ws.append([
-            day,
-            float(d["total"]),
-            d["count"],
-            float(d["cash"]),
-            float(d["upi"]),
-            float(d["card"]),
-            float(d["bank_transfer"]),
-            float(d["membership"]),
-            float(d["inventory"]),
-            float(d["network"])
-        ])
-    
-    # Save to bytes
-    excel_file = io.BytesIO()
-    wb.save(excel_file)
-    excel_file.seek(0)
-    
-    return StreamingResponse(
-        excel_file,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=daily_sales_{date_from}_to_{date_to}.xlsx"}
-    )
-
-
-# ============================================================================
-# 7. EXPORT CSV - Daily Sales
-# ============================================================================
-
-@router.get("/billing/reports/daily-sales/export-csv", summary="Export daily sales to CSV")
-async def export_daily_sales_csv(
-    date_from: str = Query(...),
-    date_to: str = Query(...),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """Export daily sales report as CSV file."""
-    
-    # Get report data (same as Excel)
-    center_id = current_admin.get("center_id")
-    date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
-    date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
-    
-    query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(date_from_parsed.date(), datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(date_to_parsed.date(), datetime.max.time()),
-            PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal, OrderType.stock_purchase, OrderType.networking_access]),
-            PaymentOrder.status == PaymentOrderStatus.paid
-        )
-    ).order_by(PaymentOrder.created_at)
-    
-    result = await db.execute(query)
-    payments = result.scalars().all()
-    
-    # Create CSV
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Header
-    writer.writerow(["Date", "Total Sales", "Transactions", "Cash", "UPI", "Card", "Bank Transfer", "Membership", "Inventory", "Network"])
-    
-    # Group data
-    daily_data = {}
-    for payment in payments:
-        day_key = payment.created_at.date().isoformat()
-        if day_key not in daily_data:
-            daily_data[day_key] = {
-                "total": Decimal("0.00"), "count": 0,
-                "cash": Decimal("0.00"), "upi": Decimal("0.00"),
-                "card": Decimal("0.00"), "bank_transfer": Decimal("0.00"),
-                "membership": Decimal("0.00"), "inventory": Decimal("0.00"), "network": Decimal("0.00")
-            }
-        
-        amount = Decimal(str(payment.total_amount))
-        daily_data[day_key]["total"] += amount
-        daily_data[day_key]["count"] += 1
-        
-        if payment.payment_method:
-            method_key = payment.payment_method.value.lower()
-            if method_key in daily_data[day_key]:
-                daily_data[day_key][method_key] += amount
-        
-        if payment.order_type in [OrderType.membership, OrderType.renewal]:
-            daily_data[day_key]["membership"] += amount
-        elif payment.order_type == OrderType.stock_purchase:
-            daily_data[day_key]["inventory"] += amount
-        elif payment.order_type == OrderType.networking_access:
-            daily_data[day_key]["network"] += amount
-    
-    # Write rows
-    for day in sorted(daily_data.keys()):
-        d = daily_data[day]
-        writer.writerow([
-            day, str(d["total"]), d["count"],
-            str(d["cash"]), str(d["upi"]), str(d["card"]), str(d["bank_transfer"]),
-            str(d["membership"]), str(d["inventory"]), str(d["network"])
-        ])
-    
-    # Return CSV
-    output.seek(0)
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=daily_sales_{date_from}_to_{date_to}.csv"}
-    )
-
 
 
 #---------add charges ---------------------------------------------
@@ -3602,3 +2884,364 @@ async def create_miscellaneous_transaction(
         "message": "Miscellaneous transaction created successfully",
         "data": response
     }
+
+
+
+
+#-----------REPORTS API ENDPOINTS-----------
+
+#-----------BILLING SALES REPORTS API ENDPOINTS-----------
+
+def parse_date_param(date_str: Optional[str]) -> Optional[date]:
+    """Convert string date or 'null' to date object or None"""
+    if date_str is None or date_str.lower() == 'null':
+        return None
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {date_str}. Use YYYY-MM-DD or null")
+
+
+@router.get("/billing/reports/sales", summary="Get Sales Report Data for UI Table")
+async def get_billing_sales_report_data(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
+    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
+    order_type: Optional[str] = Query(None, description="Filter by order type: membership, renewal, stock_purchase, networking_access, etc."),
+    payment_status: Optional[str] = Query(None, description="Filter by status: paid, unpaid, pending"),
+    payment_method: Optional[str] = Query(None, description="Filter by payment method: cash, upi, card, bank_transfer"),
+    sort_by: str = Query("created_at", description="Sort by: created_at, total_amount, order_type"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Get billing sales report data in JSON format for UI table display.
+    Supports pagination, filtering, and sorting.
+    """
+    from app.auth.models.models import CenterAdmin, Member, User
+    
+    # Get center_id from current_admin (injected by centeradmin_required)
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Parse dates
+    start_date_parsed = parse_date_param(start_date)
+    end_date_parsed = parse_date_param(end_date)
+    
+    # Build base query
+    query = select(PaymentOrder).where(PaymentOrder.center_id == center_id)
+    
+    # Apply date filters
+    if start_date_parsed:
+        query = query.where(func.date(PaymentOrder.created_at) >= start_date_parsed)
+    if end_date_parsed:
+        query = query.where(func.date(PaymentOrder.created_at) <= end_date_parsed)
+    
+    # Apply filters
+    if order_type:
+        try:
+            query = query.where(PaymentOrder.order_type == OrderType(order_type))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid order_type: {order_type}")
+    
+    if payment_status:
+        try:
+            query = query.where(PaymentOrder.status == PaymentOrderStatus(payment_status))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid payment_status: {payment_status}")
+    
+    if payment_method:
+        try:
+            query = query.where(PaymentOrder.payment_method == PaymentMethod(payment_method))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid payment_method: {payment_method}")
+    
+    # Count total records
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total_records = total_result.scalar()
+    
+    # Apply sorting
+    if sort_by == "created_at":
+        order_col = PaymentOrder.created_at
+    elif sort_by == "total_amount":
+        order_col = PaymentOrder.total_amount
+    elif sort_by == "order_type":
+        order_col = PaymentOrder.order_type
+    else:
+        order_col = PaymentOrder.created_at
+    
+    if sort_order == "desc":
+        query = query.order_by(desc(order_col))
+    else:
+        query = query.order_by(order_col)
+    
+    # Apply pagination
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
+    
+    # Execute query
+    result = await db.execute(query)
+    payment_orders = result.scalars().all()
+    
+    # Fetch customer names - collect payer_user_ids
+    payer_user_ids = set()
+    for po in payment_orders:
+        if po.payer_user_id:
+            payer_user_ids.add(po.payer_user_id)
+    
+    # Fetch users and members
+    user_map = {}
+    member_map = {}
+    
+    if payer_user_ids:
+        # Fetch all users
+        users_query = select(User).where(User.id.in_(payer_user_ids))
+        users_result = await db.execute(users_query)
+        users = users_result.scalars().all()
+        user_map = {str(u.id): u for u in users}
+        
+        # Fetch members (Member.id is the same as User.id for member users)
+        members_query = select(Member).where(Member.id.in_(payer_user_ids))
+        members_result = await db.execute(members_query)
+        members = members_result.scalars().all()
+        member_map = {str(m.id): m for m in members}
+    
+    # Build response
+    sales_data = []
+    total_revenue = Decimal("0.00")
+    total_tax = Decimal("0.00")
+    total_subtotal = Decimal("0.00")
+    
+    for po in payment_orders:
+        customer_name = "N/A"
+        
+        # Get customer name based on payer_user_id
+        if po.payer_user_id:
+            user = user_map.get(str(po.payer_user_id))
+            member = member_map.get(str(po.payer_user_id))
+            
+            if member and hasattr(member, 'full_name') and member.full_name:
+                customer_name = member.full_name
+            elif user:
+                # Try to construct name from user
+                if user.username:
+                    customer_name = user.username
+                elif user.email:
+                    customer_name = user.email.split('@')[0]
+                elif user.mobile:
+                    customer_name = user.mobile
+        
+        sales_data.append({
+            "payment_order_id": str(po.payment_order_id),
+            "created_at": po.created_at.isoformat() if po.created_at else None,
+            "order_type": po.order_type.value if hasattr(po.order_type, 'value') else str(po.order_type),
+            "customer_name": customer_name,
+            "payment_method": po.payment_method.value if hasattr(po.payment_method, 'value') else str(po.payment_method) if po.payment_method else "N/A",
+            "subtotal_amount": float(po.subtotal_amount or 0),
+            "tax_amount": float(po.tax_amount or 0),
+            "total_amount": float(po.total_amount or 0),
+            "status": po.status.value if hasattr(po.status, 'value') else str(po.status),
+            "reference_id": str(po.reference_id) if po.reference_id else None,
+            "currency": po.currency.value if hasattr(po.currency, 'value') else str(po.currency) if po.currency else "INR"
+        })
+        
+        if po.status == PaymentOrderStatus.paid:
+            total_revenue += po.total_amount or Decimal("0.00")
+            total_tax += po.tax_amount or Decimal("0.00")
+            total_subtotal += po.subtotal_amount or Decimal("0.00")
+    
+    # Calculate pagination info
+    total_pages = (total_records + page_size - 1) // page_size
+    
+    return {
+        "report_type": "billing_sales",
+        "report_period": {
+            "start_date": str(start_date_parsed) if start_date_parsed else "all_time",
+            "end_date": str(end_date_parsed) if end_date_parsed else "all_time"
+        },
+        "summary": {
+            "total_transactions": total_records,
+            "paid_transactions": len([s for s in sales_data if s['status'] == 'paid']),
+            "total_subtotal": float(total_subtotal),
+            "total_tax": float(total_tax),
+            "total_revenue": float(total_revenue)
+        },
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total_records": total_records,
+            "total_pages": total_pages
+        },
+        "data": sales_data,
+        "generated_at": datetime.utcnow().isoformat()
+    }
+
+
+@router.post("/billing/reports/generate/sales", summary="Generate and Download Sales Report")
+async def generate_billing_sales_report(
+    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
+    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
+    format: str = Query("pdf", description="Output format: json, pdf, csv"),
+    order_type: Optional[str] = Query(None, description="Filter by order type"),
+    payment_status: Optional[str] = Query(None, description="Filter by status: paid, unpaid, pending"),
+    payment_method: Optional[str] = Query(None, description="Filter by payment method"),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    """
+    Generate and download billing sales report in PDF or CSV format.
+    Returns file download response.
+    """
+    from app.auth.models.models import CenterAdmin, Member, User
+    import io
+    
+    # Get center_id from current_admin
+    center_id = current_admin.get("center_id")
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+    
+    # Get center details
+    center_query = select(Center).where(Center.id == center_id)
+    center_result = await db.execute(center_query)
+    center = center_result.scalar_one_or_none()
+    center_name = center.center_name if center else "Center"
+    
+    # Parse dates
+    start_date_parsed = parse_date_param(start_date)
+    end_date_parsed = parse_date_param(end_date)
+    
+    # Build query (same as above but without pagination)
+    query = select(PaymentOrder).where(PaymentOrder.center_id == center_id)
+    
+    if start_date_parsed:
+        query = query.where(func.date(PaymentOrder.created_at) >= start_date_parsed)
+    if end_date_parsed:
+        query = query.where(func.date(PaymentOrder.created_at) <= end_date_parsed)
+    
+    if order_type:
+        try:
+            query = query.where(PaymentOrder.order_type == OrderType(order_type))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid order_type: {order_type}")
+    
+    if payment_status:
+        try:
+            query = query.where(PaymentOrder.status == PaymentOrderStatus(payment_status))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid payment_status: {payment_status}")
+    
+    if payment_method:
+        try:
+            query = query.where(PaymentOrder.payment_method == PaymentMethod(payment_method))
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid payment_method: {payment_method}")
+    
+    query = query.order_by(desc(PaymentOrder.created_at))
+    
+    # Execute query
+    result = await db.execute(query)
+    payment_orders = result.scalars().all()
+    
+    # Fetch customer names
+    payer_user_ids = set()
+    for po in payment_orders:
+        if po.payer_user_id:
+            payer_user_ids.add(po.payer_user_id)
+    
+    user_map = {}
+    member_map = {}
+    
+    if payer_user_ids:
+        users_query = select(User).where(User.id.in_(payer_user_ids))
+        users_result = await db.execute(users_query)
+        users = users_result.scalars().all()
+        user_map = {str(u.id): u for u in users}
+        
+        members_query = select(Member).where(Member.id.in_(payer_user_ids))
+        members_result = await db.execute(members_query)
+        members = members_result.scalars().all()
+        member_map = {str(m.id): m for m in members}
+    
+    # Build sales data
+    sales_data = []
+    for po in payment_orders:
+        customer_name = "N/A"
+        
+        if po.payer_user_id:
+            user = user_map.get(str(po.payer_user_id))
+            member = member_map.get(str(po.payer_user_id))
+            
+            if member and hasattr(member, 'full_name') and member.full_name:
+                customer_name = member.full_name
+            elif user:
+                if user.username:
+                    customer_name = user.username
+                elif user.email:
+                    customer_name = user.email.split('@')[0]
+                elif user.mobile:
+                    customer_name = user.mobile
+        
+        sales_data.append({
+            "payment_order_id": str(po.payment_order_id),
+            "created_at": po.created_at.isoformat() if po.created_at else None,
+            "order_type": po.order_type.value if hasattr(po.order_type, 'value') else str(po.order_type),
+            "customer_name": customer_name,
+            "payment_method": po.payment_method.value if hasattr(po.payment_method, 'value') else str(po.payment_method) if po.payment_method else "N/A",
+            "subtotal_amount": float(po.subtotal_amount or 0),
+            "tax_amount": float(po.tax_amount or 0),
+            "total_amount": float(po.total_amount or 0),
+            "status": po.status.value if hasattr(po.status, 'value') else str(po.status),
+            "reference_id": str(po.reference_id) if po.reference_id else None,
+            "currency": po.currency.value if hasattr(po.currency, 'value') else str(po.currency) if po.currency else "INR"
+        })
+    
+    # Format dates for display
+    date_from_str = str(start_date_parsed) if start_date_parsed else "all_time"
+    date_to_str = str(end_date_parsed) if end_date_parsed else "all_time"
+    
+    # Generate report based on format
+    if format == "pdf":
+        pdf_content = BillingReportGenerator.generate_sales_pdf(
+            sales_data=sales_data,
+            center_name=center_name,
+            date_from=date_from_str,
+            date_to=date_to_str
+        )
+        
+        filename = f"billing_sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_content),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    
+    elif format == "csv":
+        csv_content = BillingReportGenerator.generate_sales_csv(sales_data=sales_data)
+        
+        filename = f"billing_sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(csv_content),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    
+    elif format == "json":
+        return {
+            "report_type": "billing_sales",
+            "report_period": {
+                "start_date": date_from_str,
+                "end_date": date_to_str
+            },
+            "center_name": center_name,
+            "data": sales_data,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
