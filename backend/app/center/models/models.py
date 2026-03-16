@@ -138,6 +138,7 @@ class CenterOnboardingTemp(Base, AuditMixin):
     platform_feature_ids = Column(JSON, nullable=False)  # list of feature UUIDs
     is_terms_and_conditions = Column(Boolean, default=False)
     calculated_amount = Column(Numeric(10, 2), nullable=False)
+    subscription_duration = Column(String, nullable=False, default="yearly")  # "monthly" or "yearly"
 
 
 

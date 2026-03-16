@@ -19,6 +19,7 @@ class CenterOnboardingTempCreate(BaseModel):
     marketing_platform: Optional[Union[dict, list]] = None  # <-- JSON
     platform_feature_ids: List[UUID4]
     is_terms_and_conditions: bool = False
+    subscription_duration: str = "yearly"  # "monthly" or "yearly"
 
 
 class CenterOnboardingTempOut(CenterOnboardingTempCreate):

@@ -373,6 +373,8 @@ async def create_onboarding_temp(
     data: CenterOnboardingTempCreate,
     db: AsyncSession = Depends(get_async_session)
 ):
+    
+    
     # Convert UUIDs to strings for JSON storage
     feature_ids = [str(fid) for fid in data.platform_feature_ids]
 
