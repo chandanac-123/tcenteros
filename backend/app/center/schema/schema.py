@@ -73,7 +73,11 @@ class GSTCalculationResponse(BaseModel):
     total_base_price: float
     total_tax: float
     total_amount: float
-    tax: Optional[TaxInfo] = None
+    tax: Optional[dict] = None
+    pricing_note: Optional[str] = None  # Add this line
+
+    class Config:
+        from_attributes = True
 
 class PaymentOrderCreate(BaseModel):
     onboarding_id: UUID4

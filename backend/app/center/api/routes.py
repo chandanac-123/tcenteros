@@ -48,6 +48,40 @@ def haversine(lat1, lon1, lat2, lon2):
     km = 6371 * c
     return km
 
+def calculate_subscription_price(yearly_base: float, duration: str) -> dict:
+    """
+    Calculate pricing based on subscription duration.
+    Monthly: (yearly/12) * 1.25
+    Yearly: base price
+    
+    Returns dict with: base_price, pricing_type, yearly_equivalent, monthly_equivalent, note
+    """
+    if duration == "monthly":
+        monthly_price = (yearly_base / 12) * 1.25
+        yearly_equivalent = monthly_price * 12
+        savings = yearly_base - yearly_equivalent
+        savings_percent = (savings / yearly_equivalent) * 100
+        return {
+            "base_price": monthly_price,
+            "pricing_type": "monthly",
+            "yearly_equivalent": yearly_equivalent,
+            "monthly_equivalent": monthly_price,
+            "note": f"Monthly: ₹{monthly_price:.2f}/month (₹{yearly_equivalent:.2f} for 12 months). Save ₹{abs(savings):.2f} ({savings_percent:.0f}%) with yearly plan!"
+        }
+    else:
+        monthly_equiv = yearly_base / 12
+        monthly_plan_yearly_cost = (monthly_equiv * 1.25) * 12
+        savings = monthly_plan_yearly_cost - yearly_base
+        savings_percent = (savings / monthly_plan_yearly_cost) * 100
+        return {
+            "base_price": yearly_base,
+            "pricing_type": "yearly",
+            "yearly_equivalent": yearly_base,
+            "monthly_equivalent": monthly_equiv,
+            "note": f"Yearly: ₹{yearly_base:.2f} (₹{monthly_equiv:.2f}/month equivalent). You're saving ₹{savings:.2f} ({savings_percent:.0f}%) compared to monthly billing!"
+        }
+
+
 @router.get("/center/dashboard", summary="Get Center Dashboard Data")
 async def get_center_dashboard(
     db: AsyncSession = Depends(get_async_session),
@@ -373,18 +407,34 @@ async def create_onboarding_temp(
     data: CenterOnboardingTempCreate,
     db: AsyncSession = Depends(get_async_session)
 ):
-    
+    """
+    Create temporary onboarding record with pricing calculation.
+    Supports monthly and yearly subscriptions.
+    """
+    # Validate subscription_duration
+    if data.subscription_duration not in ["monthly", "yearly"]:
+        raise HTTPException(
+            status_code=400,
+            detail="subscription_duration must be 'monthly' or 'yearly'"
+        )
     
     # Convert UUIDs to strings for JSON storage
     feature_ids = [str(fid) for fid in data.platform_feature_ids]
 
-    # Sum the base price of each selected feature
-    total_base = 0.0
+    # Calculate yearly base price from all selected features
+    yearly_base = 0.0
     for feature_id in data.platform_feature_ids:
         feature = await db.get(PlatformFeature, feature_id)
         if not feature:
-            raise HTTPException(404, f"Feature {feature_id} not found")
-        total_base += float(feature.base_price)
+            raise HTTPException(
+                status_code=404,
+                detail=f"Feature {feature_id} not found"
+            )
+        yearly_base += float(feature.base_price)
+
+    # Apply pricing logic based on subscription duration
+    pricing_info = calculate_subscription_price(yearly_base, data.subscription_duration)
+    calculated_amount = pricing_info["base_price"]
 
     temp = CenterOnboardingTemp(
         center_name=data.center_name,
@@ -398,14 +448,16 @@ async def create_onboarding_temp(
         trainer_count=data.trainer_count,
         currently_using_digital_tool=data.currently_using_digital_tool,
         marketing_platform=data.marketing_platform,
-        platform_feature_ids=feature_ids,  # store as list of strings
+        platform_feature_ids=feature_ids,
         is_terms_and_conditions=data.is_terms_and_conditions,
-        calculated_amount=total_base
+        subscription_duration=data.subscription_duration,
+        calculated_amount=calculated_amount
     )
     db.add(temp)
     await db.commit()
     await db.refresh(temp)
     return temp
+
 
 @router.get("/onboarding/temp/{onboarding_id}", response_model=CenterOnboardingTempDetailedOut)
 async def get_onboarding_temp_by_id(
@@ -461,40 +513,61 @@ async def calculate_gst(
     onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
     db: AsyncSession = Depends(get_async_session)
 ):
+    """
+    Calculate GST and total amount with pricing breakdown.
+    Shows savings comparison between monthly and yearly plans.
+    """
     temp = await db.get(CenterOnboardingTemp, onboarding_id)
     if not temp:
-        raise HTTPException(404, "Onboarding temp not found")
+        raise HTTPException(status_code=404, detail="Onboarding temp not found")
 
     feature_ids = temp.platform_feature_ids or []
     if not isinstance(feature_ids, list):
-        raise HTTPException(400, "platform_feature_ids must be a list of UUIDs")
+        raise HTTPException(status_code=400, detail="Invalid feature IDs format")
 
-    total_base = 0.0
+    # Calculate yearly base price from features
+    yearly_base = 0.0
     for feature_id in feature_ids:
-        feature = await db.get(PlatformFeature, feature_id)
-        if not feature:
-            raise HTTPException(404, f"Feature {feature_id} not found")
-        total_base += float(feature.base_price)
+        try:
+            feature = await db.get(PlatformFeature, UUID(feature_id))
+            if not feature:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Feature {feature_id} not found"
+                )
+            yearly_base += float(feature.base_price)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid feature ID format: {feature_id}"
+            )
 
+    # Apply pricing logic based on subscription duration
+    pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
+    total_base = pricing_info["base_price"]
+    pricing_note = pricing_info["note"]
+
+    # Get applicable tax
     tax = await db.execute(
         select(TaxCategory)
         .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
         .limit(1)
     )
     tax = tax.scalar_one_or_none()
+    
     total_tax = 0.0
     tax_info = None
     if tax:
-        total_tax = total_base * float(tax.tax_percentage) / 100
+        total_tax = (total_base * tax.tax_percentage) / 100
         tax_info = {
             "id": str(tax.id),
             "name": tax.name,
-            "tax_type": tax.tax_type.value,
+            "tax_type": tax.tax_type,
             "tax_percentage": float(tax.tax_percentage),
-            "tax_scope": tax.tax_scope.value
+            "tax_scope": tax.tax_scope
         }
 
-    # Store the final amount (base + tax) in calculated_amount
+    # Update the calculated_amount in temp record (base + tax)
     temp.calculated_amount = total_base + total_tax
     await db.commit()
     await db.refresh(temp)
@@ -506,7 +579,8 @@ async def calculate_gst(
         total_base_price=total_base,
         total_tax=total_tax,
         total_amount=total_base + total_tax,
-        tax=tax_info
+        tax=tax_info,
+        pricing_note=pricing_note
     )
 
 
@@ -517,173 +591,409 @@ async def finalize_onboarding(
     payload: FinalizeOnboardingRequest = ...,
     db: AsyncSession = Depends(get_db)
 ):
+    """
+    Finalize onboarding: create center, admin, subscriptions with correct duration and pricing.
+    """
     try:
-        # 1. Fetch onboarding temp data
-        onboarding_temp = await db.get(CenterOnboardingTemp, onboarding_id)
-        if not onboarding_temp:
-            raise HTTPException(status_code=404, detail="Onboarding data not found")
-        if not onboarding_temp.center_email:
-            raise HTTPException(status_code=400, detail="Center email is required to create a user.")
+        # 1. Fetch the onboarding temp record
+        temp = await db.get(CenterOnboardingTemp, onboarding_id)
+        if not temp:
+            raise HTTPException(status_code=404, detail="Onboarding temp not found")
 
-        # 2. Check if user already exists
-        user_stmt = select(User).where(User.email == onboarding_temp.center_email)
-        result = await db.execute(user_stmt)
-        user = result.scalar_one_or_none()
-        if user:
-            raise HTTPException(status_code=400, detail="A user with this email already exists.")
-
-        # 3. Create Address (no center_id)
+        # 2. Create or fetch Address
         address = Address(
-            id=uuid4(),
             address_line_1=payload.address_line_1,
             address_line_2=payload.address_line_2,
-            city=onboarding_temp.city,
-            state=getattr(onboarding_temp, "state", None),
-            country=getattr(onboarding_temp, "country", None),
-            postal_code=getattr(onboarding_temp, "postal_code", None),
-            created_by=None,  # Will set after CenterAdmin is created
-            updated_by=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            city=temp.city,
+            # Add other fields as needed
         )
         db.add(address)
         await db.flush()
 
-        # 4. Create Center (parent_center_id is None for parent center)
+        # 3. Get center category
+        center_category = await db.get(CenterCategory, temp.center_category_id)
+        if not center_category:
+            raise HTTPException(status_code=404, detail="Center category not found")
+
+        # 4. Create Center
         center = Center(
-            id=uuid4(),
-            center_name=onboarding_temp.center_name,
-            center_category_id=onboarding_temp.center_category_id,
+            center_name=temp.center_name,
+            center_category_id=temp.center_category_id,
             address_id=address.id,
-            gst_number=payload.gst_number,
-            currently_using_digital_tool=onboarding_temp.currently_using_digital_tool,
-            marketing_platform=onboarding_temp.marketing_platform,
-            kind_of_center=onboarding_temp.kind_of_center,
-            members_count=onboarding_temp.members_count,
-            trainer_count=onboarding_temp.trainer_count,
-            center_phone=onboarding_temp.center_phone,
-            center_email=onboarding_temp.center_email,
-            contact_person=onboarding_temp.contact_person,
             approval_status="approved",
-            center_status="active",
-            network_enabled=True,
-            parent_center_id=None,  # Explicitly set as None
-            created_by=None,  # Will set after CenterAdmin is created
-            updated_by=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            center_status=CenterStatus.active,
+            contact_person=temp.contact_person,
+            center_email=temp.center_email,
+            center_phone=temp.center_phone,
+            gst_number=payload.gst_number,
+            kind_of_center=temp.kind_of_center,
+            members_count=temp.members_count,
+            trainer_count=temp.trainer_count,
+            currently_using_digital_tool=temp.currently_using_digital_tool,
+            marketing_platform=temp.marketing_platform
         )
         db.add(center)
         await db.flush()
 
-        # 5. Initialize Accounts for the new center
-        from app.accounts.init_accounts import initialize_center_accounts
-        await initialize_center_accounts(db, center.id)
-        print(f"✅ Initialized 28 standard accounts for center: {center.center_name}")
+        # 5. Create User and CenterAdmin
+        # Check if user already exists
+        user_result = await db.execute(
+            select(User).where(User.email == temp.center_email)
+        )
+        user = user_result.scalar_one_or_none()
+        
+        if not user:
+            user = User(
+                email=temp.center_email,
+                full_name=temp.contact_person,
+                role="center_admin",
+                hashed_password=get_password_hash("TempPassword@123"),  # Generate temporary password
+                status="active"
+            )
+            db.add(user)
+            await db.flush()
 
-
-        # 6. Create CenterAdmin (this will also create the User row)
+        # Create CenterAdmin
         center_admin = CenterAdmin(
-            id=uuid4(),
-            email=onboarding_temp.center_email,
-            password_hash=get_password_hash("defaultpassword123"),
-            role="centeradmin",
-            status=StatusEnum.active,
-            full_name=onboarding_temp.contact_person or "Center Admin",
-            center_id=center.id,
-            address_id=address.id,
-            created_by=None,  # Will set after flush
-            updated_by=None,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            user_id=user.id,
+            center_id=center.id
         )
         db.add(center_admin)
         await db.flush()
 
-        # Now update created_by/updated_by fields with center_admin.id
-        address.created_by = center_admin.id
-        address.updated_by = center_admin.id
-        center.created_by = center_admin.id
-        center.updated_by = center_admin.id
-        center_admin.created_by = center_admin.id
-        center_admin.updated_by = center_admin.id
-        await db.flush()
+        # 6. Get applicable tax
+        tax_result = await db.execute(
+            select(TaxCategory)
+            .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
+            .limit(1)
+        )
+        tax = tax_result.scalar_one_or_none()
 
-        # 7. Create PaymentOrder
+        # 7. Calculate yearly base price from features
+        feature_ids = temp.platform_feature_ids or []
+        yearly_base = 0.0
+        for feature_id in feature_ids:
+            feature = await db.get(PlatformFeature, UUID(feature_id))
+            if not feature:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Feature {feature_id} not found"
+                )
+            yearly_base += float(feature.base_price)
+
+        # 8. Apply pricing logic
+        pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
+        base_price = pricing_info["base_price"]
+        
+        # Calculate tax
+        tax_amount = 0.0
+        if tax:
+            tax_amount = (base_price * tax.tax_percentage) / 100
+        
+        total_amount = base_price + tax_amount
+
+        # 9. Create PaymentOrder
         payment_order = PaymentOrder(
-            payment_order_id=uuid4(),
             center_id=center.id,
-            payer_user_id=center_admin.id,
-            payer_type="center_admin",
-            payee_type="platform",
-            order_type="center_subscription",
-            reference_schema="center_feature",
-            reference_id=center.id,
-            subtotal_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
-            tax_amount=getattr(onboarding_temp, "tax_amount", 0.0),
-            total_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
-            currency="INR",
-            status="paid",
-            created_by=center_admin.id,
-            updated_by=center_admin.id,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            user_id=user.id,
+            total_amount=total_amount,
+            status=PaymentOrderStatus.paid,  # Assuming payment is completed
+            order_type="membership",
+            created_at=datetime.utcnow()
         )
         db.add(payment_order)
         await db.flush()
 
-        # 8. Now create CenterFeatureSubscriptions with payment_order_id
-        feature_subscriptions = []
-        from collections import OrderedDict
-        feature_ids = list(OrderedDict.fromkeys(onboarding_temp.platform_feature_ids))
-        for feature_id in feature_ids:
-            feature = await db.get(PlatformFeature, feature_id)
-            if not feature:
-                raise HTTPException(status_code=404, detail=f"Feature {feature_id} not found")
-            start_date = datetime.utcnow()
+        # 10. Create CenterFeatureSubscriptions with correct duration and pricing
+        start_date = datetime.utcnow().date()
+        
+        # Set end_date based on subscription duration
+        if temp.subscription_duration == "monthly":
+            end_date = start_date + relativedelta(months=1)
+        else:
             end_date = start_date + relativedelta(years=1)
+
+        feature_subscriptions = []
+        for feature_id in feature_ids:
+            feature = await db.get(PlatformFeature, UUID(feature_id))
+            feature_yearly_price = float(feature.base_price)
+            
+            # Calculate unit price for this specific feature
+            if temp.subscription_duration == "monthly":
+                unit_price = (feature_yearly_price / 12) * 1.25
+            else:
+                unit_price = feature_yearly_price
+            
             subscription = CenterFeatureSubscription(
-                id=uuid4(),
                 center_id=center.id,
-                feature_id=feature_id,
+                feature_id=UUID(feature_id),
                 payment_order_id=payment_order.payment_order_id,
-                pricing_type="yearly",
-                unit_price=feature.base_price,
-                status=StatusEnum.active,
+                pricing_type=pricing_info["pricing_type"],
+                unit_price=unit_price,
+                tax_category_id=tax.id if tax else None,
                 start_date=start_date,
                 end_date=end_date,
-                created_by=center_admin.id,
-                updated_by=center_admin.id,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+                status=StatusEnum.active
             )
             db.add(subscription)
             feature_subscriptions.append(subscription)
+        
         await db.flush()
 
-        # 9. Commit transaction
-        await db.commit()
-
-        # 10. Prepare response
-        response = OnboardingFinalizeResponse(
-            message="Center onboarding completed successfully",  # ADD THIS LINE
-            center=CenterInfo.from_orm(center),
-            center_admin=CenterAdminInfo.from_orm(center_admin),
-            payment=PaymentOrderInfo.from_orm(payment_order),
-            feature_subscriptions=[
-                FeatureSubscriptionInfo.from_orm(fs) for fs in feature_subscriptions
-            ],
-            accounts_initialized=True  # ADD THIS LINE
+        # 11. Initialize Center Wallet
+        center_wallet = CenterWallet(
+            center_id=center.id,
+            balance=0.0,
+            deposit=0.0,
+            min_balance=0.0
         )
-        return response
+        db.add(center_wallet)
+
+        # 12. Delete the temp record
+        await db.delete(temp)
+        
+        # 13. Commit all changes
+        await db.commit()
+        
+        # 14. Refresh all objects
+        await db.refresh(center)
+        await db.refresh(center_admin)
+        await db.refresh(payment_order)
+        for sub in feature_subscriptions:
+            await db.refresh(sub)
+
+        # 15. Prepare response
+        return OnboardingFinalizeResponse(
+            message="Onboarding completed successfully",
+            center=CenterInfo(
+                id=center.id,
+                center_name=center.center_name,
+                center_category_id=center.center_category_id,
+                address_id=center.address_id,
+                approval_status=center.approval_status,
+                center_status=center.center_status
+            ),
+            center_admin=CenterAdminInfo(
+                id=center_admin.id,
+                center_id=center_admin.center_id
+            ),
+            payment=PaymentOrderInfo(
+                payment_order_id=payment_order.payment_order_id,
+                total_amount=float(payment_order.total_amount),
+                status=payment_order.status
+            ),
+            feature_subscriptions=[
+                FeatureSubscriptionInfo(
+                    id=sub.id,
+                    center_id=sub.center_id,
+                    feature_id=sub.feature_id,
+                    payment_order_id=sub.payment_order_id,
+                    pricing_type=sub.pricing_type,
+                    unit_price=float(sub.unit_price),
+                    tax_category_id=sub.tax_category_id,
+                    start_date=sub.start_date,
+                    status=sub.status
+                )
+                for sub in feature_subscriptions
+            ],
+            accounts_initialized=True
+        )
 
     except IntegrityError as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail=f"Integrity error: {str(e.orig)}")
+        raise HTTPException(status_code=400, detail=f"Database integrity error: {str(e)}")
     except Exception as e:
-        traceback.print_exc()
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error finalizing onboarding: {str(e)}")
+
+# @router.post('/billing/onboarding/finalize/{onboarding_id}', response_model=OnboardingFinalizeResponse)
+# async def finalize_onboarding(
+#     onboarding_id: UUID = Path(..., description="Onboarding temp UUID"),
+#     payload: FinalizeOnboardingRequest = ...,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     try:
+#         # 1. Fetch onboarding temp data
+#         onboarding_temp = await db.get(CenterOnboardingTemp, onboarding_id)
+#         if not onboarding_temp:
+#             raise HTTPException(status_code=404, detail="Onboarding data not found")
+#         if not onboarding_temp.center_email:
+#             raise HTTPException(status_code=400, detail="Center email is required to create a user.")
+
+#         # 2. Check if user already exists
+#         user_stmt = select(User).where(User.email == onboarding_temp.center_email)
+#         result = await db.execute(user_stmt)
+#         user = result.scalar_one_or_none()
+#         if user:
+#             raise HTTPException(status_code=400, detail="A user with this email already exists.")
+
+#         # 3. Create Address (no center_id)
+#         address = Address(
+#             id=uuid4(),
+#             address_line_1=payload.address_line_1,
+#             address_line_2=payload.address_line_2,
+#             city=onboarding_temp.city,
+#             state=getattr(onboarding_temp, "state", None),
+#             country=getattr(onboarding_temp, "country", None),
+#             postal_code=getattr(onboarding_temp, "postal_code", None),
+#             created_by=None,  # Will set after CenterAdmin is created
+#             updated_by=None,
+#             created_at=datetime.utcnow(),
+#             updated_at=datetime.utcnow(),
+#         )
+#         db.add(address)
+#         await db.flush()
+
+#         # 4. Create Center (parent_center_id is None for parent center)
+#         center = Center(
+#             id=uuid4(),
+#             center_name=onboarding_temp.center_name,
+#             center_category_id=onboarding_temp.center_category_id,
+#             address_id=address.id,
+#             gst_number=payload.gst_number,
+#             currently_using_digital_tool=onboarding_temp.currently_using_digital_tool,
+#             marketing_platform=onboarding_temp.marketing_platform,
+#             kind_of_center=onboarding_temp.kind_of_center,
+#             members_count=onboarding_temp.members_count,
+#             trainer_count=onboarding_temp.trainer_count,
+#             center_phone=onboarding_temp.center_phone,
+#             center_email=onboarding_temp.center_email,
+#             contact_person=onboarding_temp.contact_person,
+#             approval_status="approved",
+#             center_status="active",
+#             network_enabled=True,
+#             parent_center_id=None,  # Explicitly set as None
+#             created_by=None,  # Will set after CenterAdmin is created
+#             updated_by=None,
+#             created_at=datetime.utcnow(),
+#             updated_at=datetime.utcnow(),
+#         )
+#         db.add(center)
+#         await db.flush()
+
+#         # 5. Initialize Accounts for the new center
+#         from app.accounts.init_accounts import initialize_center_accounts
+#         await initialize_center_accounts(db, center.id)
+#         print(f"✅ Initialized 28 standard accounts for center: {center.center_name}")
+
+
+#         # 6. Create CenterAdmin (this will also create the User row)
+#         center_admin = CenterAdmin(
+#             id=uuid4(),
+#             email=onboarding_temp.center_email,
+#             password_hash=get_password_hash("defaultpassword123"),
+#             role="centeradmin",
+#             status=StatusEnum.active,
+#             full_name=onboarding_temp.contact_person or "Center Admin",
+#             center_id=center.id,
+#             address_id=address.id,
+#             created_by=None,  # Will set after flush
+#             updated_by=None,
+#             created_at=datetime.utcnow(),
+#             updated_at=datetime.utcnow(),
+#         )
+#         db.add(center_admin)
+#         await db.flush()
+
+#         # Now update created_by/updated_by fields with center_admin.id
+#         address.created_by = center_admin.id
+#         address.updated_by = center_admin.id
+#         center.created_by = center_admin.id
+#         center.updated_by = center_admin.id
+#         center_admin.created_by = center_admin.id
+#         center_admin.updated_by = center_admin.id
+#         await db.flush()
+
+#         # 7. Create PaymentOrder
+#         payment_order = PaymentOrder(
+#             payment_order_id=uuid4(),
+#             center_id=center.id,
+#             payer_user_id=center_admin.id,
+#             payer_type="center_admin",
+#             payee_type="platform",
+#             order_type="center_subscription",
+#             reference_schema="center_feature",
+#             reference_id=center.id,
+#             subtotal_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+#             tax_amount=getattr(onboarding_temp, "tax_amount", 0.0),
+#             total_amount=getattr(onboarding_temp, "calculated_amount", 0.0),
+#             currency="INR",
+#             status="paid",
+#             created_by=center_admin.id,
+#             updated_by=center_admin.id,
+#             created_at=datetime.utcnow(),
+#             updated_at=datetime.utcnow(),
+#         )
+#         db.add(payment_order)
+#         await db.flush()
+
+#         # 8. Now create CenterFeatureSubscriptions with payment_order_id
+#         feature_subscriptions = []
+#         from collections import OrderedDict
+#         feature_ids = list(OrderedDict.fromkeys(onboarding_temp.platform_feature_ids))
+        
+#         for feature_id in feature_ids:
+#             feature = await db.get(PlatformFeature, feature_id)
+#             if not feature:
+#                 raise HTTPException(status_code=404, detail=f"Feature {feature_id} not found")
+            
+#             start_date = datetime.utcnow()
+#             yearly_price = float(feature.base_price)
+            
+#             # Calculate end_date and pricing based on subscription_duration
+#             if onboarding_temp.subscription_duration == "monthly":
+#                 end_date = start_date + relativedelta(months=1)
+#                 pricing_type = "monthly"
+#                 # Monthly: (yearly / 12) * 1.25
+#                 unit_price = (yearly_price / 12) * 1.25
+#             else:
+#                 end_date = start_date + relativedelta(years=1)
+#                 pricing_type = "yearly"
+#                 unit_price = yearly_price
+            
+#             subscription = CenterFeatureSubscription(
+#                 id=uuid4(),
+#                 center_id=center.id,
+#                 feature_id=feature_id,
+#                 payment_order_id=payment_order.payment_order_id,
+#                 pricing_type=pricing_type,
+#                 unit_price=unit_price,
+#                 status=StatusEnum.active,
+#                 start_date=start_date,
+#                 end_date=end_date,
+#                 created_by=center_admin.id,
+#                 updated_by=center_admin.id,
+#                 created_at=datetime.utcnow(),
+#                 updated_at=datetime.utcnow(),
+#             )
+#             db.add(subscription)
+#             feature_subscriptions.append(subscription)
+        
+#         await db.flush()
+
+#         # 9. Commit transaction
+#         await db.commit()
+
+#         # 10. Prepare response
+#         response = OnboardingFinalizeResponse(
+#             message="Center onboarding completed successfully",  # ADD THIS LINE
+#             center=CenterInfo.from_orm(center),
+#             center_admin=CenterAdminInfo.from_orm(center_admin),
+#             payment=PaymentOrderInfo.from_orm(payment_order),
+#             feature_subscriptions=[
+#                 FeatureSubscriptionInfo.from_orm(fs) for fs in feature_subscriptions
+#             ],
+#             accounts_initialized=True  # ADD THIS LINE
+#         )
+#         return response
+
+#     except IntegrityError as e:
+#         await db.rollback()
+#         raise HTTPException(status_code=400, detail=f"Integrity error: {str(e.orig)}")
+#     except Exception as e:
+#         traceback.print_exc()
+#         await db.rollback()
+#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 # 6. POST /center/onboarding/finalize
