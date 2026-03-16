@@ -1,5 +1,10 @@
-import React from 'react'
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api'
+import React, { useEffect, useState } from 'react'
+import {
+  GoogleMap,
+  LoadScript,
+  Marker,
+  Autocomplete
+} from '@react-google-maps/api'
 import CustomeModal from './CustomeModal'
 import { useFetchCenterLocationMutation } from '@api-queries/center-profile/Query'
 import { useFormik } from 'formik'
@@ -16,6 +21,10 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
   const { mutateAsync: fetchCenterLocation, isPending } =
     useFetchCenterLocationMutation()
 
+  const [center, setCenter] = useState(null)
+  const [marker, setMarker] = useState(null)
+  const [autocomplete, setAutocomplete] = useState(null)
+
   const initialValues = {
     center_id: state?.auth?.center_id,
     latitude: '',
@@ -24,20 +33,61 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
 
   const formik = useFormik({
     initialValues,
-    onSubmit: async (values, { resetForm }) => {
+    onSubmit: async values => {
       try {
         await fetchCenterLocation(values)
         setLocationOpen(false)
-        resetForm()
       } catch (error) {
         console.error(error)
       }
     }
   })
 
-  const center = {
-    lat: 10.8505, // Kerala example
-    lng: 76.2711
+  // 📍 Get Current Location
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+
+      const location = { lat, lng }
+
+      setCenter(location)
+      setMarker(location)
+
+      formik.setFieldValue('latitude', lat)
+      formik.setFieldValue('longitude', lng)
+    })
+  }, [])
+
+  // 📍 Click on map
+  const handleMapClick = e => {
+    const lat = e.latLng.lat()
+    const lng = e.latLng.lng()
+
+    const location = { lat, lng }
+
+    setMarker(location)
+
+    formik.setFieldValue('latitude', lat)
+    formik.setFieldValue('longitude', lng)
+  }
+
+  // 🔍 Search place
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace()
+
+      const lat = place.geometry.location.lat()
+      const lng = place.geometry.location.lng()
+
+      const location = { lat, lng }
+
+      setCenter(location)
+      setMarker(location)
+
+      formik.setFieldValue('latitude', lat)
+      formik.setFieldValue('longitude', lng)
+    }
   }
 
   return (
@@ -48,19 +98,35 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
       header='Fitness center location'
     >
       <form onSubmit={formik.handleSubmit}>
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAP_API_KEY}>
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={10}
-            onClick={e => {
-              console.log(e.latLng.lat(), e.latLng.lng())
-            }}
+        <LoadScript
+          googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAP_API_KEY}
+          libraries={['places']}
+        >
+          {/* 🔍 Search box */}
+          <Autocomplete
+            onLoad={setAutocomplete}
+            onPlaceChanged={onPlaceChanged}
           >
-            <Marker position={center} />
-          </GoogleMap>
+            <input
+              type='text'
+              placeholder='Search location...'
+              className='w-full p-2 border rounded mb-2'
+            />
+          </Autocomplete>
+
+          {center && (
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={14}
+              onClick={handleMapClick}
+            >
+              {marker && <Marker position={marker} />}
+            </GoogleMap>
+          )}
         </LoadScript>
-        <div className='flex justify-end mt-2'>
+
+        <div className='flex justify-end mt-3'>
           <Button type='submit' size='addbutton' disabled={isPending}>
             Save Location
           </Button>

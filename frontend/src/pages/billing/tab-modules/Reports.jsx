@@ -15,10 +15,11 @@ import {
   useSaleReportQuery,
   useTaxSummaryReportQuery
 } from '@api-queries/billing/Query'
+import { useGenerateSaleReportMutation } from '@api-queries/billing/Query'
 
 const BillingReports = () => {
   const [reportType, setReportType] = useState('sales')
-  const { mutateAsync: generateSalesReport } = useSaleReportQuery()
+  const { mutateAsync: generateSalesReport } = useGenerateSaleReportMutation()
   const { mutateAsync: generateMembershipRevenueReport } =
     useMembershipRevenueReportQuery()
   const { mutateAsync: generateNetworkEarningReport } =

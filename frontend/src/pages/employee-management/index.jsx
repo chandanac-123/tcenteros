@@ -7,11 +7,19 @@ import SalaryStructure from './salary-structure'
 import Employee from './employee'
 import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
+import { useAllCentersQuery } from '@api-queries/center-profile/Query'
 
 const EmployeeManagement = () => {
   const [activeTab, setActiveTab] = useState('Employee')
   const [open, setOpen] = useState(false)
   const [structureOpen, setStructureOpen] = useState(false)
+  const { data: centersData, isFetching: isCentersFetching } =
+    useAllCentersQuery()
+  console.log('centersData: ', centersData)
+    const [tableParams, setTableParams] = useState({
+    page: 1,
+    search: ''
+  })
 
   const handleOpen = () => {
     setOpen(true)
@@ -31,7 +39,12 @@ const EmployeeManagement = () => {
           </span>
         </div>
         <div className='flex-1 flex justify-end items-center gap-2'>
-          <CustomFilter />
+          <CustomFilter
+            options={centersData?.centers}
+            onApply={value =>
+              setTableParams(prev => ({ ...prev, payment_status: value }))
+            }
+          />
           {activeTab === 'Employee' && (
             <Button onClick={handleOpen} size='addbutton'>
               + Add Employee
@@ -53,7 +66,7 @@ const EmployeeManagement = () => {
         />
 
         {activeTab === 'Employee' ? (
-          <Employee open={open} setOpen={setOpen} />
+          <Employee open={open} setOpen={setOpen} tableParams={tableParams} setTableParams={setTableParams} />
         ) : (
           <SalaryStructure />
         )}

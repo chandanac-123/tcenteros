@@ -6,7 +6,8 @@ import {
   updateProfilePic,
   updateProfileImage,
   getProfileInfo,
-  fetchCenterLocation
+  fetchCenterLocation,
+  fetchAllCenters
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -97,5 +98,14 @@ export const useFetchCenterLocationMutation = () => {
       showError(err?.response?.data?.message || 'Failed to fetch center location')
       return err
     }
+  })
+}
+
+export const useAllCentersQuery = () => {
+  return useQuery({
+    queryKey: ['centers'],
+    queryFn: fetchAllCenters,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

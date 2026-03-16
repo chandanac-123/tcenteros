@@ -12,7 +12,6 @@ import {
   useEmployeeGetByIdQuery
 } from '@api-queries/employee-management/Query'
 import InputFile from '@common/components/CustomeFileUpload'
-import { useAuthStore } from '@store/authStore'
 import { useFormik } from 'formik'
 import { employeeValidationSchema } from '@utils/validations'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
@@ -20,7 +19,6 @@ import { format } from 'date-fns'
 import AddCategory from '../category/AddCategory'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
-  const state = useAuthStore.getState()
   const { data, isFetching } = useCategoriesQuery()
   const { data: employeeData, isFetching: isEmployeeFetching } =
     useEmployeeGetByIdQuery(id)
@@ -42,7 +40,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     address: employeeData?.address?.address || '',
     password: '',
     designation_id: employeeData?.designation_id || '',
-    center_id: state?.auth?.center_id || '',
+    center_id: '',
     joining_date: employeeData?.joining_date || '',
     profile_photo: employeeData?.profile_photo || null
   }
@@ -266,6 +264,24 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                   />
                 </div>
                 <div className='flex-1'>
+                  <CustomDatePicker
+                    label='Joining Date'
+                    name='joining_date'
+                    value={
+                      formik.values.joining_date
+                        ? new Date(formik.values.joining_date)
+                        : null
+                    }
+                    onChange={val => handleDateChange('joining_date', val)}
+                    error={
+                      formik.touched.joining_date && formik.errors.joining_date
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className='flex gap-4 '>
+                <div className='flex-1'>
                   <InputFile
                     label='Upload Image'
                     name='profile_photo'
@@ -281,33 +297,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                     }
                   />
                 </div>
-              </div>
-
-              <div className='flex gap-4 '>
-                <div className='flex-1'>
-                  <CustomeSelect
-                    label='Choose Center'
-                    name='center_id'
-                    value={formik.values.center_id}
-                    onChange={formik.handleChange}
-                    placeholder='Choose Center'
-                  />
-                </div>
-                <div className='flex-1'>
-                  <CustomDatePicker
-                    label='Joining Date'
-                    name='joining_date'
-                    value={
-                      formik.values.joining_date
-                        ? new Date(formik.values.joining_date)
-                        : null
-                    }
-                    onChange={val => handleDateChange('joining_date', val)}
-                    error={
-                      formik.touched.joining_date && formik.errors.joining_date
-                    }
-                  />
-                </div>
+                <div className='flex-1'></div>
               </div>
             </>
           )}

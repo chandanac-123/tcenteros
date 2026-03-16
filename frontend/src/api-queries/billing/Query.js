@@ -25,7 +25,8 @@ import {
   getSettlementById,
   completeSettlement,
   getSettlements,
-  addCharge
+  addCharge,
+  generateSaleReport
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -263,6 +264,11 @@ export const useSaleReportQuery = data => {
   })
 }
 
+export const useGenerateSaleReportMutation = () => {
+  return useMutation({
+    mutationFn: data => generateSaleReport(data)
+  })
+}
 export const useMembershipRevenueReportQuery = data => {
   return useQuery({
     queryKey: ['membershipRevenueReport', data],

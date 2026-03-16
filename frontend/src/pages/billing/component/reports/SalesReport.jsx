@@ -1,34 +1,35 @@
 import React from 'react'
 import { DataTable } from '@common/components/DataTable'
-import { useSalesReportQuery } from '@api-queries/inventory/Query'
 import { formatDate } from '@utils/helper'
 import { Badge } from '@pages/components/ui/badge'
+import { useSaleReportQuery } from '@api-queries/billing/Query'
 
   const statusVariantMap = {
-    completed: 'active',
-    pending: 'pending'
+    paid: 'active',
+    unpaid: 'inactive'
   }
 
 const SalesReport = ({ tableParams, setTableParams }) => {
-  const { data, isLoading } = useSalesReportQuery(tableParams)
+  const { data, isLoading } = useSaleReportQuery(tableParams)
+  console.log('data: ', data);
 
   const columns = [
     {
       accessorKey: 'date',
       header: 'Date',
       cell: ({ row }) => (
-        <span className='flex gap-3'>{formatDate(row.original.date)}</span>
+        <span className='flex gap-3'>{formatDate(row.original.created_at)}</span>
       )
     },
-    { accessorKey: 'sale_number', header: 'Sales Number' },
-    { accessorKey: 'items_count', header: 'Items' },
-    { accessorKey: 'subtotal', header: 'Sub Total' },
-    { accessorKey: 'tax', header: 'Tax' },
-    { accessorKey: 'total', header: 'Total' },
+    { accessorKey: 'order_type', header: 'Order Type' },
+    { accessorKey: 'customer_name', header: 'Customer Name' },
+    { accessorKey: 'subtotal_amount', header: 'Sub Total' },
+    { accessorKey: 'tax_amount', header: 'Tax' },
+    { accessorKey: 'total_amount', header: 'Total' },
     { accessorKey: 'status', header: 'Status',
        cell: ({ row }) => (
         <Badge
-          label={row.original.status.replace('_', ' ').toUpperCase()}
+          label={row.original.status?.replace('_', ' ').toUpperCase()}
           variant={statusVariantMap[row.original.status] || 'inactive'}
         />
       )
@@ -38,10 +39,10 @@ const SalesReport = ({ tableParams, setTableParams }) => {
   return (
     <DataTable
       columns={columns}
-      data={data?.sales || []}
+      data={data?.data || []}
       tableParams={tableParams}
       setTableParams={setTableParams}
-      pagination={data?.total || 0}
+      pagination={data?.pagination?.total_records || 0}
       search={false}
       loading={isLoading}
       paginationVisibile={true}

@@ -274,7 +274,9 @@ export const updateCentersProfileImageApiCall = details =>
 export const getCenterProfileInfoApiCall = () =>
   axiosInstance.get(`/center/centeradmin/profile`)
 export const fetchCenterLocationApiCall = (details) =>
-  axiosInstance.post(`/api/center/center-location/`, details)
+  axiosInstance.post(`/center/center-location/`, details)
+export const getAllCenterApiCall = () =>
+  axiosInstance.get(`/center/centers/accessible-centers`)
 
 //CRM API
 export const getMemberApiCall = data =>

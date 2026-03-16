@@ -70,7 +70,14 @@ export const addChargeApiCall = (data) =>
   axiosInstance.post(`/billing/billing/miscellaneous-transactions`, data)
 
 export const getSaleReportApiCall = data =>
-  axiosInstance.get(`/billing/billing/reports/daily-sales`)
+  axiosInstance.get(`/billing/billing/reports/sales?page=${data?.page || 1}`)
+export const getGenerateSaleReportApiCall = data =>
+  axiosInstance.post(
+    `billing/billing/reports/generate/sales?date_from=${data?.date_from}&date_to=${data?.date_to}&format=${data?.format}`,
+    {},
+    { responseType: 'blob' }
+  )
+
 export const getMembershipRevenueReportApiCall = data =>
   axiosInstance.get(`/billing/billing/reports/membership-revenue`)
 export const getInventorySaleReportApiCall = data =>

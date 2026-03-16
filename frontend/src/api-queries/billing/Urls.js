@@ -23,7 +23,8 @@ import {
   getSettlementByIdApiCall,
   completeSettlementApiCall,
   getSettlementApiCall,
-  addChargeApiCall
+  addChargeApiCall,
+  getGenerateSaleReportApiCall
 } from './index'
 
 export const getSales = async data => {
@@ -207,6 +208,15 @@ export const completeSettlement = async (id, data) => {
 export const getSaleReport = async (data) => {
   try {
     const response = await getSaleReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const generateSaleReport = async (data) => {
+  try {
+    const response = await getGenerateSaleReportApiCall(data)
     return response.data
   } catch (error) {
     throw error

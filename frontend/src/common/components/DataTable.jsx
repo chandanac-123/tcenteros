@@ -13,7 +13,7 @@ import {
   TableRow
 } from '@pages/components/ui/table'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   Pagination,
   PaginationContent,
@@ -39,6 +39,8 @@ export function DataTable ({
   const page = tableParams?.page || 1
   const rowsPerPage = 10
   const [rowSelection, setRowSelection] = useState({})
+  const searchTimeout = useRef(null)
+  const [searchValue, setSearchValue] = useState(tableParams?.search || '')
 
   const handlePageChange = newPage => {
     setTableParams(prevParams => ({
@@ -49,11 +51,8 @@ export function DataTable ({
 
   const totalRecords = pagination || 0
   const totalPageCount = Math.ceil(totalRecords / rowsPerPage)
-
   const paginationItems = []
-
   const visibleRange = 2 // pages before & after current
-
   let lastRenderedPage = null
 
   for (let i = 1; i <= totalPageCount; i++) {
@@ -66,7 +65,6 @@ export function DataTable ({
       if (lastRenderedPage && i - lastRenderedPage > 1) {
         paginationItems.push(<PaginationEllipsis key={`ellipsis-${i}`} />)
       }
-
       paginationItems.push(
         <PaginationItem key={i}>
           <PaginationLink
@@ -77,7 +75,6 @@ export function DataTable ({
           </PaginationLink>
         </PaginationItem>
       )
-
       lastRenderedPage = i
     }
   }
@@ -106,20 +103,26 @@ export function DataTable ({
     }
   })
 
+  const handleSearchChange = e => {
+    const value = e.target.value
+    setSearchValue(value) // immediate typing
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current)
+    }
+    searchTimeout.current = setTimeout(() => {
+      setTableParams(prev => ({
+        ...prev,
+        search: value,
+        page: 1
+      }))
+    }, 300)
+  }
+
   return (
     <>
       {search && (
         <div className='mb-4'>
-          <CustomeSearch
-            value={tableParams?.search || ''}
-            onChange={e =>
-              setTableParams(prev => ({
-                ...prev,
-                search: e.target.value,
-                page: 1
-              }))
-            }
-          />
+          <CustomeSearch value={searchValue} onChange={handleSearchChange} />
         </div>
       )}
       <div className='flex flex-col h-full rounded-md border'>

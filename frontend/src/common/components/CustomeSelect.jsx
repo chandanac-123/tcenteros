@@ -25,6 +25,7 @@ export default function CustomeSelect ({
         item?.label ||
         item?.name ||
         item?.full_name ||
+        item?.center_name ||
         item?.membership_name ||
         ''
 
@@ -68,15 +69,24 @@ export default function CustomeSelect ({
               item?.label ||
               item?.name ||
               item?.full_name ||
+              item?.center_name ||
               (item?.membership_name
                 ? `${item.membership_name} - ₹${item.default_price}`
                 : '')
 
             return (
               <SelectItem
-                key={item?.id || item?.membership_id || item?.product_id ||item?.member_membership_id}
+                key={
+                  item?.id ||
+                  item?.membership_id ||
+                  item?.product_id ||
+                  item?.member_membership_id
+                }
                 value={String(
-                  item?.id || item?.membership_id || item?.product_id || item?.member_membership_id
+                  item?.id ||
+                    item?.membership_id ||
+                    item?.product_id ||
+                    item?.member_membership_id
                 )}
               >
                 {label}
@@ -90,4 +100,3 @@ export default function CustomeSelect ({
     </div>
   )
 }
-
