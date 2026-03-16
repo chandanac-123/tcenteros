@@ -5,52 +5,44 @@ import rootStock from '@assets/inventory-icons/token_rootstock.svg'
 import saleTag from '@assets/inventory-icons/hugeicons_sale-tag-02.svg'
 import root_stocks from '@assets/inventory-icons/token_rootstocks.svg'
 
-
-
-
-const StatusDisplaycard = () => {
-    const cards = [
-        {
-            title: "Total Products",
-            value: "128",
-            icon: management,
-            bg: "bg-teal-50",
-            iconBg: "bg-teal-100",
-            iconColor: "text-teal-600",
-        },
-        {
-            title: "Total Stock Quantity",
-            value: "540 Units",
-            icon: appleStock,
-            bg: "bg-purple-50",
-            iconBg: "bg-purple-100",
-            iconColor: "text-purple-600",
-        },
-        {
-            title: "Total Stock Value",
-            value: "₹ 3,45,200",
-            icon: saleTag,
-            bg: "bg-lime-50",
-            iconBg: "bg-lime-100",
-            iconColor: "text-lime-600",
-        },
-        {
-            title: "Low Stock Items",
-            value: "12",
-            icon: rootStock,
-            bg: "bg-orange-50",
-            iconBg: "bg-orange-100",
-            iconColor: "text-orange-600",
-        },
-        {
-            title: "Today Sales",
-            value: "₹ 18,400",
-            icon: root_stocks,
-            bg: "bg-cyan-50",
-            iconBg: "bg-cyan-100",
-            iconColor: "text-cyan-600",
-        },
-    ];
+const StatusDisplaycard = ({ data }) => {
+   const cards = [
+    {
+      title: "Total Products",
+      value: data?.total_products || 0,
+      icon: management,
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+    },
+    {
+      title: "Total Stock Quantity",
+      value: `${data?.total_stock_quantity || 0} Units`,
+      icon: appleStock,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+    },
+    {
+      title: "Total Stock Value",
+      value: `₹ ${data?.total_stock_value || 0}`,
+      icon: saleTag,
+      iconBg: "bg-lime-100",
+      iconColor: "text-lime-600",
+    },
+    {
+      title: "Low Stock Items",
+      value: data?.low_stock_items || 0,
+      icon: rootStock,
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+    },
+    {
+      title: "Today Sales",
+      value: `₹ ${data?.today_sales?.amount || 0}`,
+      icon: root_stocks,
+      iconBg: "bg-cyan-100",
+      iconColor: "text-cyan-600",
+    }
+  ]
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

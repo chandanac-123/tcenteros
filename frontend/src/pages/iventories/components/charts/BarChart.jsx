@@ -43,14 +43,7 @@ const BarChart = ({ title, datasets }) => {
     return (
         <div className="shadow-lg rounded-xl p-5 w-full max-w-md">
             {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-gray-700">{title}</h2>
-
-                <select className="border border-gray-200 rounded-md px-2 py-1 text-sm bg-white">
-                    <option>Week 1</option>
-                    <option>Week 2</option>
-                </select>
-            </div>
+          
 
             {/* Chart */}
             <div className="h-64">

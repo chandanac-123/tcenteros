@@ -105,3 +105,6 @@ export const getGenerateSettlementReportApiCall = data =>
     {},
     { responseType: 'blob' }
   )
+
+  export const billingDashboardApiCall = data =>
+    axiosInstance.get(`/billing/billing/dashboard`, data)

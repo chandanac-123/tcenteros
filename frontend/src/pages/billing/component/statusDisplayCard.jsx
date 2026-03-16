@@ -3,14 +3,30 @@ import payment from '@assets/billing/payment.svg'
 import networkicon from '@assets/billing/network.svg'
 import monthicon from '@assets/billing/month.svg'
 
-const cardValue = [
-  { title: 'Today Revenue  ', value: '12,540', image: revenueicon },
-  { title: 'Pending Payments  ', value: '8,320', image: payment },
-  { title: 'Network Earnings  ', value: '5,210', image: networkicon },
-  { title: 'This Month Total  ', value: '26,070', image: monthicon }
-]
+const StatusDisplayCard = ({ data }) => {
 
-const StatusDisplayCard = () => {
+    const cardValue = [
+    {
+      title: 'Today Revenue',
+      value: data?.total_revenue,
+      image: revenueicon
+    },
+    {
+      title: 'Pending Payments',
+      value: data?.pending_payments,
+      image: payment
+    },
+    {
+      title: 'Network Earnings',
+      value: data?.network_earnings,
+      image: networkicon
+    },
+    {
+      title: 'This Month Total',
+      value: data?.this_month_total,
+      image: monthicon
+    }
+  ]
   return (
     <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
       {cardValue.map((card, index) => (

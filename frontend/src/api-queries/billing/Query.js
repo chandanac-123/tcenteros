@@ -28,7 +28,8 @@ import {
   generateSaleReport,
   generateMembershipReport,
   generateNetworkReport,
-  getSettlementReport
+  getSettlementReport,
+  getBillingDashboardData
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useCartStore } from '@store/cartStore'
@@ -328,5 +329,14 @@ export const useAddChargeMutation = (details) => {
       showError(err?.response?.data?.message || 'Failed to add charge')
       return err
     }
+  })
+}
+
+export const useBillingDashboardQuery = () => {
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getBillingDashboardData,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

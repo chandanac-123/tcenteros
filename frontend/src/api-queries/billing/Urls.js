@@ -27,7 +27,8 @@ import {
   getGenerateSaleReportApiCall,
   getGenerateMembershipReportApiCall,
   getGenerateNetworkReportApiCall,
-  getGenerateSettlementReportApiCall
+  getGenerateSettlementReportApiCall,
+  billingDashboardApiCall
 } from './index'
 
 export const getSales = async data => {
@@ -283,6 +284,15 @@ export const generateSettlementReport = async (data) => {
 export const addCharge = async (data) => {
   try {
     const response = await addChargeApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getBillingDashboardData = async () => {
+  try {
+    const response = await billingDashboardApiCall()
     return response.data
   } catch (error) {
     throw error

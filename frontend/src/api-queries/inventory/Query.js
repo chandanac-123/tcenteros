@@ -18,7 +18,8 @@ import {
   getGenerateSaleReport,
   getGeneratePurchaseReport,
   getGenerateInventoryReport,
-  getGenerateStockReport
+  getGenerateStockReport,
+  getDashboardData
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -221,5 +222,15 @@ export const useGenerateInventoryReportMutation = () => {
 export const useGenerateStockReportMutation = () => {
   return useMutation({
     mutationFn: data => getGenerateStockReport(data)
+  })
+}
+
+
+export const useInventoryDashboardQuery = () => {
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   })
 }

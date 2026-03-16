@@ -103,10 +103,20 @@ const Dashboard = () => {
                 </span>
               </div>
               <BarChart
-                variant='dashboard'
+              isDashboard={true}
                 labels={revenueLabels}
-                incomeData={incomeData}
-                expenseData={expenseData}
+                datasets={[
+                  {
+                    label: 'Income',
+                    data: incomeData,
+                    backgroundColor: '#15CAB8'
+                  },
+                  {
+                    label: 'Expenses',
+                    data: expenseData,
+                    backgroundColor: '#377CF6'
+                  }
+                ]}
               />
             </Card>
           </div>

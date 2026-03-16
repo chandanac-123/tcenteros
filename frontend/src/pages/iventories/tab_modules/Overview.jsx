@@ -1,67 +1,100 @@
 import React, { useState } from 'react'
-import LineChart from '../components/charts/LineChart'
-import BarChart from '../components/charts/BarChart'
-
 import StatusDisplaycard from '../components/StatusDisplaycard'
+import { useInventoryDashboardQuery } from '@api-queries/inventory/Query'
+import LineChart from '@common/charts/LineChart'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
+import { Card } from '@pages/components/ui/card'
+import BarChart from '@common/charts/BarChart'
 
 const Overview = () => {
   const [year, setYear] = useState(new Date().getFullYear())
+  const { data: dashboardData } = useInventoryDashboardQuery()
+  console.log('dashboardData: ', dashboardData)
+  const stockLabels =
+    dashboardData?.stock_distribution_chart?.map(i => i.month) || []
 
-  console.log('Year', year)
+  const inStockData =
+    dashboardData?.stock_distribution_chart?.map(i => i.in_stock) || []
 
-  const datasets = [
-    {
-      label: 'Membership',
-      data: [
-        3000, 4500, 6000, 4000, 8000, 9500, 7000, 8500, 9000, 10000, 11000,
-        12000
-      ],
-      borderColor: '#377CF6'
-    },
-    {
-      label: 'Inventory',
-      data: [
-        2000, 3500, 5500, 6500, 7000, 8500, 6000, 7500, 8000, 9500, 10000, 10500
-      ],
-      borderColor: '#FFCD0F'
-    },
-    {
-      label: 'Network',
-      data: [
-        1000, 2500, 4000, 5000, 6000, 7500, 6500, 7000, 7200, 8500, 9000, 9500
-      ],
-      borderColor: '#55EFC2'
-    }
-  ]
+  const lowStockData =
+    dashboardData?.stock_distribution_chart?.map(i => i.low_stock) || []
 
-  const barDatasets = [
-    {
-      label: 'Last 7 Days',
-      data: [11],
-      backgroundColor: '#377CF6'
-    },
-    {
-      label: 'Last 30 Days',
-      data: [8],
-      backgroundColor: '#55EFC2'
-    }
-  ]
+  const outStockData =
+    dashboardData?.stock_distribution_chart?.map(i => i.out_of_stock) || []
+
+  const salesLabels = dashboardData?.sales_trend_chart?.map(i => i.month) || []
+
+  const salesData = dashboardData?.sales_trend_chart?.map(i => i.sales) || []
+
+  const purchaseData =
+    dashboardData?.sales_trend_chart?.map(i => i.purchases) || []
 
   return (
     <div className='flex flex-col gap-3'>
-      <StatusDisplaycard />
+      <StatusDisplaycard data={dashboardData} />
       {/* Charts */}
-      <div className='flex flex-col lg:flex-row gap-4 items-stretch'>
-        <div className='lg:w-2/3 w-full flex'>
-          <LineChart
-            title='Growth Overview'
-            datasets={datasets}
-            onYearChange={setYear}
-          />
+
+      <div className='grid grid-cols-1 lg:grid-cols-4 gap-4'>
+        {/* Chart Section */}
+        <div className='lg:col-span-2'>
+          <Card className='p-4 h-full '>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
+              <span className='font-semibold text-base'>
+                Total Revenue Summary
+              </span>
+              <span>
+                <CustomDatePicker pickerType='year' />
+              </span>
+            </div>
+            <LineChart
+              title='Stock Distribution'
+              labels={stockLabels}
+              datasets={[
+                {
+                  label: 'In Stock',
+                  data: inStockData,
+                  borderColor: '#377CF6'
+                },
+                {
+                  label: 'Low Stock',
+                  data: lowStockData,
+                  borderColor: '#FFCD0F'
+                },
+                {
+                  label: 'Out of Stock',
+                  data: outStockData,
+                  borderColor: '#55EFC2'
+                }
+              ]}
+              onYearChange={setYear}
+            />
+          </Card>
         </div>
 
-        <div className='lg:w-1/3 w-full flex'>
-          <BarChart title='Sales vs Revenue' datasets={barDatasets} />
+        <div className='lg:col-span-2'>
+          <Card className='p-4 h-full'>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
+              <span className='font-semibold text-base'>Revenue Trend</span>
+              <span>
+                <CustomDatePicker pickerType='year' />
+              </span>
+            </div>
+            <BarChart
+              labels={salesLabels}
+              datasets={[
+                {
+                  label: 'Sales',
+                  data: salesData,
+                  backgroundColor: '#377CF6'
+                },
+                {
+                  label: 'Purchases',
+                  data: purchaseData,
+                  backgroundColor: '#55EFC2'
+                }
+              ]}
+            />
+          </Card>
         </div>
       </div>
     </div>

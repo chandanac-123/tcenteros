@@ -18,7 +18,8 @@ import {
   getGenerateStockReportApiCall,
   getGenerateInventoryReportApiCall,
   getGeneratePurchaseReportApiCall,
-  getGenerateSaleReportApiCall
+  getGenerateSaleReportApiCall,
+  inventoryDashboardApiCall
 } from './index'
 
 export const getAllSKU = async () => {
@@ -185,6 +186,15 @@ export const getGenerateInventoryReport = async (data) => {
 export const getGenerateStockReport = async (data) => {
   try {
     const response = await getGenerateStockReportApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getDashboardData = async () => {
+  try {
+    const response = await inventoryDashboardApiCall()
     return response.data
   } catch (error) {
     throw error

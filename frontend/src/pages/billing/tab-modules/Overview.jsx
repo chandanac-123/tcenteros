@@ -7,8 +7,11 @@ import { useState } from 'react'
 import NewSale from '../component/NewSale'
 import { useCartOpenMutation } from '@api-queries/billing/Query'
 import AddCharge from '../component/AddCharge'
+import { useBillingDashboardQuery } from '@api-queries/billing/Query'
 
 const Overview = () => {
+  const { data: dashboardData } = useBillingDashboardQuery()
+  console.log('dashboardData: ', dashboardData)
   const [openNewSale, setOpenNewSale] = useState(false)
   const [openAddCharge, setOpenAddCharge] = useState(false)
   const { mutate: openCart } = useCartOpenMutation()
@@ -23,15 +26,26 @@ const Overview = () => {
     }
   }
 
+  const labels = dashboardData?.revenue_trend_chart?.map(i => i.month) || []
+
+  const membershipData =
+    dashboardData?.revenue_trend_chart?.map(i => i.memberships) || []
+
+  const inventoryData =
+    dashboardData?.revenue_trend_chart?.map(i => i.inventory_sales) || []
+
+  const networkData =
+    dashboardData?.revenue_trend_chart?.map(i => i.networking) || []
+
   return (
     <div className='space-y-4'>
       <div className='flex w-full'>
-        <StatusDisplayCard />
+        <StatusDisplayCard data={dashboardData} />
       </div>
 
-        <div className='flex justify-end'>
-          <DisplayActionCard onActionClick={handleActionClick} />
-        </div>
+      <div className='flex justify-end'>
+        <DisplayActionCard onActionClick={handleActionClick} />
+      </div>
 
       <div className=''>
         {/* Left Section */}
@@ -46,31 +60,29 @@ const Overview = () => {
               </span>
             </div>
             <LineChart
+              labels={labels}
               datasets={[
                 {
                   label: 'Membership',
-                  data: [3000, 4500, 6000],
+                  data: membershipData,
                   borderColor: '#377CF6'
                 },
                 {
                   label: 'Inventory',
-                  data: [2000, 3500, 5500],
+                  data: inventoryData,
                   borderColor: '#FFCD0F'
                 },
                 {
                   label: 'Network',
-                  data: [1000, 2500, 4000],
+                  data: networkData,
                   borderColor: '#55EFC2'
                 }
               ]}
               yMin={0}
-              yMax={10000}
-              tickFormat={v => v / 1000 + 'k'}
+              tickFormat={v => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v)}
             />
           </Card>
         </div>
-
-       
       </div>
       <NewSale saleOpen={openNewSale} setSaleOpen={setOpenNewSale} />
       <AddCharge

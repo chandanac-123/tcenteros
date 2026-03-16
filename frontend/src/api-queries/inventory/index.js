@@ -39,9 +39,7 @@ export const getPurchaseReportApiCall = data =>
     `inventory/reports/purchase?page=${data?.page}&date_from=${data?.date_from}&date_to=${data?.date_to}`
   )
 export const getInventoryReportApiCall = data =>
-  axiosInstance.get(
-    `inventory/reports/inventory?page=${data?.page}`
-  )
+  axiosInstance.get(`inventory/reports/inventory?page=${data?.page}`)
 
 export const getStockReportApiCall = data =>
   axiosInstance.get(
@@ -75,3 +73,6 @@ export const getGenerateStockReportApiCall = data =>
     {},
     { responseType: 'blob' }
   )
+
+export const inventoryDashboardApiCall = data =>
+  axiosInstance.get(`/inventory/dashboard`, data)
