@@ -65,7 +65,7 @@ class MemberMembership(Base, AuditMixin):
     tax_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.tax_categories.id"), nullable=True)
     total_amount = Column(Numeric(10, 2), nullable=False)
     auto_renewal_enabled = Column(Boolean, default=False)
-    membership_status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.active)
+    membership_status = Column(Enum(StatusEnum, name="status_enum"), nullable=False, default=StatusEnum.active)
 
     # Relationships (optional)
     member = relationship(
