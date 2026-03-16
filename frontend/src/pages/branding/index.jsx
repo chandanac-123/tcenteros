@@ -3,7 +3,6 @@ import InputFile from '@common/components/CustomeFileUpload'
 import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
-import { Input } from '@pages/components/ui/input'
 import CustomHexColorPicker from '@common/components/CustomeHexColorPicker'
 import { useEffect, useState } from 'react'
 import DocumentCard from './components/DocumentCard'
@@ -81,7 +80,22 @@ const Branding = () => {
       }
     }
   })
-  console.log('formik: ', formik.values)
+
+  const handleSaveDocument = async updatedContent => {
+  try {
+    const payload = {
+      type: modalState.type, // terms or privacy
+      content: updatedContent
+    }
+    await createTermsandPrivacy(payload)
+    setDocuments(prev => ({
+      ...prev,
+      [modalState.type]: updatedContent
+    }))
+  } catch (error) {
+    console.error(error)
+  }
+}
 
   return (
     <ContentLayout>
@@ -164,12 +178,7 @@ const Branding = () => {
         }
         initialContent={documents[modalState.type]}
         onClose={() => setModalState({ open: false, type: null, mode: 'view' })}
-        onSave={updatedContent =>
-          setDocuments(prev => ({
-            ...prev,
-            [modalState.type]: updatedContent
-          }))
-        }
+        onSave={handleSaveDocument }
       />
     </ContentLayout>
   )

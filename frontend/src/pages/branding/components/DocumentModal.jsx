@@ -48,6 +48,12 @@ const DocumentModal = ({
               onSave(content)
               onClose()
             }}
+            onSave={updatedContent =>
+              setDocuments(prev => ({
+                ...prev,
+                [modalState.type]: updatedContent
+              }))
+            }
           >
             Save Changes
           </Button>
