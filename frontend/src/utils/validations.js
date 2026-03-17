@@ -10,6 +10,7 @@ export const onboardingValidationSchema = Yup.object().shape({
     .matches(/^[0-9]{10,12}$/, 'Invalid phone number')
     .required('Contact phone is required'),
   city: Yup.string().required('City is required'),
+  subscription_duration: Yup.string().required('Subscription duration is required'),
   is_terms_and_conditions: Yup.boolean().oneOf(
     [true],
     'You must accept the terms'

@@ -12,10 +12,12 @@ import { Input } from '@pages/components/ui/input'
 import { useFormik } from 'formik'
 import { invoiceValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
+import { useState } from 'react'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
   const store = useOnboardingStore()
+  const [success, setSuccess] = useState(false)
   const { data, isFetching } = useCalculateGstQuery(store?.onboardId)
   const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
     store?.onboardId
@@ -35,8 +37,10 @@ const InvoiceSummary = () => {
       console.log('values: ', values)
       try {
         const response = await finalize(values)
-        setSubmitted(true)
-        // formik.resetForm()
+        setSuccess(true)
+        setTimeout(() => {
+          navigate('/primary-login')
+        }, 1500)
       } catch (error) {
         console.log('error: ', error)
       }
@@ -47,6 +51,11 @@ const InvoiceSummary = () => {
     <SecondaryLayout>
       <OnboardHeader />
       <div className='px-4 sm:px-10 '>
+        {success && (
+          <p className='text-green-600 text-center mt-2'>
+            Payment successful! Redirecting...
+          </p>
+        )}
         <div className='flex justify-center'>
           {isFetching ? (
             <Spinner />
@@ -162,8 +171,12 @@ const InvoiceSummary = () => {
                 </div>
               </section>
 
+              <p className='flex text-sm text-pricing_text '>
+                {data?.pricing_note}
+              </p>
+
               {/* Total */}
-              <div className='flex justify-between items-end mb-8'>
+              <div className='flex justify-between items-end mb-2'>
                 <div>
                   <p className='font-semibold'>Total Amount Payable</p>
                   <p className='text-xs text-gray-400'>
@@ -178,7 +191,7 @@ const InvoiceSummary = () => {
               </div>
 
               {/* Actions */}
-              <div className='flex justify-center gap-3'>
+              <div className='flex justify-center gap-3 mt-4'>
                 <Button
                   form='invoice-details-form'
                   type='submit'

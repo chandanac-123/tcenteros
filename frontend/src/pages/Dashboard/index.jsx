@@ -4,13 +4,13 @@ import SubCard from './components/Cards'
 import { Card } from '@pages/components/ui/card'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
-import DashboardTable from './components/DashboardTable'
 import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
 import { useDashboardQuery } from '@api-queries/Dashboard/Query'
+import { useEffect, useState } from 'react'
 
 const Dashboard = () => {
+  const [greeting, setGreeting] = useState('')
   const { data, isLoading, error } = useDashboardQuery()
-  console.log('data: ', data)
   const cardsData = [
     { label: 'Total Employees', value: data?.total_employees || 0 },
     { label: 'Total Members', value: data?.total_members || 0 },
@@ -32,12 +32,31 @@ const Dashboard = () => {
 
   const attendanceData =
     data?.attendance_chart?.map(i => i.attendance_percentage) || []
+
+  useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours()
+      if (hour >= 5 && hour < 12) {
+        setGreeting('Good Morning 🌞🌻')
+      } else if (hour >= 12 && hour < 17) {
+        setGreeting('Good Afternoon 🌤️😎')
+      } else if (hour >= 17 && hour < 21) {
+        setGreeting('Good Evening 🌇💫')
+      } else {
+        setGreeting('Good Night 🌙⭐')
+      }
+    }
+    updateGreeting() // initial call
+    const interval = setInterval(updateGreeting, 100000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <ContentLayout>
       <div className='gap-4 flex flex-col w-full'>
         <div className='flex justify-between items-center mb-4'>
           <div className='flex flex-col'>
-            <span>Good Morning!</span>
+            <span>{greeting}</span>
             <span className='text-xs'>Center Admin</span>
           </div>
           <div>
@@ -103,7 +122,7 @@ const Dashboard = () => {
                 </span>
               </div>
               <BarChart
-              isDashboard={true}
+                isDashboard={true}
                 labels={revenueLabels}
                 datasets={[
                   {

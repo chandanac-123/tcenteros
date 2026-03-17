@@ -13,6 +13,13 @@ import { useCreateOnboardCenterMutation } from '@api-queries/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
+import CustomeSelect from '@common/components/CustomeSelect'
+
+  const packageOptions = [
+    { id: 'monthly', name: 'Monthly' },
+    { id: 'yearly', name: 'Yearly' }
+  ]
+
 
 const ContactDetails = () => {
   const navigate = useNavigate()
@@ -50,7 +57,8 @@ const ContactDetails = () => {
     marketing_platform: store.marketingSupportType
       ? [store.marketingSupportType]
       : [],
-    platform_feature_ids: store.centerTools ? enabledFeatureIds : []
+    platform_feature_ids: store.centerTools ? enabledFeatureIds : [],
+    subscription_duration: ''
   }
 
   const [submitted, setSubmitted] = useState(false)
@@ -150,6 +158,15 @@ const ContactDetails = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.city && formik.errors.city}
+              />
+              <CustomeSelect
+                label='Subscription Duration'
+                name='subscription_duration'
+                options={packageOptions}
+                value={formik.values.subscription_duration}
+                onChange={value => formik.setFieldValue('subscription_duration', value)}
+                error={formik.touched.subscription_duration && formik.errors.subscription_duration}
+                placeholder='Select Subscription Duration'
               />
               <div className='flex flex-col'>
                 <div className='flex items-center space-x-2'>
