@@ -10,6 +10,7 @@ import { useFetchCenterLocationMutation } from '@api-queries/center-profile/Quer
 import { useFormik } from 'formik'
 import { Button } from '@pages/components/ui/button'
 import { useAuthStore } from '@store/authStore'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const containerStyle = {
   width: '100%',
@@ -113,7 +114,11 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
       header='Fitness center location'
     >
       <form onSubmit={formik.handleSubmit}>
-        {isLoaded && center && (
+        {!isLoaded || !center ? (
+          <div className='flex justify-center'>
+            <Spinner />
+          </div>
+        ) : (
           <div style={{ position: 'relative', width: '100%', height: '400px' }}>
             <GoogleMap
               mapContainerStyle={containerStyle}
@@ -121,6 +126,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
               zoom={15}
               onClick={handleMapClick}
             >
+              {/* Search */}
               <div
                 style={{
                   position: 'absolute',
@@ -148,7 +154,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
                     onChange={e => setSearchValue(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter') {
-                        e.preventDefault() // 🚨 STOP form submit
+                        e.preventDefault()
                       }
                     }}
                     type='text'
@@ -167,6 +173,8 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
                   />
                 </Autocomplete>
               </div>
+
+              {/* Marker */}
               {marker && (
                 <Marker
                   position={marker}
@@ -174,11 +182,9 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
                   onDragEnd={e => {
                     const lat = e.latLng.lat()
                     const lng = e.latLng.lng()
-
                     const location = { lat, lng }
 
                     setMarker(location)
-
                     formik.setFieldValue('latitude', lat)
                     formik.setFieldValue('longitude', lng)
                   }}
@@ -187,6 +193,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
             </GoogleMap>
           </div>
         )}
+
         <div className='flex justify-end mt-3'>
           <Button type='submit' size='addbutton' disabled={isPending}>
             Save Location
