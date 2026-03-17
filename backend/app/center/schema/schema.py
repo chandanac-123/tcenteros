@@ -54,6 +54,7 @@ class CenterOnboardingTempDetailedOut(BaseModel):
     marketing_platform: Optional[Union[dict, list]] = None
     platform_features: List[PlatformFeatureInfo]
     is_terms_and_conditions: bool
+    subscription_duration: str
     calculated_amount: float
 
 class GSTCalculationRequest(BaseModel):
