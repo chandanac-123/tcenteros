@@ -28,7 +28,9 @@ const CRM = () => {
     resetCrmState
   } = useCrmStore()
 
-  // Removed resetCrmState to preserve memberView when navigating from header
+  useEffect(() => {
+    resetCrmState()
+  }, [])
 
   const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
 
