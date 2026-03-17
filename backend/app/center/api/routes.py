@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.membership.models.models import Membership
-from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage, CenterStatus
+from app.center.models.models import CenterOnboardingTemp, Center, CenterTimeSlot, CenterWallet, WalletTransaction, CenterGalleryImage, CenterStatus, ApprovalStatus
 from app.settings.models.models import CenterCategory,Designation, Address, TaxCategory, CenterOperationalSetting
 from app.platforms.models.models import PlatformFeature, CenterFeatureSubscription, PlatformWallet
 from app.billing.models.models import PaymentOrder
@@ -548,17 +548,18 @@ async def calculate_gst(
     pricing_note = pricing_info["note"]
 
     # Get applicable tax
-    tax = await db.execute(
+    tax_query = await db.execute(
         select(TaxCategory)
         .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
         .limit(1)
     )
-    tax = tax.scalar_one_or_none()
+    tax = tax_query.scalar_one_or_none()
     
     total_tax = 0.0
     tax_info = None
     if tax:
-        total_tax = (total_base * tax.tax_percentage) / 100
+        # Convert Decimal to float to avoid type mismatch
+        total_tax = (total_base * float(tax.tax_percentage)) / 100
         tax_info = {
             "id": str(tax.id),
             "name": tax.name,
@@ -595,17 +596,20 @@ async def finalize_onboarding(
     Finalize onboarding: create center, admin, subscriptions with correct duration and pricing.
     """
     try:
+        # Import required enums
+        from app.billing.models.models import PaymentOrderStatus, PayerType, PayeeType, OrderType, ReferenceSchema, Currency
+        
         # 1. Fetch the onboarding temp record
         temp = await db.get(CenterOnboardingTemp, onboarding_id)
         if not temp:
             raise HTTPException(status_code=404, detail="Onboarding temp not found")
 
-        # 2. Create or fetch Address
+        # 2. Create Address
         address = Address(
+            id=uuid4(),
             address_line_1=payload.address_line_1,
             address_line_2=payload.address_line_2,
             city=temp.city,
-            # Add other fields as needed
         )
         db.add(address)
         await db.flush()
@@ -617,10 +621,11 @@ async def finalize_onboarding(
 
         # 4. Create Center
         center = Center(
+            id=uuid4(),
             center_name=temp.center_name,
             center_category_id=temp.center_category_id,
             address_id=address.id,
-            approval_status="approved",
+            approval_status=ApprovalStatus.approved,
             center_status=CenterStatus.active,
             contact_person=temp.contact_person,
             center_email=temp.center_email,
@@ -630,38 +635,60 @@ async def finalize_onboarding(
             members_count=temp.members_count,
             trainer_count=temp.trainer_count,
             currently_using_digital_tool=temp.currently_using_digital_tool,
-            marketing_platform=temp.marketing_platform
+            marketing_platform=temp.marketing_platform,
+            network_enabled=True,
+            parent_center_id=None,
         )
         db.add(center)
         await db.flush()
 
-        # 5. Create User and CenterAdmin
-        # Check if user already exists
+        # 5. Initialize Accounts for the new center (if you have this function)
+        try:
+            from app.accounts.init_accounts import initialize_center_accounts
+            await initialize_center_accounts(db, center.id)
+            print(f"✅ Initialized accounts for center: {center.center_name}")
+        except ImportError:
+            print("⚠️ Account initialization module not found, skipping...")
+
+        # 6. Check if user already exists with this email
         user_result = await db.execute(
             select(User).where(User.email == temp.center_email)
         )
-        user = user_result.scalar_one_or_none()
+        existing_user = user_result.scalar_one_or_none()
         
-        if not user:
-            user = User(
-                email=temp.center_email,
-                full_name=temp.contact_person,
-                role="center_admin",
-                hashed_password=get_password_hash("TempPassword@123"),  # Generate temporary password
-                status="active"
+        if existing_user:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"A user with email {temp.center_email} already exists"
             )
-            db.add(user)
-            await db.flush()
 
-        # Create CenterAdmin
+        # 7. Create CenterAdmin (which will also create the User row via inheritance)
         center_admin = CenterAdmin(
-            user_id=user.id,
-            center_id=center.id
+            id=uuid4(),
+            email=temp.center_email,
+            password_hash=get_password_hash("TempPassword@123"),
+            role="centeradmin",
+            status="active",
+            full_name=temp.contact_person,
+            center_id=center.id,
+            address_id=address.id,
+            network_access_enabled=False,
+            white_label_enabled=False,
+            is_approved=True,
         )
         db.add(center_admin)
         await db.flush()
 
-        # 6. Get applicable tax
+        # 8. Update audit fields
+        address.created_by = center_admin.id
+        address.updated_by = center_admin.id
+        center.created_by = center_admin.id
+        center.updated_by = center_admin.id
+        center_admin.created_by = center_admin.id
+        center_admin.updated_by = center_admin.id
+        await db.flush()
+
+        # 9. Get applicable tax
         tax_result = await db.execute(
             select(TaxCategory)
             .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
@@ -669,7 +696,7 @@ async def finalize_onboarding(
         )
         tax = tax_result.scalar_one_or_none()
 
-        # 7. Calculate yearly base price from features
+        # 10. Calculate yearly base price from features
         feature_ids = temp.platform_feature_ids or []
         yearly_base = 0.0
         for feature_id in feature_ids:
@@ -681,30 +708,39 @@ async def finalize_onboarding(
                 )
             yearly_base += float(feature.base_price)
 
-        # 8. Apply pricing logic
+        # 11. Apply pricing logic
         pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
         base_price = pricing_info["base_price"]
         
         # Calculate tax
         tax_amount = 0.0
         if tax:
-            tax_amount = (base_price * tax.tax_percentage) / 100
+            tax_amount = (base_price * float(tax.tax_percentage)) / 100
         
         total_amount = base_price + tax_amount
 
-        # 9. Create PaymentOrder
+        # 12. Create PaymentOrder with all required enum fields
         payment_order = PaymentOrder(
+            payment_order_id=uuid4(),
+            payer_user_id=center_admin.id,
+            payer_type=PayerType.center_admin,      # ✅ Required enum
+            payee_type=PayeeType.platform,           # ✅ Required enum
             center_id=center.id,
-            user_id=user.id,
+            order_type=OrderType.center_subscription, # ✅ Required enum (use correct value)
+            reference_schema=ReferenceSchema.center_feature, # ✅ Required enum
+            reference_id=center.id,                   # Reference to the center
+            subtotal_amount=base_price,
+            tax_amount=tax_amount,
             total_amount=total_amount,
-            status=PaymentOrderStatus.paid,  # Assuming payment is completed
-            order_type="membership",
-            created_at=datetime.utcnow()
+            currency=Currency.INR,
+            status=PaymentOrderStatus.paid,
+            created_by=center_admin.id,
+            updated_by=center_admin.id,
         )
         db.add(payment_order)
         await db.flush()
 
-        # 10. Create CenterFeatureSubscriptions with correct duration and pricing
+        # 13. Create CenterFeatureSubscriptions with correct duration and pricing
         start_date = datetime.utcnow().date()
         
         # Set end_date based on subscription duration
@@ -725,6 +761,7 @@ async def finalize_onboarding(
                 unit_price = feature_yearly_price
             
             subscription = CenterFeatureSubscription(
+                id=uuid4(),
                 center_id=center.id,
                 feature_id=UUID(feature_id),
                 payment_order_id=payment_order.payment_order_id,
@@ -733,45 +770,52 @@ async def finalize_onboarding(
                 tax_category_id=tax.id if tax else None,
                 start_date=start_date,
                 end_date=end_date,
-                status=StatusEnum.active
+                status=StatusEnum.active,
+                created_by=center_admin.id,
+                updated_by=center_admin.id,
             )
             db.add(subscription)
             feature_subscriptions.append(subscription)
         
         await db.flush()
 
-        # 11. Initialize Center Wallet
+        # 14. Initialize Center Wallet
         center_wallet = CenterWallet(
+            id=uuid4(),
             center_id=center.id,
             balance=0.0,
             deposit=0.0,
-            min_balance=0.0
+            min_balance=10000.0,
+            min_deposit=2000.0,
+            created_by=center_admin.id,
+            updated_by=center_admin.id,
         )
         db.add(center_wallet)
+        await db.flush()
 
-        # 12. Delete the temp record
+        # 15. Delete the temp record
         await db.delete(temp)
         
-        # 13. Commit all changes
+        # 16. Commit all changes
         await db.commit()
         
-        # 14. Refresh all objects
+        # 17. Refresh all objects
         await db.refresh(center)
         await db.refresh(center_admin)
         await db.refresh(payment_order)
         for sub in feature_subscriptions:
             await db.refresh(sub)
 
-        # 15. Prepare response
+        # 18. Prepare response
         return OnboardingFinalizeResponse(
-            message="Onboarding completed successfully",
+            message="Center onboarding completed successfully",
             center=CenterInfo(
                 id=center.id,
                 center_name=center.center_name,
                 center_category_id=center.center_category_id,
                 address_id=center.address_id,
-                approval_status=center.approval_status,
-                center_status=center.center_status
+                approval_status=center.approval_status.value,
+                center_status=center.center_status.value
             ),
             center_admin=CenterAdminInfo(
                 id=center_admin.id,
@@ -780,7 +824,7 @@ async def finalize_onboarding(
             payment=PaymentOrderInfo(
                 payment_order_id=payment_order.payment_order_id,
                 total_amount=float(payment_order.total_amount),
-                status=payment_order.status
+                status=payment_order.status.value
             ),
             feature_subscriptions=[
                 FeatureSubscriptionInfo(
@@ -792,7 +836,7 @@ async def finalize_onboarding(
                     unit_price=float(sub.unit_price),
                     tax_category_id=sub.tax_category_id,
                     start_date=sub.start_date,
-                    status=sub.status
+                    status=sub.status.value
                 )
                 for sub in feature_subscriptions
             ],
@@ -801,10 +845,16 @@ async def finalize_onboarding(
 
     except IntegrityError as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail=f"Database integrity error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Database integrity error: {str(e.orig)}")
+    except HTTPException:
+        await db.rollback()
+        raise
     except Exception as e:
         await db.rollback()
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error finalizing onboarding: {str(e)}")
+
 
 # @router.post('/billing/onboarding/finalize/{onboarding_id}', response_model=OnboardingFinalizeResponse)
 # async def finalize_onboarding(
