@@ -42,24 +42,34 @@ const MembershipPlan = () => {
           + Create New Plan
         </Button>
       </div>
-      {isFetching ? (
-        <div className='flex justify-center items-center py-10'>
-          <Spinner />
+      {data?.length === 0 && (
+        <p className='flex justify-center items-center font-semibold font-poppins'>
+          NO ACTIVETED MEMBERSHIP PLANS AVAILABLE, CREATE A NEW PLAN TO START
+          OFFERING MEMBERSHIPS TO YOUR CUSTOMERS.
+        </p>
+      )}
+      {data?.length > 0 && (
+        <div>
+          {isFetching ? (
+            <div className='flex justify-center items-center py-10'>
+              <Spinner />
+            </div>
+          ) : (
+            <CarouselSize>
+              {data?.map((plan, index) => (
+                <PlanCard
+                  key={index}
+                  data={plan}
+                  colors={
+                    membershipPlanColorPalette[
+                      index % membershipPlanColorPalette.length
+                    ]
+                  }
+                />
+              ))}
+            </CarouselSize>
+          )}
         </div>
-      ) : (
-        <CarouselSize>
-          {data?.map((plan, index) => (
-            <PlanCard
-              key={index}
-              data={plan}
-              colors={
-                membershipPlanColorPalette[
-                  index % membershipPlanColorPalette.length
-                ]
-              }
-            />
-          ))}
-        </CarouselSize>
       )}
 
       <CreateMembershipForm open={open} setOpen={setOpen} />

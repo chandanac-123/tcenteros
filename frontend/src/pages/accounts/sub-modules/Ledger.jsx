@@ -1,36 +1,38 @@
 import { DataTable } from '@common/components/DataTable'
+import { useAllLedgerQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Ledger = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+    search: ''
+  })
+  const { data, isLoading, isError } = useAllLedgerQuery(tableParams)
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Accounts Heads'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Date-wise Debit/Credit entries'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Voucher IDs'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Source Module'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Action'
-    }
+    { accessorKey: 'account_code', header: 'Account Code' },
+    { accessorKey: 'account_name', header: 'Accounts Name' },
+    { accessorKey: 'account_type', header: 'Account Type' },
+    { accessorKey: 'source', header: 'Source' },
+    { accessorKey: 'date', header: 'Payroll Date' },
+    { accessorKey: 'credit', header: 'Credit' },
+    { accessorKey: 'debit', header: 'Debit' },
+    { accessorKey: 'balance', header: 'Balance' },
+    { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'description', header: 'Description' }
   ]
 
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.entries || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isLoading}
+        pagination={data?.total}
+        paginationVisibile={true}
+        search={true}
+      />
     </>
   )
 }

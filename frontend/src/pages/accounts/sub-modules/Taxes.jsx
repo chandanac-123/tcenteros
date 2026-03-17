@@ -1,6 +1,14 @@
 import { DataTable } from "@common/components/DataTable"
+import { useAllTaxesQuery } from "@api-queries/accounts/Query"
+import { useState } from "react"
 
 const Taxes = () => {
+    const [tableParams, setTableParams] = useState({
+      page: 1,
+      search: ''
+    })
+   const { data, isLoading, isError } = useAllTaxesQuery(tableParams)
+
   const columns = [
     {
       accessorKey: 'full_name',
@@ -29,7 +37,16 @@ const Taxes = () => {
   ]
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.entries || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isLoading}
+        pagination={data?.total}
+        paginationVisibile={true}
+        search={true}
+      />
     </>
   )
 }

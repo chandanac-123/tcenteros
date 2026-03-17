@@ -211,6 +211,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             <Input
               label='Date of Birth'
               name='date_of_birth'
+              placeholder='YYYY-MM-DD'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
               error={
