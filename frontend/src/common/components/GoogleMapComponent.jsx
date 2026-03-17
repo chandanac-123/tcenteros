@@ -59,7 +59,36 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
     })
   }, [])
 
-  // 📍 Click on map
+  // 🔍 Search place
+
+const onLoadAutocomplete = auto => {
+  setAutocomplete(auto)
+}
+
+const onPlaceChanged = () => {
+  if (!autocomplete) return
+
+  const place = autocomplete.getPlace()
+
+  // safety check
+  if (!place.geometry) {
+    alert('Please select a valid location')
+    return
+  }
+
+  const lat = place.geometry.location.lat()
+  const lng = place.geometry.location.lng()
+
+  const location = { lat, lng }
+
+  setCenter(location)
+  setMarker(location)
+
+  formik.setFieldValue('latitude', lat)
+  formik.setFieldValue('longitude', lng)
+}
+
+    //  Click on map → move marker
   const handleMapClick = e => {
     const lat = e.latLng.lat()
     const lng = e.latLng.lng()
@@ -72,23 +101,6 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
     formik.setFieldValue('longitude', lng)
   }
 
-  // 🔍 Search place
-  const onPlaceChanged = () => {
-    if (autocomplete !== null) {
-      const place = autocomplete.getPlace()
-
-      const lat = place.geometry.location.lat()
-      const lng = place.geometry.location.lng()
-
-      const location = { lat, lng }
-
-      setCenter(location)
-      setMarker(location)
-
-      formik.setFieldValue('latitude', lat)
-      formik.setFieldValue('longitude', lng)
-    }
-  }
 
   return (
     <CustomeModal
@@ -103,7 +115,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
           libraries={['places']}
         >
           {/* 🔍 Search box */}
-          <Autocomplete
+          {/* <Autocomplete
             onLoad={setAutocomplete}
             onPlaceChanged={onPlaceChanged}
           >
@@ -112,16 +124,33 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
               placeholder='Search location...'
               className='w-full p-2 border rounded mb-2'
             />
-          </Autocomplete>
+          </Autocomplete> */}
 
-          {center && (
+           {center && (
             <GoogleMap
               mapContainerStyle={containerStyle}
               center={center}
-              zoom={14}
+              zoom={15}
               onClick={handleMapClick}
             >
-              {marker && <Marker position={marker} />}
+              {/* 📍 Draggable Marker */}
+              {marker && (
+                <Marker
+                  position={marker}
+                  draggable={true}
+                  onDragEnd={e => {
+                    const lat = e.latLng.lat()
+                    const lng = e.latLng.lng()
+
+                    const location = { lat, lng }
+
+                    setMarker(location)
+
+                    formik.setFieldValue('latitude', lat)
+                    formik.setFieldValue('longitude', lng)
+                  }}
+                />
+              )}
             </GoogleMap>
           )}
         </LoadScript>
