@@ -504,6 +504,7 @@ async def get_onboarding_temp_by_id(
         "marketing_platform": temp.marketing_platform,
         "platform_features": features,
         "is_terms_and_conditions": temp.is_terms_and_conditions,
+        "subscription_duration": temp.subscription_duration,  # Added
         "calculated_amount": float(temp.calculated_amount)
     }
 
