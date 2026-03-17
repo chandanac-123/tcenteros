@@ -1,18 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import select, func, and_, desc, or_
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from uuid import UUID
 
 from app.core.database import get_async_session
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, centeradmin_required
 from app.accounts.models.models import (
     ChartOfAccounts, JournalEntry, JournalEntryLine, 
     GeneralLedger, TaxLedger, AccountType, EntryStatus, TransactionSource
 )
 from app.accounts.schema.schema import *
+from app.accounts.models.models import (
+    ChartOfAccounts, JournalEntry, JournalEntryLine, 
+    GeneralLedger, TaxLedger, AccountType, TransactionSource
+)
+from app.payrole.models.models import PayrollRecord
+
+
 
 router = APIRouter()
 
@@ -183,625 +190,802 @@ async def get_chart_of_accounts(
     query = query.order_by(ChartOfAccounts.code)
     
     result = await db.execute(query)
-    return result.scalars().all()
-
-
-@router.post("/chart-of-accounts", response_model=ChartOfAccountsResponse)
-async def create_account(
-    account_data: ChartOfAccountsCreate,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Create new account"""
+    accounts = result.scalars().all()
     
-    # Check if code already exists for this center
-    existing = await db.execute(
-        select(ChartOfAccounts).where(
-            and_(
-                ChartOfAccounts.code == account_data.code,
-                ChartOfAccounts.center_id == UUID(account_data.center_id)
-            )
+    # Convert UUID to string for each account
+    return [
+        ChartOfAccountsResponse(
+            id=account.id,
+            center_id=str(account.center_id),  # Convert UUID to string
+            code=account.code,
+            name=account.name,
+            account_type=account.account_type,
+            parent_id=account.parent_id,
+            description=account.description,
+            is_active=account.is_active,
+            is_system=account.is_system,
+            created_at=account.created_at,
+            updated_at=account.updated_at
         )
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Account code already exists for this center")
-    
-    account = ChartOfAccounts(**account_data.dict())
-    db.add(account)
-    await db.commit()
-    await db.refresh(account)
-    
-    return account
+        for account in accounts
+    ]
+
+
+
 
 
 # ============================================
-# JOURNAL ENTRY APIs
+# 1. LEDGER TAB - All Transactions
 # ============================================
 
-@router.post("/journal-entries", response_model=JournalEntryResponse)
-async def create_journal_entry(
-    entry_data: JournalEntryCreate,
+@router.get("/ledger", summary="Get all ledger entries")
+async def get_ledger_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    account_code: Optional[str] = None,
+    account_type: Optional[AccountType] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    search: Optional[str] = None,  # Search in description
     db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_admin=Depends(centeradmin_required)
 ):
-    """Create and post journal entry"""
+    """
+    Get all ledger entries with filters
+    Shows: Date, Account, Description, Debit, Credit, Balance, Entry Number
+    """
+    center_id = current_admin["center_id"]
     
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    return journal_entry
-
-
-@router.get("/journal-entries", response_model=List[JournalEntryResponse])
-async def get_journal_entries(
-    center_id: str,
-    source: Optional[TransactionSource] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    limit: int = Query(100, le=1000),
-    offset: int = 0,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Get journal entries"""
-    
-    query = select(JournalEntry).where(JournalEntry.center_id == UUID(center_id))
-    
-    if source:
-        query = query.where(JournalEntry.source == source)
-    if start_date:
-        query = query.where(JournalEntry.entry_date >= start_date)
-    if end_date:
-        query = query.where(JournalEntry.entry_date <= end_date)
-    
-    query = query.order_by(desc(JournalEntry.entry_date)).limit(limit).offset(offset)
-    
-    result = await db.execute(query)
-    return result.scalars().all()
-
-
-# ============================================
-# GENERAL LEDGER APIs
-# ============================================
-
-@router.get("/ledger", response_model=List[GeneralLedgerResponse])
-async def get_general_ledger(
-    center_id: str,
-    account_id: Optional[int] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    limit: int = Query(100, le=1000),
-    offset: int = 0,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Get general ledger entries"""
-    
+    # Build query with joins
     query = select(
         GeneralLedger,
         ChartOfAccounts.code.label('account_code'),
         ChartOfAccounts.name.label('account_name'),
-        JournalEntry.entry_number
+        ChartOfAccounts.account_type.label('account_type'),
+        JournalEntry.entry_number.label('entry_number')
     ).join(
         ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
     ).join(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(GeneralLedger.center_id == UUID(center_id))
     
-    if account_id:
-        query = query.where(GeneralLedger.account_id == account_id)
+    # Filters
+    if account_code:
+        query = query.where(ChartOfAccounts.code == account_code)
+    
+    if account_type:
+        query = query.where(ChartOfAccounts.account_type == account_type)
+    
     if start_date:
-        query = query.where(GeneralLedger.transaction_date >= start_date)
+        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+    
     if end_date:
-        query = query.where(GeneralLedger.transaction_date <= end_date)
+        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
     
-    query = query.order_by(desc(GeneralLedger.transaction_date)).limit(limit).offset(offset)
+    if search:
+        query = query.where(GeneralLedger.description.ilike(f"%{search}%"))
     
-    result = await db.execute(query)
-    rows = result.all()
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
     
-    return [
-        GeneralLedgerResponse(
-            id=row.GeneralLedger.id,
-            account_code=row.account_code,
-            account_name=row.account_name,
-            transaction_date=row.GeneralLedger.transaction_date,
-            description=row.GeneralLedger.description,
-            debit=row.GeneralLedger.debit,
-            credit=row.GeneralLedger.credit,
-            balance=row.GeneralLedger.balance,
-            source=row.GeneralLedger.source,
-            entry_number=row.entry_number
-        )
-        for row in rows
-    ]
-
-
-# ============================================
-# FINANCIAL REPORTS
-# ============================================
-
-@router.get("/reports/trial-balance", response_model=TrialBalanceResponse)
-async def get_trial_balance(
-    center_id: str,
-    as_of_date: datetime = Query(default_factory=datetime.utcnow),
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Get trial balance"""
-    
-    subquery = select(
-        GeneralLedger.account_id,
-        func.sum(GeneralLedger.debit).label('total_debit'),
-        func.sum(GeneralLedger.credit).label('total_credit')
-    ).where(
-        and_(
-            GeneralLedger.center_id == UUID(center_id),
-            GeneralLedger.transaction_date <= as_of_date
-        )
-    ).group_by(GeneralLedger.account_id).subquery()
-    
-    query = select(
-        ChartOfAccounts.code,
-        ChartOfAccounts.name,
-        ChartOfAccounts.account_type,
-        subquery.c.total_debit,
-        subquery.c.total_credit
-    ).join(
-        subquery, ChartOfAccounts.id == subquery.c.account_id
-    ).order_by(ChartOfAccounts.code)
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date), desc(GeneralLedger.id))
+    query = query.offset((page - 1) * page_size).limit(page_size)
     
     result = await db.execute(query)
     rows = result.all()
     
-    items = []
-    grand_total_debit = Decimal(0)
-    grand_total_credit = Decimal(0)
-    
+    entries = []
     for row in rows:
-        debit = row.total_debit or Decimal(0)
-        credit = row.total_credit or Decimal(0)
-        
-        if row.account_type in [AccountType.ASSET, AccountType.EXPENSE]:
-            net = debit - credit
-            item_debit = net if net > 0 else Decimal(0)
-            item_credit = abs(net) if net < 0 else Decimal(0)
-        else:
-            net = credit - debit
-            item_credit = net if net > 0 else Decimal(0)
-            item_debit = abs(net) if net < 0 else Decimal(0)
-        
-        items.append(TrialBalanceItem(
-            account_code=row.code,
-            account_name=row.name,
-            account_type=row.account_type,
-            debit=item_debit,
-            credit=item_credit
-        ))
-        
-        grand_total_debit += item_debit
-        grand_total_credit += item_credit
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "account_code": row.account_code,
+            "account_name": row.account_name,
+            "account_type": row.account_type,
+            "description": row.GeneralLedger.description,
+            "debit": float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0,
+            "credit": float(row.GeneralLedger.credit) if row.GeneralLedger.credit else 0,
+            "balance": float(row.GeneralLedger.balance),
+            "source": row.GeneralLedger.source,
+            "source_id": row.GeneralLedger.source_id
+        })
     
-    return TrialBalanceResponse(
-        as_of_date=as_of_date,
-        items=items,
-        total_debit=grand_total_debit,
-        total_credit=grand_total_credit,
-        is_balanced=abs(grand_total_debit - grand_total_credit) < Decimal('0.01')
-    )
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size,
+        "entries": entries
+    }
 
 
-@router.get("/reports/income-statement", response_model=IncomeStatementResponse)
-async def get_income_statement(
-    center_id: str,
-    start_date: datetime,
-    end_date: datetime,
+# ============================================
+# 2. INCOME TAB - All Revenue Sources
+# ============================================
+
+@router.get("/income", summary="Get all income entries")
+async def get_income_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    income_type: Optional[str] = Query(None, description="membership, inventory, network, other"),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_admin=Depends(centeradmin_required)
 ):
-    """Get income statement (P&L)"""
+    """
+    Get all income/revenue entries
+    Shows: Date, Income Type, Source, Amount, Tax, Total
+    """
+    center_id = current_admin["center_id"]
     
-    # Revenue
-    revenue_query = select(
-        ChartOfAccounts.code,
-        ChartOfAccounts.name,
-        func.sum(GeneralLedger.credit - GeneralLedger.debit).label('amount')
+    # Query revenue accounts (4000-4999)
+    query = select(
+        GeneralLedger,
+        ChartOfAccounts.code.label('account_code'),
+        ChartOfAccounts.name.label('account_name'),
+        JournalEntry.entry_number.label('entry_number'),
+        JournalEntry.description.label('je_description')
     ).join(
-        GeneralLedger, ChartOfAccounts.id == GeneralLedger.account_id
-    ).where(
-        and_(
-            ChartOfAccounts.account_type == AccountType.REVENUE,
-            GeneralLedger.center_id == UUID(center_id),
-            GeneralLedger.transaction_date >= start_date,
-            GeneralLedger.transaction_date <= end_date
-        )
-    ).group_by(ChartOfAccounts.code, ChartOfAccounts.name)
-    
-    revenue_result = await db.execute(revenue_query)
-    revenue_items = [
-        IncomeStatementItem(account_code=row.code, account_name=row.name, amount=row.amount or Decimal(0))
-        for row in revenue_result.all()
-    ]
-    
-    # Expenses
-    expense_query = select(
-        ChartOfAccounts.code,
-        ChartOfAccounts.name,
-        func.sum(GeneralLedger.debit - GeneralLedger.credit).label('amount')
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
     ).join(
-        GeneralLedger, ChartOfAccounts.id == GeneralLedger.account_id
+        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
-        and_(
-            ChartOfAccounts.account_type == AccountType.EXPENSE,
-            GeneralLedger.center_id == UUID(center_id),
-            GeneralLedger.transaction_date >= start_date,
-            GeneralLedger.transaction_date <= end_date
-        )
-    ).group_by(ChartOfAccounts.code, ChartOfAccounts.name)
-    
-    expense_result = await db.execute(expense_query)
-    expense_items = [
-        IncomeStatementItem(account_code=row.code, account_name=row.name, amount=row.amount or Decimal(0))
-        for row in expense_result.all()
-    ]
-    
-    total_revenue = sum(item.amount for item in revenue_items)
-    total_expenses = sum(item.amount for item in expense_items)
-    
-    return IncomeStatementResponse(
-        start_date=start_date,
-        end_date=end_date,
-        revenue=revenue_items,
-        expenses=expense_items,
-        total_revenue=total_revenue,
-        total_expenses=total_expenses,
-        net_profit=total_revenue - total_expenses
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.account_type == AccountType.REVENUE
     )
-
-
-@router.get("/reports/balance-sheet", response_model=BalanceSheetResponse)
-async def get_balance_sheet(
-    center_id: str,
-    as_of_date: datetime = Query(default_factory=datetime.utcnow),
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Get balance sheet"""
     
-    async def get_account_balances(account_type: AccountType):
-        query = select(
-            ChartOfAccounts.code,
-            ChartOfAccounts.name,
-            func.sum(
-                func.case(
-                    (account_type.value in ['asset', 'expense'], GeneralLedger.debit - GeneralLedger.credit),
-                    else_=GeneralLedger.credit - GeneralLedger.debit
-                )
-            ).label('balance')
-        ).join(
-            GeneralLedger, ChartOfAccounts.id == GeneralLedger.account_id
-        ).where(
-            and_(
-                ChartOfAccounts.account_type == account_type,
-                GeneralLedger.center_id == UUID(center_id),
-                GeneralLedger.transaction_date <= as_of_date
+    # Filter by income type
+    if income_type == "membership":
+        query = query.where(ChartOfAccounts.code == "4000")
+    elif income_type == "inventory":
+        query = query.where(ChartOfAccounts.code == "4100")
+    elif income_type == "network":
+        query = query.where(ChartOfAccounts.code == "4200")
+    elif income_type == "other":
+        query = query.where(ChartOfAccounts.code == "4300")
+    
+    # Date filters
+    if start_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+    if end_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        # Get corresponding tax entry if exists
+        tax_query = select(TaxLedger).where(
+            TaxLedger.journal_entry_id == row.GeneralLedger.journal_entry_id
+        )
+        tax_result = await db.execute(tax_query)
+        tax_entry = tax_result.scalar_one_or_none()
+        
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "income_type": row.account_name,
+            "account_code": row.account_code,
+            "description": row.je_description,
+            "amount": float(row.GeneralLedger.credit),  # Income is credit
+            "tax_amount": float(tax_entry.tax_amount) if tax_entry else 0,
+            "total_amount": float(row.GeneralLedger.credit) + (float(tax_entry.tax_amount) if tax_entry else 0),
+            "source": row.GeneralLedger.source,
+            "source_id": row.GeneralLedger.source_id
+        })
+    
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_income": sum(e["amount"] for e in entries),
+            "total_tax": sum(e["tax_amount"] for e in entries)
+        }
+    }
+
+
+# ============================================
+# 3. EXPENSE TAB - All Costs
+# ============================================
+
+@router.get("/expenses", summary="Get all expense entries")
+async def get_expense_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    expense_type: Optional[str] = Query(None, description="salary, rent, marketing, utilities, cogs, platform_fee, general"),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    Get all expense entries
+    Shows: Date, Expense Type, Description, Amount
+    """
+    center_id = current_admin["center_id"]
+    
+    # Query expense accounts (5000-5999)
+    query = select(
+        GeneralLedger,
+        ChartOfAccounts.code.label('account_code'),
+        ChartOfAccounts.name.label('account_name'),
+        JournalEntry.entry_number.label('entry_number'),
+        JournalEntry.description.label('je_description')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).join(
+        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.account_type == AccountType.EXPENSE
+    )
+    
+    # Filter by expense type
+    expense_codes = {
+        "salary": "5000",
+        "rent": "5100",
+        "marketing": "5200",
+        "utilities": "5300",
+        "cogs": "5400",
+        "platform_fee": "5500",
+        "general": "5600"
+    }
+    
+    if expense_type and expense_type in expense_codes:
+        query = query.where(ChartOfAccounts.code == expense_codes[expense_type])
+    
+    # Date filters
+    if start_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+    if end_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "expense_type": row.account_name,
+            "account_code": row.account_code,
+            "description": row.je_description,
+            "amount": float(row.GeneralLedger.debit),  # Expenses are debit
+            "source": row.GeneralLedger.source,
+            "source_id": row.GeneralLedger.source_id
+        })
+    
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_expenses": sum(e["amount"] for e in entries)
+        }
+    }
+
+
+# ============================================
+# 4. PAYROLL TAB - Salary Accounting
+# ============================================
+
+@router.get("/payroll", summary="Get payroll accounting entries")
+async def get_payroll_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2020),
+    employee_id: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    Get payroll accounting entries
+    Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
+    """
+    center_id = current_admin["center_id"]
+    
+    # Query salary expense account (5000)
+    query = select(
+        GeneralLedger,
+        JournalEntry.entry_number.label('entry_number'),
+        JournalEntry.description.label('description')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).join(
+        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        GeneralLedger.source == TransactionSource.PAYROLL,
+        ChartOfAccounts.code == "5000"  # Salary Expense
+    )
+    
+    # Filters
+    if month:
+        query = query.where(func.extract('month', GeneralLedger.transaction_date) == month)
+    if year:
+        query = query.where(func.extract('year', GeneralLedger.transaction_date) == year)
+    if employee_id:
+        query = query.where(GeneralLedger.source_id.like(f"%{employee_id}%"))
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        # Get corresponding PayrollRecord if exists
+        payroll_query = select(PayrollRecord).where(
+            PayrollRecord.id == UUID(row.GeneralLedger.source_id)
+        )
+        payroll_result = await db.execute(payroll_query)
+        payroll = payroll_result.scalar_one_or_none()
+        
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "payroll_id": row.GeneralLedger.source_id,
+            "employee_name": payroll.employee.full_name if payroll and payroll.employee else "Unknown",
+            "gross_salary": float(row.GeneralLedger.debit),  # Debit = expense
+            "deductions": float(payroll.total_deductions) if payroll else 0,
+            "net_salary": float(payroll.net_salary) if payroll else 0,
+            "month": row.GeneralLedger.transaction_date.strftime("%B %Y"),
+            "status": payroll.status if payroll else "unknown"
+        })
+    
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_gross_salary": sum(e["gross_salary"] for e in entries),
+            "total_deductions": sum(e["deductions"] for e in entries),
+            "total_net_salary": sum(e["net_salary"] for e in entries)
+        }
+    }
+
+
+# ============================================
+# 5. INVENTORY TAB - Stock Accounting
+# ============================================
+
+@router.get("/inventory-accounting", summary="Get inventory accounting entries")
+async def get_inventory_accounting(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    transaction_type: Optional[str] = Query(None, description="purchase, sale, adjustment"),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    Get inventory accounting entries
+    Shows: Date, Type, Description, Quantity, Value, COGS (for sales)
+    """
+    center_id = current_admin["center_id"]
+    
+    # Query inventory and COGS accounts
+    query = select(
+        GeneralLedger,
+        ChartOfAccounts.code.label('account_code'),
+        ChartOfAccounts.name.label('account_name'),
+        JournalEntry.entry_number.label('entry_number'),
+        JournalEntry.description.label('description')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).join(
+        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        or_(
+            GeneralLedger.source == TransactionSource.INVENTORY_SALE,
+            GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE
+        )
+    )
+    
+    # Filter by transaction type
+    if transaction_type == "purchase":
+        query = query.where(
+            GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE,
+            ChartOfAccounts.code == "1400"  # Inventory Asset
+        )
+    elif transaction_type == "sale":
+        query = query.where(
+            GeneralLedger.source == TransactionSource.INVENTORY_SALE,
+            or_(
+                ChartOfAccounts.code == "4100",  # Sales Income
+                ChartOfAccounts.code == "5400"   # COGS
             )
-        ).group_by(ChartOfAccounts.code, ChartOfAccounts.name)
+        )
+    
+    # Date filters
+    if start_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+    if end_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        transaction_type_label = "Purchase" if row.GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE else "Sale"
         
-        result = await db.execute(query)
-        return [
-            IncomeStatementItem(account_code=row.code, account_name=row.name, amount=row.balance or Decimal(0))
-            for row in result.all()
-        ]
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "transaction_type": transaction_type_label,
+            "account": row.account_name,
+            "description": row.description,
+            "debit": float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0,
+            "credit": float(row.GeneralLedger.credit) if row.GeneralLedger.credit else 0,
+            "source_id": row.GeneralLedger.source_id
+        })
     
-    assets = await get_account_balances(AccountType.ASSET)
-    liabilities = await get_account_balances(AccountType.LIABILITY)
-    equity = await get_account_balances(AccountType.EQUITY)
-    
-    total_assets = sum(item.amount for item in assets)
-    total_liabilities = sum(item.amount for item in liabilities)
-    total_equity = sum(item.amount for item in equity)
-    
-    return BalanceSheetResponse(
-        as_of_date=as_of_date,
-        assets=assets,
-        liabilities=liabilities,
-        equity=equity,
-        total_assets=total_assets,
-        total_liabilities=total_liabilities,
-        total_equity=total_equity,
-        is_balanced=abs(total_assets - (total_liabilities + total_equity)) < Decimal('0.01')
-    )
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_purchases": sum(e["debit"] for e in entries if e["transaction_type"] == "Purchase"),
+            "total_sales": sum(e["credit"] for e in entries if e["transaction_type"] == "Sale")
+        }
+    }
 
 
 # ============================================
-# TAX LEDGER
+# 6. SETTLEMENTS TAB - Network & Trainer Payouts
 # ============================================
 
-@router.get("/tax-ledger", response_model=List[TaxLedgerResponse])
-async def get_tax_ledger(
-    center_id: str,
-    tax_type: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    limit: int = Query(100, le=1000),
-    offset: int = 0,
+@router.get("/settlements", summary="Get settlement entries")
+async def get_settlement_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    settlement_type: Optional[str] = Query(None, description="network, trainer"),
+    status: Optional[str] = Query(None, description="pending, completed"),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_admin=Depends(centeradmin_required)
 ):
-    """Get tax ledger entries"""
+    """
+    Get network and trainer settlement entries
+    Shows: Date, Settlement Type, Amount, Platform Fee, Net Amount, Status
+    """
+    center_id = current_admin["center_id"]
     
-    query = select(TaxLedger).where(TaxLedger.center_id == UUID(center_id))
+    # Query network income and receivable accounts
+    query = select(
+        GeneralLedger,
+        ChartOfAccounts.code.label('account_code'),
+        ChartOfAccounts.name.label('account_name'),
+        JournalEntry.entry_number.label('entry_number'),
+        JournalEntry.description.label('description')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).join(
+        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        GeneralLedger.source == TransactionSource.NETWORK_SETTLEMENT
+    )
     
+    # Date filters
+    if start_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+    if end_date:
+        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(GeneralLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        # Get all entries in this journal entry to calculate platform fee
+        je_lines_query = select(GeneralLedger).where(
+            GeneralLedger.journal_entry_id == row.GeneralLedger.journal_entry_id
+        )
+        je_lines_result = await db.execute(je_lines_query)
+        je_lines = je_lines_result.scalars().all()
+        
+        gross_income = sum(float(line.credit) for line in je_lines if line.credit > 0)
+        platform_fee = sum(float(line.debit) for line in je_lines if line.debit > 0 and line.account_id != row.GeneralLedger.account_id)
+        net_amount = gross_income - platform_fee
+        
+        entries.append({
+            "id": row.GeneralLedger.id,
+            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "settlement_type": "Network",  # Can extend for trainer
+            "description": row.description,
+            "gross_income": gross_income,
+            "platform_fee": platform_fee,
+            "net_amount": net_amount,
+            "status": "completed",  # From journal entry status
+            "source_id": row.GeneralLedger.source_id
+        })
+    
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_gross_income": sum(e["gross_income"] for e in entries),
+            "total_platform_fee": sum(e["platform_fee"] for e in entries),
+            "total_net_amount": sum(e["net_amount"] for e in entries)
+        }
+    }
+
+
+# ============================================
+# 7. TAXES TAB - GST & Statutory Liabilities
+# ============================================
+
+@router.get("/taxes", summary="Get tax entries")
+async def get_tax_entries(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    tax_type: Optional[str] = Query(None, description="GST, TDS"),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    """
+    Get all tax-related entries
+    Shows: Date, Tax Type, Taxable Amount, Tax Rate, Tax Amount, Status
+    """
+    center_id = current_admin["center_id"]
+    
+    # Query from TaxLedger
+    query = select(
+        TaxLedger,
+        JournalEntry.entry_number.label('entry_number')
+    ).join(
+        JournalEntry, TaxLedger.journal_entry_id == JournalEntry.id
+    ).where(TaxLedger.center_id == UUID(center_id))
+    
+    # Filters
     if tax_type:
         query = query.where(TaxLedger.tax_type == tax_type)
-    if start_date:
-        query = query.where(TaxLedger.transaction_date >= start_date)
-    if end_date:
-        query = query.where(TaxLedger.transaction_date <= end_date)
     
-    query = query.order_by(desc(TaxLedger.transaction_date)).limit(limit).offset(offset)
+    if start_date:
+        query = query.where(func.date(TaxLedger.transaction_date) >= start_date)
+    if end_date:
+        query = query.where(func.date(TaxLedger.transaction_date) <= end_date)
+    
+    # Total count
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
+    
+    # Pagination
+    query = query.order_by(desc(TaxLedger.transaction_date))
+    query = query.offset((page - 1) * page_size).limit(page_size)
     
     result = await db.execute(query)
-    return result.scalars().all()
+    rows = result.all()
+    
+    entries = []
+    for row in rows:
+        entries.append({
+            "id": row.TaxLedger.id,
+            "date": row.TaxLedger.transaction_date.strftime("%Y-%m-%d"),
+            "entry_number": row.entry_number,
+            "tax_type": row.TaxLedger.tax_type,
+            "tax_rate": float(row.TaxLedger.tax_rate),
+            "taxable_amount": float(row.TaxLedger.taxable_amount),
+            "tax_amount": float(row.TaxLedger.tax_amount),
+            "source": row.TaxLedger.source,
+            "source_id": row.TaxLedger.source_id
+        })
+    
+    # Calculate tax payable (liability accounts)
+    gst_payable_query = select(
+        func.sum(GeneralLedger.credit - GeneralLedger.debit).label('gst_payable')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.code == "2200"  # GST Payable
+    )
+    gst_result = await db.execute(gst_payable_query)
+    gst_payable = gst_result.scalar() or 0
+    
+    tds_payable_query = select(
+        func.sum(GeneralLedger.credit - GeneralLedger.debit).label('tds_payable')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.code == "2300"  # TDS Payable
+    )
+    tds_result = await db.execute(tds_payable_query)
+    tds_payable = tds_result.scalar() or 0
+    
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "entries": entries,
+        "summary": {
+            "total_tax_collected": sum(e["tax_amount"] for e in entries),
+            "gst_payable": float(gst_payable),
+            "tds_payable": float(tds_payable),
+            "total_payable": float(gst_payable) + float(tds_payable)
+        }
+    }
 
 
 # ============================================
-# AUTOMATED TRANSACTION RECORDING
+# 8. OVERVIEW/DASHBOARD - Financial Summary
 # ============================================
 
-@router.post("/auto-record/membership-sale")
-async def auto_record_membership_sale(
-    data: MembershipSaleRequest,
+@router.get("/overview", summary="Get financial overview/dashboard")
+async def get_financial_overview(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_admin=Depends(centeradmin_required)
 ):
-    """Auto-record membership sale: Dr Cash/Bank, Cr Membership Income, Cr GST"""
+    """
+    Get financial overview with key metrics
+    Shows: Total Income, Total Expenses, Net Profit, Outstanding Receivables, etc.
+    """
+    center_id = current_admin["center_id"]
     
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
+    # Default to current month if no dates provided
+    if not start_date:
+        start_date = date.today().replace(day=1)
+    if not end_date:
+        end_date = date.today()
     
-    # Get accounts
-    cash_account = await get_account_by_code(db, '1100' if data.payment_method == 'cash' else '1200', center_id)
-    membership_income = await get_account_by_code(db, '4100', center_id)
-    gst_payable = await get_account_by_code(db, '2310', center_id)
-    
-    if not all([cash_account, membership_income, gst_payable]):
-        raise HTTPException(status_code=400, detail="Required accounts not found. Initialize chart of accounts first.")
-    
-    revenue_amount = data.amount - data.tax_amount
-    
-    # Create journal entry
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"Membership sale - {data.source_id}",
-        source=TransactionSource.MEMBERSHIP,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(
-                account_id=cash_account.id,
-                description=f"Payment received via {data.payment_method}",
-                debit=data.amount,
-                credit=Decimal(0)
-            ),
-            JournalEntryLineCreate(
-                account_id=membership_income.id,
-                description="Membership revenue",
-                debit=Decimal(0),
-                credit=revenue_amount
-            ),
-            JournalEntryLineCreate(
-                account_id=gst_payable.id,
-                description=f"GST @ {data.tax_rate}%",
-                debit=Decimal(0),
-                credit=data.tax_amount
-            )
-        ]
+    # Total Income (Revenue accounts)
+    income_query = select(
+        func.sum(GeneralLedger.credit - GeneralLedger.debit).label('total_income')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.account_type == AccountType.REVENUE,
+        func.date(GeneralLedger.transaction_date) >= start_date,
+        func.date(GeneralLedger.transaction_date) <= end_date
     )
+    income_result = await db.execute(income_query)
+    total_income = income_result.scalar() or 0
     
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    
-    # Record tax
-    await record_tax(
-        db=db,
-        journal_entry_id=journal_entry.id,
-        center_id=center_id,
-        transaction_date=transaction_date,
-        tax_type="GST",
-        tax_rate=data.tax_rate,
-        taxable_amount=revenue_amount,
-        tax_amount=data.tax_amount,
-        source=TransactionSource.MEMBERSHIP,
-        source_id=data.source_id
+    # Total Expenses
+    expense_query = select(
+        func.sum(GeneralLedger.debit - GeneralLedger.credit).label('total_expenses')
+    ).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        ChartOfAccounts.account_type == AccountType.EXPENSE,
+        func.date(GeneralLedger.transaction_date) >= start_date,
+        func.date(GeneralLedger.transaction_date) <= end_date
     )
+    expense_result = await db.execute(expense_query)
+    total_expenses = expense_result.scalar() or 0
     
-    return {"message": "Membership sale recorded", "entry_number": journal_entry.entry_number}
-
-
-@router.post("/auto-record/inventory-sale")
-async def auto_record_inventory_sale(
-    data: InventorySaleRequest,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Auto-record inventory sale: Dr Cash, Cr Sales Income, Cr GST; Dr COGS, Cr Inventory"""
+    # Cash Balance
+    cash_query = select(GeneralLedger.balance).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        or_(ChartOfAccounts.code == "1100", ChartOfAccounts.code == "1200")
+    ).order_by(desc(GeneralLedger.id)).limit(1)
+    cash_result = await db.execute(cash_query)
+    cash_balance = cash_result.scalar() or 0
     
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
+    # Accounts Receivable
+    ar_query = select(GeneralLedger.balance).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        or_(ChartOfAccounts.code == "1300", ChartOfAccounts.code == "1310")
+    ).order_by(desc(GeneralLedger.id)).limit(1)
+    ar_result = await db.execute(ar_query)
+    accounts_receivable = ar_result.scalar() or 0
     
-    # Get accounts
-    cash_account = await get_account_by_code(db, '1100' if data.payment_method == 'cash' else '1200', center_id)
-    sales_income = await get_account_by_code(db, '4200', center_id)
-    gst_payable = await get_account_by_code(db, '2310', center_id)
-    cogs_account = await get_account_by_code(db, '5400', center_id)
-    inventory_account = await get_account_by_code(db, '1400', center_id)
+    # Tax Payable
+    tax_payable_query = select(GeneralLedger.balance).join(
+        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
+    ).where(
+        GeneralLedger.center_id == UUID(center_id),
+        or_(ChartOfAccounts.code == "2200", ChartOfAccounts.code == "2300")
+    ).order_by(desc(GeneralLedger.id)).limit(1)
+    tax_result = await db.execute(tax_payable_query)
+    tax_payable = tax_result.scalar() or 0
     
-    if not all([cash_account, sales_income, gst_payable, cogs_account, inventory_account]):
-        raise HTTPException(status_code=400, detail="Required accounts not found")
-    
-    revenue_amount = data.sale_amount - data.tax_amount
-    
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"Inventory sale - {data.source_id}",
-        source=TransactionSource.INVENTORY_SALE,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(account_id=cash_account.id, debit=data.sale_amount, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=sales_income.id, debit=Decimal(0), credit=revenue_amount),
-            JournalEntryLineCreate(account_id=gst_payable.id, debit=Decimal(0), credit=data.tax_amount),
-            JournalEntryLineCreate(account_id=cogs_account.id, debit=data.cogs_amount, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=inventory_account.id, debit=Decimal(0), credit=data.cogs_amount)
-        ]
-    )
-    
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    
-    await record_tax(
-        db=db, journal_entry_id=journal_entry.id, center_id=center_id,
-        transaction_date=transaction_date, tax_type="GST", tax_rate=data.tax_rate,
-        taxable_amount=revenue_amount, tax_amount=data.tax_amount,
-        source=TransactionSource.INVENTORY_SALE, source_id=data.source_id
-    )
-    
-    return {"message": "Inventory sale recorded", "entry_number": journal_entry.entry_number}
-
-
-@router.post("/auto-record/inventory-purchase")
-async def auto_record_inventory_purchase(
-    data: InventoryPurchaseRequest,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Auto-record inventory purchase: Dr Inventory, Cr Cash/Payable"""
-    
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
-    
-    inventory_account = await get_account_by_code(db, '1400', center_id)
-    payment_account = await get_account_by_code(db, '1100' if data.payment_method == 'cash' else '2110', center_id)
-    
-    if not all([inventory_account, payment_account]):
-        raise HTTPException(status_code=400, detail="Required accounts not found")
-    
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"Inventory purchase - {data.source_id}",
-        source=TransactionSource.INVENTORY_PURCHASE,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(account_id=inventory_account.id, debit=data.purchase_amount, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=payment_account.id, debit=Decimal(0), credit=data.purchase_amount)
-        ]
-    )
-    
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    return {"message": "Inventory purchase recorded", "entry_number": journal_entry.entry_number}
-
-
-@router.post("/auto-record/payroll")
-async def auto_record_payroll(
-    data: PayrollRequest,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Auto-record payroll: Dr Salary Expense, Cr Salaries Payable, Cr Cash, Cr TDS"""
-    
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
-    
-    salary_expense = await get_account_by_code(db, '5100', center_id)
-    salaries_payable = await get_account_by_code(db, '2200', center_id)
-    cash_account = await get_account_by_code(db, '1200', center_id)
-    tds_payable = await get_account_by_code(db, '2320', center_id)
-    
-    if not all([salary_expense, salaries_payable, cash_account, tds_payable]):
-        raise HTTPException(status_code=400, detail="Required accounts not found")
-    
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"Payroll - {data.source_id}",
-        source=TransactionSource.PAYROLL,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(account_id=salary_expense.id, debit=data.gross_salary, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=salaries_payable.id, debit=Decimal(0), credit=data.gross_salary),
-            JournalEntryLineCreate(account_id=salaries_payable.id, debit=data.gross_salary, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=cash_account.id, debit=Decimal(0), credit=data.net_salary),
-            JournalEntryLineCreate(account_id=tds_payable.id, debit=Decimal(0), credit=data.deductions)
-        ]
-    )
-    
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    return {"message": "Payroll recorded", "entry_number": journal_entry.entry_number}
-
-
-@router.post("/auto-record/network-income")
-async def auto_record_network_income(
-    data: NetworkIncomeRequest,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Auto-record network income: Dr Network Receivable, Cr Network Income, Dr Platform Fee Expense"""
-    
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
-    
-    network_receivable = await get_account_by_code(db, '1310', center_id)
-    network_income = await get_account_by_code(db, '4300', center_id)
-    platform_fee_expense = await get_account_by_code(db, '5500', center_id)
-    
-    if not all([network_receivable, network_income, platform_fee_expense]):
-        raise HTTPException(status_code=400, detail="Required accounts not found")
-    
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"Network visit income - {data.source_id}",
-        source=TransactionSource.NETWORK_SETTLEMENT,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(account_id=network_receivable.id, debit=data.net_income, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=platform_fee_expense.id, debit=data.platform_fee, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=network_income.id, debit=Decimal(0), credit=data.gross_income)
-        ]
-    )
-    
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    return {"message": "Network income recorded", "entry_number": journal_entry.entry_number}
-
-
-@router.post("/auto-record/general-expense")
-async def auto_record_general_expense(
-    data: GeneralExpenseRequest,
-    db: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
-):
-    """Auto-record general expense: Dr Expense, Cr Cash"""
-    
-    center_id = UUID(data.center_id)
-    transaction_date = data.transaction_date or datetime.utcnow()
-    
-    expense_codes = {'rent': '5200', 'utilities': '5300', 'general': '5600'}
-    expense_account = await get_account_by_code(db, expense_codes.get(data.expense_type, '5600'), center_id)
-    cash_account = await get_account_by_code(db, '1100' if data.payment_method == 'cash' else '1200', center_id)
-    
-    if not all([expense_account, cash_account]):
-        raise HTTPException(status_code=400, detail="Required accounts not found")
-    
-    entry_data = JournalEntryCreate(
-        entry_date=transaction_date,
-        description=f"{data.expense_type.title()} expense - {data.source_id}",
-        source=TransactionSource.GENERAL_EXPENSE,
-        source_id=data.source_id,
-        center_id=data.center_id,
-        lines=[
-            JournalEntryLineCreate(account_id=expense_account.id, debit=data.amount, credit=Decimal(0)),
-            JournalEntryLineCreate(account_id=cash_account.id, debit=Decimal(0), credit=data.amount)
-        ]
-    )
-    
-    journal_entry = await create_and_post_journal_entry(db, entry_data, current_user.id)
-    return {"message": f"{data.expense_type.title()} expense recorded", "entry_number": journal_entry.entry_number}
+    return {
+        "period": {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d")
+        },
+        "income": {
+            "total": float(total_income),
+            "membership": 0,  # Can break down by account
+            "inventory": 0,
+            "network": 0,
+            "other": 0
+        },
+        "expenses": {
+            "total": float(total_expenses),
+            "salary": 0,  # Can break down by account
+            "rent": 0,
+            "utilities": 0,
+            "other": 0
+        },
+        "profitability": {
+            "net_profit": float(total_income - total_expenses),
+            "profit_margin": float((total_income - total_expenses) / total_income * 100) if total_income > 0 else 0
+        },
+        "balances": {
+            "cash": float(cash_balance),
+            "accounts_receivable": float(accounts_receivable),
+            "tax_payable": float(tax_payable)
+        }
+    }

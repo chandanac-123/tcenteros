@@ -4,7 +4,8 @@ from sqlalchemy.dialects.postgresql import UUID, ENUM
 from datetime import datetime
 import enum
 from app.core.models.base import Base, AuditMixin
-
+from sqlalchemy.dialects import postgresql
+import uuid
 
 class AccountType(str, enum.Enum):
     ASSET = "asset"
@@ -62,7 +63,7 @@ class ChartOfAccounts(Base, AuditMixin):
     center_id = Column(UUID(as_uuid=True), ForeignKey('center.centers.id'), nullable=False, index=True)
     code = Column(String(20), nullable=False, index=True)
     name = Column(String(200), nullable=False)
-    account_type = Column(account_type_enum, nullable=False, index=True)
+    account_type = Column(postgresql.ENUM('asset', 'liability', 'equity', 'revenue', 'expense', name='account_type', schema='accounts', create_type=False), nullable=False, index=True)
     parent_id = Column(Integer, ForeignKey('accounts.chart_of_accounts.id'), nullable=True)
     description = Column(Text)
     is_active = Column(Boolean, default=True)
@@ -78,27 +79,37 @@ class ChartOfAccounts(Base, AuditMixin):
 
 
 # Journal Entry Header
-class JournalEntry(Base, AuditMixin):
+class  JournalEntry(Base, AuditMixin):
     __tablename__ = "journal_entries"
     __table_args__ = {'schema': 'accounts'}
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     entry_number = Column(String(50), nullable=False, index=True)
     entry_date = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     description = Column(Text, nullable=False)
     
-    source = Column(transaction_source_enum, nullable=False, index=True)
+    source = Column(String(50), nullable=False, index=True)
     source_id = Column(String(50), index=True)
     center_id = Column(UUID(as_uuid=True), ForeignKey('center.centers.id'), nullable=False, index=True)
     
-    status = Column(entry_status_enum, default=EntryStatus.DRAFT, index=True)
+    status = Column(
+    postgresql.ENUM(
+        'draft', 'posted', 'reversed',
+        name='entry_status',
+        schema='accounts',
+        create_type=False
+    ),
+    default='draft',
+    nullable=False,
+    index=True
+    )
     posted_at = Column(DateTime)
-    posted_by = Column(Integer)
+    posted_by = Column(UUID(as_uuid=True))
     
     total_debit = Column(Numeric(15, 2), nullable=False)
     total_credit = Column(Numeric(15, 2), nullable=False)
     
-    created_by = Column(Integer, nullable=False)
+    created_by = Column(UUID(as_uuid=True), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -115,8 +126,8 @@ class JournalEntryLine(Base, AuditMixin):
         {'schema': 'accounts'}
     )
 
-    id = Column(Integer, primary_key=True, index=True)
-    journal_entry_id = Column(Integer, ForeignKey('accounts.journal_entries.id'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey('accounts.journal_entries.id'), nullable=False)
     account_id = Column(Integer, ForeignKey('accounts.chart_of_accounts.id'), nullable=False)
     
     entry_date = Column(DateTime, nullable=False, index=True)
@@ -141,10 +152,10 @@ class GeneralLedger(Base, AuditMixin):
         {'schema': 'accounts'}
     )
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     account_id = Column(Integer, ForeignKey('accounts.chart_of_accounts.id'), nullable=False)
-    journal_entry_id = Column(Integer, ForeignKey('accounts.journal_entries.id'), nullable=False)
-    journal_entry_line_id = Column(Integer, ForeignKey('accounts.journal_entry_lines.id'), nullable=False)
+    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey('accounts.journal_entries.id'), nullable=False)
+    journal_entry_line_id = Column(UUID(as_uuid=True), ForeignKey('accounts.journal_entry_lines.id'), nullable=False)
     
     transaction_date = Column(DateTime, nullable=False, index=True)
     description = Column(Text)
@@ -154,7 +165,7 @@ class GeneralLedger(Base, AuditMixin):
     balance = Column(Numeric(15, 2), nullable=False)
     
     center_id = Column(UUID(as_uuid=True), ForeignKey('center.centers.id'), nullable=False, index=True)
-    source = Column(transaction_source_enum, nullable=False)
+    source = Column(String(50), nullable=False, index=True)
     source_id = Column(String(50))
     
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -171,7 +182,7 @@ class FiscalPeriod(Base, AuditMixin):
     __tablename__ = "fiscal_periods"
     __table_args__ = {'schema': 'accounts'}
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     center_id = Column(UUID(as_uuid=True), ForeignKey('center.centers.id'), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     start_date = Column(DateTime, nullable=False)
@@ -197,8 +208,8 @@ class TaxLedger(Base, AuditMixin):
         {'schema': 'accounts'}
     )
 
-    id = Column(Integer, primary_key=True, index=True)
-    journal_entry_id = Column(Integer, ForeignKey('accounts.journal_entries.id'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey('accounts.journal_entries.id'), nullable=False)
     
     center_id = Column(UUID(as_uuid=True), ForeignKey('center.centers.id'), nullable=False, index=True)
     transaction_date = Column(DateTime, nullable=False)
@@ -209,8 +220,9 @@ class TaxLedger(Base, AuditMixin):
     taxable_amount = Column(Numeric(15, 2), nullable=False)
     tax_amount = Column(Numeric(15, 2), nullable=False)
     
-    source = Column(transaction_source_enum, nullable=False)
+    source = Column(String(50), nullable=False, index=True)
     source_id = Column(String(50))
+
     
     created_at = Column(DateTime, default=datetime.utcnow)
 

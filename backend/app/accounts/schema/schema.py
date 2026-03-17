@@ -3,6 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from app.accounts.models.models import AccountType, EntryStatus, TransactionSource
+from uuid import UUID
 
 
 # ============================================
@@ -22,14 +23,21 @@ class ChartOfAccountsCreate(ChartOfAccountsBase):
     center_id: str
 
 
-class ChartOfAccountsResponse(ChartOfAccountsBase):
+class ChartOfAccountsResponse(BaseModel):
     id: int
-    center_id: str
+    center_id: UUID  # Change from str to UUID (Pydantic will serialize to string in JSON)
+    code: str
+    name: str
+    account_type: str  # or AccountType enum
+    parent_id: Optional[int] = None
+    description: Optional[str] = None
+    is_active: bool
     is_system: bool
     created_at: datetime
+    updated_at: datetime
     
     class Config:
-        from_attributes = True
+        from_attributes = True 
 
 
 # ============================================
