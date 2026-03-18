@@ -1,13 +1,13 @@
 import LineChart from '@common/charts/LineChart'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { Card } from '@pages/components/ui/card'
-import StatusDisplayCard from '../component/StatusDisplayCard'
-import DisplayActionCard from '../component/DisplayActionCard'
 import { useState } from 'react'
 import NewSale from '../component/NewSale'
 import { useCartOpenMutation } from '@api-queries/billing/Query'
 import AddCharge from '../component/AddCharge'
 import { useBillingDashboardQuery } from '@api-queries/billing/Query'
+import StatusDisplayCard from '../component/statusDisplayCard'
+import DisplayActionCard from '../component/displayActionCard'
 
 const Overview = () => {
   const { data: dashboardData } = useBillingDashboardQuery()
