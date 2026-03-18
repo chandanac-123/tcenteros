@@ -8,6 +8,7 @@ import {
     getUserNetworkList,
     networkToggleButton
 } from "./Urls"
+import { showError, showSuccess } from '@utils/toast'
 
 export const useAddNetworkAmountMutation = () => {
     const queryClient = useQueryClient()
@@ -53,6 +54,11 @@ export const useEditApproveNetworkMutation = () => {
        mutationFn: ( id) => editApproveStatusNetwork( id),
         onSuccess: () => { 
             queryClient.invalidateQueries({ queryKey: ['network'] });
+            showSuccess(data?.response?.data?.detail || '')
+        },
+        onError: (error) => {
+            showError(error?.response?.data?.detail || 'Failed to create holiday')
+            return error
         }
     });
 }      
