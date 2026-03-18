@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 import uuid
 import enum
-
+from sqlalchemy import UniqueConstraint
 
 class WeekDayEnum(enum.Enum):
     monday = "monday"
@@ -97,11 +97,15 @@ class TaxCategory(Base, AuditMixin):
 # ------------------------
 class Designation(Base, AuditMixin):
     __tablename__ = "designations"
-    __table_args__ = {"schema": "settings"}
+    __table_args__ = (
+        # Add unique constraint for (center_id, name)
+        UniqueConstraint('center_id', 'name', name='uq_designation_center_name'),
+        {"schema": "settings"}
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     code = Column(String, unique=True, nullable=False)
     description = Column(Text)
     hierarchy_level = Column(Integer, default=0)

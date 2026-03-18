@@ -62,13 +62,27 @@ async def get_branching_price(
 
 
 #3. Centeradmin: Request Branch Creation & Calculate Amount
+from fastapi import APIRouter, Body, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from uuid import uuid4
+from datetime import datetime
+from app.platforms.models.models import PlatformBranchSetting
+from app.billing.models.models import PaymentOrder, PaymentOrderStatus
+from app.center.models.models import Center
+from app.core.database import get_async_session
+from app.core.dependencies import centeradmin_required
+from app.accounts.branching_helper import post_branching_purchase_journal  # <-- You must implement this helper
+
+router = APIRouter()
+
 @router.post("/centeradmin/branch/request")
 async def request_branch_creation(
     branch_count: int = Body(..., embed=True),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    # Get the current branching price from settings
+    # 1. Get the current branching price from settings
     setting = await session.execute(
         select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
     )
@@ -76,7 +90,7 @@ async def request_branch_creation(
     price = float(setting.value) if setting else 0.0
     subtotal_amount = branch_count * price
 
-    # Check for tax category with tax_scope = "add_on"
+    # 2. Check for tax category with tax_scope = "add_on"
     from app.settings.models.models import TaxCategory
     tax_result = await session.execute(
         select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
@@ -84,30 +98,34 @@ async def request_branch_creation(
     tax_category = tax_result.scalar_one_or_none()
     if tax_category:
         tax_percentage = float(tax_category.tax_percentage or 0)
-        tax_amount = round(subtotal_amount * (tax_percentage / 100), 2)
-        total_amount = round(subtotal_amount + tax_amount, 2)
         tax_category_id = str(tax_category.id)
+        tax_type = tax_category.tax_type
+        tax_rate = tax_percentage
+        tax_amount = round(subtotal_amount * tax_percentage / 100, 2)
     else:
         tax_percentage = 0.0
-        tax_amount = 0.0
-        total_amount = subtotal_amount
         tax_category_id = None
+        tax_type = None
+        tax_rate = 0.0
+        tax_amount = 0.0
 
-    # Create payment order (simulate payment success)
+    total_amount = subtotal_amount + tax_amount
+
+    # 3. Create payment order (simulate payment success)
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
         center_id=current_admin["center_id"],
         payer_user_id=current_admin["user_id"],
         payer_type="center_admin",
         payee_type="platform",
-        order_type="add_on",  # Use the correct enum value as per your DB
+        order_type="add_on",
         reference_schema="center",
         reference_id=current_admin["center_id"],
         subtotal_amount=subtotal_amount,
         tax_amount=tax_amount,
         total_amount=total_amount,
         currency="INR",
-        status="paid",
+        status=PaymentOrderStatus.paid,
         created_by=current_admin["user_id"],
         updated_by=current_admin["user_id"],
         created_at=datetime.utcnow(),
@@ -115,7 +133,7 @@ async def request_branch_creation(
     )
     session.add(payment_order)
 
-    # Fetch the parent center and increment branch_count if it is a parent (parent_center_id is None)
+    # 4. Fetch the parent center and increment branch_count if it is a parent (parent_center_id is None)
     parent_center = await session.get(Center, current_admin["center_id"])
     total_branch_count = None
     if parent_center and parent_center.parent_center_id is None:
@@ -123,6 +141,23 @@ async def request_branch_creation(
         total_branch_count = parent_center.branch_count
 
     await session.commit()
+
+    # 5. Post to accounting (GeneralLedger and TaxLedger)
+    # You must set PLATFORM_CENTER_ID to your platform's center_id (could be a constant or from settings)
+    PLATFORM_CENTER_ID = "YOUR_PLATFORM_CENTER_UUID"  # <-- Set this appropriately
+    await post_branching_purchase_journal(
+        session=session,
+        center_id=current_admin["center_id"],
+        platform_center_id=PLATFORM_CENTER_ID,
+        subtotal_amount=subtotal_amount,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        tax_type=tax_type,
+        tax_rate=tax_rate,
+        payment_order_id=payment_order.payment_order_id,
+        created_by=current_admin["user_id"]
+    )
+
     return {
         "branch_count": branch_count,
         "branching_price": price,
@@ -135,6 +170,87 @@ async def request_branch_creation(
         "total_branch_count": total_branch_count,
         "tax_category_id": tax_category_id,
     }
+
+
+
+
+
+
+
+
+# @router.post("/centeradmin/branch/request")
+# async def request_branch_creation(
+#     branch_count: int = Body(..., embed=True),
+#     session: AsyncSession = Depends(get_async_session),
+#     current_admin=Depends(centeradmin_required)
+# ):
+#     # Get the current branching price from settings
+#     setting = await session.execute(
+#         select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
+#     )
+#     setting = setting.scalar_one_or_none()
+#     price = float(setting.value) if setting else 0.0
+#     subtotal_amount = branch_count * price
+
+#     # Check for tax category with tax_scope = "add_on"
+#     from app.settings.models.models import TaxCategory
+#     tax_result = await session.execute(
+#         select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
+#     )
+#     tax_category = tax_result.scalar_one_or_none()
+#     if tax_category:
+#         tax_percentage = float(tax_category.tax_percentage or 0)
+#         tax_amount = round(subtotal_amount * (tax_percentage / 100), 2)
+#         total_amount = round(subtotal_amount + tax_amount, 2)
+#         tax_category_id = str(tax_category.id)
+#     else:
+#         tax_percentage = 0.0
+#         tax_amount = 0.0
+#         total_amount = subtotal_amount
+#         tax_category_id = None
+
+#     # Create payment order (simulate payment success)
+#     payment_order = PaymentOrder(
+#         payment_order_id=uuid4(),
+#         center_id=current_admin["center_id"],
+#         payer_user_id=current_admin["user_id"],
+#         payer_type="center_admin",
+#         payee_type="platform",
+#         order_type="add_on",  # Use the correct enum value as per your DB
+#         reference_schema="center",
+#         reference_id=current_admin["center_id"],
+#         subtotal_amount=subtotal_amount,
+#         tax_amount=tax_amount,
+#         total_amount=total_amount,
+#         currency="INR",
+#         status="paid",
+#         created_by=current_admin["user_id"],
+#         updated_by=current_admin["user_id"],
+#         created_at=datetime.utcnow(),
+#         updated_at=datetime.utcnow(),
+#     )
+#     session.add(payment_order)
+
+#     # Fetch the parent center and increment branch_count if it is a parent (parent_center_id is None)
+#     parent_center = await session.get(Center, current_admin["center_id"])
+#     total_branch_count = None
+#     if parent_center and parent_center.parent_center_id is None:
+#         parent_center.branch_count = (parent_center.branch_count or 0) + branch_count
+#         total_branch_count = parent_center.branch_count
+
+#     await session.commit()
+#     return {
+#         "branch_count": branch_count,
+#         "branching_price": price,
+#         "subtotal_amount": subtotal_amount,
+#         "tax_percentage": tax_percentage,
+#         "tax_amount": tax_amount,
+#         "total_amount": total_amount,
+#         "payment_order_id": str(payment_order.payment_order_id),
+#         "payment_status": "success",
+#         "total_branch_count": total_branch_count,
+#         "tax_category_id": tax_category_id,
+#     }
 
 #GET API that allows the logged-in center admin to view their latest branch purchase calculation, including tax details:
 @router.get("/centeradmin/branch/request/summary")

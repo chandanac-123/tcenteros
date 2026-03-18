@@ -22,6 +22,7 @@ import io
 import csv
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
+from app.accounts.other_charges_helper import post_miscellaneous_transaction_journal
 
 
 
@@ -2931,6 +2932,8 @@ async def mark_settlement_completed(
 
 
 #---------add charges ---------------------------------------------
+
+
 @router.post("/billing/miscellaneous-transactions", status_code=201, summary="Create miscellaneous transaction")
 async def create_miscellaneous_transaction(
     payload: MiscellaneousTransactionCreate,
@@ -2940,39 +2943,32 @@ async def create_miscellaneous_transaction(
     """
     Create a new miscellaneous transaction (income/expense).
     Examples: rent, electricity, maintenance, office supplies, etc.
-    
-    Required fields only:
-    - transaction_type: "income" or "expense"
-    - category: Category name (e.g., "Office Rent")
-    - title: Transaction title
-    - amount: Transaction amount
-    - payment_method: cash, bank_transfer, upi, card, other
     """
     from app.center.models.models import Center
-    
+
     center_id = current_admin.get("center_id")
     if not center_id:
-        raise HTTPException(status_code=403, detail="Center admin required")
-    
+        raise HTTPException(status_code=400, detail="Center ID not found in session.")
+
     # Validate center exists
     center_result = await db.execute(
         select(Center).where(Center.id == center_id)
     )
     center = center_result.scalar_one_or_none()
     if not center:
-        raise HTTPException(status_code=404, detail="Center not found")
-    
+        raise HTTPException(status_code=404, detail="Center not found.")
+
     # Set defaults
     tax_amount = Decimal("0.00")
     total_amount = Decimal(str(payload.amount))
     transaction_date = date.today()
-    
+
     # Create PaymentOrder (always create for tracking)
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
         payer_user_id=current_admin.get("user_id"),
-        payer_type="center_admin",
-        payee_type="platform" if payload.transaction_type == "expense" else "center",
+        payer_type=PayerType.center_admin,
+        payee_type=PayerType.platform if payload.transaction_type == "expense" else PayerType.center,
         center_id=center_id,
         order_type=OrderType.add_on,
         reference_schema=ReferenceSchema.invoice,
@@ -2980,14 +2976,16 @@ async def create_miscellaneous_transaction(
         tax_amount=tax_amount,
         total_amount=total_amount,
         currency=Currency.INR,
-        status=PaymentOrderStatus.paid,  # Always mark as paid
-        payment_method=PaymentMethod[payload.payment_method],  # Convert string to enum
+        status=PaymentOrderStatus.paid,
+        payment_method=PaymentMethod[payload.payment_method],
         created_by=current_admin.get("user_id"),
-        updated_by=current_admin.get("user_id")
+        updated_by=current_admin.get("user_id"),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     db.add(payment_order)
     await db.flush()  # Get payment_order_id
-    
+
     # Create MiscellaneousTransaction
     misc_transaction = MiscellaneousTransaction(
         id=uuid4(),
@@ -2995,29 +2993,38 @@ async def create_miscellaneous_transaction(
         transaction_type=payload.transaction_type,
         category=payload.category,
         title=payload.title,
-        description=None,
+        description=getattr(payload, "description", None),
         amount=payload.amount,
         tax_amount=tax_amount,
         total_amount=total_amount,
         tax_category_id=None,
         payment_order_id=payment_order.payment_order_id,
-        payment_method=payload.payment_method,  # Store as string directly
+        payment_method=payload.payment_method,
         payment_status=PaymentOrderStatus.paid,
         transaction_date=transaction_date,
-        party_name=None,
-        party_contact=None,
-        invoice_number=None,
-        receipt_number=None,
-        attachment_urls=None,
-        notes=None,
+        party_name=getattr(payload, "party_name", None),
+        party_contact=getattr(payload, "party_contact", None),
+        invoice_number=getattr(payload, "invoice_number", None),
+        receipt_number=getattr(payload, "receipt_number", None),
+        attachment_urls=getattr(payload, "attachment_urls", None),
+        notes=getattr(payload, "notes", None),
         created_by=current_admin.get("user_id"),
-        updated_by=current_admin.get("user_id")
+        updated_by=current_admin.get("user_id"),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
-    
+
     db.add(misc_transaction)
     await db.commit()
     await db.refresh(misc_transaction)
-    
+
+    # --- ACCOUNTING INTEGRATION ---
+    await post_miscellaneous_transaction_journal(
+        session=db,
+        misc_txn=misc_transaction,
+        created_by=current_admin.get("user_id")
+    )
+
     # Prepare response
     response = {
         "id": str(misc_transaction.id),
@@ -3029,17 +3036,130 @@ async def create_miscellaneous_transaction(
         "tax_amount": str(misc_transaction.tax_amount),
         "total_amount": str(misc_transaction.total_amount),
         "payment_order_id": str(misc_transaction.payment_order_id),
-        "payment_method": misc_transaction.payment_method,  # Already a string, no .value needed
+        "payment_method": misc_transaction.payment_method,
         "payment_status": "paid",
         "transaction_date": misc_transaction.transaction_date.isoformat(),
         "created_at": misc_transaction.created_at.isoformat() if misc_transaction.created_at else None,
         "created_by": str(misc_transaction.created_by) if misc_transaction.created_by else None
     }
+    return response
+
+
+
+
+
+
+
+
+# @router.post("/billing/miscellaneous-transactions", status_code=201, summary="Create miscellaneous transaction")
+# async def create_miscellaneous_transaction(
+#     payload: MiscellaneousTransactionCreate,
+#     db: AsyncSession = Depends(get_async_session),
+#     current_admin: dict = Depends(centeradmin_required)
+# ):
+#     """
+#     Create a new miscellaneous transaction (income/expense).
+#     Examples: rent, electricity, maintenance, office supplies, etc.
     
-    return {
-        "message": "Miscellaneous transaction created successfully",
-        "data": response
-    }
+#     Required fields only:
+#     - transaction_type: "income" or "expense"
+#     - category: Category name (e.g., "Office Rent")
+#     - title: Transaction title
+#     - amount: Transaction amount
+#     - payment_method: cash, bank_transfer, upi, card, other
+#     """
+#     from app.center.models.models import Center
+    
+#     center_id = current_admin.get("center_id")
+#     if not center_id:
+#         raise HTTPException(status_code=403, detail="Center admin required")
+    
+#     # Validate center exists
+#     center_result = await db.execute(
+#         select(Center).where(Center.id == center_id)
+#     )
+#     center = center_result.scalar_one_or_none()
+#     if not center:
+#         raise HTTPException(status_code=404, detail="Center not found")
+    
+#     # Set defaults
+#     tax_amount = Decimal("0.00")
+#     total_amount = Decimal(str(payload.amount))
+#     transaction_date = date.today()
+    
+#     # Create PaymentOrder (always create for tracking)
+#     payment_order = PaymentOrder(
+#         payment_order_id=uuid4(),
+#         payer_user_id=current_admin.get("user_id"),
+#         payer_type="center_admin",
+#         payee_type="platform" if payload.transaction_type == "expense" else "center",
+#         center_id=center_id,
+#         order_type=OrderType.add_on,
+#         reference_schema=ReferenceSchema.invoice,
+#         subtotal_amount=payload.amount,
+#         tax_amount=tax_amount,
+#         total_amount=total_amount,
+#         currency=Currency.INR,
+#         status=PaymentOrderStatus.paid,  # Always mark as paid
+#         payment_method=PaymentMethod[payload.payment_method],  # Convert string to enum
+#         created_by=current_admin.get("user_id"),
+#         updated_by=current_admin.get("user_id")
+#     )
+#     db.add(payment_order)
+#     await db.flush()  # Get payment_order_id
+    
+#     # Create MiscellaneousTransaction
+#     misc_transaction = MiscellaneousTransaction(
+#         id=uuid4(),
+#         center_id=center_id,
+#         transaction_type=payload.transaction_type,
+#         category=payload.category,
+#         title=payload.title,
+#         description=None,
+#         amount=payload.amount,
+#         tax_amount=tax_amount,
+#         total_amount=total_amount,
+#         tax_category_id=None,
+#         payment_order_id=payment_order.payment_order_id,
+#         payment_method=payload.payment_method,  # Store as string directly
+#         payment_status=PaymentOrderStatus.paid,
+#         transaction_date=transaction_date,
+#         party_name=None,
+#         party_contact=None,
+#         invoice_number=None,
+#         receipt_number=None,
+#         attachment_urls=None,
+#         notes=None,
+#         created_by=current_admin.get("user_id"),
+#         updated_by=current_admin.get("user_id")
+#     )
+    
+#     db.add(misc_transaction)
+#     await db.commit()
+#     await db.refresh(misc_transaction)
+    
+#     # Prepare response
+#     response = {
+#         "id": str(misc_transaction.id),
+#         "center_id": str(misc_transaction.center_id),
+#         "transaction_type": misc_transaction.transaction_type,
+#         "category": misc_transaction.category,
+#         "title": misc_transaction.title,
+#         "amount": str(misc_transaction.amount),
+#         "tax_amount": str(misc_transaction.tax_amount),
+#         "total_amount": str(misc_transaction.total_amount),
+#         "payment_order_id": str(misc_transaction.payment_order_id),
+#         "payment_method": misc_transaction.payment_method,  # Already a string, no .value needed
+#         "payment_status": "paid",
+#         "transaction_date": misc_transaction.transaction_date.isoformat(),
+#         "created_at": misc_transaction.created_at.isoformat() if misc_transaction.created_at else None,
+#         "created_by": str(misc_transaction.created_by) if misc_transaction.created_by else None
+#     }
+    
+#     return {
+#         "message": "Miscellaneous transaction created successfully",
+#         "data": response
+#     }
 
 
 

@@ -260,3 +260,5 @@ async def auto_record_payroll_payment(
 
     await db.flush()
     return journal_entry
+
+

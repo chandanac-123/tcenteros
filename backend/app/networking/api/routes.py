@@ -14,6 +14,7 @@ from app.core.database import get_async_session
 from app.center.models.models import Center
 from app.settings.models.models import Address
 from decimal import Decimal
+from app.accounts.networking_helper import post_networking_access_journal   
 
 router = APIRouter()
 
@@ -731,11 +732,35 @@ async def approve_networking_access(
         status="completed",
         created_at=datetime.utcnow()
     ))
+    session.add(WalletTransaction(
+        id=uuid4(),
+        txn_id=uuid4(),
+        platform_wallet_id=platform_wallet.id,
+        amount=platform_share,
+        transaction_type="platform_income",
+        description="Platform income from networking",
+        balance=platform_wallet.balance,
+        type="credit",
+        status="completed",
+        created_at=datetime.utcnow()
+    ))
 
     # 10. Update membership status
     membership.network_status = NetworkingStatusEnum.approved
     membership.updated_by = current_admin["user_id"]
     membership.updated_at = datetime.utcnow()
+
+    # 11. Post accounting entries
+    await post_networking_access_journal(
+        session,
+        home_center_id=member.home_center_id,
+        network_center_id=network_center.id,
+        amount=center_share,
+        platform_share=platform_share,
+        member_id=member.id,
+        membership_id=membership.id,
+        approved_by=current_admin["user_id"]
+    )
 
     await session.commit()
     return {

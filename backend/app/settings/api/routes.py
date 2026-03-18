@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form , UploadFile, File, Depends, HTTPException, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, and_
+from sqlalchemy.exc import IntegrityError
 from app.core.database import get_async_session
 from app.auth.models.models import MemberStatusEnum, Member
 from app.settings.models.models import CenterCategory, TaxCategory, Designation, Address
@@ -268,19 +269,23 @@ async def create_designation(
         raise HTTPException(status_code=403, detail="Not a center admin")
     center_id = center_admin.center_id
 
+    # Check for duplicate name in this center
+    result_name = await session.execute(
+        select(Designation).where(Designation.name == name, Designation.center_id == center_id)
+    )
+    if result_name.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="There cannot be more than one designation with the same name in your center.")
+
     # Auto-generate code
     name_part = ''.join(re.findall(r'[A-Za-z]', name))[:3].upper().ljust(3, 'X')
     while True:
         rand_part = f"{random.randint(0, 999):03d}"
         code = f"{name_part}{rand_part}"
-        result_code = await session.execute(select(Designation).where(Designation.code == code, Designation.center_id == center_id))
+        result_code = await session.execute(
+            select(Designation).where(Designation.code == code, Designation.center_id == center_id)
+        )
         if not result_code.scalar_one_or_none():
             break
-
-    # Check for duplicate name in this center
-    result_name = await session.execute(select(Designation).where(Designation.name == name, Designation.center_id == center_id))
-    if result_name.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Designation name already exists")
 
     image_key = f"designations/{uuid.uuid4()}_{image.filename}"
     image_bytes = await image.read()
@@ -291,15 +296,26 @@ async def create_designation(
         name=name,
         code=code,
         image_url=image_url,
-        center_id=center_id
+        center_id=center_id,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
     )
     session.add(designation)
-    await session.commit()
-    await session.refresh(designation)
+    try:
+        await session.commit()
+        await session.refresh(designation)
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="There cannot be more than one designation with the same name in your center."
+        )
+
     return {
         **designation.__dict__,
         "image_url": image_url
     }
+
 
 # Update Designation (centeradmin only, in own center)
 @router.put("/designation/{designation_id}", response_model=DesignationOut)
@@ -805,3 +821,6 @@ async def get_inventory_profit(
 
     # Return as string to preserve Decimal precision in JSON
     return {"center_id": str(center_id), "inventory_profit": str(profit) if profit is not None else "0.00"}
+
+
+

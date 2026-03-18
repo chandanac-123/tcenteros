@@ -19,6 +19,7 @@ from decimal import Decimal
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 from app.inventory.utils.reports import ReportGenerator
+from app.accounts.inventory_helper import post_inventory_sale_journal, post_inventory_purchase_journal
 import io
 import pandas as pd
 
@@ -581,18 +582,19 @@ async def delete_product(
 @router.post("/stock/adjust")
 async def add_stock(
     payload: StockAdjustIn,
-    session: AsyncSession = Depends(get_async_session),
-    current_user: dict = Depends(centeradmin_required),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
 ):
+   
     TRANSACTION_TYPE = "IN"
 
     # verify product exists
-    product = await session.get(Product, payload.product_id)
+    product = await db.get(Product, payload.product_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     # enforce centeradmin scope (avoid records for other centers)
-    center_id = current_user.get("center_id")
+    center_id = current_admin.get("center_id")
     if not center_id or str(product.center_id) != str(center_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to modify this product")
 
@@ -603,9 +605,9 @@ async def add_stock(
     tax_amount = Decimal("0.00")
     total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
 
-    payer_user_id = current_user.get("id") or current_user.get("user_id")
+    payer_user_id = current_admin.get("id") or current_admin.get("user_id")
 
-    async def _work():
+    try:
         # 1) create StockTransaction
         stock_tx = StockTransaction(
             product_id=product.id,
@@ -616,35 +618,35 @@ async def add_stock(
             supplier_name=payload.supplier_name,
             invoice_number=payload.invoice_number,
             invoice_date=payload.invoice_date,
+            created_by=payer_user_id,
         )
-        session.add(stock_tx)
-        await session.flush()  # ensure stock_tx.id
+        db.add(stock_tx)
+        await db.flush()  # ensure stock_tx.id
 
         # 2) update/create Stock aggregate
         q = select(Stock).where(Stock.product_id == product.id).limit(1)
-        res = await session.execute(q)
+        res = await db.execute(q)
         stock = res.scalars().first()
 
         if stock:
-            new_qty = (stock.quantity_available or 0) + qty
+            new_qty = int(stock.quantity_available) + qty
             stock.quantity_available = new_qty
             stock.last_cost = unit_cost
-            session.add(stock)
         else:
-            new_qty = qty
             stock = Stock(
                 product_id=product.id,
-                quantity_available=new_qty,
+                quantity_available=qty,
                 last_cost=unit_cost,
             )
-            session.add(stock)
+            db.add(stock)
+            new_qty = qty
 
-        await session.flush()  # populate stock.id if new
+        await db.flush()  # populate stock.id if new
 
         # update transaction balance_after and persist
         stock_tx.balance_after = new_qty
-        session.add(stock_tx)
-        await session.flush()
+        db.add(stock_tx)
+        await db.flush()
 
         # 3) create PaymentOrder linked to stock_tx
         po = PaymentOrder(
@@ -662,26 +664,44 @@ async def add_stock(
             status=PaymentOrderStatus.paid,
             payment_method=None,
         )
-        session.add(po)
-        await session.flush()
+        db.add(po)
+        await db.flush()
 
-        return stock_tx, stock, po
+        # --- ACCOUNTING INTEGRATION ---
+        class PurchaseObj:
+            # Minimal object to pass to the helper
+            def __init__(self, id, center_id, subtotal_amount, tax_amount, total_amount):
+                self.id = id
+                self.center_id = center_id
+                self.subtotal_amount = subtotal_amount
+                self.tax_amount = tax_amount
+                self.total_amount = total_amount
 
-    # perform work and explicitly commit (rollback on error)
-    try:
-        stock_tx, stock, po = await _work()
-        await session.commit()
+        purchase = PurchaseObj(
+            id=stock_tx.id,
+            center_id=center_id,
+            subtotal_amount=subtotal,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
+        )
+
+        await db.commit()
+        await post_inventory_purchase_journal(
+            db,
+            purchase=purchase,
+            created_by=payer_user_id
+        )
+
     except Exception as exc:
-        await session.rollback()
+        await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to add stock: {exc}") from exc
 
     # refresh to ensure we have latest DB state on objects
     try:
-        await session.refresh(stock_tx)
-        await session.refresh(stock)
-        await session.refresh(po)
+        await db.refresh(stock_tx)
+        await db.refresh(stock)
+        await db.refresh(po)
     except Exception:
-        # non-fatal; objects are still safe to read
         pass
 
     return {
@@ -692,6 +712,123 @@ async def add_stock(
         "tax": str(tax_amount),
         "total": str(total_amount),
     }
+
+
+
+# @router.post("/stock/adjust")
+# async def add_stock(
+#     payload: StockAdjustIn,
+#     session: AsyncSession = Depends(get_async_session),
+#     current_user: dict = Depends(centeradmin_required),
+# ):
+#     TRANSACTION_TYPE = "IN"
+
+#     # verify product exists
+#     product = await session.get(Product, payload.product_id)
+#     if product is None:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+#     # enforce centeradmin scope (avoid records for other centers)
+#     center_id = current_user.get("center_id")
+#     if not center_id or str(product.center_id) != str(center_id):
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to modify this product")
+
+#     # compute quantities and amounts
+#     qty = int(payload.quantity)
+#     unit_cost = Decimal(payload.cost_price)
+#     subtotal = (unit_cost * Decimal(qty)).quantize(Decimal("0.01"))
+#     tax_amount = Decimal("0.00")
+#     total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
+
+#     payer_user_id = current_user.get("id") or current_user.get("user_id")
+
+#     async def _work():
+#         # 1) create StockTransaction
+#         stock_tx = StockTransaction(
+#             product_id=product.id,
+#             quantity=qty,
+#             transaction_type=TRANSACTION_TYPE,
+#             unit_cost=unit_cost,
+#             subtotal=subtotal,
+#             supplier_name=payload.supplier_name,
+#             invoice_number=payload.invoice_number,
+#             invoice_date=payload.invoice_date,
+#         )
+#         session.add(stock_tx)
+#         await session.flush()  # ensure stock_tx.id
+
+#         # 2) update/create Stock aggregate
+#         q = select(Stock).where(Stock.product_id == product.id).limit(1)
+#         res = await session.execute(q)
+#         stock = res.scalars().first()
+
+#         if stock:
+#             new_qty = (stock.quantity_available or 0) + qty
+#             stock.quantity_available = new_qty
+#             stock.last_cost = unit_cost
+#             session.add(stock)
+#         else:
+#             new_qty = qty
+#             stock = Stock(
+#                 product_id=product.id,
+#                 quantity_available=new_qty,
+#                 last_cost=unit_cost,
+#             )
+#             session.add(stock)
+
+#         await session.flush()  # populate stock.id if new
+
+#         # update transaction balance_after and persist
+#         stock_tx.balance_after = new_qty
+#         session.add(stock_tx)
+#         await session.flush()
+
+#         # 3) create PaymentOrder linked to stock_tx
+#         po = PaymentOrder(
+#             payer_user_id=payer_user_id,
+#             payer_type=PayerType.center_admin,
+#             payee_type=PayeeType.center,
+#             center_id=center_id,
+#             order_type=OrderType.stock_purchase,
+#             reference_schema=ReferenceSchema.invoice,
+#             reference_id=stock_tx.id,
+#             subtotal_amount=subtotal,
+#             tax_amount=tax_amount,
+#             total_amount=total_amount,
+#             currency=getattr(product, "currency", Currency.INR),
+#             status=PaymentOrderStatus.paid,
+#             payment_method=None,
+#         )
+#         session.add(po)
+#         await session.flush()
+
+#         return stock_tx, stock, po
+
+#     # perform work and explicitly commit (rollback on error)
+#     try:
+#         stock_tx, stock, po = await _work()
+#         await session.commit()
+#     except Exception as exc:
+#         await session.rollback()
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to add stock: {exc}") from exc
+
+#     # refresh to ensure we have latest DB state on objects
+#     try:
+#         await session.refresh(stock_tx)
+#         await session.refresh(stock)
+#         await session.refresh(po)
+#     except Exception:
+#         # non-fatal; objects are still safe to read
+#         pass
+
+#     return {
+#         "stock_transaction_id": str(stock_tx.id),
+#         "stock_id": str(stock.id),
+#         "payment_order_id": str(po.payment_order_id),
+#         "subtotal": str(subtotal),
+#         "tax": str(tax_amount),
+#         "total": str(total_amount),
+#     }
 
 
 @router.get("/stock-history")
@@ -1558,8 +1695,17 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
         cart.updated_at = datetime.utcnow()
         db.add(cart)
         
-        # CRITICAL: Commit the transaction
+        
         await db.commit()
+        await db.refresh(cart)
+
+        # --- ACCOUNTING INTEGRATION ---
+        if paid:
+            await post_inventory_sale_journal(
+                db,
+                sale=cart,
+                created_by=current_admin["user_id"]
+            )
         
     except HTTPException:
         await db.rollback()
@@ -1569,10 +1715,10 @@ async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_
         raise HTTPException(status_code=500, detail=f"Checkout failed: {exc}") from exc
 
     # Best-effort refresh
-    try:
-        await db.refresh(cart)
-    except Exception:
-        pass
+    # try:
+    #     await db.refresh(cart)
+    # except Exception:
+    #     pass
 
     if paid:
         payment_status = "paid"
