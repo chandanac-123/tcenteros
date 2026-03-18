@@ -15,6 +15,7 @@ from app.auth.models.models import Employee, Member, MemberStatusEnum
 from uuid import uuid4
 from datetime import datetime
 from app.s3.service import upload_file, get_file_url
+from app.accounts.branching_helper import post_branching_purchase_journal  # <-- You must implement this helper
 
 router = APIRouter()
 
@@ -62,19 +63,6 @@ async def get_branching_price(
 
 
 #3. Centeradmin: Request Branch Creation & Calculate Amount
-from fastapi import APIRouter, Body, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from uuid import uuid4
-from datetime import datetime
-from app.platforms.models.models import PlatformBranchSetting
-from app.billing.models.models import PaymentOrder, PaymentOrderStatus
-from app.center.models.models import Center
-from app.core.database import get_async_session
-from app.core.dependencies import centeradmin_required
-from app.accounts.branching_helper import post_branching_purchase_journal  # <-- You must implement this helper
-
-router = APIRouter()
 
 @router.post("/centeradmin/branch/request")
 async def request_branch_creation(
@@ -142,13 +130,11 @@ async def request_branch_creation(
 
     await session.commit()
 
-    # 5. Post to accounting (GeneralLedger and TaxLedger)
-    # You must set PLATFORM_CENTER_ID to your platform's center_id (could be a constant or from settings)
-    PLATFORM_CENTER_ID = "YOUR_PLATFORM_CENTER_UUID"  # <-- Set this appropriately
+    # 5. Post to accounting (center only, no platform)
     await post_branching_purchase_journal(
         session=session,
         center_id=current_admin["center_id"],
-        platform_center_id=PLATFORM_CENTER_ID,
+        platform_center_id=None,  # No platform center
         subtotal_amount=subtotal_amount,
         tax_amount=tax_amount,
         total_amount=total_amount,
@@ -170,11 +156,6 @@ async def request_branch_creation(
         "total_branch_count": total_branch_count,
         "tax_category_id": tax_category_id,
     }
-
-
-
-
-
 
 
 

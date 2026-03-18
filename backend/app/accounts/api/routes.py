@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, desc, or_
+from sqlalchemy import select, func, and_, desc, or_, extract
 from typing import List, Optional
 from datetime import datetime, date
 from decimal import Decimal
@@ -22,6 +22,162 @@ from app.payrole.models.models import PayrollRecord
 
 
 router = APIRouter()
+
+@router.get("/dashboard/accounting")
+async def get_accounting_dashboard(
+    start_year: int = Query(None, description="Year for monthly chart"),
+    end_year: int = Query(None, description="Year for monthly chart"),
+    session: AsyncSession = Depends(get_async_session),
+    current_admin=Depends(centeradmin_required)
+):
+    center_id = current_admin["center_id"]
+
+    # 1. Total Income, Expense, GST Payable, Payroll
+    total_income = await session.execute(
+        select(func.sum(GeneralLedger.credit))
+        .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+        .where(
+            GeneralLedger.center_id == center_id,
+            ChartOfAccounts.account_type == AccountType.REVENUE
+        )
+    )
+    total_income = float(total_income.scalar() or 0)
+
+    total_expense = await session.execute(
+        select(func.sum(GeneralLedger.debit))
+        .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+        .where(
+            GeneralLedger.center_id == center_id,
+            ChartOfAccounts.account_type == AccountType.EXPENSE
+        )
+    )
+    total_expense = float(total_expense.scalar() or 0)
+
+    gst_payable = await session.execute(
+        select(func.sum(GeneralLedger.credit - GeneralLedger.debit))
+        .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+        .where(
+            GeneralLedger.center_id == center_id,
+            ChartOfAccounts.code == "2200"
+        )
+    )
+    gst_payable = float(gst_payable.scalar() or 0)
+
+    payroll_expense = await session.execute(
+        select(func.sum(GeneralLedger.debit))
+        .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+        .where(
+            GeneralLedger.center_id == center_id,
+            ChartOfAccounts.code == "5000"
+        )
+    )
+    payroll_expense = float(payroll_expense.scalar() or 0)
+
+    # 2. Monthly Income & Expense Chart
+    year = start_year or datetime.utcnow().year
+    monthly_income = []
+    monthly_expense = []
+    for month in range(1, 13):
+        income = await session.execute(
+            select(func.sum(GeneralLedger.credit))
+            .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+            .where(
+                GeneralLedger.center_id == center_id,
+                ChartOfAccounts.account_type == AccountType.REVENUE,
+                extract('month', GeneralLedger.transaction_date) == month,
+                extract('year', GeneralLedger.transaction_date) == year
+            )
+        )
+        monthly_income.append(float(income.scalar() or 0))
+
+        expense = await session.execute(
+            select(func.sum(GeneralLedger.debit))
+            .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+            .where(
+                GeneralLedger.center_id == center_id,
+                ChartOfAccounts.account_type == AccountType.EXPENSE,
+                extract('month', GeneralLedger.transaction_date) == month,
+                extract('year', GeneralLedger.transaction_date) == year
+            )
+        )
+        monthly_expense.append(float(expense.scalar() or 0))
+
+    # 3. Income Breakdown
+    income_codes = {
+        "membership": "4000",
+        "network": "4200",
+        "inventory_sales": "4100",
+        "other": "4300"
+    }
+    income_breakdown = {}
+    for key, code in income_codes.items():
+        value = await session.execute(
+            select(func.sum(GeneralLedger.credit))
+            .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+            .where(
+                GeneralLedger.center_id == center_id,
+                ChartOfAccounts.code == code
+            )
+        )
+        income_breakdown[key] = float(value.scalar() or 0)
+    total_income_for_breakdown = sum(income_breakdown.values())
+    for key in income_breakdown:
+        percent = (
+            (income_breakdown[key] / total_income_for_breakdown) * 100
+            if total_income_for_breakdown > 0 else 0
+        )
+        income_breakdown[key] = {
+            "value": income_breakdown[key],
+            "percentage": round(percent, 2)
+        }
+
+    # 4. Expense Breakdown
+    expense_codes = {
+        "networking": "5500",
+        "salary": "5000",
+        "branching": "5600",  # General Expense used for branching
+        "inventory_purchase": "5400",
+        "other": "5100"  # Rent Expense as example for other
+    }
+    expense_breakdown = {}
+    for key, code in expense_codes.items():
+        value = await session.execute(
+            select(func.sum(GeneralLedger.debit))
+            .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+            .where(
+                GeneralLedger.center_id == center_id,
+                ChartOfAccounts.code == code
+            )
+        )
+        expense_breakdown[key] = float(value.scalar() or 0)
+    total_expense_for_breakdown = sum(expense_breakdown.values())
+    for key in expense_breakdown:
+        percent = (
+            (expense_breakdown[key] / total_expense_for_breakdown) * 100
+            if total_expense_for_breakdown > 0 else 0
+        )
+        expense_breakdown[key] = {
+            "value": expense_breakdown[key],
+            "percentage": round(percent, 2)
+        }
+
+    return {
+        "totals": {
+            "income": total_income,
+            "expense": total_expense,
+            "gst_payable": gst_payable,
+            "payroll_expense": payroll_expense
+        },
+        "monthly_chart": {
+            "income": monthly_income,
+            "expense": monthly_expense
+        },
+        "income_breakdown": income_breakdown,
+        "expense_breakdown": expense_breakdown
+    }
+
+
+
 
 
 # ============================================
