@@ -28,9 +28,9 @@ const CRM = () => {
     resetCrmState
   } = useCrmStore()
 
-  useEffect(() => {
-    resetCrmState()
-  }, [])
+  // useEffect(() => {
+  //   resetCrmState()
+  // }, [])
 
   const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
 
