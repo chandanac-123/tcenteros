@@ -12,7 +12,7 @@ const ManagementToolRow = ({
         flex items-center rounded-lg px-4 py-2 border-2 transition
         ${
           checked
-            ? 'border-secondary bg-secondary/10'
+            ? 'border-onboard_secondary bg-onboard_secondary/10'
             : 'border-bordergreylight'
         }
       `}
@@ -38,7 +38,7 @@ const ManagementToolRow = ({
         checked={checked}
         disabled={isMandatory}
         onChange={e => onToggle(tool.id, e.target.checked)}
-        className={`w-4 h-4 accent-secondary ${
+        className={`w-4 h-4 accent-onboard_secondary ${
           isMandatory ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
         }`}
       />

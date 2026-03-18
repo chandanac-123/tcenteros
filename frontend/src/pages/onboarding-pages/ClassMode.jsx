@@ -45,7 +45,7 @@ const ClassSelectionMode = () => {
           Back
         </Button>
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/center-size-scale')}
         >

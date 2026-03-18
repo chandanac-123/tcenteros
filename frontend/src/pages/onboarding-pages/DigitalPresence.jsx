@@ -54,7 +54,7 @@ const DegitalPresence = () => {
             onClick={selectNone}
             className={`
               flex items-center border-2 rounded-lg px-4 py-3 gap-4 cursor-pointer transition
-              ${noneSelected ? 'border-primary bg-primary/5' : 'border-grey'}
+              ${noneSelected ? 'border-onboard_primary bg-onboard_primary/5' : 'border-grey'}
             `}
           >
             <input
@@ -78,7 +78,7 @@ const DegitalPresence = () => {
           Back
         </Button>
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/management')}
         >

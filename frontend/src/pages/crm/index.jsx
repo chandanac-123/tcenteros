@@ -1,20 +1,38 @@
-import CustomeVerticalSelect from '@common/CustomeVerticalSelect'
+import CustomeVerticalSelect from '@common/components/CustomeVerticalSelect'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { crm_tabs } from '@constants/crmTabs'
 import { Button } from '@pages/components/ui/button'
-import { useCrmStore } from '@store/crmTabStore'
-import { useState } from 'react'
 import Members from './member'
 import MemberView from './member/MemberView'
 import MemberAdd from './member/MemberAdd'
 import { SquarePen } from 'lucide-react'
+import { useCrmStore } from '@store/tabStore'
+import VisitorAdd from './visitor/VisitorAdd'
+import Visitors from './visitor'
+import Guest from './guest'
+import { useEffect } from 'react'
 
 const CRM = () => {
-  const selected = useCrmStore(state => state.selectedTab)
-  const setSelected = useCrmStore(state => state.setSelectedTab)
-  const selectedCategory = crm_tabs.find(c => c.id === selected)
-  const [memberView, setMemberView] = useState('list')
-  const [selectedMemberId, setSelectedMemberId] = useState(null)
+  const {
+    selectedTab: crmSelectedTab,
+    setSelectedTab: setCrmSelectedTab,
+    memberView,
+    setMemberView,
+    visitorView,
+    setVisitorView,
+    setGuestView,
+    selectedMemberId,
+    setSelectedMemberId,
+    setSelectedTab,
+    clearSelectedIds,
+    resetCrmState
+  } = useCrmStore()
+
+  // useEffect(() => {
+  //   resetCrmState()
+  // }, [])
+
+  const selectedCrmCategory = crm_tabs.find(c => c.id === crmSelectedTab)
 
   return (
     <ContentLayout>
@@ -23,13 +41,19 @@ const CRM = () => {
           Customer Relationship Management
         </span>
         <div>
-          {selected === 1 && memberView === 'list' && (
-            <Button size='addbutton' onClick={() => setMemberView('add')}>
-              + Add Member
+          {crmSelectedTab === 4 && visitorView === 'list' && (
+            <Button
+              size='addbutton'
+              onClick={() => {
+                setVisitorView('add')
+                setSelectedTab(4)
+              }}
+            >
+              + Add Visitor
             </Button>
           )}
 
-          {selected === 1 && memberView === 'view' && (
+          {crmSelectedTab === 1 && memberView === 'view' && (
             <Button size='addbutton' onClick={() => setMemberView('edit')}>
               <SquarePen />
               Edit
@@ -40,13 +64,16 @@ const CRM = () => {
 
       <CustomeVerticalSelect
         options={crm_tabs}
-        selected={selected}
+        selected={crmSelectedTab}
         onSelect={id => {
-          setSelected(id)
+          setCrmSelectedTab(id)
           setMemberView('list')
+          setVisitorView('list')
+          setGuestView('list')
+          clearSelectedIds()
         }}
         heading={
-          selected === 1
+          crmSelectedTab === 1
             ? memberView === 'add'
               ? 'Add Member'
               : memberView === 'view'
@@ -54,10 +81,16 @@ const CRM = () => {
               : memberView === 'edit'
               ? 'Edit Member'
               : 'Members'
-            : selectedCategory?.heading
+            : crmSelectedTab === 4
+            ? visitorView === 'add'
+              ? 'Add Visitor'
+              : 'Visitors'
+            : crmSelectedTab === 3
+            ? 'Guests'
+            : selectedCrmCategory?.heading
         }
       >
-        {selected === 1 ? (
+        {crmSelectedTab === 1 ? (
           memberView === 'add' ? (
             <MemberAdd goBack={() => setMemberView('list')} />
           ) : memberView === 'view' ? (
@@ -83,8 +116,16 @@ const CRM = () => {
               }}
             />
           )
+        ) : crmSelectedTab === 4 ? (
+          visitorView === 'add' ? (
+            <VisitorAdd goBack={() => setVisitorView('list')} />
+          ) : (
+            <Visitors />
+          )
+        ) : crmSelectedTab === 3 ? (
+          <Guest />
         ) : (
-          selectedCategory?.component_view
+          selectedCrmCategory?.component_view
         )}
       </CustomeVerticalSelect>
     </ContentLayout>

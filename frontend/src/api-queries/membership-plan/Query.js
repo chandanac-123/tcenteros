@@ -4,13 +4,15 @@ import {
   deletePlan,
   getAllPlans,
   getPlanById,
-  updatePlan
+  updatePlan,
+  updateStatusPlan
 } from './Urls'
+import { showError, showSuccess } from '@utils/toast'
 
-export const usePlansQuery = () => {
+export const usePlansQuery = (status) => {
   return useQuery({
-    queryKey: ['plans'],
-    queryFn: () => getAllPlans(),
+    queryKey: ['plans', status],
+    queryFn: () => getAllPlans(status),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
@@ -22,8 +24,10 @@ export const useCreatePlanMutation = () => {
     mutationFn: data => createPlan(data),
     onSuccess: async data => {
       query.invalidateQueries('plans')
+      showSuccess('Plan created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create plan')
       return err
     }
   })
@@ -35,8 +39,10 @@ export const useUpdatePlanMutation = () => {
     mutationFn: ({ id, data }) => updatePlan(data, id),
     onSuccess: async data => {
       query.invalidateQueries('plans')
+      showSuccess('Plan updated successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update plan')
       return err
     }
   })
@@ -48,8 +54,10 @@ export const useDeletePlanMutation = () => {
     mutationFn: id => deletePlan(id),
     onSuccess: async data => {
       query.invalidateQueries('plans')
+      showSuccess('Plan deleted successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to delete plan')
       return err
     }
   })
@@ -62,5 +70,21 @@ export const usePlanGetByIdQuery = id => {
     enabled: !!id,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useUpdatePlanStatusMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }) => updateStatusPlan(data, id),
+    onSuccess: async data => {
+      console.log('data: ', data.detail );
+      query.invalidateQueries({ queryKey: ['plans'] })
+      showSuccess(data.detail || 'Plan status updated successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update plan')
+      return err
+    }
   })
 }

@@ -1,7 +1,10 @@
 import { Button } from '@pages/components/ui/button'
-import CustomeBreadcrumb from '@common/CustomeBreadcrumb'
+import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
+import { useMembersGetByIdQuery } from '@api-queries/crm/Query';
 
-const MemberView = ({ goBack }) => {
+const MemberView = ({ goBack,memberId }) => {
+  console.log('memberId: ', memberId);
+   const { data: memberData } = useMembersGetByIdQuery(memberId)
   return (
     <div className='flex gap-3 flex-col pb-6'>
       <CustomeBreadcrumb
@@ -14,19 +17,19 @@ const MemberView = ({ goBack }) => {
         <div className='flex gap-3 justify-between w-full'>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Member Name</span>
-            <span>Alex Rooney</span>
+            <span>{memberData?.full_name}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Gender</span>
-            <span>Male</span>
+            <span>{memberData?.gender}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Date Of Birth</span>
-            <span>01/01/1990</span>
+            <span>{memberData?.date_of_birth}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Blood Group</span>
-            <span>Alex Rooney</span>
+            <span>{memberData?.blood_group}</span>
           </div>
         </div>
       </div>
@@ -35,12 +38,12 @@ const MemberView = ({ goBack }) => {
       <div className='flex border border-tableborder p-4 rounded-xl'>
         <div className='flex gap-16'>
           <div className='flex flex-col'>
-            <span className='text-pricing_text'>E mail </span>
-            <span>Alex@gmai.com</span>
+            <span className='text-pricing_text'>Email </span>
+            <span>{memberData?.email}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Phone Number</span>
-            <span>Male</span>
+            <span>{memberData?.mobile}</span>
           </div>
         </div>
       </div>
@@ -50,23 +53,23 @@ const MemberView = ({ goBack }) => {
         <div className='flex gap-3 justify-between w-full'>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Address</span>
-            <span>Alex Rooney</span>
+            <span>{memberData?.address?.address_line_1}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>City</span>
-            <span>Male</span>
+            <span>{memberData?.address?.city}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>State</span>
-            <span>01/01/1990</span>
+            <span>{memberData?.address?.state}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Country</span>
-            <span>Alex Rooney</span>
+            <span>{memberData?.address?.country}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Pin Code</span>
-            <span>Alex Rooney</span>
+            <span>{memberData?.address?.postal_code}</span>
           </div>
         </div>
       </div>
@@ -76,11 +79,11 @@ const MemberView = ({ goBack }) => {
         <div className='flex gap-16'>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Membership Plan</span>
-            <span>Alex@gmai.com</span>
+            <span>{memberData?.membership_id}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Time Slot</span>
-            <span>Male</span>
+            <span>{memberData?.time_slot_id}</span>
           </div>
         </div>
         <div className='flex justify-end mt-4 '>

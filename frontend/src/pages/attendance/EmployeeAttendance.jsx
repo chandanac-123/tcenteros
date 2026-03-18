@@ -1,56 +1,61 @@
-import { DataTable } from '@common/DataTable'
-import view from '@assets/form-icons/view.svg'
+import { DataTable } from '@common/components/DataTable'
+import { useEffect, useState } from 'react'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { Switch } from '@pages/components/ui/switch'
-import { useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
+import {
+  useAllEmployeesAttendanceQuery,
+  useDeleteAttendanceMutation
+} from '@api-queries/attendance/Query'
+import DeleteModal from '@common/components/CustomeDelete'
+import { formatTo12Hour } from '@utils/helper'
 
-const EmployeeAttendance = () => {
+const EmployeeAttendance = ({ categoryId, dateRange }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
-    search: ''
+    search: '',
+    categoryId: null,
+    from: null,
+    to: null
   })
-  const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Date'
-    },
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
 
-    {
-      accessorKey: 'designation_name',
-      header: 'Designation'
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      categoryId,
+      page: 1
+    }))
+  }, [categoryId])
+
+  useEffect(() => {
+    setTableParams(prev => ({
+      ...prev,
+      from: dateRange?.from,
+      to: dateRange?.to,
+      page: 1
+    }))
+  }, [dateRange])
+
+  const { data: employees, isLoading: isEmployeesLoading } =
+    useAllEmployeesAttendanceQuery(tableParams)
+  const { mutate: deleteAttendance } = useDeleteAttendanceMutation()
+
+  const columns = [
+    { accessorKey: 'full_name', header: 'Member  Name' },
+    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'designation', header: 'Designation' },
+    {accessorKey: 'check_in_time', header: 'Check In Time',
+      cell: ({ row }) => formatTo12Hour(row.original.check_in_time)
     },
-    {
-      accessorKey: 'email',
-      header: 'Check In Time'
+    { accessorKey: 'check_out_time',
+      header: 'Check Out Time ',
+      cell: ({ row }) => formatTo12Hour(row.original.check_out_time)
     },
-    {
-      accessorKey: 'mobile',
-      header: 'Check Out Time '
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Duration'
-    },
-    {
-      header: 'Actions',
+    { accessorKey: 'duration', header: 'Duration' },
+    {header: 'Actions',
       accessorKey: 'status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-          <button
-            onClick={() => {
-              setViewId(row.original.id)
-              setViewOpen(true)
-            }}
-          >
-            <img src={view} alt='view' />
-          </button>
           <button
             onClick={() => {
               setDeleteId(row.original.id)
@@ -59,30 +64,41 @@ const EmployeeAttendance = () => {
           >
             <img src={deleteicon} alt='delete' />
           </button>
-          <Switch />
         </span>
       )
     }
   ]
 
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteAttendance(deleteId)
+      setDeleteOpen(false)
+      setDeleteId(null)
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
+  }
+
   return (
     <>
       <DataTable
         columns={columns}
-        data={[]}
+        data={employees?.attendance || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
+        pagination={employees?.total}
+        loading={isEmployeesLoading}
         paginationVisibile={true}
+        search={false}
       />
-      {/*   
-          <ViewForm id={viewId} open={viewopen} setOpen={setViewOpen} />
-          // <DeleteModal
-          //   open={deleteOpen}
-          //   setOpen={setDeleteOpen}
-          //   header='Delete Employee'
-          //   description='Are you sure you want to delete this employee?'
-          //   onConfirm={handleDelete}
-          // /> */}
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header='Delete Attendance Record'
+        description='Are you sure you want to delete this attendance record?'
+        onConfirm={handleDelete}
+      />
     </>
   )
 }

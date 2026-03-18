@@ -19,7 +19,7 @@ const HexButton = ({ label, active, onClick }) => {
         className={cn(
           'absolute inset-0',
           active
-            ? 'bg-secondary'
+            ? 'bg-onboard_secondary'
             : 'bg-[#8B24E242]'
         )}
         style={{ clipPath: hexClip }}

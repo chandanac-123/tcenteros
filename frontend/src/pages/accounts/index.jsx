@@ -1,15 +1,23 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import MonthlyFinanceChart from '@common/charts/MonthlyFinanceChart'
 import { Card } from '@pages/components/ui/card'
 import SummaryCard from './components/SummaryCard'
-import RevenuePieChart from '@common/charts/RevenuePieChart'
-import FinancialProgressBar from './components/FinancialProgress'
 import AccountSubCard from './components/AccountSubCard'
-import { DataTable } from '@common/DataTable'
 import { useNavigate } from 'react-router-dom'
-import CustomDatePicker from '@common/CustomeDatepicker'
+import CustomDatePicker from '@common/components/CustomeDatepicker'
+import BarChart from '@common/charts/BarChart'
+import PieChart from '@common/charts/PieChart'
+import { useAccountsOverviewQuery } from '@api-queries/accounts/Query'
+import { useDashboardQuery } from '@api-queries/Dashboard/Query'
 
 const Accounts = () => {
+  // const { data, isLoading, isError } = useAccountsOverviewQuery()
+  const { data, isLoading, error } = useDashboardQuery()
+
+  const revenueLabels = data?.revenue_trend?.map(i => i.month) || []
+  const incomeData = data?.revenue_trend?.map(i => i.income) || []
+
+  const expenseData = data?.revenue_trend?.map(i => i.expense) || []
+
   const navigate = useNavigate()
   const summaryData = [
     { title: 'Total Income', amount: 3000 },
@@ -40,86 +48,41 @@ const Accounts = () => {
     }
   ]
 
-  const progresscolorPalette = [
+  const incomeDataConfig = [
+    { key: 'membership', label: 'Membership ', value: 5000, color: '#8A00FF' },
+    { key: 'networking', label: 'Networking ', value: 3000, color: '#EB4824' },
     {
-      label: 'Membership Sale',
-      bg: 'bg-primary_light',
-      bglight: 'bg-memberprogress_light'
+      key: 'inventory',
+      label: 'Inventory Sales',
+      value: 2000,
+      color: '#FFCD0F'
     },
-    {
-      label: 'Inventory Sale',
-      bg: 'bg-progress_yellow',
-      bglight: 'bg-inventory_light'
-    },
-    {
-      label: 'Inventory Purchase',
-      bg: 'bg-purchase',
-      bglight: 'bg-purchase_light'
-    },
-    {
-      label: 'Payroll Processing',
-      bg: 'bg-barchartexpense',
-      bglight: 'bg-payroll_light'
-    },
-    {
-      label: 'Trainer Charges',
-      bg: 'bg-green_text',
-      bglight: 'bg-progress_light_green'
-    },
-    {
-      label: 'Network Settlements',
-      bg: 'bg-Network',
-      bglight: 'bg-Network_light'
-    },
-    {
-      label: 'General Expenses',
-      bg: 'bg-progress_blue',
-      bglight: 'bg-general_bg'
-    }
+    { key: 'other', label: 'Other Income', value: 1000, color: '#A3AED0' }
   ]
-
-  const columns = [
+  const expenseDataConfig = [
+    { key: 'networking', label: 'Salary', value: 4000, color: '#3B82F6' },
+    { key: 'branching', label: 'Branching', value: 2000, color: '#EF4444' },
+    { key: 'salary', label: 'Salary ', value: 1500, color: '#F59E0B' },
     {
-      accessorKey: 'full_name',
-      header: 'Center Name'
+      key: 'inventory',
+      label: 'Inventory Purchase',
+      value: 1500,
+      color: '#F59E0B'
     },
-    {
-      accessorKey: 'designation_name',
-      header: 'Transaction Date'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Description'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Debit'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Credit'
-    },
-    {
-      accessorKey: 'joining_date',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'joining_date',
-      header: 'Action'
-    }
+    { key: 'other', label: 'Other ', value: 1000, color: '#10B981' }
   ]
 
   return (
     <ContentLayout>
-      <div className='flex flex-col lg:flex-row gap-4 items-stretch lg:min-h-[88vh] '>
-        <div className='flex flex-col w-full lg:w-3/5 gap-4'>
-          <Card className='lg:flex-1'>
+      <div className='grid grid-cols-1 lg:grid-cols-5 gap-4 lg:min-h-[88vh]'>
+        <div className='lg:col-span-3 flex flex-col gap-4"'>
+          <Card className=''>
             <div className='flex flex-col p-4 h-full'>
               <span className='text-lg font-semibold text-textblack'>
                 Account Overview
               </span>
 
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2  xl:grid-cols-4 gap-4'>
                 {summaryData.map((item, index) => (
                   <SummaryCard
                     key={index}
@@ -134,30 +97,47 @@ const Accounts = () => {
                   Monthly Income Vs Expenses
                 </span>
                 <span>
-                <CustomDatePicker pickerType="year"/>
+                  <CustomDatePicker pickerType='year' />
                 </span>
               </div>
-              <MonthlyFinanceChart />
+              <BarChart
+                labels={revenueLabels}
+                datasets={[
+                  {
+                    label: 'Income',
+                    data: incomeData,
+                    backgroundColor: '#15CAB8'
+                  },
+                  {
+                    label: 'Expenses',
+                    data: expenseData,
+                    backgroundColor: '#377CF6'
+                  }
+                ]}
+              />
             </div>
           </Card>
 
-          <Card className='lg:flex-1'>
+          <Card className=''>
             <div className='flex flex-col p-4 h-full'>
               <div className='flex justify-between py-2'>
                 <span className='text-lg font-semibold text-textblack'>
-                  Revenue Breakdown
+                  Income Breakdown
                 </span>
-                <span> <CustomDatePicker pickerType="year"/></span>
+                <span>
+                  {' '}
+                  <CustomDatePicker pickerType='year' />
+                </span>
               </div>
-              <RevenuePieChart />{' '}
+              <PieChart dataConfig={incomeDataConfig} />{' '}
             </div>
           </Card>
         </div>
 
-        <div className='flex flex-col w-full lg:w-2/5 gap-4'>
+        <div className='lg:col-span-2 flex flex-col gap-4'>
           <Card className='lg:flex-1'>
             <div className='flex flex-col p-4 h-full'>
-              <div className='flex justify-between py-2'>
+              <div className='flex justify-between py-4'>
                 <span className='text-lg font-semibold text-textblack'>
                   Account Sub-modules
                 </span>
@@ -174,34 +154,19 @@ const Accounts = () => {
 
           <Card label='Total Expenses' className='lg:flex-1'>
             <div className='flex flex-col p-4 h-full'>
-              <span className='text-lg font-semibold text-textblack'>
-                End to End Financial Flows
-              </span>
-
-              {progresscolorPalette.map((item, index) => (
-                <div key={index} className='flex flex-col gap-2 my-2 w-full'>
-                  <div className='flex justify-between items-center w-full'>
-                    <FinancialProgressBar
-                      label={item.label}
-                      value=''
-                      progressBg={item.bg}
-                      progressBgLight={item.bglight}
-                    />
-                  </div>
-                </div>
-              ))}
+              <div className='flex justify-between py-4'>
+                <span className='text-lg font-semibold text-textblack'>
+                  Expense Breakdown
+                </span>
+                <span>
+                  {' '}
+                  <CustomDatePicker pickerType='year' />
+                </span>
+              </div>
+              <PieChart dataConfig={expenseDataConfig} />{' '}
             </div>
           </Card>
         </div>
-      </div>
-
-      <div className='my-4'>
-        <DataTable
-          title='Products'
-          subTitle='Products'
-          columns={columns}
-          data={[]}
-        />
       </div>
     </ContentLayout>
   )

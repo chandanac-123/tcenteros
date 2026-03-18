@@ -36,13 +36,13 @@ const SellableItem = () => {
 
       <div className='flex justify-center px-4 sm:px-10 mt-5'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-auto'>
-          <h2 className='font-semibold text-xl text-secondary'>
+          <h2 className='font-semibold text-xl text-onboard_secondary'>
             {tool?.feature_name}
           </h2>
 
           <p className='text-sm text-grey'>{tool?.description}</p>
 
-          <p className='font-medium text-sm text-secondary'>
+          <p className='font-medium text-sm text-onboard_secondary'>
             Manage stock, avoid shortages, and connect item sales directly to
             billing — no spreadsheets needed
           </p>
@@ -71,7 +71,7 @@ const SellableItem = () => {
         </Button>
 
         <Button
-          variant='outline_primary'
+          variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/management')}
         >

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createTax, deleteTax, getAllTax, getTaxById, updateTax } from './Urls'
+import { showError, showSuccess } from '@utils/toast'
 
 export const useAllTaxQuery = () => {
   return useQuery({
@@ -15,8 +16,10 @@ export const useCreateTaxMutation = () => {
     mutationFn: data => createTax(data),
     onSuccess: async data => {
       query.invalidateQueries('tax')
+      showSuccess('Tax created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create tax')
       return err
     }
   })
@@ -28,8 +31,10 @@ export const useUpdateTaxMutation = () => {
     mutationFn: ({ id, data }) => updateTax(data, id),
     onSuccess: async data => {
       query.invalidateQueries('tax')
+      showSuccess('Tax updated successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to update tax')
       return err
     }
   })

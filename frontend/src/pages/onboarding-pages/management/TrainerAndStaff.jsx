@@ -4,7 +4,7 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { useLocation, useNavigate } from 'react-router-dom'
 import backarrow from '@assets/navigate-icons/backarrow.svg'
 import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
-import RadioGroup from '@common/RadioGroup'
+import RadioGroup from '@common/components/RadioGroup'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
 

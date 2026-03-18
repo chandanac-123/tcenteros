@@ -13,11 +13,9 @@ export default defineConfig({
       '@assets': path.resolve(__dirname, 'src/assets'),
       '@store': path.resolve(__dirname, 'src/store'),
       '@constants': path.resolve(__dirname, 'src/constants'),
-<<<<<<< HEAD
-=======
       '@common': path.resolve(__dirname, 'src/common'),
-      '@api-queries': path.resolve(__dirname, 'src/api-queries')
->>>>>>> frontend
+      '@api-queries': path.resolve(__dirname, 'src/api-queries'),
+      '@api': path.resolve(__dirname, 'src/api'),
     },
   },
 });

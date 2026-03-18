@@ -1,57 +1,76 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
-import CustomeTab from '@common/CustomeTab'
+import CustomeTab from '@common/components/CustomeTab'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
 import PlanCard from './PlanCard'
-import { CarouselSize } from '@common/CustomeCarousel'
+import { CarouselSize } from '@common/components/CustomeCarousel'
 import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/membership-plan/Query'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const MembershipPlan = () => {
+  const [activeTab, setActiveTab] = useState('All')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
-  const { data, isFetching } = usePlansQuery()
-  // console.log('data: ', data);
-  const employeeOrCenter = [
+  const { data, isFetching } = usePlansQuery(activeTab)
+
+  const Status = [
     { id: 1, name: 'All' },
-    { id: 2, name: 'Active' },
-    { id: 3, name: 'Inactive' }
+    { id: 2, name: 'active' },
+    { id: 3, name: 'inactive' }
   ]
 
   return (
     <ContentLayout>
-      <div className='font-medium text-2xl'> Available Membership Plans</div>
+      <div className='text-xl font-semibold text-textblack'>
+        {' '}
+        Available Membership Plans
+      </div>
       <div className='flex justify-between items-center my-4'>
         <div>
           <CustomeTab
-            tabList={employeeOrCenter}
+            tabList={Status}
             defaultVal='All'
             tabsListClass=' w-[400px] p-[1px]'
+            onChange={value => setActiveTab(value)}
           />
         </div>
-        <div className='flex'>
-          <Button size='addbutton' onClick={() => setOpen(true)}>
-            {' '}
-            + Create New Plan
-          </Button>
-        </div>
+        <Button size='addbutton' onClick={() => setOpen(true)}>
+          {' '}
+          + Create New Plan
+        </Button>
       </div>
-
-      <CarouselSize>
-        {data?.map((plan, index) => (
-          <PlanCard
-            key={index}
-            data={plan}
-            colors={
-              membershipPlanColorPalette[
-                index % membershipPlanColorPalette.length
-              ]
-            }
-          />
-        ))}
-      </CarouselSize>
+      {data?.length === 0 && (
+        <p className='flex justify-center items-center font-semibold font-poppins'>
+          NO ACTIVETED MEMBERSHIP PLANS AVAILABLE, CREATE A NEW PLAN TO START
+          OFFERING MEMBERSHIPS TO YOUR CUSTOMERS.
+        </p>
+      )}
+      {data?.length > 0 && (
+        <div>
+          {isFetching ? (
+            <div className='flex justify-center items-center py-10'>
+              <Spinner />
+            </div>
+          ) : (
+            <CarouselSize>
+              {data?.map((plan, index) => (
+                <PlanCard
+                  key={index}
+                  data={plan}
+                  colors={
+                    membershipPlanColorPalette[
+                      index % membershipPlanColorPalette.length
+                    ]
+                  }
+                />
+              ))}
+            </CarouselSize>
+          )}
+        </div>
+      )}
 
       <CreateMembershipForm open={open} setOpen={setOpen} />
       <DeleteModal

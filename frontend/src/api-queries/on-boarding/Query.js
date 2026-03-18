@@ -1,3 +1,4 @@
+import { showError, showSuccess } from '@utils/toast'
 import {
   getAllClassTypes,
   getAllPlatforms,
@@ -58,8 +59,10 @@ export const useCreateOnboardCenterMutation = () => {
     mutationFn: data => createOnboardCenter(data),
     onSuccess: async data => {
       query.invalidateQueries('pricingPage')
+      showSuccess('Onboard center created successfully')
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to create onboard center')
       return err
     }
   })
@@ -90,8 +93,10 @@ export const useFinalizeOnboardCenterMutation = (id) => {
     mutationFn: (details) => finalizeOnboardCenter(details, id),
     onSuccess: async data => {
       query.invalidateQueries('invoiceSummary');
+      showSuccess('Onboard center finalized successfully');
     },
     onError: err => {
+      showError(err?.response?.data?.message || 'Failed to finalize onboard center');
       return err;
     }
   });

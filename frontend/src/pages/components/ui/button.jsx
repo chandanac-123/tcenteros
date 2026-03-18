@@ -7,13 +7,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        onboard_default:
+          'bg-onboard_primary text-white rounded-xl hover:bg-onboard_primary/90 font-roboto font-medium text-md justify-between',
         default:
           'bg-primary text-white rounded-xl hover:bg-primary/90 font-roboto font-medium text-md justify-between',
         outline_primary:
-          'border border-input  text-primary border-primary bg-primarybglight font-medium justify-between',
+          'border border-input  text-primary border-primary bg-primary/10 font-medium justify-between',
+        onboard_outline_primary:
+          'border border-input  text-onboard_primary border-onboard_primary bg-onboard_primary/10 font-medium justify-between',
         outline_secondary:
           'border border-input text-grey border-grey  font-medium justify-between',
         button_filled: 'bg-primary text-white',
+        onboard_button_filled: 'bg-onboard_primary text-white',
         button_outlined: ' text-primary outline ',
         button_outlined_textleft: 'text-primary outline justify-start',
         button_filter: 'text-textgrey border-2 border-filter_border'
@@ -24,7 +29,9 @@ const buttonVariants = cva(
         sm: 'h-10 rounded-lg pr-4 pl-1 text-md gap-20',
         filterbutton: 'h-9 p-2 rounded-lg text-md gap-2',
         addbutton: 'h-10 px-6 rounded-lg text-sm gap-2',
-        icon: 'h-9 w-9'
+        editbutton: 'h-9 w-20 px-4 rounded-2xl text-sm gap-2',
+        icon: 'h-9 w-9',
+        notificationbutton: 'h-6 px-3 rounded-lg text-xs gap-1',
       }
     },
     defaultVariants: {
@@ -55,15 +62,7 @@ const Button = React.forwardRef(
         onClick={onClick}
         {...props}
       >
-        {leftIcon && (
-          <img
-            src={leftIcon}
-            className={cn(
-              'flex items-center',
-              size === 'googlebutton' ? 'w-6' : 'w-8'
-            )}
-          />
-        )}
+        {leftIcon && <img src={leftIcon} className='flex items-center w-8' />}
         {children}
         {rightIcon && <img src={rightIcon} className='flex items-center w-8' />}
       </button>

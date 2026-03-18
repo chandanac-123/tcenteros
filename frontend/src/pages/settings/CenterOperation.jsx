@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import TimePicker from '@common/Timepicker'
+import TimePicker from '@common/components/Timepicker'
 import { days } from '@constants/days'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
@@ -11,7 +11,7 @@ import {
   useDeleteSlotMutation
 } from '@api-queries/slot/Query'
 import { useFormik } from 'formik'
-import DeleteModal from '@common/CustomeDelete'
+import DeleteModal from '@common/components/CustomeDelete'
 import {
   useAllCenterTimeQuery,
   useCreateCenterTimeMutation,
@@ -30,7 +30,6 @@ const CenterOperations = () => {
 
   const { data: centerTime, isFetching: isFetchingCenterTime } =
     useAllCenterTimeQuery()
-  console.log('centerTime: ', centerTime)
   const { mutateAsync: createCenterTime, isPending: isCreatingCenterTime } =
     useCreateCenterTimeMutation()
   const { mutateAsync: updateCenterTime, isPending: isUpdatingCenterTime } =
@@ -41,8 +40,8 @@ const CenterOperations = () => {
     closing_time: convertTo12Hour(centerTime?.closing_time) || '',
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
-    attendance_allowed_radius_meters:
-      centerTime?.attendance_allowed_radius_meters || ''
+    payroll_cycle_day: centerTime?.payroll_cycle_day || 0,
+    inventory_profit: centerTime?.inventory_profit || 0
   }
 
   const initialValues = {
@@ -54,7 +53,6 @@ const CenterOperations = () => {
   const formik = useFormik({
     initialValues,
     onSubmit: async values => {
-      console.log('values: ', values)
       try {
         await createSlot(values)
         formik.resetForm()
@@ -64,31 +62,30 @@ const CenterOperations = () => {
     }
   })
 
- const centerTimeFormik = useFormik({
-  initialValues: centerTimeInitialValues,
-  enableReinitialize: true,
- onSubmit: async values => {
-  const formattedValues = {
-    ...values,
-    opening_time: convert12To24WithSeconds(values.opening_time),
-    closing_time: convert12To24WithSeconds(values.closing_time)
-  }
-
-  try {
-    if (centerTime) {
-      await updateCenterTime({
-        id: centerTime.id,
-        data: formattedValues
-      })
-    } else {
-      await createCenterTime(formattedValues)
+  const centerTimeFormik = useFormik({
+    initialValues: centerTimeInitialValues,
+    enableReinitialize: true,
+    onSubmit: async values => {
+      const formattedValues = {
+        ...values,
+        opening_time: convert12To24WithSeconds(values.opening_time),
+        closing_time: convert12To24WithSeconds(values.closing_time),
+        payroll_cycle_day: parseInt(values.payroll_cycle_day),
+        inventory_profit: parseInt(values.inventory_profit)
+      }
+      try {
+        if (centerTime) {
+          await updateCenterTime({
+            data: formattedValues
+          })
+        } else {
+          await createCenterTime(formattedValues)
+        }
+      } catch (error) {
+        console.error(error)
+      }
     }
-  } catch (error) {
-    console.error(error)
-  }
-}
-})
-
+  })
 
   const handleConfirmDelete = async () => {
     try {
@@ -103,7 +100,7 @@ const CenterOperations = () => {
 
   return (
     <div className='flex flex-col gap-6 py-2'>
-      <span className='text-lg font-semibold'>Create  Center Timing</span>
+      <span className='text-lg font-semibold'>Create Center Timing</span>
 
       <form
         className='space-y-4'
@@ -144,25 +141,43 @@ const CenterOperations = () => {
           />
         </div>
 
-        <div className='flex justify-between items-center'>
-          <Input
-            label='Attendance allowed radius'
-            value={centerTimeFormik.values.attendance_allowed_radius_meters}
-            onChange={e =>
-              centerTimeFormik.setFieldValue(
-                'attendance_allowed_radius_meters',
-                e.target.value
-              )
-            }
-          />
-          <Button
-            id='center-timing'
-            size='addbutton'
-            variant='button_outlined'
-            type='submit'
-          >
-            Save Changes
-          </Button>
+        <div className='flex gap-4'>
+          <div className='flex-1'>
+            <Input
+              label='Inventory Profit'
+              name='inventory_profit'
+              value={centerTimeFormik.values.inventory_profit}
+              onChange={e =>
+                centerTimeFormik.setFieldValue(
+                  'inventory_profit',
+                  e.target.value
+                )
+              }
+            />
+          </div>
+          <div className='flex-1'>
+            <Input
+              label='Pay Cycle'
+              name='payroll_cycle_day'
+              value={centerTimeFormik.values.payroll_cycle_day}
+              onChange={e =>
+                centerTimeFormik.setFieldValue(
+                  'payroll_cycle_day',
+                  e.target.value
+                )
+              }
+            />
+          </div>
+          <div className='flex-1 justify-end items-center flex'>
+            <Button
+              id='center-timing'
+              size='addbutton'
+              variant='button_outlined'
+              type='submit'
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
       </form>
 
@@ -215,6 +230,7 @@ const CenterOperations = () => {
           {slots?.map(slot => (
             <SlotCard
               key={slot.id}
+              sku_name ='null'
               startTime={slot.start_time}
               endTime={slot.end_time}
               capacity={slot.slot_capacity}

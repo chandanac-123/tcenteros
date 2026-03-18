@@ -18,13 +18,13 @@ export const crm_tabs = [
   },
 
   {
-    id: 4,
+    id: 3,
     name: 'Guests',
     heading: 'Guests',
     component_view: <Guest />
   },
   {
-    id: 3,
+    id: 4,
     name: 'Visitors',
     heading: 'Visitors',
     component_view: <Visitors />

@@ -7,11 +7,13 @@ export const useAuthStore = create(
       auth: null,
       accessToken: null,
       refreshToken: null,
-      setAuth: auth =>
+      firstLogin: false,
+      setAuth: (auth, firstLogin = false) =>
         set({
           auth,
-          accessToken: auth?.access_token || null, // use the correct property name
-          refreshToken: auth?.refresh_token || null
+          accessToken: auth?.access_token || null,
+          refreshToken: auth?.refresh_token || null,
+          firstLogin
         }),
       clearAuth: () =>
         set({

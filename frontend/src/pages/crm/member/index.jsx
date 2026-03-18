@@ -1,60 +1,47 @@
-import { DataTable } from '@common/DataTable'
+import { DataTable } from '@common/components/DataTable'
 import edit from '@assets/form-icons/edit.svg'
 import view from '@assets/form-icons/view.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
 import { Badge } from '@pages/components/ui/badge'
 import { useState } from 'react'
-import DeleteModal from '@common/CustomeDelete'
-import { useDeleteEmployeeMutation } from '@api-queries/employee-management/Query'
+import DeleteModal from '@common/components/CustomeDelete'
 import { memberType } from '@constants/members'
 import Card from '../components/Cards'
+import {
+  useMembersQuery,
+  useMembersCountQuery,
+  useDeleteMemberMutation,
+  useUpdateMemberStatusMutation
+} from '@api-queries/crm/Query'
 
 const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
     page: 1,
-    pageSize: 10,
-    totalCount: 3,
     search: ''
   })
+  const { data, isFetching } = useMembersQuery(tableParams)
+  const { data: memberCountData, isFetching: isMemberCountFetching } =
+    useMembersCountQuery()
 
-  // Dummy data for DataTable
-  const data = [
-    {
-      id: 1,
-      full_name: 'John Doe',
-      email: 'john.doe@example.com',
-      mobile: '9876543210',
-      status: 'active'
-    },
-    {
-      id: 2,
-      full_name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      mobile: '9123456780',
-      status: 'inactive'
-    },
-    {
-      id: 3,
-      full_name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      mobile: '9988776655',
-      status: 'active'
-    }
-  ]
-  const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [editopen, setEditOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-  const [editId, setEditId] = useState(null)
-  const [viewId, setViewId] = useState(null)
-  const { mutate: deleteEmployee } = useDeleteEmployeeMutation(deleteId)
+  const { mutate: deleteMember } = useDeleteMemberMutation(deleteId)
+  const { mutate: updateStatus } = useUpdateMemberStatusMutation()
 
   const handleDelete = () => {
     if (deleteId) {
-      deleteEmployee(deleteId)
+      deleteMember(deleteId)
       setDeleteOpen(false)
       setDeleteId(null)
+    }
+  }
+
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await updateStatus({ id, status })
+    } catch (error) {
+      console.error('Failed to update status', error)
     }
   }
 
@@ -64,21 +51,10 @@ const Members = ({ onView, onEdit }) => {
   }
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
+    {  accessorKey: 'full_name',  header: 'Member  Name' },
+    {  accessorKey: 'email',  header: 'Email'},
+    {  accessorKey: 'mobile',  header: 'Phone Number'},
+    {  accessorKey: 'status', header: 'Status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
@@ -88,8 +64,7 @@ const Members = ({ onView, onEdit }) => {
         </span>
       )
     },
-    {
-      header: 'Action',
+    {  header: 'Action',
       accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>
@@ -107,7 +82,15 @@ const Members = ({ onView, onEdit }) => {
           >
             <img src={deleteicon} alt='delete' />
           </button>
-          <Switch />
+          <Switch
+            checked={row.original.status === 'active'}
+            onCheckedChange={checked => {
+              handleStatusUpdate(
+                row.original.id,
+                checked ? 'active' : 'inactive'
+              )
+            }}
+          />
         </span>
       )
     }
@@ -117,15 +100,20 @@ const Members = ({ onView, onEdit }) => {
     <>
       <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6'>
         {memberType?.map(member => (
-          <Card key={member.id} label={member.name} />
+          <Card
+            key={member.id}
+            label={member.name}
+            value={memberCountData?.[member.key] || 0}
+          />
         ))}
       </div>
 
       <DataTable
-        title='Products'
-        subTitle='Products'
+        loading={isFetching}
         columns={columns}
-        data={data}
+        data={data?.members}
+        pagination={data?.total}
+        search={false}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}

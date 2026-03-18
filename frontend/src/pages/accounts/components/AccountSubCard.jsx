@@ -24,7 +24,7 @@ const AccountSubCard = () => {
       {subaccounts.map(item => (
         <div
           key={item.title}
-          className='flex flex-col w-24 items-center gap-2 border border-tab_bg rounded-lg p-3 cursor-pointer hover:shadow-sm transition'
+          className='flex flex-col w-24 items-center gap-4 border border-tab_bg rounded-lg p-3 hover:shadow-sm transition'
         >
           <img src={item.image} alt={item.title} />
           <span className='text-sm font-medium text-muted-foreground'>

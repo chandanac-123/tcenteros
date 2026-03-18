@@ -1,119 +1,148 @@
 import bell from '@assets/header-icons/bell.svg'
-import user from '@assets/header-icons/user.svg'
+import bell_active from '@assets/header-icons/bell-inactive.svg'
 import map from '@assets/header-icons/map.svg'
-import logout from '@assets/header-icons/logout.svg'
-import dummy from '@assets/dummy/center.svg'
 import {
   Popover,
   PopoverTrigger,
   PopoverContent
 } from '@pages/components/ui/popover'
-import { ChevronDown, FileText, Key, Settings } from 'lucide-react'
-import CustomeSearch from '../CustomeSearch'
-import CustomeModal from '../CustomeModal'
-import AddEditForm from '../../pages/employee-management/AddEditForm'
+import { ChevronDown, LogOut, Settings, UserRound } from 'lucide-react'
+import CustomeModal from '../components/CustomeModal'
 import { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@store/authStore'
+import AddBranchButton from '@pages/branch'
+import { useCrmStore } from '@store/tabStore'
+import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
+import GoogleMapComponent from '../components/GoogleMapComponent'
 
 const Header = () => {
-  const [open, setOpen] = useState(false)
+  const { setSelectedTab, setMemberView } = useCrmStore()
+  const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const { data } = useGetProfileInfoQuery()
   const navigate = useNavigate()
+  const [locationOpen, setLocationOpen] = useState(false)
 
-  const handleOpen = () => {
-    setOpen(true)
+  const handleLogout = () => {
+    const state = useAuthStore.getState()
+    if (state.clearAuth) state.clearAuth()
+    setLogoutOpen(false)
   }
 
   return (
-    <header className='w-full bg-textblack shadow flex items-center h-16 p-3'>
-      <div className='w-1/2 flex'>
-        <CustomeSearch placeholder='Search User' />
-      </div>
+    <header className='w-full bg-secondary shadow flex items-center h-16 p-3'>
       <div className='flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200'>
         <div className='flex w-full justify-end gap-2 items-center'>
-          <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
-            <img src={map} className='w-5 h-5 mr-2' />
-            Fitness center
-          </span>
-
-          {/* ADD */}
-          <Button onClick={handleOpen} size='addbutton'>
-            + Add Employee
-          </Button>
-
-          {/* EDIT MODAL */}
-          <CustomeModal
-            open={open}
-            onOpenChange={setOpen}
-            header='Create Employee'
+          <button onClick={() => setLocationOpen(true)}>
+            <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
+              <img src={map} className='w-5 h-5 mr-2' />
+              Fitness center
+            </span>
+          </button>
+          <GoogleMapComponent
+            open={locationOpen}
+            setLocationOpen={setLocationOpen}
+          />
+          <AddBranchButton />
+          <Button
+            size='addbutton'
+            onClick={() => {
+              setSelectedTab(1)
+              setMemberView('add')
+              navigate('/crm')
+            }}
           >
-            <AddEditForm
-              open={open}
-              setOpen={setOpen}
-              closeModal={() => setOpen(false)}
-            />
-          </CustomeModal>
+            + Add Member
+          </Button>
         </div>
-        <img src={bell} alt='logo' className='mr-2' />
-        <Popover>
-          <PopoverTrigger asChild>
+        <button onClick={() => navigate('/notifications')}>
+          <img src={bell_active} alt='logo' className='mr-2' />
+        </button>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
             <div className='flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer'>
               <div className='flex items-center'>
                 <div className='flex items-center gap-0'>
                   <img
-                    src={dummy}
+                    src={data?.profile_photo}
                     alt='logo'
                     className='w-8 h-8 mr-4 rounded-full'
                   />
                   <div className='flex flex-col'>
-                    <span className='text-textwhite text-sm whitespace-nowrap'>
-                      Hello, Pratibha
+                    <span className='text-textwhite text-xs font-normal whitespace-nowrap'>
+                      Hello,{data?.full_name || '-'}
                     </span>
-                    <span className='text-primary text-xs font-light'>
-                      Center Admin
+                    <span className='text-textwhite/50 text-xs font-light'>
+                      {data?.role
+                        ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
+                        : '-'}
                     </span>
                   </div>
                 </div>
-                <ChevronDown className='w-5 h-5 text-primary  ml-10' />
+                <ChevronDown className='w-5 h-5 text-textwhite  ml-10' />
               </div>
             </div>
           </PopoverTrigger>
           <PopoverContent className='w-auto'>
             <div className='flex flex-col gap-2'>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <img src={user} alt='' className='w-6 h-6 text-primary' />
+              <button
+                onClick={() => {
+                  navigate('/profile')
+                  setPopoverOpen(false)
+                }}
+                className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
+              >
+                <UserRound className='w-5 h-5 text-primary' />
                 Profile
               </button>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <Key className='w-5 h-5 text-primary' />
-                Reset Password
-              </button>
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => {
+                  navigate('/settings')
+                  setPopoverOpen(false)
+                }}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
                 <Settings className='w-5 h-5 text-primary' />
                 Settings
               </button>
-              <button className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'>
-                <FileText className='w-5 h-5 text-primary' />
-                Legal & polices
-              </button>
               <button
                 onClick={() => setLogoutOpen(true)}
                 className='flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded'
               >
-                <img src={logout} alt='' className='w-6 h-6 text-primary' />
+                <LogOut className='w-5 h-5 text-primary' />
                 Logout
               </button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
-      {/* <CustomeModal open={logoutOpen} onOpenChange={setLogoutOpen} header='Logout'>
-        <div className='flex flex-col gap-4 p-4'></div>
-      </CustomeModal> */}
+      <CustomeModal
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        header='Logout'
+      >
+        Are you sure you want to logout?
+        <div className='flex justify-end  gap-4'>
+          <Button
+            onClick={() => setLogoutOpen(false)}
+            size='addbutton'
+            variant='outline_secondary'
+            type='button'
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleLogout}
+            size='addbutton'
+            variant='default'
+            type='button'
+          >
+            Logout
+          </Button>
+        </div>
+      </CustomeModal>
     </header>
   )
 }
