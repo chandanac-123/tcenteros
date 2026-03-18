@@ -1,40 +1,23 @@
-import { DataTable } from "@common/components/DataTable"
-import { useAllTaxesQuery } from "@api-queries/accounts/Query"
-import { useState } from "react"
+import { DataTable } from '@common/components/DataTable'
+import { useAllTaxesQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Taxes = () => {
-    const [tableParams, setTableParams] = useState({
-      page: 1,
-      search: ''
-    })
-   const { data, isLoading, isError } = useAllTaxesQuery(tableParams)
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+    search: ''
+  })
+  const { data, isLoading, isError } = useAllTaxesQuery(tableParams)
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'GST Collected'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'GST Paid'
-    },
-    {
-      accessorKey: 'email',
-      header: 'GST Payable'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Tax Period Reports'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Action'
-    }
+    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'source', header: 'Source' },
+    { accessorKey: 'tax_type', header: 'Tax Type' },
+    { accessorKey: 'tax_rate', header: 'Tax Rate' },
+    { accessorKey: 'tax_amount', header: 'Tax Amount' },
   ]
+
   return (
     <>
       <DataTable

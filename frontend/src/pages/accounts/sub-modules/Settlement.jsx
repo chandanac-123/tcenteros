@@ -1,35 +1,35 @@
 import { DataTable } from '@common/components/DataTable'
+import { useAllSettlementsQuery } from '@api-queries/accounts/Query'
 
 const Settlement = () => {
+   const [tableParams, setTableParams] = useState({
+    page: 1,
+    search: ''
+  })
+  const { data, isLoading, isError } = useAllSettlementsQuery(tableParams)
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Trainer Commissions'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Commissions'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Network Settlements'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Paid Status'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Action'
-    }
+    { accessorKey: 'income_type', header: 'Income Type' },
+    { accessorKey: 'source', header: 'Source' },
+    { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'account_code', header: 'Account Code' },
+    { accessorKey: 'amount', header: 'Amount' },
+    { accessorKey: 'tax_amount', header: 'Tax Amount' },
+    { accessorKey: 'total_amount', header: 'Total Amount' },
+    { accessorKey: 'description', header: 'Description' }
   ]
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.entries || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isLoading}
+        pagination={data?.total}
+        paginationVisibile={true}
+        search={true}
+      />
     </>
   )
 }

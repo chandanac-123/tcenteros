@@ -137,7 +137,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                     options={membershipDurationOptions}
                     value={formik.values.duration_unit}
                     onChange={option =>
-                      formik.setFieldValue('duration_unit', option.id)
+                      formik.setFieldValue('duration_unit', option)
                     }
                   />
                 </div>

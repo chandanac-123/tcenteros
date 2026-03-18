@@ -36,7 +36,7 @@ const SmartRecommandation = () => {
 
       {/* Heading */}
       <div className='px-4 sm:px-10'>
-        <div className='flex flex-col gap-1 mb-6'>
+        <div className='flex flex-col'>
           <span className='text-2xl font-medium text-onboard_secondary'>
             We’ve Designed an Exclusive Branded Package for You
           </span>

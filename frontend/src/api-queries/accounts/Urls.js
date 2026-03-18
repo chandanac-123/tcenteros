@@ -1,30 +1,34 @@
 import {
   getAccountsLedgerApiCall,
   getAccountsIncomeApiCall,
-  getAccountsTaxesApiCall
+  getAccountsTaxesApiCall,
+  getAccountsExpensesApiCall,
+  getAccountsPayrollApiCall,
+  getAccountsInventoryApiCall,
+  getAccountsSettlementsApiCall,
+  getAccountsOverviewApiCall
 } from './index'
 
-export const getAllLedger = async (params) => {
+const handleApi = apiFn => async (params) => {
   try {
-    const response = await getAccountsLedgerApiCall(params)
+    const response = await apiFn(params)
     return response.data
   } catch (error) {
     throw error
   }
 }
 
-export const getAllIncome = async (params) => {
-  try {
-    const response = await getAccountsIncomeApiCall(params)
-    return response.data
-  } catch (error) {
-    throw error
-  }
-}
+export const getAllLedger = handleApi(getAccountsLedgerApiCall)
+export const getAllIncome = handleApi(getAccountsIncomeApiCall)
+export const getAllTaxes = handleApi(getAccountsTaxesApiCall)
+export const getAllExpenses = handleApi(getAccountsExpensesApiCall)
+export const getAllPayroll = handleApi(getAccountsPayrollApiCall)
+export const getAllInventory = handleApi(getAccountsInventoryApiCall)
+export const getAllSettlements = handleApi(getAccountsSettlementsApiCall)
 
-export const getAllTaxes = async (params) => {
+export const getAccountsOverview = async () => {
   try {
-    const response = await getAccountsTaxesApiCall(params)
+    const response = await getAccountsOverviewApiCall()
     return response.data
   } catch (error) {
     throw error

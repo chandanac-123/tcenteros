@@ -1,39 +1,35 @@
 import { DataTable } from '@common/components/DataTable'
+import { useAllExpensesQuery } from '@api-queries/accounts/Query'
 
 const Expense = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+    search: ''
+  })
+  const { data, isLoading, isError } = useAllExpensesQuery(tableParams)
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Utilities'
-    },
-    {
-      accessorKey: 'designation_name',
-      header: 'Trainer Payouts'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Vendor Payments'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'GST Credit'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Payroll Date'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Status'
-    },
-    {
-      accessorKey: 'center_name',
-      header: 'Action'
-    }
+    { accessorKey: 'income_type', header: 'Income Type' },
+    { accessorKey: 'source', header: 'Source' },
+    { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'account_code', header: 'Account Code' },
+    { accessorKey: 'amount', header: 'Amount' },
+    { accessorKey: 'tax_amount', header: 'Tax Amount' },
+    { accessorKey: 'total_amount', header: 'Total Amount' },
+    { accessorKey: 'description', header: 'Description' }
   ]
   return (
     <>
-      <DataTable columns={columns} data={[]} />
+      <DataTable
+        columns={columns}
+        data={data?.entries || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        loading={isLoading}
+        pagination={data?.total}
+        paginationVisibile={true}
+        search={true}
+      />
     </>
   )
 }

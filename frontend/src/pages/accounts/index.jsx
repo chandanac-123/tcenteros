@@ -8,8 +8,10 @@ import { useNavigate } from 'react-router-dom'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import PieChart from '@common/charts/PieChart'
+import { useAccountsOverviewQuery } from '@api-queries/accounts/Query'
 
 const Accounts = () => {
+  const { data, isLoading, isError } = useAccountsOverviewQuery()
   const navigate = useNavigate()
   const summaryData = [
     { title: 'Total Income', amount: 3000 },
