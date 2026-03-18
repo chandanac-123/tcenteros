@@ -64,6 +64,11 @@ export const updateEmployeeStatusApiCall = (details, id) =>
 export const deleteMultipleEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee/delete-multiple', details)
 
+export const getPayrollApiCall = data =>
+  axiosInstance.get(`/payrole/payroll/history?page=${data?.page||1}`)
+export const runPayrollApiCall = details =>
+  axiosInstance.post('/payrole/payroll/run', details)
+
 // TAX API
 export const getTaxApiCall = () =>
   axiosInstance.get(`/settings/superadmin/tax-categories/`)
@@ -273,7 +278,7 @@ export const updateCentersProfileImageApiCall = details =>
   }) // For updating centers and sub-branchs image from center information page
 export const getCenterProfileInfoApiCall = () =>
   axiosInstance.get(`/center/centeradmin/profile`)
-export const fetchCenterLocationApiCall = (details) =>
+export const fetchCenterLocationApiCall = details =>
   axiosInstance.post(`/center/center-location/`, details)
 export const getAllCenterApiCall = () =>
   axiosInstance.get(`/center/centers/accessible-centers`)
@@ -322,6 +327,3 @@ export const deleteSalaryApiCall = id =>
   axiosInstance.delete(`/payrole/center/employees/${id}/salary-structure`)
 export const getSalaryByIdApiCall = id =>
   axiosInstance.get(`/payrole/center/employees/${id}/salary-structure`)
-
-
-

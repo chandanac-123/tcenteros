@@ -8,6 +8,7 @@ import Employee from './employee'
 import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
 import { useAllCentersQuery } from '@api-queries/center-profile/Query'
+import Payroll from './payroll'
 
 const EmployeeManagement = () => {
   const [activeTab, setActiveTab] = useState('Employee')
@@ -16,7 +17,7 @@ const EmployeeManagement = () => {
   const { data: centersData, isFetching: isCentersFetching } =
     useAllCentersQuery()
   console.log('centersData: ', centersData)
-    const [tableParams, setTableParams] = useState({
+  const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
   })
@@ -26,7 +27,8 @@ const EmployeeManagement = () => {
   }
   const employeeOrCenter = [
     { id: 1, name: 'Employee' },
-    { id: 2, name: 'Salary Structure' }
+    { id: 2, name: 'Salary Structure' },
+    { id: 3, name: 'Payroll' }
   ]
 
   return (
@@ -65,11 +67,16 @@ const EmployeeManagement = () => {
           onChange={value => setActiveTab(value)}
         />
 
-        {activeTab === 'Employee' ? (
-          <Employee open={open} setOpen={setOpen} tableParams={tableParams} setTableParams={setTableParams} />
-        ) : (
-          <SalaryStructure />
+        {activeTab === 'Employee' && (
+          <Employee
+            open={open}
+            setOpen={setOpen}
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
         )}
+        {activeTab === 'Salary Structure' && <SalaryStructure />}
+        {activeTab === 'Payroll' && <Payroll />}
         <AddEditForm
           open={open}
           setOpen={setOpen}

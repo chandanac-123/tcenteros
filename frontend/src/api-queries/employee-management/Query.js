@@ -12,7 +12,9 @@ import {
   getEmployeeById,
   updateEmployeeStatus,
   deleteMultipleEmployees,
-  getEmployeesDropdown
+  getEmployeesDropdown,
+  getPayroll,
+  runPayroll
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -178,12 +180,35 @@ export const useDeleteMultipleEmployeeMutation = () => {
   })
 }
 
-
 export const useEmployeesDropdownQuery = () => {
   return useQuery({
     queryKey: ['employees'],
     queryFn: () => getEmployeesDropdown(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const usePayrollQuery = data => {
+  return useQuery({
+    queryKey: ['payroll', data],
+    queryFn: () => getPayroll(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useRunPayrollMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: () => runPayroll(),
+    onSuccess: async data => {
+      query.invalidateQueries('payroll')
+      showSuccess('Payroll run successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.detail || 'Failed to run payroll')
+      return err
+    }
   })
 }
