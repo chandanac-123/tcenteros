@@ -1,8 +1,7 @@
 const SummaryCard = ({
   title,
   amount,
-  currency = 'RS',
-  className = '',
+  currency = '₹',
   colorTheme
 }) => {
   return (

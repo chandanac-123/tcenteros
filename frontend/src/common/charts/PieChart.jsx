@@ -86,7 +86,7 @@ const PieChart = ({ dataConfig }) => {
                 </span>
 
                 <span className='text-sm font-medium text-black'>
-                  ₹{item.value.toLocaleString()}
+                  ₹{item.value}
                 </span>
               </div>
             </div>
