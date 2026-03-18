@@ -1,5 +1,5 @@
 import React from 'react'
-import ContentLayout from "@common/masterLayout/ContentLayout"
+import ContentLayout from "@common/MasterLayout/ContentLayout"
 import { Button } from '@pages/components/ui/button'
 import { useGetNetworkingBookingByIdQuery } from '@api-queries/network/Query'
 import { useParams } from 'react-router-dom'

@@ -1,4 +1,4 @@
-import ContentLayout from '@common/masterLayout/ContentLayout'
+import ContentLayout from '@common/MasterLayout/ContentLayout'
 import LineChart from '@common/charts/LineChart'
 import SubCard from './components/Cards'
 import { Card } from '@pages/components/ui/card'

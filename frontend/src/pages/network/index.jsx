@@ -1,4 +1,4 @@
-import ContentLayout from "@common/masterLayout/ContentLayout"
+import ContentLayout from "@common/MasterLayout/ContentLayout"
 import { Switch } from "@pages/components/ui/switch"
 import NetworkTables from "./NetworkTables"
 import CustomeTab from '@common/components/CustomeTab'
