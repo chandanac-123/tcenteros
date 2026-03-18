@@ -78,7 +78,7 @@ const Accounts = () => {
   const expenseDataConfig = [
     {
       key: 'networking',
-      label: 'Salary',
+      label: 'Networking ',
       value: data?.expense_breakdown?.networking?.value,
       color: '#3B82F6'
     },

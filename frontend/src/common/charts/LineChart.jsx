@@ -70,15 +70,30 @@ const LineChart = ({
     }))
   }
 
-  const data = {
-    labels,
-    datasets: datasets.map(ds => ({
-      ...ds,
-      tension: 0.4,
-      borderWidth: 2,
-      pointRadius: 0
-    }))
-  }
+  const hasData = datasets.some(ds => ds.data?.some(val => val > 0))
+
+  const data = hasData
+    ? {
+        labels,
+        datasets: datasets.map(ds => ({
+          ...ds,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 0
+        }))
+      }
+    : {
+        labels: ['No Data'],
+        datasets: [
+          {
+            label: 'No Data',
+            data: [1],
+            borderColor: '#E5E7EB',
+            backgroundColor: '#E5E7EB',
+            tension: 0.4
+          }
+        ]
+      }
 
   const options = {
     responsive: true,
@@ -118,31 +133,39 @@ const LineChart = ({
 
   return (
     <div className='w-full flex flex-col'>
-      <div className='h-60 w-full'>
+      <div className='h-60 w-full flex items-center justify-center relative'>
+        {!hasData && (
+          <span className='absolute text-gray-400 text-sm'>
+            No Data Available
+          </span>
+        )}
+
         <Line ref={chartRef} data={data} options={options} />
       </div>
 
-      <div className='flex gap-8 justify-center py-3'>
-        {datasets.map(ds => (
-          <div
-            key={ds.label}
-            onClick={() => toggleDataset(ds.label)}
-            className='flex items-center gap-2 cursor-pointer'
-          >
-            <span
-              className='w-6 h-2 rounded'
-              style={{ backgroundColor: ds.borderColor }}
-            />
-            <span
-              className={`text-sm ${
-                visibleDatasets[ds.label] ? 'text-black' : 'text-gray-400'
-              }`}
+      {hasData && (
+        <div className='flex gap-8 justify-center py-3'>
+          {datasets.map(ds => (
+            <div
+              key={ds.label}
+              onClick={() => toggleDataset(ds.label)}
+              className='flex items-center gap-2 cursor-pointer'
             >
-              {ds.label}
-            </span>
-          </div>
-        ))}
-      </div>
+              <span
+                className='w-6 h-2 rounded'
+                style={{ backgroundColor: ds.borderColor }}
+              />
+              <span
+                className={`text-sm ${
+                  visibleDatasets[ds.label] ? 'text-black' : 'text-gray-400'
+                }`}
+              >
+                {ds.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
