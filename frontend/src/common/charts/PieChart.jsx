@@ -16,15 +16,16 @@ const PieChart = ({ dataConfig }) => {
       [key]: !prev[key]
     }))
   }
+  const values = dataConfig.map(item => (visible[item.key] ? item.value : 0))
+  const total = values.reduce((sum, val) => sum + val, 0)
 
   const chartData = {
     labels: dataConfig.map(item => item.label),
     datasets: [
       {
-        data: dataConfig.map(item =>
-          visible[item.key] ? item.value : 0
-        ),
-        backgroundColor: dataConfig.map(item => item.color),
+        data: total === 0 ? [1] : values, // 👈 trick
+        backgroundColor:
+          total === 0 ? ['#e5e7eb'] : dataConfig.map(item => item.color),
         borderWidth: 0
       }
     ]
@@ -50,9 +51,12 @@ const PieChart = ({ dataConfig }) => {
 
   return (
     <div className='flex items-center justify-between w-full gap-6'>
-      
       {/* 🔥 PIE CHART */}
-      <div className='h-44 w-44'>
+      <div className='h-44 w-44 flex items-center justify-center relative'>
+        {total === 0 && (
+          <span className='absolute text-xs text-gray-400'>No Data</span>
+        )}
+
         <Pie data={chartData} options={options} />
       </div>
 
@@ -86,7 +90,7 @@ const PieChart = ({ dataConfig }) => {
                 </span>
 
                 <span className='text-sm font-medium text-black'>
-                  ₹{item.value.toLocaleString()}
+                  ₹{item.value}
                 </span>
               </div>
             </div>

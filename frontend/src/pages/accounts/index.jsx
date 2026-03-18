@@ -7,11 +7,10 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import PieChart from '@common/charts/PieChart'
 import { useAccountsOverviewQuery } from '@api-queries/accounts/Query'
-import { useDashboardQuery } from '@api-queries/Dashboard/Query'
 
 const Accounts = () => {
-  // const { data, isLoading, isError } = useAccountsOverviewQuery()
-  const { data, isLoading, error } = useDashboardQuery()
+  const { data, isLoading, isError } = useAccountsOverviewQuery()
+  console.log('data: ', data)
 
   const revenueLabels = data?.revenue_trend?.map(i => i.month) || []
   const incomeData = data?.revenue_trend?.map(i => i.income) || []
@@ -19,11 +18,12 @@ const Accounts = () => {
   const expenseData = data?.revenue_trend?.map(i => i.expense) || []
 
   const navigate = useNavigate()
+
   const summaryData = [
-    { title: 'Total Income', amount: 3000 },
-    { title: 'Total Expense', amount: 1200 },
-    { title: 'Net Profit', amount: 1800 },
-    { title: 'Pending Payment', amount: 500 }
+    { title: 'Total Income', amount: data?.totals?.income },
+    { title: 'Total Expense', amount: data?.totals?.expense },
+    { title: 'GST Payable', amount: data?.totals?.gst_payable },
+    { title: 'Payroll', amount: data?.totals?.payroll_expense }
   ]
   const colorPalette = [
     {
@@ -49,27 +49,63 @@ const Accounts = () => {
   ]
 
   const incomeDataConfig = [
-    { key: 'membership', label: 'Membership ', value: 5000, color: '#8A00FF' },
-    { key: 'networking', label: 'Networking ', value: 3000, color: '#EB4824' },
+    {
+      key: 'membership',
+      label: 'Membership ',
+      value: data?.income_breakdown?.membership?.value,
+      color: '#8A00FF'
+    },
+    {
+      key: 'networking',
+      label: 'Networking ',
+      value: data?.income_breakdown?.network?.value,
+      color: '#EB4824'
+    },
     {
       key: 'inventory',
       label: 'Inventory Sales',
-      value: 2000,
+      value: data?.income_breakdown?.inventory_sales?.value,
       color: '#FFCD0F'
     },
-    { key: 'other', label: 'Other Income', value: 1000, color: '#A3AED0' }
+    {
+      key: 'other',
+      label: 'Other Income',
+      value: data?.income_breakdown?.other?.value,
+      color: '#A3AED0'
+    }
   ]
+
   const expenseDataConfig = [
-    { key: 'networking', label: 'Salary', value: 4000, color: '#3B82F6' },
-    { key: 'branching', label: 'Branching', value: 2000, color: '#EF4444' },
-    { key: 'salary', label: 'Salary ', value: 1500, color: '#F59E0B' },
+    {
+      key: 'networking',
+      label: 'Networking ',
+      value: data?.expense_breakdown?.networking?.value,
+      color: '#3B82F6'
+    },
+    {
+      key: 'branching',
+      label: 'Branching',
+      value: data?.expense_breakdown?.branching?.value,
+      color: '#EF4444'
+    },
+    {
+      key: 'salary',
+      label: 'Salary ',
+      value: data?.expense_breakdown?.salary?.value,
+      color: '#F59E0B'
+    },
     {
       key: 'inventory',
       label: 'Inventory Purchase',
-      value: 1500,
+      value: data?.expense_breakdown?.inventory_purchase?.value,
       color: '#F59E0B'
     },
-    { key: 'other', label: 'Other ', value: 1000, color: '#10B981' }
+    {
+      key: 'other',
+      label: 'Other ',
+      value: data?.expense_breakdown?.other?.value,
+      color: '#10B981'
+    }
   ]
 
   return (
@@ -135,7 +171,7 @@ const Accounts = () => {
         </div>
 
         <div className='lg:col-span-2 flex flex-col gap-4'>
-          <Card className='lg:flex-1'>
+          <Card className='lg:flex-2'>
             <div className='flex flex-col p-4 h-full'>
               <div className='flex justify-between py-4'>
                 <span className='text-lg font-semibold text-textblack'>

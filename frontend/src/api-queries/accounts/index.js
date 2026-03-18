@@ -31,4 +31,4 @@ export const getAccountsSettlementsApiCall = data =>
     `/accounts/settlements?page=${data?.page || 1}&search=${data?.search || ''}`
   )
 export const getAccountsOverviewApiCall = () =>
-  axiosInstance.get(`/accounts/overview`)
+  axiosInstance.get(`/accounts/dashboard/accounting`)
