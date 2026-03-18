@@ -20,7 +20,7 @@ const AddProductCategory = ({ open, onOpenChange }) => {
     onSubmit: async values => {
       try {
         await create(values)
-        setOpen(false)
+        onOpenChange(false)
         formik.resetForm()
       } catch (error) {
         console.error(error)

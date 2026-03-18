@@ -1,5 +1,6 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllInventoryQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Inventory = () => {
    const [tableParams, setTableParams] = useState({

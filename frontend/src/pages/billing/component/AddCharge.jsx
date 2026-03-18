@@ -24,7 +24,7 @@ const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
     transaction_type: '',
     payment_method: '',
     category: '',
-    amount: '',
+    amount: null,
     title: ''
   }
 
@@ -76,6 +76,7 @@ const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
           label='Amount'
           placeholder='Enter amount'
           name='amount'
+          type= 'number'
           value={formik.values.amount}
           onChange={formik.handleChange}
           error={formik.touched.amount && formik.errors.amount}

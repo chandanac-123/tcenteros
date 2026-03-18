@@ -1,5 +1,6 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllExpensesQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Expense = () => {
   const [tableParams, setTableParams] = useState({
@@ -8,14 +9,11 @@ const Expense = () => {
   })
   const { data, isLoading, isError } = useAllExpensesQuery(tableParams)
   const columns = [
-    { accessorKey: 'income_type', header: 'Income Type' },
-    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'expense_type', header: 'Expense Type' },
     { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'account_code', header: 'Account Code' },
     { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'tax_amount', header: 'Tax Amount' },
-    { accessorKey: 'total_amount', header: 'Total Amount' },
+    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'description', header: 'Description' }
   ]
   return (

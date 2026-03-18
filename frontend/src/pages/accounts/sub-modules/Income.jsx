@@ -9,11 +9,10 @@ const Income = () => {
   })
   const { data, isLoading, isError } = useAllIncomeQuery(tableParams)
   const columns = [
+    { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'income_type', header: 'Income Type' },
     { accessorKey: 'source', header: 'Source' },
-    { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'account_code', header: 'Account Code' },
     { accessorKey: 'amount', header: 'Amount' },
     { accessorKey: 'tax_amount', header: 'Tax Amount' },
     { accessorKey: 'total_amount', header: 'Total Amount' },

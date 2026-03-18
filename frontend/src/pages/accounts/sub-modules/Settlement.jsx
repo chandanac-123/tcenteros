@@ -1,5 +1,6 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllSettlementsQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Settlement = () => {
    const [tableParams, setTableParams] = useState({

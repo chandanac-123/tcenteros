@@ -1,5 +1,6 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllPayrollQuery } from '@api-queries/accounts/Query'
+import { useState } from 'react'
 
 const Payroll = () => {
   const [tableParams, setTableParams] = useState({
@@ -8,15 +9,12 @@ const Payroll = () => {
   })
   const { data, isLoading, isError } = useAllPayrollQuery(tableParams)
   const columns = [
-    { accessorKey: 'income_type', header: 'Income Type' },
-    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'account_code', header: 'Account Code' },
-    { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'tax_amount', header: 'Tax Amount' },
-    { accessorKey: 'total_amount', header: 'Total Amount' },
-    { accessorKey: 'description', header: 'Description' }
+    { accessorKey: 'employee_name', header: 'Employee Name' },
+    { accessorKey: 'gross_salary', header: 'Gross Salary' },
+    { accessorKey: 'net_salary', header: 'Net Salary' },
+    { accessorKey: 'status', header: 'Status' },
   ]
   return (
     <>

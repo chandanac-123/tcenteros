@@ -9,15 +9,14 @@ const Ledger = () => {
   })
   const { data, isLoading, isError } = useAllLedgerQuery(tableParams)
   const columns = [
-    { accessorKey: 'account_code', header: 'Account Code' },
+    { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'account_name', header: 'Accounts Name' },
     { accessorKey: 'account_type', header: 'Account Type' },
     { accessorKey: 'source', header: 'Source' },
-    { accessorKey: 'date', header: 'Payroll Date' },
+    { accessorKey: 'date', header: 'Date' },
     { accessorKey: 'credit', header: 'Credit' },
     { accessorKey: 'debit', header: 'Debit' },
     { accessorKey: 'balance', header: 'Balance' },
-    { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'description', header: 'Description' }
   ]
 
