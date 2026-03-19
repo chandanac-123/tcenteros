@@ -72,7 +72,7 @@ const Wallet = () => {
             type='submit'
           >  + {buttonLabel}</Button>
         </div>
-        <AddWallet open={open} setOpen={setOpen} refetchWalletAmount={refetchWalletAmount} />
+        <AddWallet open={open} setOpen={setOpen} refetchWalletAmount={refetchWalletAmount} topUp={true} />
 
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
 

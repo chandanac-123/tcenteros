@@ -5,7 +5,7 @@ import { Button } from '@pages/components/ui/button'
 import { useCreateWalletAmountMutation } from '@api-queries/wallet/Query'
 import { showError, showSuccess } from '@utils/toast'
 
-const AddWallet = ({ open, setOpen, refetchWalletAmount }) => {
+const AddWallet = ({ open, setOpen, refetchWalletAmount , topUp }) => {
   const [amount, setAmount] = useState('')
   const { mutate: createWalletAmount, isPending } =
     useCreateWalletAmountMutation()
@@ -37,7 +37,7 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount }) => {
     <CustomeModal open={open} onOpenChange={setOpen}>
       <form className='space-y-2' onSubmit={handleAddWalletAmount}>
         <h2 className='min-w-[300px] text-[20px] leading-[30px] bg-[#F0DEFF] rounded-lg p-3'>
-          Add Wallet
+           Add Wallet
         </h2>
         <Input
           label='Amount'
@@ -45,7 +45,11 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount }) => {
           value={amount}
           onChange={e => setAmount(e.target.value)}
         />
-        <p className='text-xs text-onboard_secondary'>Add minimum 20,000</p>
+        {topUp ? (
+          <p className='text-xs text-onboard_secondary'>Wallet should have a minimum of 10,000</p>
+        ) : (
+          <p className='text-xs text-onboard_secondary'>Deposit amount should be 20,000</p>
+        )}
         <div className='flex justify-center gap-3'>
           <Button
             variant='onboard_button_filled'
