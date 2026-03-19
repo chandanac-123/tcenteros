@@ -410,6 +410,7 @@ async def create_onboarding_temp(
     """
     Create temporary onboarding record with pricing calculation.
     Supports monthly and yearly subscriptions.
+    Checks for duplicate email in onboarding and user tables.
     """
     # Validate subscription_duration
     if data.subscription_duration not in ["monthly", "yearly"]:
@@ -417,7 +418,27 @@ async def create_onboarding_temp(
             status_code=400,
             detail="subscription_duration must be 'monthly' or 'yearly'"
         )
-    
+
+    # Check for duplicate email in onboarding temp table
+    existing_temp = await db.execute(
+        select(CenterOnboardingTemp).where(CenterOnboardingTemp.center_email == data.center_email)
+    )
+    if existing_temp.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail="A center onboarding with this email already exists"
+        )
+
+    # Check for duplicate email in user table
+    existing_user = await db.execute(
+        select(User).where(User.email == data.center_email)
+    )
+    if existing_user.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail="A user with this email already exists"
+        )
+
     # Convert UUIDs to strings for JSON storage
     feature_ids = [str(fid) for fid in data.platform_feature_ids]
 
