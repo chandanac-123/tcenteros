@@ -30,3 +30,7 @@
   width: 4px;
   height: 4px;
 }
+.pac-container {
+  z-index: 999999 !important;
+   pointer-events: auto !important;
+}

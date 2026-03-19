@@ -44,8 +44,7 @@ const MembershipPlan = () => {
       </div>
       {data?.length === 0 && (
         <p className='flex justify-center items-center font-semibold font-poppins'>
-          NO ACTIVETED MEMBERSHIP PLANS AVAILABLE, CREATE A NEW PLAN TO START
-          OFFERING MEMBERSHIPS TO YOUR CUSTOMERS.
+          NO MORE PLANS AVAILABLE
         </p>
       )}
       {data?.length > 0 && (
