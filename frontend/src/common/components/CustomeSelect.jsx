@@ -51,18 +51,33 @@ export default function CustomeSelect ({
         </SelectTrigger>
 
         <SelectContent className='max-h-[180px] overflow-y-auto'>
-          {search && (
-            <div className='p-2'>
-              <input
-                type='text'
-                placeholder='Search...'
-                value={searchVal}
-                onChange={e => setSearchVal(e.target.value)}
-                onKeyDown={e => e.stopPropagation()}
-                className='w-full border rounded px-2 py-1 text-sm'
-              />
-            </div>
-          )}
+          {search &&
+            options?.length >
+              10&&(
+                <div className='p-2'>
+                  <input
+                    type='text'
+                    placeholder='Search...'
+                    autoFocus
+                    value={searchVal}
+                    onChange={e => setSearchVal(e.target.value)}
+                    onKeyDown={e => {
+                      // allow typing
+                      if (
+                        e.key === 'ArrowDown' ||
+                        e.key === 'ArrowUp' ||
+                        e.key === 'Enter'
+                      ) {
+                        // let Select handle navigation
+                        return
+                      }
+
+                      e.stopPropagation()
+                    }}
+                    className='w-full border rounded px-2 py-1 text-sm'
+                  />
+                </div>
+              )}
 
           {filteredOptions.map(item => {
             const label =
@@ -88,6 +103,10 @@ export default function CustomeSelect ({
                     item?.product_id ||
                     item?.member_membership_id
                 )}
+                className='
+    cursor-pointer
+    focus:bg-greylight focus:text-textblack
+  '
               >
                 {label}
               </SelectItem>

@@ -11,11 +11,27 @@ import { useOnboardingStore } from '@store/onboardingStore'
 const MarketingSupport = () => {
   const navigate = useNavigate()
 
- const { marketingSupportType, setMarketingSupportType } = useOnboardingStore()
+  const { marketingSupportType, setMarketingSupportType } = useOnboardingStore()
 
-  const handleSelect = id => {
-    setMarketingSupportType(id)
+ const handleSelect = id => {
+  if (id === 'none') {
+    setMarketingSupportType(['none'])
+    return
   }
+
+  let updated = [...marketingSupportType]
+
+  // remove 'none' if selecting other options
+  updated = updated.filter(item => item !== 'none')
+
+  if (updated.includes(id)) {
+    updated = updated.filter(item => item !== id)
+  } else {
+    updated.push(id)
+  }
+
+  setMarketingSupportType(updated)
+}
 
   return (
     <SecondaryLayout>
@@ -44,7 +60,7 @@ const MarketingSupport = () => {
             <SelectionWithoutCheckbox
               key={item.id}
               item={item}
-              selected={marketingSupportType === item.id}
+              selected={marketingSupportType.includes(item.id)}
               onSelect={() => handleSelect(item.id)}
             />
           ))}
@@ -63,8 +79,8 @@ const MarketingSupport = () => {
             <input
               type='radio'
               name='marketing-support'
-              checked={marketingSupportType === 'none'}
-              onChange={() => handleSelect('none')}
+              checked={marketingSupportType.includes('none')}
+             onChange={() => setMarketingSupportType(['none'])}
               className='w-5 h-5 accent-onboard_primary'
             />
             <span className='flex-1'>None of the above</span>
@@ -74,8 +90,12 @@ const MarketingSupport = () => {
 
       {/* Footer */}
       <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button variant='outline_secondary' size='sm' leftIcon={backarrow}
-        onClick={() => navigate('/smart-recommandation')}>
+        <Button
+          variant='outline_secondary'
+          size='sm'
+          leftIcon={backarrow}
+          onClick={() => navigate('/smart-recommandation')}
+        >
           Back
         </Button>
 

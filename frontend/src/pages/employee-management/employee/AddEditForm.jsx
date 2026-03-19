@@ -1,6 +1,5 @@
 import { Input } from '@pages/components/ui/input'
 import SelectCategory from '@common/components/SelectCategory'
-import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
@@ -17,6 +16,15 @@ import { employeeValidationSchema } from '@utils/validations'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { format } from 'date-fns'
 import AddCategory from '../category/AddCategory'
+import CitySelect from '@common/components/CitySelect'
+import StateSelect from '@common/components/StateSelect'
+import CountrySelect from '@common/components/CountrySelect'
+import {
+  getCountryCode,
+  getCountryName,
+  getStateCode,
+  getStateName
+} from '@utils/helper'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
@@ -33,8 +41,12 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     mobile: employeeData?.mobile || '',
     qualification: employeeData?.qualification || '',
     experience: employeeData?.experience || '',
-    country: employeeData?.address?.country || '',
-    state: employeeData?.address?.state || '',
+    country: getCountryCode(employeeData?.address?.country) || '',
+    state:
+      getStateCode(
+        getCountryCode(employeeData?.address?.country),
+        employeeData?.address?.state
+      ) || '',
     city: employeeData?.address?.city || '',
     pin: employeeData?.address?.pin || '',
     address: employeeData?.address?.address || '',
@@ -52,9 +64,14 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     onSubmit: async values => {
       try {
         const fd = new FormData()
+
+        // ✅ convert ISO → Name
+        const finalValues = {
+          ...values,
+          country: getCountryName(values.country),
+          state: getStateName(values.country, values.state)
+        }
         if (id) {
-          // 🔥 EDIT MODE
-          // append only editable fields
           const allowedFields = [
             'full_name',
             'email',
@@ -67,20 +84,20 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             'pin',
             'address'
           ]
-
           allowedFields.forEach(field => {
-            if (values[field] !== undefined && values[field] !== null) {
-              fd.append(field, values[field])
+            if (
+              finalValues[field] !== undefined &&
+              finalValues[field] !== null
+            ) {
+              fd.append(field, finalValues[field])
             }
           })
-          // only append image if user selected new file
           if (values.profile_photo instanceof File) {
             fd.append('profile_photo', values.profile_photo)
           }
           await updateEmployee({ id, data: fd })
         } else {
-          // 🔥 CREATE MODE
-          Object.entries(values).forEach(([key, value]) => {
+          Object.entries(finalValues).forEach(([key, value]) => {
             if (key !== 'profile_photo' && value) {
               fd.append(key, value)
             }
@@ -120,7 +137,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
             <>
               <span>Select Category</span>
               <div className='w-full'>
-                <div className='grid grid-cols-2 md:grid-cols-5 gap-2'>
+                <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2'>
                   {data?.map(item => (
                     <SelectCategory
                       key={item.id}
@@ -206,29 +223,33 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               />
             </div>
             <div className='flex-1'>
-              <Input
-                label='Country'
-                name='country'
+              <CountrySelect
                 value={formik.values.country}
-                onChange={formik.handleChange}
+                onChange={val => {
+                  formik.setFieldValue('country', val)
+                  formik.setFieldValue('state', '')
+                  formik.setFieldValue('city', '')
+                }}
               />
             </div>
           </div>
           <div className='flex gap-4'>
             <div className='flex-1'>
-              <Input
-                label='State'
-                name='state'
+              <StateSelect
+                country={formik.values.country}
                 value={formik.values.state}
-                onChange={formik.handleChange}
+                onChange={val => {
+                  formik.setFieldValue('state', val)
+                  formik.setFieldValue('city', '')
+                }}
               />
             </div>
             <div className='flex-1'>
-              <Input
-                label='City'
-                name='city'
+              <CitySelect
+                country={formik.values.country}
+                state={formik.values.state}
                 value={formik.values.city}
-                onChange={formik.handleChange}
+                onChange={val => formik.setFieldValue('city', val)}
               />
             </div>
           </div>

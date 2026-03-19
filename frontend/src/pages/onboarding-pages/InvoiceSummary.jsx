@@ -206,16 +206,18 @@ const InvoiceSummary = () => {
           )}
         </div>
         {/* Bottom Back Button */}
-        <div className='mt-6'>
-          <Button
-            variant='outline_secondary'
-            size='sm'
-            leftIcon={backarrow}
-            onClick={() => navigate('/pricing-page')}
-          >
-            Back
-          </Button>
-        </div>
+        {isLoading && (
+          <div className='mt-6'>
+            <Button
+              variant='outline_secondary'
+              size='sm'
+              leftIcon={backarrow}
+              onClick={() => navigate('/pricing-page')}
+            >
+              Back
+            </Button>
+          </div>
+        )}
       </div>
     </SecondaryLayout>
   )

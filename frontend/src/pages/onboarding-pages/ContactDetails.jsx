@@ -14,19 +14,20 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
 import CustomeSelect from '@common/components/CustomeSelect'
+import { City } from 'country-state-city'
 
-  const packageOptions = [
-    { id: 'monthly', name: 'Monthly' },
-    { id: 'yearly', name: 'Yearly' }
-  ]
-
+const packageOptions = [
+  { id: 'monthly', name: 'Monthly' },
+  { id: 'yearly', name: 'Yearly' }
+]
 
 const ContactDetails = () => {
   const navigate = useNavigate()
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
-
+  const cities = City.getCitiesOfState('IN', 'KL') // India, Kerala
+  
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
     .map(tool => tool.feature_id)
@@ -55,7 +56,7 @@ const ContactDetails = () => {
         : 5,
     currently_using_digital_tool: store.digitalToolsSelected || [],
     marketing_platform: store.marketingSupportType
-      ? [store.marketingSupportType]
+      ? store.marketingSupportType
       : [],
     platform_feature_ids: store.centerTools ? enabledFeatureIds : [],
     subscription_duration: ''
@@ -149,14 +150,20 @@ const ContactDetails = () => {
                   formik.touched.center_phone && formik.errors.center_phone
                 }
               />
-              <Input
+              <CustomeSelect
                 label='City'
                 name='city'
                 placeholder='City'
+                options={cities.map(city => ({
+                  id: city.name,
+                  name: city.name
+                }))}
+                 search={true}
                 icon={<MapPin className='w-5 h-5 text-onboard_primary mr-2' />}
                 value={formik.values.city}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                onChange={value =>
+                  formik.setFieldValue('city', value)
+                }
                 error={formik.touched.city && formik.errors.city}
               />
               <CustomeSelect
@@ -164,8 +171,13 @@ const ContactDetails = () => {
                 name='subscription_duration'
                 options={packageOptions}
                 value={formik.values.subscription_duration}
-                onChange={value => formik.setFieldValue('subscription_duration', value)}
-                error={formik.touched.subscription_duration && formik.errors.subscription_duration}
+                onChange={value =>
+                  formik.setFieldValue('subscription_duration', value)
+                }
+                error={
+                  formik.touched.subscription_duration &&
+                  formik.errors.subscription_duration
+                }
                 placeholder='Select Subscription Duration'
               />
               <div className='flex flex-col'>
