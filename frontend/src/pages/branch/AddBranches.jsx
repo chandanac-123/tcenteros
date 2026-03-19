@@ -10,7 +10,7 @@ import SuccessModal from './message-popup/success'
 import { useNavigate } from 'react-router-dom'
 
 const AddBranches = () => {
-  const [count, setCount] = useState(1)
+  const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
   const { data, isLoading } = useGetBranchPricesAndTaxQuery()
   const [openSuccess, setOpenSuccess] = useState(false)

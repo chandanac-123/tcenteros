@@ -34,7 +34,6 @@ const InvoiceSummary = () => {
     enableReinitialize: true,
     validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
-      console.log('values: ', values)
       try {
         const response = await finalize(values)
         setSuccess(true)
@@ -206,16 +205,18 @@ const InvoiceSummary = () => {
           )}
         </div>
         {/* Bottom Back Button */}
-        <div className='mt-6'>
-          <Button
-            variant='outline_secondary'
-            size='sm'
-            leftIcon={backarrow}
-            onClick={() => navigate('/pricing-page')}
-          >
-            Back
-          </Button>
-        </div>
+        {!success && !isFetching && (
+          <div className='mt-6'>
+            <Button
+              variant='outline_secondary'
+              size='sm'
+              leftIcon={backarrow}
+              onClick={() => navigate('/pricing-page')}
+            >
+              Back
+            </Button>
+          </div>
+        )}
       </div>
     </SecondaryLayout>
   )

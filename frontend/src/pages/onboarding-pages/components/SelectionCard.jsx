@@ -15,6 +15,7 @@ const SelectionCard = ({ item, selected, onSelect }) => {
       <img
         src={item?.image_url}
         alt={item?.name}
+        loading="lazy"
         className='w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] lg:w-[222px] lg:h-[220px] object-cover rounded-lg'
       />
 
