@@ -13,10 +13,9 @@ def upload_file(file_bytes, key, content_type="image/jpeg"):
         key,
         ExtraArgs={
             "ContentType": content_type,
-            "ACL": "public-read",  # Make the file public
         },
     )
-    return key  # Always return only the key
+    return key
 
 def get_file_url(key: str):
     import urllib.parse

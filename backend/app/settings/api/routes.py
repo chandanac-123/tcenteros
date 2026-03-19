@@ -40,41 +40,49 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def create_center_category(
-    name: str,
-    code: str,
+    name: str = Form(...),
+    code: str = Form(...),
     image: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user),
 ):
     if current_user["role"] != "superadmin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only superadmin can create center categories",
-        )
+        raise HTTPException(status_code=403, detail="Only superadmin can create center categories.")
 
-    image_key = f"center_categories/{uuid.uuid4()}_{image.filename}"
+    image_key = f"center_categories/{uuid4()}_{image.filename}"
     image_bytes = await image.read()
     upload_file(image_bytes, image_key, image.content_type)
-    image_url = image_key  # Or construct the S3 public URL if needed
-
+    # Store only the key in DB
     category = CenterCategory(
         name=name,
         code=code,
-        image_url=image_url,
+        image_url=image_key,
     )
 
     session.add(category)
     await session.commit()
     await session.refresh(category)
 
-    return category
+    # Return with public URL
+    return {
+        **category.__dict__,
+        "image_url": get_file_url(category.image_url) if category.image_url else None
+    }
 
 @router.get("/center-categories/", response_model=list[CenterCategoryOut])
 async def list_center_categories(
     session: AsyncSession = Depends(get_async_session)
 ):
     result = await session.execute(select(CenterCategory))
-    return result.scalars().all()
+    categories = result.scalars().all()
+    # Return with public URLs
+    return [
+        {
+            **cat.__dict__,
+            "image_url": get_file_url(cat.image_url) if cat.image_url else None
+        }
+        for cat in categories
+    ]
 
 
 #TaxCategory
