@@ -9,32 +9,95 @@ const axiosInstance = axios.create({
   }
 })
 
+let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
+//  REQUEST INTERCEPTOR
 axiosInstance.interceptors.request.use(
   config => {
-    // Get the accessToken from zustand store
     const state = useAuthStore.getState()
-    // Try to get token from both accessToken and auth object
-    const token = state?.accessToken || state?.auth?.access_token
+    const token = state.accessToken
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-    } else {
-      delete config.headers.Authorization
     }
     return config
   },
   error => Promise.reject(error)
 )
 
-// Optionally, you can inject a logout handler here if needed
+// RESPONSE INTERCEPTOR (REFRESH LOGIC)
 axiosInstance.interceptors.response.use(
   response => response,
-  error => {
-    if (error.response && error.response.status === 401) {
-      // Clear auth store and redirect to login
-      const state = useAuthStore.getState()
-      if (state.clearAuth) state.clearAuth()
+  async error => {
+    const originalRequest = error.config
+    const state = useAuthStore.getState()
+    // If not 401 → reject
+    if (error.response?.status !== 401) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+    //  Prevent infinite loop
+    if (originalRequest._retry) {
+      state.clearAuth()
+      return Promise.reject(error)
+    }
+    originalRequest._retry = true
+    const refreshToken = state.refreshToken
+    if (!refreshToken) {
+      state.clearAuth()
+      return Promise.reject(error)
+    }
+
+    //  If already refreshing → queue requests
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject })
+      })
+        .then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return axiosInstance(originalRequest)
+        })
+        .catch(err => Promise.reject(err))
+    }
+    isRefreshing = true
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/auth/refresh`,
+        {
+          refresh_token: refreshToken
+        }
+      )
+      const newAccess = response.data.access
+      const newRefresh = response.data.refresh
+
+      // Update Zustand
+      state.setAuth({
+        access_token: newAccess,
+        refresh_token: newRefresh
+      })
+      axiosInstance.defaults.headers.Authorization = `Bearer ${newAccess}`
+      processQueue(null, newAccess)
+      originalRequest.headers.Authorization = `Bearer ${newAccess}`
+      return axiosInstance(originalRequest)
+    } catch (err) {
+      processQueue(err, null)
+      state.clearAuth()
+      // optional redirect
+      window.location.href = '/login'
+      return Promise.reject(err)
+    } finally {
+      isRefreshing = false
+    }
   }
 )
 
