@@ -780,34 +780,21 @@ async def finalize_onboarding(
         
         await db.flush()
 
-        # 14. Initialize Center Wallet
-        center_wallet = CenterWallet(
-            id=uuid4(),
-            center_id=center.id,
-            balance=0.0,
-            deposit=0.0,
-            min_balance=10000.0,
-            min_deposit=2000.0,
-            created_by=center_admin.id,
-            updated_by=center_admin.id,
-        )
-        db.add(center_wallet)
-        await db.flush()
 
-        # 15. Delete the temp record
+        # 14. Delete the temp record
         await db.delete(temp)
         
-        # 16. Commit all changes
+        # 15. Commit all changes
         await db.commit()
         
-        # 17. Refresh all objects
+        # 16. Refresh all objects
         await db.refresh(center)
         await db.refresh(center_admin)
         await db.refresh(payment_order)
         for sub in feature_subscriptions:
             await db.refresh(sub)
 
-        # 18. Prepare response
+        # 17. Prepare response
         return OnboardingFinalizeResponse(
             message="Center onboarding completed successfully",
             center=CenterInfo(
