@@ -30,6 +30,9 @@ from pydantic import UUID4
 from app.settings.models.models import SKUCategory
 from app.settings.schema.schema import SKUCategoryCreate, SKUCategoryOut
 from uuid import UUID
+from app.s3.service import delete_file
+
+
 
 router = APIRouter()
 
@@ -83,6 +86,33 @@ async def list_center_categories(
         }
         for cat in categories
     ]
+
+@router.delete("/center-categories/{category_id}", status_code=204)
+async def delete_center_category(
+    category_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["role"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can delete center categories.")
+
+    result = await session.execute(select(CenterCategory).where(CenterCategory.id == category_id))
+    category = result.scalar_one_or_none()
+    if not category:
+        raise HTTPException(status_code=404, detail="Center category not found")
+
+    # Delete image from S3 if it exists
+    if category.image_url:
+        try:
+            delete_file(category.image_url)
+        except Exception as e:
+            # Log or handle error, but continue to delete the DB record
+            pass
+
+    await session.delete(category)
+    await session.commit()
+    return
+
 
 
 #TaxCategory
