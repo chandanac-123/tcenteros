@@ -60,7 +60,7 @@ export const useOnboardingStore = create(
       digitalToolsSelected: ['website'],
       setDigitalToolsSelected: value => set({ digitalToolsSelected: value }),
 
-      marketingSupportType: 'metacampaign',
+      marketingSupportType: [],
       setMarketingSupportType: value => set({ marketingSupportType: value })
     }),
     {
