@@ -5,13 +5,7 @@ import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
-import {
-  Mail,
-  User,
-  Phone,
-  MapPinCheck,
-  CalendarClock
-} from 'lucide-react'
+import { Mail, User, Phone, MapPinCheck, CalendarClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { useState } from 'react'
@@ -20,7 +14,7 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
 import CustomeSelect from '@common/components/CustomeSelect'
-import { City } from 'country-state-city'
+import { City, State } from 'country-state-city'
 
 const packageOptions = [
   { id: 'monthly', name: 'Monthly' },
@@ -32,7 +26,19 @@ const ContactDetails = () => {
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
-  const cities = City.getCitiesOfState('IN', 'KL')
+   const cities = City.getCitiesOfState('IN', 'KL')
+
+  const getAllCitiesInIndia = () => {
+    const states = State.getStatesOfCountry('IN')
+    let allCities = []
+    states.forEach(state => {
+      const cities = City.getCitiesOfState('IN', state.isoCode)
+      allCities = [...allCities, ...cities]
+    })
+    return allCities
+  }
+  const allIndianCities = getAllCitiesInIndia()
+  console.log('allIndianCities: ', allIndianCities);
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -159,7 +165,7 @@ const ContactDetails = () => {
                 <CustomeSelect
                   label='City'
                   search={true}
-                  options={cities.map(city => ({
+                  options={cities?.map(city => ({
                     id: city.name,
                     name: city.name
                   }))}

@@ -18,6 +18,7 @@ const containerStyle = {
 }
 
 function GoogleMapComponent ({ open, setLocationOpen }) {
+  const inputRef = useRef(null)
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
     libraries: ['places']
@@ -57,9 +58,9 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
     }
   })
 
-  // 📍 Get Current Location
+  // Get Current Location
   useEffect(() => {
-    if (!open) return // ✅ only run when modal opens
+    if (!open) return //  only run when modal opens
     navigator.geolocation.getCurrentPosition(
       position => {
         const lat = position.coords.latitude
@@ -78,14 +79,10 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
     )
   }, [open])
 
-  // 🔍 Search place
+  //  Search place
   const onPlaceChanged = () => {
     const place = autocompleteRef.current?.getPlace()
-    console.log('PLACE:', place) // 👈 debug
-    if (!place || !place.geometry) {
-      console.warn('No geometry found. Probably typed text only.')
-      return
-    }
+    if (!place || !place.geometry) return
     const lat = place.geometry.location.lat()
     const lng = place.geometry.location.lng()
     const location = { lat, lng }
@@ -93,7 +90,10 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
     setMarker(location)
     formik.setFieldValue('latitude', lat)
     formik.setFieldValue('longitude', lng)
-    setSearchValue(place.formatted_address || place.name || '')
+    // update input manually
+    if (inputRef.current) {
+      inputRef.current.value = place.formatted_address || place.name || ''
+    }
   }
 
   //  Click on map → move marker
@@ -109,9 +109,15 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
   return (
     <CustomeModal
       open={open}
-      onOpenChange={setLocationOpen}
+      // onOpenChange={setLocationOpen}
       className='max-w-3xl w-full'
       header='Fitness center location'
+      onInteractOutside={e => {
+        const el = document.querySelector('.pac-container')
+        if (el && el.contains(e.target)) {
+          e.preventDefault()
+        }
+      }}
     >
       <form onSubmit={formik.handleSubmit}>
         {!isLoaded || !center ? (
@@ -135,43 +141,42 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
                   top: 10,
                   display: 'flex',
                   justifyContent: 'center',
-                  zIndex: 10
+                  zIndex: 9999
                 }}
               >
-                <Autocomplete
-                  onLoad={autocomplete => {
-                    autocomplete.setFields([
-                      'formatted_address',
-                      'geometry',
-                      'name'
-                    ])
-                    autocompleteRef.current = autocomplete
-                  }}
-                  onPlaceChanged={onPlaceChanged}
-                >
-                  <input
-                    value={searchValue}
-                    onChange={e => setSearchValue(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                      }
+                <div>
+                  <Autocomplete
+                    onLoad={autocomplete => {
+                      autocomplete.setFields([
+                        'formatted_address',
+                        'geometry',
+                        'name'
+                      ])
+                      autocompleteRef.current = autocomplete
                     }}
-                    type='text'
-                    placeholder='Search location...'
-                    style={{
-                      boxSizing: 'border-box',
-                      border: '1px solid #ccc',
-                      width: '300px',
-                      height: '40px',
-                      padding: '0 12px',
-                      borderRadius: '6px',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                      fontSize: '16px',
-                      outline: 'none'
-                    }}
-                  />
-                </Autocomplete>
+                    onPlaceChanged={onPlaceChanged}
+                  >
+                    <input
+                      ref={inputRef}
+                      type='text'
+                      placeholder='Search location...'
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') e.preventDefault()
+                      }}
+                      style={{
+                        boxSizing: 'border-box',
+                        border: '1px solid #ccc',
+                        width: '300px',
+                        height: '40px',
+                        padding: '0 12px',
+                        borderRadius: '6px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                    />
+                  </Autocomplete>
+                </div>
               </div>
 
               {/* Marker */}
@@ -194,8 +199,16 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
           </div>
         )}
 
-        <div className='flex justify-end mt-3'>
-          <Button type='submit' size='addbutton' disabled={isPending}>
+        <div className='flex justify-end mt-3 gap-4'>
+          <Button
+            size='addbutton'
+            variant='outline_secondary'
+            type='button'
+            onClick={() => setLocationOpen(false)}
+          >
+            Close
+          </Button>
+          <Button type='button' size='addbutton' disabled={isPending}>
             Save Location
           </Button>
         </div>
