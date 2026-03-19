@@ -23,7 +23,7 @@ const Input = React.forwardRef(
           </label>
         )}
         {hasIcon ? (
-          <div className="flex items-center relative rounded-lg border border-bordergreylight">
+          <div className="flex items-center relative rounded-lg ">
             {iconPosition === "start" && (
               <span className="absolute left-3 flex items-center text-gray-400">
                 {icon}

@@ -5,7 +5,13 @@ import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
-import { Mail, User, Phone, MapPin } from 'lucide-react'
+import {
+  Mail,
+  User,
+  Phone,
+  MapPinCheck,
+  CalendarClock
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { useState } from 'react'
@@ -26,13 +32,12 @@ const ContactDetails = () => {
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
-  const cities = City.getCitiesOfState('IN', 'KL') // India, Kerala
-  
+  const cities = City.getCitiesOfState('IN', 'KL')
+
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
     .map(tool => tool.feature_id)
 
-  // Map all relevant store values to initialValues
   const initialValues = {
     center_name: store.center_name || '',
     contact_person: store.contact_person || '',
@@ -63,6 +68,7 @@ const ContactDetails = () => {
   }
 
   const [submitted, setSubmitted] = useState(false)
+
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
@@ -70,10 +76,14 @@ const ContactDetails = () => {
     onSubmit: async values => {
       try {
         const response = await create(values)
-        if (response && response.id) {
+        if (response?.id) {
           setOnboardId(response.id)
         }
         setSubmitted(true)
+        navigate('/pricing-page')
+        // optional smooth scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
         formik.resetForm()
       } catch (error) {
         console.log('error: ', error)
@@ -83,169 +93,164 @@ const ContactDetails = () => {
 
   return (
     <SecondaryLayout>
-      <OnboardHeader />
-      <div className='px-4 sm:px-10'>
-        <div className='flex flex-col gap-1 mb-6 text-xl font-medium'>
-          Let’s Set This Up for You
-        </div>
-        <div className='flex flex-row gap-16'>
-          {/* Left Part */}
-          <div className='w-full md:w-1/2'>
-            <form
-              id='contact-details-form'
-              className='space-y-3'
-              onSubmit={formik.handleSubmit}
-            >
-              <Input
-                label='Center Name'
-                name='center_name'
-                placeholder='Center Name'
-                icon={
-                  <img
-                    src={people_icon}
-                    alt='peopel icon'
-                    className='w-6 h-6 text-onboard_primary mr-2'
-                  />
-                }
-                value={formik.values.center_name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.center_name && formik.errors.center_name}
-              />
-              <Input
-                label='Contact Person'
-                name='contact_person'
-                placeholder='Contact Person'
-                icon={<User className='w-5 h-5 text-onboard_primary mr-2' />}
-                value={formik.values.contact_person}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.contact_person && formik.errors.contact_person
-                }
-              />
-              <Input
-                label='Email*'
-                name='center_email'
-                placeholder='Email'
-                type='email'
-                icon={<Mail className='w-5 h-5 text-onboard_primary mr-2' />}
-                value={formik.values.center_email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.center_email && formik.errors.center_email
-                }
-              />
-              <Input
-                label='Phone*'
-                name='center_phone'
-                placeholder='Phone'
-                type='tel'
-                icon={<Phone className='w-5 h-5 text-onboard_primary mr-2' />}
-                value={formik.values.center_phone}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.center_phone && formik.errors.center_phone
-                }
-              />
-              <CustomeSelect
-                label='City'
-                name='city'
-                placeholder='City'
-                options={cities.map(city => ({
-                  id: city.name,
-                  name: city.name
-                }))}
-                 search={true}
-                icon={<MapPin className='w-5 h-5 text-onboard_primary mr-2' />}
-                value={formik.values.city}
-                onChange={value =>
-                  formik.setFieldValue('city', value)
-                }
-                error={formik.touched.city && formik.errors.city}
-              />
-              <CustomeSelect
-                label='Subscription Duration'
-                name='subscription_duration'
-                options={packageOptions}
-                value={formik.values.subscription_duration}
-                onChange={value =>
-                  formik.setFieldValue('subscription_duration', value)
-                }
-                error={
-                  formik.touched.subscription_duration &&
-                  formik.errors.subscription_duration
-                }
-                placeholder='Select Subscription Duration'
-              />
-              <div className='flex flex-col'>
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id='agree'
-                    name='is_terms_and_conditions'
-                    checked={formik.values.is_terms_and_conditions === true}
-                    onCheckedChange={val =>
-                      formik.setFieldValue('is_terms_and_conditions', val)
-                    }
-                    onBlur={formik.handleBlur}
-                  />
-                  <label htmlFor='agree' className='text-sm'>
-                    I agree to be contacted for onboarding and support.
-                  </label>
-                </div>
-                {formik.touched.is_terms_and_conditions &&
-                  formik.errors.is_terms_and_conditions && (
-                    <span className='text-xs text-red-500 mt-1'>
-                      {formik.errors.is_terms_and_conditions}
-                    </span>
-                  )}
-              </div>
-            </form>
-          </div>
-          {/* Right Part */}
-          <div className='w-full md:w-1/2 gap-4 flex flex-col justify-center items-center text-center'>
-            <span className='text-3xl font-semibold  text-onboard_secondary'>
-              Almost there!
-            </span>
-            <span className='text-base'>
-              To unlock your custom pricing and send a copy of this
-              recommendation to your inbox, just let us know where to reach you.
-            </span>
-          </div>
-        </div>
-      </div>
+      <div className='flex flex-col h-screen'>
+        <OnboardHeader />
 
-      <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button
-          variant='outline_secondary'
-          size='sm'
-          leftIcon={backarrow}
-          onClick={() => navigate('/marketing-support')}
-        >
-          Back
-        </Button>
-        {!submitted ? (
+        {/* 🔥 Scrollable Content */}
+        <div className='flex-1 overflow-y-auto px-4 sm:px-10'>
+          <div className='flex flex-col gap-1 mb-6 text-xl font-medium'>
+            Let’s Set This Up for You
+          </div>
+
+          <div className='flex flex-col md:flex-row gap-10 md:gap-16'>
+            {/* Left */}
+            <div className='w-full md:w-1/2'>
+              <form
+                id='contact-details-form'
+                className='space-y-3'
+                onSubmit={formik.handleSubmit}
+              >
+                <Input
+                  label='Center Name'
+                  name='center_name'
+                  placeholder='Center Name'
+                  icon={<img src={people_icon} className='w-6 h-6 mr-2' />}
+                  value={formik.values.center_name}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.center_name && formik.errors.center_name
+                  }
+                />
+
+                <Input
+                  label='Contact Person'
+                  name='contact_person'
+                  icon={<User className='w-5 h-5 mr-2 text-onboard_primary' />}
+                  value={formik.values.contact_person}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.contact_person &&
+                    formik.errors.contact_person
+                  }
+                />
+
+                <Input
+                  label='Email'
+                  name='center_email'
+                  icon={<Mail className='w-5 h-5 mr-2 text-onboard_primary' />}
+                  value={formik.values.center_email}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.center_email && formik.errors.center_email
+                  }
+                />
+
+                <Input
+                  label='Phone'
+                  name='center_phone'
+                  icon={<Phone className='w-5 h-5 mr-2 text-onboard_primary' />}
+                  value={formik.values.center_phone}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.center_phone && formik.errors.center_phone
+                  }
+                />
+
+                <CustomeSelect
+                  label='City'
+                  search={true}
+                  options={cities.map(city => ({
+                    id: city.name,
+                    name: city.name
+                  }))}
+                  icon={
+                    <MapPinCheck className='w-5 h-5 text-onboard_primary' />
+                  }
+                  value={formik.values.city}
+                  onChange={val => formik.setFieldValue('city', val)}
+                  error={formik.touched.city && formik.errors.city}
+                />
+
+                <CustomeSelect
+                  label='Subscription Duration'
+                  options={packageOptions}
+                  icon={
+                    <CalendarClock className='w-5 h-5 text-onboard_primary' />
+                  }
+                  value={formik.values.subscription_duration}
+                  onChange={val =>
+                    formik.setFieldValue('subscription_duration', val)
+                  }
+                  error={
+                    formik.touched.subscription_duration &&
+                    formik.errors.subscription_duration
+                  }
+                />
+
+                <div className='flex flex-col'>
+                  <div className='flex items-center gap-2'>
+                    <Checkbox
+                      checked={formik.values.is_terms_and_conditions}
+                      onCheckedChange={val =>
+                        formik.setFieldValue('is_terms_and_conditions', val)
+                      }
+                    />
+                    <label className='text-sm'>I agree to be contacted</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            {/* Right */}
+            <div className='w-full md:w-1/2 flex flex-col gap-4 justify-center items-center text-center'>
+              <span className='text-3xl font-semibold  text-onboard_secondary'>
+                Almost there!
+              </span>
+              <span className='text-base'>
+                To unlock your custom pricing and send a copy of this
+                recommendation to your inbox, just let us know where to reach
+                you.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 🔥 Sticky Footer */}
+        <div className='sticky bottom-0 bg-white border-t px-4 sm:px-10 py-4 flex justify-between'>
           <Button
-            variant='onboard_outline_primary'
-            rightIcon={rightcolorarrow}
-            type='submit'
-            form='contact-details-form'
+            variant='outline_secondary'
+            size='sm'
+            leftIcon={backarrow}
+            onClick={() => navigate('/marketing-support')}
           >
-            Submit
+            Back
           </Button>
-        ) : (
-          <Button
-            variant='onboard_outline_primary'
-            rightIcon={rightcolorarrow}
-            onClick={() => navigate('/pricing-page')}
-          >
-            View My Pricing
-          </Button>
-        )}
+
+          {!submitted && (
+            <Button
+              variant='onboard_outline_primary'
+              rightIcon={rightcolorarrow}
+              type='submit'
+              form='contact-details-form'
+              disabled={isPending}
+            >
+              {isPending ? 'Submitting...' : 'Submit'}
+            </Button>
+          )}
+        </div>
       </div>
     </SecondaryLayout>
   )
 }
+
 export default ContactDetails
+
+{
+  /* <Button
+              variant='onboard_outline_primary'
+              rightIcon={rightcolorarrow}
+              onClick={() => navigate('/pricing-page')}
+            >
+              View My Pricing
+            </Button> */
+}

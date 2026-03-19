@@ -101,6 +101,7 @@ const MarketingSupport = () => {
 
         <Button
           variant='onboard_outline_primary'
+          // size='sm'
           rightIcon={rightcolorarrow}
           disabled={!marketingSupportType}
           onClick={() => navigate('/contact-details')}

@@ -34,7 +34,6 @@ const InvoiceSummary = () => {
     enableReinitialize: true,
     validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
-      console.log('values: ', values)
       try {
         const response = await finalize(values)
         setSuccess(true)
@@ -206,7 +205,7 @@ const InvoiceSummary = () => {
           )}
         </div>
         {/* Bottom Back Button */}
-        {isLoading && (
+        {!success && !isFetching && (
           <div className='mt-6'>
             <Button
               variant='outline_secondary'
