@@ -163,27 +163,14 @@ const ContactDetails = () => {
                   }
                 />
 
-                <CustomeSelect
-                  label='City'
-                  search={true}
-                  options={cities?.map(city => ({
-                    id: city.name,
-                    name: city.name
-                  }))}
-                  icon={
-                    <MapPinCheck className='w-5 h-5 text-onboard_primary' />
-                  }
+              
+
+                <CitySelect
+                  country='IN'
+                  state='KL' // 🔥 Kerala
                   value={formik.values.city}
                   onChange={val => formik.setFieldValue('city', val)}
-                  error={formik.touched.city && formik.errors.city}
                 />
-
-                {/* <CitySelect
-  country="IN"
-  state="KL" // 🔥 Kerala
-  value={formik.values.city}
-  onChange={(val) => formik.setFieldValue('city', val)}
-/> */}
 
                 <CustomeSelect
                   label='Subscription Duration'
