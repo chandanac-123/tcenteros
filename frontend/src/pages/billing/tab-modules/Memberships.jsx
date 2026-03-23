@@ -1,9 +1,8 @@
 import { DataTable } from '@common/components/DataTable'
-import deleteicon from '@assets/form-icons/delete.svg'
-import view from '@assets/form-icons/view.svg'
 import { useState } from 'react'
 import RenewMembership from '../component/RenewMembership'
 import { useGetAllMembershipsQuery } from '@api-queries/billing/Query'
+import { formatDate } from '@utils/helper'
 
 const Memberships = () => {
   const [tableParams, setTableParams] = useState({
@@ -16,13 +15,24 @@ const Memberships = () => {
 
   const columns = [
     { accessorKey: 'member_name', header: 'Member Name' },
-    { accessorKey: 'plan_name', header: 'Plan' },
-    { accessorKey: 'start_date', header: 'Start Date' },
-    { accessorKey: 'end_date', header: 'End Date' },
-    { accessorKey: 'expiry_date', header: 'Expiry Date' },
+    { accessorKey: 'membership_name', header: 'Plan' },
+    { accessorKey: 'member_mobile', header: 'Phone' },
+    {
+      accessorKey: 'start_date',
+      header: 'Start Date',
+      cell: ({ row }) => {
+        return <span>{formatDate(row.original.start_date)}</span>
+      }
+    },
+    {
+      accessorKey: 'end_date',
+      header: 'End Date',
+      cell: ({ row }) => {
+        return <span>{formatDate(row.original.end_date)}</span>
+      }
+    },
     { accessorKey: 'days_until_expiry', header: 'Days until expiry' },
     { accessorKey: 'total_amount', header: 'Amount' },
-    { accessorKey: 'renewal_status', header: 'Status' },
     {
       header: 'Actions',
       accessorKey: 'status',
@@ -36,12 +46,6 @@ const Memberships = () => {
             }}
           >
             Renew
-          </button>
-          <button>
-            <img src={view} alt='view' />
-          </button>
-          <button>
-            <img src={deleteicon} alt='delete' />
           </button>
         </div>
       )
@@ -59,7 +63,11 @@ const Memberships = () => {
         tableParams={tableParams}
         loading={isFetching}
       />
-      <RenewMembership open={renewOpen} setOpen={setRenewOpen} membershipId={renewId} />
+      <RenewMembership
+        open={renewOpen}
+        setOpen={setRenewOpen}
+        membershipId={renewId}
+      />
     </div>
   )
 }

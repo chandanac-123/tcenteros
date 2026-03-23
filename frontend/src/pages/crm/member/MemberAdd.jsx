@@ -23,12 +23,6 @@ import { Spinner } from '@pages/components/ui/spinner'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
-import {
-  getCountryCode,
-  getCountryName,
-  getStateCode,
-  getStateName
-} from '@utils/helper'
 
 const paidStatus = [
   { id: 'unpaid', name: 'unpaid' },
@@ -105,8 +99,8 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       try {
         const payload = {
           ...values,
-          country: getCountryName(values.country),
-          state: getStateName(values.country, values.state)
+          country: values.country,
+          state: values.state
         }
         if (payload.payment_status === 'unpaid') {
           delete payload.password
@@ -145,12 +139,8 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       address_line_1: sourceData?.address?.address_line_1 || '',
       address_line_2: sourceData?.address?.address_line_2 || '',
       city: sourceData?.address?.city || '',
-      country: getCountryCode(sourceData?.address?.country) || '',
-      state:
-        getStateCode(
-          getCountryCode(sourceData?.address?.country),
-          sourceData?.address?.state
-        ) || '',
+      country: sourceData?.address?.country || '',
+      state: sourceData?.address?.state || '',
       postal_code: sourceData?.address?.postal_code || '',
       membership_id: sourceData?.membership_id || '',
       time_slot_id: sourceData?.time_slot_id || '',
