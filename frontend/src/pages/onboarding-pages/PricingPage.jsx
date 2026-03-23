@@ -95,7 +95,7 @@ const PricingPage = () => {
       </div>
 
       {/* Back Button */}
-      <div className='mt-auto flex px-4 sm:px-10 pb-6 sm:pb-8'>
+      {/* <div className='mt-auto flex px-4 sm:px-10 pb-6 sm:pb-8'>
         <Button
           variant='outline_secondary'
           size='sm'
@@ -104,7 +104,7 @@ const PricingPage = () => {
         >
           Back
         </Button>
-      </div>
+      </div> */}
     </SecondaryLayout>
   )
 }

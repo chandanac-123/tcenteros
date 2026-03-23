@@ -15,6 +15,7 @@ import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { City, State } from 'country-state-city'
+import CitySelect from '@common/components/CitySelect'
 
 const packageOptions = [
   { id: 'monthly', name: 'Monthly' },
@@ -26,7 +27,7 @@ const ContactDetails = () => {
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
-   const cities = City.getCitiesOfState('IN', 'KL')
+  const cities = City.getCitiesOfState('IN', 'KL')
 
   const getAllCitiesInIndia = () => {
     const states = State.getStatesOfCountry('IN')
@@ -38,7 +39,7 @@ const ContactDetails = () => {
     return allCities
   }
   const allIndianCities = getAllCitiesInIndia()
-  console.log('allIndianCities: ', allIndianCities);
+  // console.log('allIndianCities: ', allIndianCities);
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -176,6 +177,13 @@ const ContactDetails = () => {
                   onChange={val => formik.setFieldValue('city', val)}
                   error={formik.touched.city && formik.errors.city}
                 />
+
+                {/* <CitySelect
+  country="IN"
+  state="KL" // 🔥 Kerala
+  value={formik.values.city}
+  onChange={(val) => formik.setFieldValue('city', val)}
+/> */}
 
                 <CustomeSelect
                   label='Subscription Duration'
