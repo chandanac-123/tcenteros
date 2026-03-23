@@ -20,7 +20,7 @@ const containerStyle = {
 
 function GoogleMapComponent ({ open, setLocationOpen }) {
   const inputRef = useRef(null)
-const { isLoaded } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
     libraries: LIBRARIES // ✅ stable reference
   })
@@ -110,15 +110,15 @@ const { isLoaded } = useJsApiLoader({
   return (
     <CustomeModal
       open={open}
-      // onOpenChange={setLocationOpen}
+      onOpenChange={setLocationOpen}
       className='max-w-3xl w-full'
       header='Fitness center location'
-      onInteractOutside={e => {
-        const el = document.querySelector('.pac-container')
-        if (el && el.contains(e.target)) {
-          e.preventDefault()
-        }
-      }}
+      // onInteractOutside={e => {
+      //   const el = document.querySelector('.pac-container')
+      //   if (el && el.contains(e.target)) {
+      //     e.preventDefault()
+      //   }
+      // }}
     >
       <form onSubmit={formik.handleSubmit}>
         {!isLoaded || !center ? (

@@ -19,12 +19,6 @@ import AddCategory from '../category/AddCategory'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
-import {
-  getCountryCode,
-  getCountryName,
-  getStateCode,
-  getStateName
-} from '@utils/helper'
 
 const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { data, isFetching } = useCategoriesQuery()
@@ -41,12 +35,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     mobile: employeeData?.mobile || '',
     qualification: employeeData?.qualification || '',
     experience: employeeData?.experience || '',
-    country: getCountryCode(employeeData?.address?.country) || '',
-    state:
-      getStateCode(
-        getCountryCode(employeeData?.address?.country),
-        employeeData?.address?.state
-      ) || '',
+    country: employeeData?.address?.country || '',
+    state: employeeData?.address?.state || '',
     city: employeeData?.address?.city || '',
     pin: employeeData?.address?.pin || '',
     address: employeeData?.address?.address || '',
@@ -67,9 +57,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
 
         // ✅ convert ISO → Name
         const finalValues = {
-          ...values,
-          country: getCountryName(values.country),
-          state: getStateName(values.country, values.state)
+          ...values
         }
         if (id) {
           const allowedFields = [
@@ -226,30 +214,30 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               <CountrySelect
                 value={formik.values.country}
                 onChange={val => {
-                  formik.setFieldValue('country', val)
-                  formik.setFieldValue('state', '')
-                  formik.setFieldValue('city', '')
+                  formik.setFieldValue('country', val.country)
                 }}
+                label='Country'
               />
             </div>
           </div>
           <div className='flex gap-4'>
             <div className='flex-1'>
               <StateSelect
-                country={formik.values.country}
+                country={formik.values.countryCode} 
                 value={formik.values.state}
-                onChange={val => {
-                  formik.setFieldValue('state', val)
-                  formik.setFieldValue('city', '')
-                }}
+                onChange={val => formik.setFieldValue('state', val)}
+                label='State'
               />
             </div>
             <div className='flex-1'>
               <CitySelect
-                country={formik.values.country}
-                state={formik.values.state}
+                country={formik.values.countryCode}
                 value={formik.values.city}
-                onChange={val => formik.setFieldValue('city', val)}
+                onChange={data => {
+                  formik.setFieldValue('city', data.city)
+                  formik.setFieldValue('state', data.state) // auto-fill
+                }}
+                label='City'
               />
             </div>
           </div>
