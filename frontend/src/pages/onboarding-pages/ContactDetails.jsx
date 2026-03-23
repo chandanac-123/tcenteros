@@ -14,7 +14,6 @@ import { useOnboardingStore } from '@store/onboardingStore'
 import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
 import CustomeSelect from '@common/components/CustomeSelect'
-import { City, State } from 'country-state-city'
 import CitySelect from '@common/components/CitySelect'
 
 const packageOptions = [
@@ -27,19 +26,6 @@ const ContactDetails = () => {
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
-  const cities = City.getCitiesOfState('IN', 'KL')
-
-  const getAllCitiesInIndia = () => {
-    const states = State.getStatesOfCountry('IN')
-    let allCities = []
-    states.forEach(state => {
-      const cities = City.getCitiesOfState('IN', state.isoCode)
-      allCities = [...allCities, ...cities]
-    })
-    return allCities
-  }
-  const allIndianCities = getAllCitiesInIndia()
-  // console.log('allIndianCities: ', allIndianCities);
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -164,10 +150,8 @@ const ContactDetails = () => {
                 />
 
                 <CitySelect
+                  country={formik.values.countryCode}
                   value={formik.values.city}
-                  icon={
-                    <MapPinCheck className='w-5 h-5 mr-2 text-onboard_primary' />
-                  }
                   onChange={data => {
                     formik.setFieldValue('city', data.city)
                   }}

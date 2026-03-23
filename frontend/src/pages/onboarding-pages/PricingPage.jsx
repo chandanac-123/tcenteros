@@ -12,6 +12,11 @@ const PricingPage = () => {
   const store = useOnboardingStore()
   const { data, isFetching } = usePricingPageQuery(store?.onboardId)
 
+  const amount = data?.calculated_amount || 0
+  const isYearly = data?.subscription_duration === 'yearly'
+
+  const monthlyPrice = isYearly ? amount / 12 : amount
+  const yearlyPrice = isYearly ? amount : amount * 12
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -37,19 +42,16 @@ const PricingPage = () => {
               {/* Price */}
               <div className='text-center mb-4'>
                 <span className='text-3xl font-bold text-onboard_secondary'>
-                  {data?.calculated_amount
-                    ? `₹${data.calculated_amount.toFixed(2)}`
-                    : '₹0'}
+                  ₹{monthlyPrice.toFixed(2)}
                 </span>
+
                 <span className='text-base font-medium text-onboard_secondary'>
                   {' '}
-                  / {data?.subscription_duration}
+                  / Monthly
                 </span>
+
                 <span className='ml-2 text-md text-textblack font-bold'>
-                  Billed Annualy :{' '}
-                  {data?.calculated_amount
-                    ? `₹${(data.calculated_amount * 12).toFixed(2)}`
-                    : '₹0'}
+                 -  Billed Annually : ₹{yearlyPrice.toFixed(2)}
                 </span>
               </div>
 
@@ -75,7 +77,7 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-onboard_secondary'>
-                Total 1-year Cost :{' '}
+                Total 1-{data?.subscription_duration} Cost :{' '}
                 {data?.calculated_amount
                   ? `₹${data.calculated_amount.toFixed(2)}`
                   : '₹0'}
