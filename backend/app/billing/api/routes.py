@@ -680,7 +680,6 @@ async def get_membership_billing_list(
             MemberMembership.membership_status == "active"
         )
     elif status_filter == "due":
-        # Due: ending within next 7 days
         due_date = now + timedelta(days=7)
         query = query.where(
             MemberMembership.end_date >= now,
@@ -716,9 +715,12 @@ async def get_membership_billing_list(
 
     # Build response
     data = []
+    now_date = datetime.utcnow().date()
     for mm in memberships:
         member = mm.member
         membership_plan = mm.membership
+        end_date = mm.end_date.date() if mm.end_date else None
+        days_until_expiry = (end_date - now_date).days if end_date else None
         data.append({
             "member_membership_id": str(mm.id),
             "member_id": str(mm.member_id),
@@ -730,7 +732,8 @@ async def get_membership_billing_list(
             "end_date": mm.end_date,
             "total_amount": float(mm.total_amount) if mm.total_amount is not None else None,
             "status": mm.membership_status.value if hasattr(mm.membership_status, "value") else mm.membership_status,
-            "action_type": mm.action_type.value if hasattr(mm.action_type, "value") else mm.action_type,  # <-- Added
+            "action_type": mm.action_type.value if hasattr(mm.action_type, "value") else mm.action_type,
+            "days_until_expiry": days_until_expiry,
         })
 
     return {
