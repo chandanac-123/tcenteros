@@ -8,9 +8,16 @@ import { useBrandingStore } from '@store/brandingStore'
 import { useEffect } from 'react'
 import { useAllBrandQuery } from './api-queries/branding/Query'
 import PageNotFound from './common/components/PageNotFound'
+import { useJsApiLoader } from '@react-google-maps/api'
+const LIBRARIES = ['places']
 
 const App = () => {
   const { data } = useAllBrandQuery()
+
+const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
+    libraries: LIBRARIES 
+  })
 
   const loadBrandingFromStorage = useBrandingStore(
     state => state.loadBrandingFromStorage
@@ -28,7 +35,7 @@ const App = () => {
       loadBrandingFromAPI(data.centers[0].branding)
     }
   }, [data])
-
+  
   return (
     <Routes>
       <Route element={<PrivateRoute />}>

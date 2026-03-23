@@ -170,10 +170,6 @@ const InvoiceSummary = () => {
                 </div>
               </section>
 
-              <p className='flex text-sm text-pricing_text '>
-                {data?.pricing_note}
-              </p>
-
               {/* Total */}
               <div className='flex justify-between items-end mb-2'>
                 <div>

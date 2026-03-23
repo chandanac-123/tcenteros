@@ -259,6 +259,8 @@ export const getTermsandPrivacyApiCall = id =>
   axiosInstance.get(`/branding/terms-privacy/global`)
 export const createTermsandPrivacyApiCall = details =>
   axiosInstance.post(`/branding/terms-privacy/center`, details)
+export const getUpdatedTermsandPrivacyApiCall = () =>
+  axiosInstance.get(`/branding/terms-privacy/center`)
 
 //CENTER PROFILE API
 export const getCenterProfileApiCall = () =>

@@ -11,12 +11,14 @@ import {
   useAllBrandQuery,
   useCreateBrandMutation,
   useAllTermsandPrivacyQuery,
-  useCreateTermsandPrivacyMutation
+  useCreateTermsandPrivacyMutation,
+  getUpdatedTermsandPrivacyQuery
 } from '@api-queries/branding/Query'
 import { useBrandingStore } from '@store/brandingStore'
 
 const Branding = () => {
   const { setBranding } = useBrandingStore()
+  
   const { data: brandingData, isFetching } = useAllBrandQuery()
   const { mutateAsync: createBranding, isLoading: isCreating } =
     useCreateBrandMutation()
@@ -26,27 +28,29 @@ const Branding = () => {
     mutateAsync: createTermsandPrivacy,
     isLoading: isCreatingTermsandPrivacy
   } = useCreateTermsandPrivacyMutation()
+  const {
+    data: updatedTermsandPrivacyData,
+    isFetching: isFetchingUpdatedTermsandPrivacy
+  } = getUpdatedTermsandPrivacyQuery()
 
   const [modalState, setModalState] = useState({
     open: false,
     type: null,
     mode: 'view'
   })
-  const [documents, setDocuments] = useState({
-    terms: '',
-    privacy: ''
-  })
 
-  useEffect(() => {
-    if (termsandprivacyData?.content) {
-      setDocuments({
-        terms: termsandprivacyData.content
-      })
+  // Show termsandprivacyData initially, then always show updatedTermsandPrivacyData after first edit
+  const getDocumentContent = type => {
+    if (updatedTermsandPrivacyData?.content) {
+      return updatedTermsandPrivacyData.content
     }
-  }, [termsandprivacyData])
+    if (termsandprivacyData?.content) {
+      return termsandprivacyData.content
+    }
+    return ''
+  }
 
   const initialValues = {
-    app_name: brandingData?.centers?.[0]?.branding?.app_name || '',
     primary_color:
       brandingData?.centers?.[0]?.branding?.primary_color || '#1452D4',
     secondary_color:
@@ -61,7 +65,6 @@ const Branding = () => {
     onSubmit: async values => {
       try {
         const formData = new FormData()
-        formData.append('app_name', values.app_name)
         formData.append('primary_color', values.primary_color)
         formData.append('secondary_color', values.secondary_color)
         if (values.app_logo instanceof File) {
@@ -69,7 +72,6 @@ const Branding = () => {
         }
         const response = await createBranding(formData)
         const updatedBranding = {
-          app_name: response?.app_name,
           logo_url: response?.logo_url,
           primary_color: response?.primary_color,
           secondary_color: response?.secondary_color
@@ -82,20 +84,20 @@ const Branding = () => {
   })
 
   const handleSaveDocument = async updatedContent => {
-  try {
-    const payload = {
-      type: modalState.type, // terms or privacy
-      content: updatedContent
+    try {
+      const payload = {
+        type: modalState.type, // terms or privacy
+        content: updatedContent
+      }
+      await createTermsandPrivacy(payload)
+      setDocuments(prev => ({
+        ...prev,
+        [modalState.type]: updatedContent
+      }))
+    } catch (error) {
+      console.error(error)
     }
-    await createTermsandPrivacy(payload)
-    setDocuments(prev => ({
-      ...prev,
-      [modalState.type]: updatedContent
-    }))
-  } catch (error) {
-    console.error(error)
   }
-}
 
   return (
     <ContentLayout>
@@ -176,9 +178,9 @@ const Branding = () => {
             ? 'Terms and Conditions'
             : 'Privacy Policy'
         }
-        initialContent={documents[modalState.type]}
+        initialContent={getDocumentContent(modalState.type)}
         onClose={() => setModalState({ open: false, type: null, mode: 'view' })}
-        onSave={handleSaveDocument }
+        onSave={handleSaveDocument}
       />
     </ContentLayout>
   )

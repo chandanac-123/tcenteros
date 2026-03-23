@@ -1,8 +1,7 @@
-import { Country, State } from 'country-state-city'
 import { format } from 'date-fns'
 
 export const hexToRgb = hex => {
-  const h = hex.replace('#', '')
+  const h = hex?.replace('#', '')
   let rgbColor = `${parseInt(h.substring(0, 2), 16)} ${parseInt(
     h.substring(2, 4),
     16
@@ -73,33 +72,4 @@ export const downloadFile = (blob, filename) => {
 export const formatDate = date => {
   if (!date) return null
   return format(new Date(date), 'yyyy-MM-dd')
-}
-
-export const getCountryCode = name => {
-  if (!name) return ''
-  return Country.getAllCountries().find(c => c.name === name)?.isoCode || ''
-}
-
-// ✅ Get state ISO code from name + country
-export const getStateCode = (countryCode, stateName) => {
-  if (!countryCode || !stateName) return ''
-  return (
-    State.getStatesOfCountry(countryCode).find(s => s.name === stateName)
-      ?.isoCode || ''
-  )
-}
-
-// ✅ Get country name from ISO code
-export const getCountryName = code => {
-  if (!code) return ''
-  return Country.getAllCountries().find(c => c.isoCode === code)?.name || ''
-}
-
-// ✅ Get state name from ISO code
-export const getStateName = (countryCode, stateCode) => {
-  if (!countryCode || !stateCode) return ''
-  return (
-    State.getStatesOfCountry(countryCode).find(s => s.isoCode === stateCode)
-      ?.name || ''
-  )
 }

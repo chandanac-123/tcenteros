@@ -15,6 +15,7 @@ export const useAuthStore = create(
           refreshToken: auth?.refresh_token || null,
           firstLogin
         }),
+        setFirstLogin: value => set({ firstLogin: value }),
       clearAuth: () =>
         set({
           auth: null,

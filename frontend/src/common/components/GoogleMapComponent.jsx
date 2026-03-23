@@ -11,6 +11,7 @@ import { useFormik } from 'formik'
 import { Button } from '@pages/components/ui/button'
 import { useAuthStore } from '@store/authStore'
 import { Spinner } from '@pages/components/ui/spinner'
+const LIBRARIES = ['places']
 
 const containerStyle = {
   width: '100%',
@@ -21,7 +22,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
   const inputRef = useRef(null)
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
-    libraries: ['places']
+    libraries: LIBRARIES // ✅ stable reference
   })
 
   const state = useAuthStore.getState()
@@ -109,15 +110,15 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
   return (
     <CustomeModal
       open={open}
-      // onOpenChange={setLocationOpen}
+      onOpenChange={setLocationOpen}
       className='max-w-3xl w-full'
       header='Fitness center location'
-      onInteractOutside={e => {
-        const el = document.querySelector('.pac-container')
-        if (el && el.contains(e.target)) {
-          e.preventDefault()
-        }
-      }}
+      // onInteractOutside={e => {
+      //   const el = document.querySelector('.pac-container')
+      //   if (el && el.contains(e.target)) {
+      //     e.preventDefault()
+      //   }
+      // }}
     >
       <form onSubmit={formik.handleSubmit}>
         {!isLoaded || !center ? (

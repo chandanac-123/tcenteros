@@ -3,7 +3,8 @@ import {
   createBrand,
   createTermsandPrivacy,
   getBrand,
-  getTermsandPrivacy
+  getTermsandPrivacy,
+  getUpdatedTermsandPrivacy
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 import { useAuthStore } from '@store/authStore'
@@ -57,5 +58,14 @@ export const useCreateTermsandPrivacyMutation = () => {
       )
       return err
     }
+  })
+}
+
+export const getUpdatedTermsandPrivacyQuery = () => {
+  return useQuery({
+    queryKey: ['updatedTermsandPrivacy'],
+    queryFn: getUpdatedTermsandPrivacy,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   })
 }
