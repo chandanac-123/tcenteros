@@ -277,5 +277,25 @@ async def create_or_update_center_terms_privacy(
     return terms
 
 
+@router.get("/terms-privacy/center", response_model=TermsPrivacyOut)
+async def get_center_terms_privacy(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_id = current_user["center_id"]
+    result = await session.execute(
+        select(TermsPrivacy).where(TermsPrivacy.center_id == center_id)
+    )
+    terms = result.scalars().first()
+    if not terms:
+        raise HTTPException(404, "Terms/Privacy not found for this center")
+    return TermsPrivacyOut(
+        id=terms.id,
+        title=terms.title,
+        content=terms.content,
+        created_at=terms.created_at,
+        updated_at=terms.updated_at
+    )
+
 
 
