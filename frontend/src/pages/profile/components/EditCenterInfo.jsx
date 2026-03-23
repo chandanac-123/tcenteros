@@ -198,33 +198,34 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
 
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <CountrySelect
-              value={formik.values.country}
-              onChange={val => {
-                formik.setFieldValue('country', val)
-                formik.setFieldValue('state', '')
-                formik.setFieldValue('city', '')
+            <CitySelect
+              country={formik.values.countryCode}
+              value={formik.values.city}
+              onChange={data => {
+                formik.setFieldValue('city', data.city)
+                formik.setFieldValue('state', data.state) // auto-fill
+                formik.setFieldValue('country', data.country) // auto-fill country
               }}
+              label='City'
             />
           </div>
           <div className='flex-1'>
             <StateSelect
-              country={formik.values.country}
+              country={formik.values.countryCode}
               value={formik.values.state}
-              onChange={val => {
-                formik.setFieldValue('state', val)
-                formik.setFieldValue('city', '')
-              }}
+              onChange={val => formik.setFieldValue('state', val)}
+              label='State'
             />
           </div>
         </div>
         <div className='flex gap-4'>
           <div className='flex-1'>
-            <CitySelect
-              country={formik.values.country}
-              state={formik.values.state}
-              value={formik.values.city}
-              onChange={val => formik.setFieldValue('city', val)}
+            <CountrySelect
+              value={formik.values.country}
+              onChange={val => {
+                formik.setFieldValue('country', val.country)
+              }}
+              label='Country'
             />
           </div>
           <div className='flex-1'>

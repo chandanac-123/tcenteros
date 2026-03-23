@@ -211,33 +211,34 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
               />
             </div>
             <div className='flex-1'>
-              <CountrySelect
-                value={formik.values.country}
-                onChange={val => {
-                  formik.setFieldValue('country', val.country)
-                }}
-                label='Country'
-              />
-            </div>
-          </div>
-          <div className='flex gap-4'>
-            <div className='flex-1'>
-              <StateSelect
-                country={formik.values.countryCode} 
-                value={formik.values.state}
-                onChange={val => formik.setFieldValue('state', val)}
-                label='State'
-              />
-            </div>
-            <div className='flex-1'>
               <CitySelect
                 country={formik.values.countryCode}
                 value={formik.values.city}
                 onChange={data => {
                   formik.setFieldValue('city', data.city)
                   formik.setFieldValue('state', data.state) // auto-fill
+                  formik.setFieldValue('country', data.country) // auto-fill country
                 }}
                 label='City'
+              />
+            </div>
+          </div>
+          <div className='flex gap-4'>
+            <div className='flex-1'>
+              <StateSelect
+                country={formik.values.countryCode}
+                value={formik.values.state}
+                onChange={val => formik.setFieldValue('state', val)}
+                label='State'
+              />
+            </div>
+            <div className='flex-1'>
+              <CountrySelect
+                value={formik.values.country}
+                onChange={val => {
+                  formik.setFieldValue('country', val.country)
+                }}
+                label='Country'
               />
             </div>
           </div>

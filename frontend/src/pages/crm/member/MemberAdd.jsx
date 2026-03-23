@@ -103,9 +103,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     validationSchema: memberValidationSchema,
     onSubmit: async values => {
       try {
-        const payload = { ...values ,
-           country: getCountryName(values.country),
-                    state: getStateName(values.country, values.state)
+        const payload = {
+          ...values,
+          country: getCountryName(values.country),
+          state: getStateName(values.country, values.state)
         }
         if (payload.payment_status === 'unpaid') {
           delete payload.password
@@ -144,12 +145,12 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       address_line_1: sourceData?.address?.address_line_1 || '',
       address_line_2: sourceData?.address?.address_line_2 || '',
       city: sourceData?.address?.city || '',
-       country: getCountryCode(sourceData?.address?.country) || '',
-         state:
-           getStateCode(
-             getCountryCode(sourceData?.address?.country),
-             sourceData?.address?.state
-           ) || '',
+      country: getCountryCode(sourceData?.address?.country) || '',
+      state:
+        getStateCode(
+          getCountryCode(sourceData?.address?.country),
+          sourceData?.address?.state
+        ) || '',
       postal_code: sourceData?.address?.postal_code || '',
       membership_id: sourceData?.membership_id || '',
       time_slot_id: sourceData?.time_slot_id || '',
@@ -264,34 +265,35 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-            <CountrySelect
-                value={formik.values.country}
-                onChange={val => {
-                  formik.setFieldValue('country', val)
-                  formik.setFieldValue('state', '')
-                  formik.setFieldValue('city', '')
-                }}
-              />
+            <CitySelect
+              country={formik.values.countryCode}
+              value={formik.values.city}
+              onChange={data => {
+                formik.setFieldValue('city', data.city)
+                formik.setFieldValue('state', data.state) // auto-fill
+                formik.setFieldValue('country', data.country) // auto-fill country
+              }}
+              label='City'
+            />
           </div>
           <div className='flex-1'>
-             <StateSelect
-                country={formik.values.country}
-                value={formik.values.state}
-                onChange={val => {
-                  formik.setFieldValue('state', val)
-                  formik.setFieldValue('city', '')
-                }}
-              />
+            <StateSelect
+              country={formik.values.countryCode}
+              value={formik.values.state}
+              onChange={val => formik.setFieldValue('state', val)}
+              label='State'
+            />
           </div>
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-           <CitySelect
-                country={formik.values.country}
-                state={formik.values.state}
-                value={formik.values.city}
-                onChange={val => formik.setFieldValue('city', val)}
-              />
+            <CountrySelect
+              value={formik.values.country}
+              onChange={val => {
+                formik.setFieldValue('country', val.country)
+              }}
+              label='Country'
+            />
           </div>
           <div className='flex-1'>
             <Input
