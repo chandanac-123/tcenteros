@@ -163,13 +163,15 @@ const ContactDetails = () => {
                   }
                 />
 
-              
-
                 <CitySelect
-                  country='IN'
-                  state='KL' // 🔥 Kerala
                   value={formik.values.city}
-                  onChange={val => formik.setFieldValue('city', val)}
+                  icon={
+                    <MapPinCheck className='w-5 h-5 mr-2 text-onboard_primary' />
+                  }
+                  onChange={data => {
+                    formik.setFieldValue('city', data.city)
+                  }}
+                  label='City'
                 />
 
                 <CustomeSelect

@@ -11,6 +11,7 @@ import { useFormik } from 'formik'
 import { Button } from '@pages/components/ui/button'
 import { useAuthStore } from '@store/authStore'
 import { Spinner } from '@pages/components/ui/spinner'
+const LIBRARIES = ['places']
 
 const containerStyle = {
   width: '100%',
@@ -19,9 +20,9 @@ const containerStyle = {
 
 function GoogleMapComponent ({ open, setLocationOpen }) {
   const inputRef = useRef(null)
-  const { isLoaded } = useJsApiLoader({
+const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
-    libraries: ['places']
+    libraries: LIBRARIES // ✅ stable reference
   })
 
   const state = useAuthStore.getState()
