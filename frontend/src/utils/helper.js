@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 
 export const hexToRgb = hex => {
-  const h = hex.replace('#', '')
+  const h = hex?.replace('#', '')
   let rgbColor = `${parseInt(h.substring(0, 2), 16)} ${parseInt(
     h.substring(2, 4),
     16

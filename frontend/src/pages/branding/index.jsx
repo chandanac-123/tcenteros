@@ -11,12 +11,14 @@ import {
   useAllBrandQuery,
   useCreateBrandMutation,
   useAllTermsandPrivacyQuery,
-  useCreateTermsandPrivacyMutation
+  useCreateTermsandPrivacyMutation,
+  getUpdatedTermsandPrivacyQuery
 } from '@api-queries/branding/Query'
 import { useBrandingStore } from '@store/brandingStore'
 
 const Branding = () => {
   const { setBranding } = useBrandingStore()
+  
   const { data: brandingData, isFetching } = useAllBrandQuery()
   const { mutateAsync: createBranding, isLoading: isCreating } =
     useCreateBrandMutation()
@@ -26,24 +28,27 @@ const Branding = () => {
     mutateAsync: createTermsandPrivacy,
     isLoading: isCreatingTermsandPrivacy
   } = useCreateTermsandPrivacyMutation()
+  const {
+    data: updatedTermsandPrivacyData,
+    isFetching: isFetchingUpdatedTermsandPrivacy
+  } = getUpdatedTermsandPrivacyQuery()
 
   const [modalState, setModalState] = useState({
     open: false,
     type: null,
     mode: 'view'
   })
-  const [documents, setDocuments] = useState({
-    terms: '',
-    privacy: ''
-  })
 
-  useEffect(() => {
-    if (termsandprivacyData?.content) {
-      setDocuments({
-        terms: termsandprivacyData.content
-      })
+  // Show termsandprivacyData initially, then always show updatedTermsandPrivacyData after first edit
+  const getDocumentContent = type => {
+    if (updatedTermsandPrivacyData?.content) {
+      return updatedTermsandPrivacyData.content
     }
-  }, [termsandprivacyData])
+    if (termsandprivacyData?.content) {
+      return termsandprivacyData.content
+    }
+    return ''
+  }
 
   const initialValues = {
     primary_color:
@@ -173,7 +178,7 @@ const Branding = () => {
             ? 'Terms and Conditions'
             : 'Privacy Policy'
         }
-        initialContent={documents[modalState.type]}
+        initialContent={getDocumentContent(modalState.type)}
         onClose={() => setModalState({ open: false, type: null, mode: 'view' })}
         onSave={handleSaveDocument}
       />

@@ -1,4 +1,10 @@
-import { createBrandingApiCall, createTermsandPrivacyApiCall, getBrandingApiCall, getTermsandPrivacyApiCall } from '../../api/index'
+import {
+  createBrandingApiCall,
+  createTermsandPrivacyApiCall,
+  getBrandingApiCall,
+  getTermsandPrivacyApiCall,
+  getUpdatedTermsandPrivacyApiCall
+} from '../../api/index'
 
 export const getBrand = async () => {
   try {
@@ -35,3 +41,11 @@ export const createTermsandPrivacy = async details => {
   }
 }
 
+export const getUpdatedTermsandPrivacy = async () => {
+  try {
+    const response = await getUpdatedTermsandPrivacyApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
