@@ -6,23 +6,62 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import BranchDetailsButton from '@pages/branch/BranchDetailsButton'
 import { useDashboardQuery } from '@api-queries/Dashboard/Query'
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@store/authStore'
 
 const Dashboard = () => {
   const [greeting, setGreeting] = useState('')
   const navigate = useNavigate()
+  const setFirstLogin = useAuthStore(state => state.setFirstLogin)
+
+  useEffect(() => {
+    setFirstLogin(false)
+  }, [])
+
   const { data, isLoading, error } = useDashboardQuery()
   const cardsData = [
-    { label: 'Total Employees', value: data?.total_employees || 0, onClick: () => navigate('/employee-management') },
-    { label: 'Total Members', value: data?.total_members || 0,onClick: () => navigate('/crm') },
-    { label: 'Active Memberships', value: data?.active_memberships || 0,onClick: () => navigate('/membership-plan') },
-    { label: 'Active Leads', value: 12 ,onClick: () => navigate('/crm')},
-    { label: 'Total Guests', value: data?.total_guests || 0 ,onClick: () => navigate('/crm')},
-    { label: 'Today Attendance', value: data?.today_attendance || 0 ,onClick: () => navigate('/attendance')},
-    { label: 'Total Revenue', value: data?.total_revenue || 0 ,onClick: () => navigate('/accounts')},
-    { label: 'Total Expense', value: data?.total_expenses || 0 ,onClick: () => navigate('/accounts')},
-    { label: 'Net Profit', value: data?.net_profit || 0 ,onClick: () => navigate('/accounts')}
+    {
+      label: 'Total Employees',
+      value: data?.total_employees || 0,
+      onClick: () => navigate('/employee-management')
+    },
+    {
+      label: 'Total Members',
+      value: data?.total_members || 0,
+      onClick: () => navigate('/crm')
+    },
+    {
+      label: 'Active Memberships',
+      value: data?.active_memberships || 0,
+      onClick: () => navigate('/membership-plan')
+    },
+    { label: 'Active Leads', value: 12, onClick: () => navigate('/crm') },
+    {
+      label: 'Total Guests',
+      value: data?.total_guests || 0,
+      onClick: () => navigate('/crm')
+    },
+    {
+      label: 'Today Attendance',
+      value: data?.today_attendance || 0,
+      onClick: () => navigate('/attendance')
+    },
+    {
+      label: 'Total Revenue',
+      value: data?.total_revenue || 0,
+      onClick: () => navigate('/accounts')
+    },
+    {
+      label: 'Total Expense',
+      value: data?.total_expenses || 0,
+      onClick: () => navigate('/accounts')
+    },
+    {
+      label: 'Net Profit',
+      value: data?.net_profit || 0,
+      onClick: () => navigate('/accounts')
+    }
   ]
 
   const revenueLabels = data?.revenue_trend?.map(i => i.month) || []
