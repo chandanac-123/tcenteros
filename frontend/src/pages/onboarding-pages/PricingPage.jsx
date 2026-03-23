@@ -45,8 +45,11 @@ const PricingPage = () => {
                   {' '}
                   / {data?.subscription_duration}
                 </span>
-                <span className='ml-2 text-sm text-gray-400 line-through'>
-                  ₹42,999.00
+                <span className='ml-2 text-md text-textblack font-bold'>
+                  Billed Annualy :{' '}
+                  {data?.calculated_amount
+                    ? `₹${(data.calculated_amount * 12).toFixed(2)}`
+                    : '₹0'}
                 </span>
               </div>
 
@@ -54,7 +57,7 @@ const PricingPage = () => {
               <div className='border-b border-gray-200 my-2' />
 
               {/* Includes */}
-              <h3 className='text-sm font-semibold text-center mb-4'>
+              <h3 className='text-sm font-medium text-center mb-4'>
                 What’s included
               </h3>
 
