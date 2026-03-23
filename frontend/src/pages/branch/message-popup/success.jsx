@@ -11,7 +11,6 @@ const SuccessModal = ({ open, onOpenChange, count }) => {
             <div className="flex flex-col items-center justify-center gap-2">
                 <img src={success} alt="view" />
                 <h3 className='font-semibold'>Payment Successful</h3>
-                <p>You have purchased {count} branch slots.</p>
                 <button
                     type="button"
                     onClick={() => navigate('/dashboard')}
