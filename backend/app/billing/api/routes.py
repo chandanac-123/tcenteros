@@ -648,139 +648,96 @@ async def get_membership_billing_list(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    List all memberships with renewal status for the center.
-    Shows: Member | Plan | Expiry | Renewal Due | Amount | Status
-    """
+    from sqlalchemy import or_
+    from app.auth.models.models import Member
+    from app.membership.models.models import MemberMembership, Membership
+
     center_id = current_admin.get("center_id")
     if not center_id:
-        raise HTTPException(status_code=403, detail="No center assigned")
+        raise HTTPException(status_code=403, detail="Center admin required")
 
-    # Build query to get all member memberships for this center
-    query = select(MemberMembership).where(
-        MemberMembership.center_id == center_id
-    )
+    # Base query: memberships for this center
+    query = select(MemberMembership).options(
+        selectinload(MemberMembership.member),
+        selectinload(MemberMembership.membership)
+    ).where(MemberMembership.center_id == center_id)
 
-    # Execute query
-    result = await db.execute(query)
-    member_memberships = result.scalars().all()
-
-    # Collect all unique IDs for batch fetching
-    member_ids = {mm.member_id for mm in member_memberships}
-    membership_ids = {mm.membership_id for mm in member_memberships}
-
-    # Batch fetch members
-    member_map = {}
-    if member_ids:
-        members_result = await db.execute(
-            select(Member).where(Member.id.in_(member_ids))
-        )
-        members = members_result.scalars().all()
-        member_map = {m.id: m for m in members}
-
-    # Batch fetch base users for mobile numbers
-    user_map = {}
-    if member_ids:
-        users_result = await db.execute(
-            select(User).where(User.id.in_(member_ids))
-        )
-        users = users_result.scalars().all()
-        user_map = {u.id: u for u in users}
-
-    # Batch fetch memberships
-    membership_map = {}
-    if membership_ids:
-        memberships_result = await db.execute(
-            select(Membership).where(Membership.membership_id.in_(membership_ids))
-        )
-        memberships = memberships_result.scalars().all()
-        membership_map = {m.membership_id: m for m in memberships}
-
-    # Build response data
-    today = date.today()
-    membership_list = []
-
-    for mm in member_memberships:
-        member = member_map.get(mm.member_id)
-        user = user_map.get(mm.member_id)
-        membership = membership_map.get(mm.membership_id)
-
-        if not member or not membership:
-            continue
-
-        member_name = member.full_name if member.full_name else (user.email if user else "N/A")
-        member_mobile = user.mobile if user else None
-
-        # Calculate expiry and renewal status
-        expiry_date = mm.end_date.date() if mm.end_date else None
-        days_until_expiry = None
-        renewal_status = "active"
-
-        if expiry_date:
-            days_until_expiry = (expiry_date - today).days
-            
-            if days_until_expiry < 0:
-                renewal_status = "expired"
-            elif days_until_expiry <= 7:  # Due if expiring within 7 days
-                renewal_status = "due"
-            else:
-                renewal_status = "active"
-
-        membership_list.append({
-            "member_id": str(mm.member_id),
-            "member_name": member_name,
-            "member_mobile": member_mobile,
-            "plan_name": membership.membership_name,
-            "membership_id": str(mm.membership_id),
-            "member_membership_id": str(mm.id),
-            "start_date": mm.start_date.date().isoformat() if mm.start_date else None,
-            "end_date": expiry_date.isoformat() if expiry_date else None,
-            "expiry_date": expiry_date.isoformat() if expiry_date else None,
-            "days_until_expiry": days_until_expiry,
-            "renewal_status": renewal_status,
-            "total_amount": str(mm.total_amount),
-            "membership_status": mm.membership_status.value if mm.membership_status else "active",
-        })
-
-    # Apply search filter
+    # Search filter
     if search:
-        search_lower = search.lower()
-        membership_list = [
-            item for item in membership_list
-            if (search_lower in item["member_name"].lower() or
-                (item["member_mobile"] and search_lower in item["member_mobile"]))
-        ]
-
-    # Apply status filter
-    if status_filter:
-        membership_list = [
-            item for item in membership_list
-            if item["renewal_status"] == status_filter
-        ]
-
-    # Sort
-    reverse = (sort_order == "desc")
-    if sort_by == "member_name":
-        membership_list.sort(key=lambda x: x["member_name"], reverse=reverse)
-    elif sort_by == "total_amount":
-        membership_list.sort(key=lambda x: Decimal(x["total_amount"]), reverse=reverse)
-    else:  # default to end_date
-        membership_list.sort(
-            key=lambda x: x["end_date"] if x["end_date"] else "9999-12-31",
-            reverse=reverse
+        query = query.join(Member, MemberMembership.member_id == Member.id)
+        query = query.where(
+            or_(
+                Member.full_name.ilike(f"%{search}%"),
+                Member.mobile.ilike(f"%{search}%")
+            )
         )
+
+    # Status filter
+    now = datetime.utcnow()
+    if status_filter == "active":
+        query = query.where(
+            MemberMembership.end_date >= now,
+            MemberMembership.membership_status == "active"
+        )
+    elif status_filter == "due":
+        # Due: ending within next 7 days
+        due_date = now + timedelta(days=7)
+        query = query.where(
+            MemberMembership.end_date >= now,
+            MemberMembership.end_date <= due_date,
+            MemberMembership.membership_status == "active"
+        )
+    elif status_filter == "expired":
+        query = query.where(
+            MemberMembership.end_date < now,
+            MemberMembership.membership_status == "active"
+        )
+
+    # Sorting
+    sort_column = {
+        "end_date": MemberMembership.end_date,
+        "member_name": Member.full_name,
+        "total_amount": MemberMembership.total_amount
+    }.get(sort_by, MemberMembership.end_date)
+    if sort_order == "desc":
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(sort_column)
 
     # Pagination
-    total = len(membership_list)
-    start_idx = (page - 1) * page_size
-    end_idx = start_idx + page_size
-    paginated_list = membership_list[start_idx:end_idx]
+    total_result = await db.execute(
+        query.with_only_columns(func.count()).order_by(None)
+    )
+    total = total_result.scalar_one()
+    query = query.offset((page - 1) * page_size).limit(page_size)
+
+    result = await db.execute(query)
+    memberships = result.scalars().all()
+
+    # Build response
+    data = []
+    for mm in memberships:
+        member = mm.member
+        membership_plan = mm.membership
+        data.append({
+            "member_membership_id": str(mm.id),
+            "member_id": str(mm.member_id),
+            "member_name": member.full_name if member else None,
+            "member_mobile": member.mobile if member else None,
+            "membership_id": str(mm.membership_id),
+            "membership_name": membership_plan.membership_name if membership_plan else None,
+            "start_date": mm.start_date,
+            "end_date": mm.end_date,
+            "total_amount": float(mm.total_amount) if mm.total_amount is not None else None,
+            "status": mm.membership_status.value if hasattr(mm.membership_status, "value") else mm.membership_status,
+            "action_type": mm.action_type.value if hasattr(mm.action_type, "value") else mm.action_type,  # <-- Added
+        })
 
     return {
+        "memberships": data,
         "page": page,
         "page_size": page_size,
-        "total": total,
-        "memberships": paginated_list,
+        "total": total
     }
 
 

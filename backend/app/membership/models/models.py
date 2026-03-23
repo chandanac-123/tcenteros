@@ -12,6 +12,12 @@ class DurationUnitEnum(enum.Enum):
     month = "month"
     year = "year"
 
+class MembershipActionTypeEnum(enum.Enum):
+    created = "created"
+    renewal = "renewal"
+    plan_change = "plan_change"
+
+
 class MembershipFeature(Base, AuditMixin):
     __tablename__ = "membership_features"
     __table_args__ = {"schema": "membership"}
@@ -66,6 +72,7 @@ class MemberMembership(Base, AuditMixin):
     total_amount = Column(Numeric(10, 2), nullable=False)
     auto_renewal_enabled = Column(Boolean, default=False)
     membership_status = Column(Enum(StatusEnum, name="status_enum"), nullable=False, default=StatusEnum.active)
+    action_type = Column(Enum(MembershipActionTypeEnum), nullable=False, default=MembershipActionTypeEnum.created)
 
     # Relationships (optional)
     member = relationship(
@@ -75,3 +82,7 @@ class MemberMembership(Base, AuditMixin):
     )
     center = relationship("Center", back_populates="member_memberships")
     membership = relationship("Membership", back_populates="member_memberships")
+
+
+
+

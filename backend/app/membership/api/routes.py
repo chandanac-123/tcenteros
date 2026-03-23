@@ -6,7 +6,7 @@ from app.membership.models.models import Membership, MembershipFeature
 from app.membership.schema.schema import MembershipCreate, MemberCreate, MemberUpdate ,GuestRegisterIn
 from app.auth.models.models import Member, MemberStatusEnum
 from app.core.security import get_password_hash, generate_random_password
-from app.membership.models.models import MemberMembership, Membership
+from app.membership.models.models import MemberMembership, Membership, MembershipActionTypeEnum
 from app.settings.models.models import Address
 from app.core.models.models import GenderEnum
 from datetime import datetime, date
@@ -346,7 +346,6 @@ async def create_member(
     from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
     from app.accounts.helpers import auto_record_payment_in_accounts
     from app.settings.models.models import TaxCategory, TaxScope
-    import traceback
 
     # Get logged-in centeradmin and their center_id
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
@@ -372,6 +371,30 @@ async def create_member(
             allowed_sub_ids = [str(row[0]) for row in sub_centers.fetchall()]
             if str(target_center.id) not in allowed_sub_ids:
                 raise HTTPException(status_code=403, detail="You can only create members in your own center or sub-branches")
+
+    # --- EMAIL & PHONE VALIDATION ---
+    # Check for duplicate email in the same center
+    email_query = await db.execute(
+        select(Member).where(
+            Member.email == payload.email,
+            Member.home_center_id == target_center.id
+        )
+    )
+    existing_email_member = email_query.scalar_one_or_none()
+    if existing_email_member:
+        raise HTTPException(status_code=400, detail="A member with this email already exists in this center.")
+
+    # Check for duplicate mobile in the same center
+    if payload.mobile:
+        mobile_query = await db.execute(
+            select(Member).where(
+                Member.mobile == payload.mobile,
+                Member.home_center_id == target_center.id
+            )
+        )
+        existing_mobile_member = mobile_query.scalar_one_or_none()
+        if existing_mobile_member:
+            raise HTTPException(status_code=400, detail="A member with this mobile number already exists in this center.")
 
     # Validate membership plan if provided
     membership = None
@@ -507,6 +530,7 @@ async def create_member(
             updated_by=current_user["user_id"],
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
+            action_type=MembershipActionTypeEnum.created  # <-- Set action_type
         )
         db.add(member_membership)
         await db.flush()
@@ -531,9 +555,9 @@ async def create_member(
                 payer_user_id=member.id,
                 payer_type="user",
                 payee_type="center",
-                center_id=target_center.id,  # ✅ CORRECT: Use center_id
+                center_id=target_center.id,
                 order_type="membership",
-                reference_schema="center",  # ✅ CORRECT: Use valid enum value
+                reference_schema="center",
                 reference_id=member_membership.id,
                 subtotal_amount=subtotal_amount,
                 tax_amount=tax_amount,
@@ -549,22 +573,20 @@ async def create_member(
             db.add(payment_order)
             await db.flush()
             
-            # ✅ AUTO-RECORD IN ACCOUNTING MODULE
+            # AUTO-RECORD IN ACCOUNTING MODULE
             if payment_order.status == PaymentOrderStatus.paid:
                 try:
                     await auto_record_payment_in_accounts(
                         db=db,
                         payment_order=payment_order,
-                        created_by=str(current_user["user_id"])
+                        member=member,
+                        center=target_center,
+                        membership=membership,
+                        member_membership=member_membership,
                     )
-                    print(f"✅ Accounting entry created for payment order: {payment_order.payment_order_id}")
                 except Exception as e:
-                    # Log the error but don't fail the member creation
-                    print(f"❌ Failed to record payment in accounts: {str(e)}")
-                    traceback.print_exc()
-                    # Optionally add warning to response
-                    if not tax_warning_message:
-                        tax_warning_message = f"Accounting error: {str(e)}"
+                    # Log or handle accounting error if needed
+                    pass
 
     await db.commit()
     await db.refresh(member)
@@ -747,8 +769,8 @@ async def partial_update_member(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    from app.membership.models.models import MemberMembership, Membership
-    from datetime import datetime, date
+    from app.membership.models.models import MemberMembership, Membership, MembershipActionTypeEnum
+    from datetime import datetime
     from dateutil.relativedelta import relativedelta
 
     member = await db.get(Member, member_id)
@@ -760,17 +782,18 @@ async def partial_update_member(
 
     # Update or create address if address fields are present
     if any(field in update_fields for field in address_fields):
+        from app.settings.models.models import Address
         if member.address_id:
-            address = await db.get(Address, member.address_id)
-            if address:
+            address_obj = await db.get(Address, member.address_id)
+            if address_obj:
                 for field in address_fields:
                     if field in update_fields:
-                        setattr(address, field, update_fields[field])
-                address.updated_at = datetime.utcnow()
-                address.updated_by = current_user["user_id"]
+                        setattr(address_obj, field, update_fields[field])
+                address_obj.updated_at = datetime.utcnow()
+                address_obj.updated_by = current_user["user_id"]
                 await db.flush()
         else:
-            address = Address(
+            address_obj = Address(
                 id=uuid4(),
                 address_line_1=update_fields.get("address_line_1"),
                 address_line_2=update_fields.get("address_line_2"),
@@ -783,46 +806,71 @@ async def partial_update_member(
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
-            db.add(address)
+            db.add(address_obj)
             await db.flush()
-            member.address_id = address.id
+            member.address_id = address_obj.id
 
     # Update member fields
     for field, value in update_fields.items():
-        if field not in address_fields:
+        if hasattr(member, field) and field not in address_fields:
             setattr(member, field, value)
     member.updated_at = datetime.utcnow()
     member.updated_by = current_user["user_id"]
 
-    # If membership_id is present, create a new MemberMembership record
+    # If membership_id is present, create a new MemberMembership record (plan change)
     if "membership_id" in update_fields and update_fields["membership_id"]:
         membership = await db.get(Membership, update_fields["membership_id"])
         if not membership:
-            raise HTTPException(status_code=400, detail="Membership not found")
-        start_date = date.today()
+            raise HTTPException(status_code=404, detail="Membership plan not found")
+
+        # Calculate start and end date for new membership
+        now = datetime.utcnow()
         duration_unit = membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit
-        if duration_unit == "month":
-            end_date = start_date + relativedelta(months=membership.duration_count)
+        duration_count = membership.duration_count
+        if duration_unit == "day":
+            end_date = now + relativedelta(days=duration_count)
+        elif duration_unit == "month":
+            end_date = now + relativedelta(months=duration_count)
         elif duration_unit == "year":
-            end_date = start_date + relativedelta(years=membership.duration_count)
-        elif duration_unit == "day":
-            end_date = start_date + relativedelta(days=membership.duration_count)
+            end_date = now + relativedelta(years=duration_count)
         else:
-            end_date = None
+            raise HTTPException(status_code=400, detail="Invalid duration unit in membership plan")
+
+        # Tax calculation (optional, can be expanded as needed)
+        subtotal_amount = float(membership.default_price)
+        tax_amount = 0.0
+        applied_tax_rate = 0.0
+        tax_category_id = None
+        from app.settings.models.models import TaxCategory, TaxScope
+        tax_result = await db.execute(
+            select(TaxCategory).where(
+                TaxCategory.tax_scope == TaxScope.membership,
+                TaxCategory.is_active == True
+            ).limit(1)
+        )
+        tax_category = tax_result.scalar_one_or_none()
+        if tax_category:
+            applied_tax_rate = float(tax_category.tax_rate)
+            tax_category_id = tax_category.id
+            tax_amount = subtotal_amount * applied_tax_rate / 100.0
+        total_amount = subtotal_amount + tax_amount
 
         member_membership = MemberMembership(
             id=uuid4(),
             member_id=member.id,
             membership_id=membership.membership_id,
             center_id=member.home_center_id,
-            start_date=start_date,
+            start_date=now,
             end_date=end_date,
-            total_amount=float(membership.default_price),
+            tax_category_id=tax_category_id,
+            total_amount=total_amount,
+            auto_renewal_enabled=False,
             membership_status=StatusEnum.active,
             created_by=current_user["user_id"],
             updated_by=current_user["user_id"],
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
+            action_type=MembershipActionTypeEnum.plan_change  # <-- Set action_type
         )
         db.add(member_membership)
 
@@ -832,6 +880,7 @@ async def partial_update_member(
     # Fetch updated address for response
     address_obj = None
     if member.address_id:
+        from app.settings.models.models import Address
         address_obj = await db.get(Address, member.address_id)
 
     # Fetch latest MemberMembership for response
@@ -843,8 +892,7 @@ async def partial_update_member(
     member_memberships = result.scalars().all()
     membership_id = None
     if member_memberships:
-        latest_mm = member_memberships[0]
-        membership_id = str(latest_mm.membership_id) if latest_mm.membership_id else None
+        membership_id = str(member_memberships[0].membership_id)
 
     return {
         "id": str(member.id),
@@ -2145,9 +2193,9 @@ async def renew_or_update_membership(
     from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
     from app.accounts.helpers import auto_record_payment_in_accounts
     from app.settings.models.models import TaxCategory, TaxScope
-    from app.membership.models.models import DurationUnitEnum
+    from app.membership.models.models import DurationUnitEnum, MembershipActionTypeEnum
     from uuid import uuid4
-    from datetime import datetime, date
+    from datetime import datetime
     from dateutil.relativedelta import relativedelta
 
     # Extract and validate payload
@@ -2160,15 +2208,12 @@ async def renew_or_update_membership(
     if not payment_status:
         raise HTTPException(status_code=400, detail="payment_status is required")
     
-    # Validate payment_method
     valid_payment_methods = ["cash", "bank_transfer", "upi", "card", "other"]
     if payment_method not in valid_payment_methods:
         raise HTTPException(
             status_code=400, 
             detail=f"Invalid payment_method. Must be one of: {', '.join(valid_payment_methods)}"
         )
-    
-    # Validate payment_status
     valid_payment_statuses = ["paid", "unpaid"]
     if payment_status not in valid_payment_statuses:
         raise HTTPException(
@@ -2176,106 +2221,79 @@ async def renew_or_update_membership(
             detail=f"Invalid payment_status. Must be one of: {', '.join(valid_payment_statuses)}"
         )
 
-    # Get logged-in centeradmin
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
-    
-    # Get the member
     member = await db.get(Member, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
-    
-    # Verify the member belongs to the admin's center or sub-branch
     from app.center.models.models import Center
     member_center = await db.get(Center, member.home_center_id)
     if not member_center:
         raise HTTPException(status_code=404, detail="Member's center not found")
-    
     admin_center_id = str(center_admin.center_id)
     admin_center = await db.get(Center, admin_center_id)
-    
-    # Access control
     if member_center.parent_center_id:
-        # Sub-branch member: admin must be parent or the same branch
         if admin_center_id != str(member_center.id) and admin_center_id != str(member_center.parent_center_id):
-            raise HTTPException(status_code=403, detail="Not authorized to manage this member")
+            raise HTTPException(status_code=403, detail="Not authorized for this member")
     else:
-        # Parent center member: admin must be the same center or can be from sub-branch if allowed
         if admin_center_id != str(member_center.id):
-            # Check if admin is from a sub-branch
-            if not admin_center.parent_center_id or str(admin_center.parent_center_id) != str(member_center.id):
-                raise HTTPException(status_code=403, detail="Not authorized to manage this member")
-    
-    # Get the latest membership record for this member - FIXED LINE
+            sub_centers_result = await db.execute(
+                select(Center.id).where(Center.parent_center_id == admin_center_id)
+            )
+            allowed_sub_ids = [str(row[0]) for row in sub_centers_result.fetchall()]
+            if str(member_center.id) not in allowed_sub_ids:
+                raise HTTPException(status_code=403, detail="Not authorized for this member")
+
+    # Get the latest membership record for this member
     result = await db.execute(
         select(MemberMembership)
         .where(MemberMembership.member_id == member.id)
         .order_by(MemberMembership.end_date.desc())
     )
-    latest_membership_record = result.scalars().first()  # CHANGED: from scalar_one_or_none() to scalars().first()
+    latest_membership_record = result.scalars().first()
     
-    # Determine which membership plan to use
+    # Determine which membership plan to use and action_type
     if membership_id:
-        # New plan provided - assign new membership
         membership = await db.get(Membership, membership_id)
         if not membership:
             raise HTTPException(status_code=404, detail="Membership plan not found")
-        
-        # Verify membership belongs to member's center
         if str(membership.center_id) != str(member.home_center_id):
-            raise HTTPException(status_code=400, detail="Membership plan does not belong to member's center")
-        
+            raise HTTPException(status_code=400, detail="Membership does not belong to member's center")
         renewal_type = "plan_change"
+        action_type = MembershipActionTypeEnum.plan_change
     else:
-        # No new plan provided - renew current plan
         if not latest_membership_record:
-            raise HTTPException(
-                status_code=400, 
-                detail="Member has no existing membership. Please provide membership_id to assign a new plan"
-            )
-        
-        # Get the current membership plan
+            raise HTTPException(status_code=400, detail="No existing membership to renew")
         membership = await db.get(Membership, latest_membership_record.membership_id)
         if not membership:
-            raise HTTPException(status_code=404, detail="Member's current membership plan not found")
-        
+            raise HTTPException(status_code=404, detail="Current membership plan not found")
         renewal_type = "renewal"
-    
-    # Determine start date for renewal/new membership
+        action_type = MembershipActionTypeEnum.renewal
+
     now = datetime.utcnow()
-    
     if renewal_type == "renewal" and latest_membership_record and latest_membership_record.end_date:
-        # If renewing and previous membership hasn't expired, continue from end_date
-        if latest_membership_record.end_date > now:
-            start_date = latest_membership_record.end_date
-        else:
-            # Previous membership expired, start from today
-            start_date = now
+        last_end = latest_membership_record.end_date
+        start_date = last_end + relativedelta(days=1) if last_end > now else now
     else:
-        # New plan assignment or no previous end_date, start from today
         start_date = now
-    
-    # Calculate end_date based on membership duration
+
     duration_unit = membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit
-    
+    duration_count = membership.duration_count
     if duration_unit == "day":
-        end_date = start_date + relativedelta(days=membership.duration_count)
+        end_date = start_date + relativedelta(days=duration_count)
     elif duration_unit == "month":
-        end_date = start_date + relativedelta(months=membership.duration_count)
+        end_date = start_date + relativedelta(months=duration_count)
     elif duration_unit == "year":
-        end_date = start_date + relativedelta(years=membership.duration_count)
+        end_date = start_date + relativedelta(years=duration_count)
     else:
-        raise HTTPException(status_code=400, detail="Invalid membership duration unit")
-    
-    # Tax calculation
+        raise HTTPException(status_code=400, detail="Invalid duration unit in membership plan")
+
     subtotal_amount = float(membership.default_price)
     tax_amount = 0.0
     applied_tax_rate = 0.0
     tax_category_id = None
     tax_warning_message = None
-    
-    # Try to find tax category for membership scope (global, not per-center)
     tax_result = await db.execute(
         select(TaxCategory).where(
             TaxCategory.tax_scope == TaxScope.membership,
@@ -2283,19 +2301,21 @@ async def renew_or_update_membership(
         ).limit(1)
     )
     tax_category = tax_result.scalar_one_or_none()
-    
     if tax_category:
-        tax_category_id = tax_category.id
         applied_tax_rate = float(tax_category.tax_percentage)
-        tax_amount = subtotal_amount * (applied_tax_rate / 100)
+        tax_amount = round(subtotal_amount * applied_tax_rate / 100, 2)
+        tax_category_id = tax_category.id
     else:
-        tax_warning_message = "No active tax category found for membership. Tax amount set to 0."
-    
+        tax_amount = 0.0
+        applied_tax_rate = 0.0
+        tax_category_id = None
+        tax_warning_message = "No active tax category found for membership. Tax not applied."
+
+    # --- FIX: Calculate total_amount before using it ---
     total_amount = subtotal_amount + tax_amount
-    
+
     # Create PaymentOrder
     order_type = "renewal" if renewal_type == "renewal" else "membership"
-    
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
         center_id=member.home_center_id,
@@ -2317,7 +2337,7 @@ async def renew_or_update_membership(
     )
     db.add(payment_order)
     await db.flush()
-    
+
     # Create new MemberMembership record
     member_membership = MemberMembership(
         id=uuid4(),
@@ -2334,58 +2354,40 @@ async def renew_or_update_membership(
         updated_by=current_user["user_id"],
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
+        action_type=action_type
     )
     db.add(member_membership)
-    await db.flush()
-    
-    # If payment is marked as paid, record in accounts
-    if payment_status == "paid":
-        try:
-            description = f"Membership {renewal_type} payment for {member.full_name} - {membership.membership_name}"
-            await auto_record_payment_in_accounts(
-                db=db,
-                center_id=str(member.home_center_id),
-                payment_order_id=str(payment_order.payment_order_id),
-                amount=total_amount,
-                payment_method=payment_method,
-                transaction_date=date.today(),
-                description=description,
-                created_by_user_id=str(current_user["user_id"])
-            )
-        except Exception as e:
-            # Log error but don't fail the renewal
-            print(f"Failed to record payment in accounts: {str(e)}")
-    
     await db.commit()
     await db.refresh(member_membership)
     await db.refresh(payment_order)
-    
-    # Build response
-    response_data = {
-        "message": f"Membership {'renewed' if renewal_type == 'renewal' else 'updated'} successfully",
-        "action": renewal_type,
+
+    # --- ACCOUNTS INTEGRATION ---
+    # This will create the journal entry and ledger records for the payment order
+    try:
+        await auto_record_payment_in_accounts(payment_order, db)
+    except Exception as e:
+        # Optionally log or handle accounting errors, but do not block the main flow
+        print(f"⚠️ Accounting integration failed: {e}")
+
+    response = {
         "member_id": str(member.id),
-        "member_name": member.full_name,
-        "member_email": member.email,
         "membership_id": str(membership.membership_id),
         "membership_name": membership.membership_name,
-        "membership_code": membership.membership_code,
-        "member_membership_id": str(member_membership.id),
-        "start_date": start_date.isoformat(),
-        "end_date": end_date.isoformat(),
-        "duration": f"{membership.duration_count} {duration_unit}(s)",
-        "payment_order_id": str(payment_order.payment_order_id),
+        "start_date": start_date,
+        "end_date": end_date,
         "subtotal_amount": subtotal_amount,
         "tax_amount": tax_amount,
         "tax_rate": applied_tax_rate,
         "total_amount": total_amount,
-        "payment_method": payment_method,
-        "payment_status": payment_status,
+        "payment_order_id": str(payment_order.payment_order_id),
+        "payment_status": payment_order.status.value,
+        "payment_method": payment_order.payment_method.value,
+        "action_type": action_type.value,
+        "tax_warning_message": tax_warning_message,
+        "status": "success"
     }
-    
-    if tax_warning_message:
-        response_data["tax_warning"] = tax_warning_message
-    
-    return response_data
+    return response
+
+
 
 

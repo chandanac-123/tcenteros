@@ -491,12 +491,13 @@ async def get_onboarding_temp_by_id(
 
     # Fetch center category info
     category = await db.get(CenterCategory, temp.center_category_id)
-    category_info = None
     if category:
         category_info = {
-            "id": category.id,
+            "id": str(category.id),
             "name": category.name
         }
+    else:
+        category_info = {}  # Return empty dict if not found
 
     # Fetch platform features info
     feature_ids = temp.platform_feature_ids or []
@@ -505,19 +506,19 @@ async def get_onboarding_temp_by_id(
         feature = await db.get(PlatformFeature, fid)
         if feature:
             features.append({
-                "id": feature.id,
+                "id": str(feature.id),
                 "feature_name": feature.feature_name,
                 "description": feature.description
             })
 
     return {
-        "id": temp.id,
+        "id": str(temp.id),
         "center_name": temp.center_name,
         "contact_person": temp.contact_person,
         "center_email": temp.center_email,
         "center_phone": temp.center_phone,
         "city": temp.city,
-        "center_category": category_info,
+        "center_category": category_info,  # Always a dict
         "kind_of_center": temp.kind_of_center,
         "members_count": temp.members_count,
         "trainer_count": temp.trainer_count,
@@ -525,7 +526,7 @@ async def get_onboarding_temp_by_id(
         "marketing_platform": temp.marketing_platform,
         "platform_features": features,
         "is_terms_and_conditions": temp.is_terms_and_conditions,
-        "subscription_duration": temp.subscription_duration,  # Added
+        "subscription_duration": temp.subscription_duration,
         "calculated_amount": float(temp.calculated_amount)
     }
 
