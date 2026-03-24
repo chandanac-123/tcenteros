@@ -26,7 +26,7 @@ export const useCreateAttendanceMutation = () => {
       showSuccess('Attendance created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create attendance')
+      showError(err?.response?.data?.detail || 'Failed to create attendance')
       return err
     }
   })

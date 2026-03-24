@@ -29,7 +29,7 @@ export const useUpdateProfileMutation = (id, data) => {
       showSuccess('Profile updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update profile')
+      showError(err?.response?.data?.detail || 'Failed to update profile')
       return err
     }
   })
@@ -55,7 +55,7 @@ export const useUpdateProfilePicMutation = () => {
     },
     onError: err => {
       showError(
-        err?.response?.data?.message || 'Failed to update profile picture'
+        err?.response?.data?.detail || 'Failed to update profile picture'
       )
       return err
     }
@@ -71,7 +71,7 @@ export const useUpdateProfileImageMutation = () => {
       showSuccess('Center image updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update center image')
+      showError(err?.response?.data?.detail || 'Failed to update center image')
       return err
     }
   })
@@ -95,7 +95,7 @@ export const useFetchCenterLocationMutation = () => {
       showSuccess('Center location fetched successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to fetch center location')
+      showError(err?.response?.data?.detail || 'Failed to fetch center location')
       return err
     }
   })

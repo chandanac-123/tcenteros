@@ -34,7 +34,7 @@ export const useCreateMemberMutation = () => {
       showSuccess('Member created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create member')
+      showError(err?.response?.data?.detail || 'Failed to create member')
       return err
     }
   })
@@ -49,7 +49,7 @@ export const useUpdateMemberMutation = () => {
       showSuccess('Member updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update member')
+      showError(err?.response?.data?.detail || 'Failed to update member')
       return err
     }
   })
@@ -64,7 +64,7 @@ export const useDeleteMemberMutation = () => {
       showSuccess('Member deleted successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to delete member')
+      showError(err?.response?.data?.detail || 'Failed to delete member')
       return err
     }
   })
