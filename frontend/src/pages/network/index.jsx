@@ -179,7 +179,7 @@ const Network = () => {
             activeTab={activeTab}
             data={filteredData}
             tableParams={tableParams}
-            pagination={data?.total}
+            pagination={filteredData?.total}
             loading={isFetching}
             setTableParams={setTableParams}
           />
