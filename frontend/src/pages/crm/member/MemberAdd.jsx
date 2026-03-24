@@ -168,6 +168,15 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           isEdit ? 'Member Updation Form' : 'Member Creation Form'
         }
       />
+      {memberPlan?.length === 0 && (
+        <div className='flex justify-center items-center text-red_text'>
+          Currently there is no active membership plan. Please create a
+          membership plan to proceed.
+          <Button variant='link' onClick={() => navigate('/membership-plan')}>
+            Click to Proceed
+          </Button>
+        </div>
+      )}
       <form className='space-y-2' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
           <div className='flex-1'>
