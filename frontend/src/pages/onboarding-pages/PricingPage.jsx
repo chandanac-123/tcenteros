@@ -50,9 +50,7 @@ const PricingPage = () => {
                   / Monthly
                 </span>
 
-                <span className='ml-2 text-md text-textblack font-bold'>
-                 -  Billed Annually : ₹{yearlyPrice.toFixed(2)}
-                </span>
+                
               </div>
 
               {/* Divider */}
@@ -77,10 +75,9 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-onboard_secondary'>
-                Total 1-{data?.subscription_duration} Cost :{' '}
-                {data?.calculated_amount
-                  ? `₹${data.calculated_amount.toFixed(2)}`
-                  : '₹0'}
+               <span className='ml-2 text-md text-textblack font-bold'>
+                   Billed Annually
+                </span>
               </div>
             </div>
 

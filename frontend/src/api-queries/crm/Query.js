@@ -44,7 +44,7 @@ export const useUpdateMemberMutation = () => {
   const query = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }) => updateMember(data, id),
-    onSuccess: async data => {
+    onSuccess: async   => {
       query.invalidateQueries('members')
       showSuccess('Member updated successfully')
     },

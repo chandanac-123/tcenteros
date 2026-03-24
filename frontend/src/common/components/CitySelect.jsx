@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Autocomplete } from '@react-google-maps/api'
 
-const CitySelect = ({ value, onChange, label, icon, country }) => {
+const CitySelect = ({ value, onChange, label, icon, country="IN" }) => {
   const autocompleteRef = useRef(null)
 
   const onLoad = autocomplete => {

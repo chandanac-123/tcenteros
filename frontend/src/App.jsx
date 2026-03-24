@@ -37,7 +37,7 @@ const { isLoaded } = useJsApiLoader({
   }, [data])
   
   if (!isLoaded) {
-    return <div>Loading Google Maps...</div>
+    return <div>...</div>
   }
   
   return (
