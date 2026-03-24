@@ -22,7 +22,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
   const inputRef = useRef(null)
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
-    libraries: LIBRARIES // ✅ stable reference
+    libraries: LIBRARIES // stable reference
   })
 
   const state = useAuthStore.getState()
@@ -209,7 +209,7 @@ function GoogleMapComponent ({ open, setLocationOpen }) {
           >
             Close
           </Button>
-          <Button type='button' size='addbutton' disabled={isPending}>
+          <Button type='submit' size='addbutton' disabled={isPending}>
             Save Location
           </Button>
         </div>

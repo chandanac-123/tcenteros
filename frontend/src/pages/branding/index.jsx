@@ -133,7 +133,7 @@ const Branding = () => {
           </div>
           <div className='flex-1'>
             <CustomHexColorPicker
-              label='Secondary Color Picker'
+              label='Secondary Color'
               name='secondary_color'
               value={formik.values.secondary_color}
               onChange={val => formik.setFieldValue('secondary_color', val)}
