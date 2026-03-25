@@ -43,8 +43,16 @@ async def bulk_update_white_label_config(
 
     # Handle logo upload (one upload for all)
     logo_url = None
+    MAX_FILE_SIZE_MB = 2
+    MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
+
     if logo:
         file_bytes = await logo.read()
+        if len(file_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Logo file too large. Max allowed size is {MAX_FILE_SIZE_MB} MB."
+            )
         file_ext = logo.filename.split('.')[-1]
         key = f"branding/{admin_center_id}/logo_{uuid4()}.{file_ext}"
         upload_file(file_bytes, key, logo.content_type)
