@@ -184,7 +184,7 @@ const InvoiceSummary = () => {
                   </p>
                 </div>
                 <p className='text-2xl font-bold text-purple-600'>
-                  {yearlyPrice}
+                  {data?.total_amount ? `₹${data?.total_amount.toFixed(2)}` : '₹00.00'}
                 </p>
               </div>
 
