@@ -119,6 +119,7 @@ async def get_center_dashboard(
         raise HTTPException(status_code=403, detail="Not a center admin")
     
     center_id = center_admin.center_id
+    centeradmin_name = center_admin.full_name
     today = date_type.today()
     current_year = today.year
     
@@ -387,6 +388,7 @@ async def get_center_dashboard(
     
     return {
         "center_id": str(center_id),
+        "centeradmin_name": centeradmin_name,
         "generated_at": datetime.now().isoformat(),
         "total_employees": int(total_employees),
         "total_members": int(total_members),
