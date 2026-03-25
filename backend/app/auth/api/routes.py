@@ -529,23 +529,17 @@ async def update_employee(
     mobile: Optional[str] = Form(None),
     qualification: Optional[str] = Form(None),
     experience: Optional[int] = Form(None),
-    # country: Optional[str] = Form(None),
-    # state: Optional[str] = Form(None),
-    # city: Optional[str] = Form(None),
-    # pin: Optional[str] = Form(None),
-    # address: Optional[str] = Form(None),
     password: Optional[str] = Form(None),
     designation_id: Optional[str] = Form(None),
     center_id: Optional[str] = Form(None),
     joining_date: Optional[date] = Form(None),
     profile_photo: Optional[UploadFile] = File(None),
-    # Address fields
-    address_line_1: Optional[str] = Form(None),
-    address_line_2: Optional[str] = Form(None),
-    address_city: Optional[str] = Form(None),
-    address_state: Optional[str] = Form(None),
-    address_country: Optional[str] = Form(None),
-    address_pin: Optional[str] = Form(None),
+    # Address fields (updated)
+    address: Optional[str] = Form(None),
+    city: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+    country: Optional[str] = Form(None),
+    pin: Optional[str] = Form(None),
     session: AsyncSession = Depends(get_async_session)
 ):
     emp = await session.get(Employee, employee_id)
@@ -570,21 +564,6 @@ async def update_employee(
     if experience is not None:
         emp.experience_years = experience
         updated = True
-    # if country is not None:
-    #     emp.country = country
-    #     updated = True
-    # if state is not None:
-    #     emp.state = state
-    #     updated = True
-    # if city is not None:
-    #     emp.city = city
-    #     updated = True
-    # if pin is not None:
-    #     emp.pin = pin
-    #     updated = True
-    # if address is not None:
-    #     emp.address = address
-    #     updated = True
     if password is not None:
         emp.password_hash = password  # Hash if needed
         updated = True
@@ -608,17 +587,16 @@ async def update_employee(
         updated = True
 
     # Update or create Address if any address field is provided
-    if any([address_line_1, address_line_2, address_city, address_state, address_country, address_pin]):
+    if any([address, city, state, country, pin]):
         if not emp.address_id:
             # Create a new Address if none exists
             new_addr = Address(
                 id=uuid4(),
-                address_line_1=address_line_1,
-                address_line_2=address_line_2,
-                city=address_city,
-                state=address_state,
-                country=address_country,
-                postal_code=address_pin,
+                address_line_1=address,
+                city=city,
+                state=state,
+                country=country,
+                postal_code=pin,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
@@ -630,18 +608,16 @@ async def update_employee(
             addr = await session.get(Address, emp.address_id)
             if not addr:
                 raise HTTPException(404, "Address not found")
-            if address_line_1 is not None:
-                addr.address_line_1 = address_line_1
-            if address_line_2 is not None:
-                addr.address_line_2 = address_line_2
-            if address_city is not None:
-                addr.city = address_city
-            if address_state is not None:
-                addr.state = address_state
-            if address_country is not None:
-                addr.country = address_country
-            if address_pin is not None:
-                addr.postal_code = address_pin
+            if address is not None:
+                addr.address_line_1 = address
+            if city is not None:
+                addr.city = city
+            if state is not None:
+                addr.state = state
+            if country is not None:
+                addr.country = country
+            if pin is not None:
+                addr.postal_code = pin
         updated = True
     else:
         addr = None
