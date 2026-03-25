@@ -1107,6 +1107,15 @@ async def delete_member(
     member = await db.get(Member, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # Handle time slot occupancy
+    if member.time_slot_id:
+        from app.center.models.models import CenterTimeSlot
+        slot = await db.get(CenterTimeSlot, member.time_slot_id)
+        if slot and hasattr(slot, "current_occupancy"):
+            slot.current_occupancy = max(0, (slot.current_occupancy or 1) - 1)
+            db.add(slot)
+
     await db.delete(member)
     await db.commit()
     return {"detail": "Member deleted"}
@@ -1190,7 +1199,7 @@ async def change_member_status(
         raise HTTPException(status_code=404, detail="Member not found")
 
     # Get member's center
-    from app.center.models.models import Center
+    from app.center.models.models import Center, CenterTimeSlot
     member_center = await db.get(Center, member.home_center_id)
     if not member_center:
         raise HTTPException(status_code=404, detail="Member's center not found")
@@ -1209,6 +1218,19 @@ async def change_member_status(
             allowed_sub_ids = [str(row[0]) for row in sub_centers.fetchall()]
             if str(member_center.id) not in allowed_sub_ids:
                 raise HTTPException(status_code=403, detail="Not allowed to change status for this member")
+
+    # Handle time slot occupancy
+    if member.time_slot_id:
+        slot = await db.get(CenterTimeSlot, member.time_slot_id)
+        if slot and hasattr(slot, "current_occupancy"):
+            # If member is being inactivated/suspended and was active, decrement occupancy
+            if member.status == StatusEnum.active and status in ["inactive", "suspended"]:
+                slot.current_occupancy = max(0, (slot.current_occupancy or 1) - 1)
+                db.add(slot)
+            # If member is being activated and was inactive/suspended, increment occupancy
+            elif member.status in [StatusEnum.inactive, StatusEnum.suspended] and status == "active":
+                slot.current_occupancy = (slot.current_occupancy or 0) + 1
+                db.add(slot)
 
     # Change status
     member.status = StatusEnum(status)
