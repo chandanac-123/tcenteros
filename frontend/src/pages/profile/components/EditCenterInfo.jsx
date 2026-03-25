@@ -168,8 +168,8 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           <div className='flex-1'>
             <CustomeSelect
               options={[
-                { id: true, name: 'Yes' },
-                { id: false, name: 'No' }
+                { id: 'true', name: 'Yes' },
+                { id: 'false', name: 'No' }
               ]}
               label='Live Class'
               name='live_class_enable'

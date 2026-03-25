@@ -11,7 +11,8 @@ import {
   getVisitorApiCall,
   getGuestApiCall,
   getVisitorByIdApiCall,
-  getGuestByIdApiCall
+  getGuestByIdApiCall,
+  getActiveMemberPlanApiCall
 } from '../../api'
 
 export const getAllMember = async data => {
@@ -70,6 +71,15 @@ export const getMemberTimeSlot = async id => {
 export const getMemberPlan = async () => {
   try {
     const response = await getMemberPlanApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getActiveMemberPlan = async () => {
+  try {
+    const response = await getActiveMemberPlanApiCall()
     return response.data
   } catch (error) {
     throw error

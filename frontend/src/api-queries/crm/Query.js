@@ -12,7 +12,8 @@ import {
   getVisitor,
   getGuestInfo,
   getVisitorById,
-  getGuestById
+  getGuestById,
+  getActiveMemberPlan
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -34,6 +35,7 @@ export const useCreateMemberMutation = () => {
       showSuccess('Member created successfully')
     },
     onError: err => {
+      console.log('err: ', err);
       showError(err?.response?.data?.detail || 'Failed to create member')
       return err
     }
@@ -98,6 +100,16 @@ export const useMembersPlanQuery = () => {
     refetchOnMount: true
   })
 }
+
+export const useActiveMembersPlanQuery = () => {
+  return useQuery({
+    queryKey: ['membersPlan'],
+    queryFn: () => getActiveMemberPlan(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
 
 export const useMembersCountQuery = () => {
   return useQuery({
