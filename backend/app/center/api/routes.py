@@ -533,8 +533,8 @@ async def get_onboarding_temp_by_id(
     }
 
 
-@router.get("/onboarding/calculate", response_model=GSTCalculationResponse)
-async def calculate_gst(
+@router.get("/onboarding/calculate-plan", response_model=GSTCalculationResponse)
+async def calculate_gst_plan(
     onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
     db: AsyncSession = Depends(get_async_session)
 ):
@@ -585,6 +585,83 @@ async def calculate_gst(
         total_tax=0.0,
         total_amount=total_base,
         tax=None,
+        pricing_note=pricing_note
+    )  
+
+
+@router.get("/onboarding/calculate", response_model=GSTCalculationResponse)
+async def calculate_gst(
+    onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Calculate GST and total amount with pricing breakdown.
+    Shows savings comparison between monthly and yearly plans.
+    """
+    temp = await db.get(CenterOnboardingTemp, onboarding_id)
+    if not temp:
+        raise HTTPException(status_code=404, detail="Onboarding temp not found")
+
+    feature_ids = temp.platform_feature_ids or []
+    if not isinstance(feature_ids, list):
+        raise HTTPException(status_code=400, detail="Invalid feature IDs format")
+
+    # Calculate yearly base price from features
+    yearly_base = 0.0
+    for feature_id in feature_ids:
+        try:
+            feature = await db.get(PlatformFeature, UUID(feature_id))
+            if not feature:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Feature {feature_id} not found"
+                )
+            yearly_base += float(feature.base_price)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid feature ID format: {feature_id}"
+            )
+
+    # Apply pricing logic based on subscription duration
+    pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
+    total_base = pricing_info["base_price"]
+    pricing_note = pricing_info["note"]
+
+    # Get applicable tax
+    tax_query = await db.execute(
+        select(TaxCategory)
+        .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
+        .limit(1)
+    )
+    tax = tax_query.scalar_one_or_none()
+    
+    total_tax = 0.0
+    tax_info = None
+    if tax:
+        # Convert Decimal to float to avoid type mismatch
+        total_tax = (total_base * float(tax.tax_percentage)) / 100
+        tax_info = {
+            "id": str(tax.id),
+            "name": tax.name,
+            "tax_type": tax.tax_type,
+            "tax_percentage": float(tax.tax_percentage),
+            "tax_scope": tax.tax_scope
+        }
+
+    # Update the calculated_amount in temp record (base + tax)
+    temp.calculated_amount = total_base + total_tax
+    await db.commit()
+    await db.refresh(temp)
+
+    return GSTCalculationResponse(
+        center_name=temp.center_name,
+        center_phone=temp.center_phone,
+        city=temp.city,
+        total_base_price=total_base,
+        total_tax=total_tax,
+        total_amount=total_base + total_tax,
+        tax=tax_info,
         pricing_note=pricing_note
     )
 
