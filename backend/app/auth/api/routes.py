@@ -529,11 +529,11 @@ async def update_employee(
     mobile: Optional[str] = Form(None),
     qualification: Optional[str] = Form(None),
     experience: Optional[int] = Form(None),
-    country: Optional[str] = Form(None),
-    state: Optional[str] = Form(None),
-    city: Optional[str] = Form(None),
-    pin: Optional[str] = Form(None),
-    address: Optional[str] = Form(None),
+    # country: Optional[str] = Form(None),
+    # state: Optional[str] = Form(None),
+    # city: Optional[str] = Form(None),
+    # pin: Optional[str] = Form(None),
+    # address: Optional[str] = Form(None),
     password: Optional[str] = Form(None),
     designation_id: Optional[str] = Form(None),
     center_id: Optional[str] = Form(None),
@@ -570,21 +570,21 @@ async def update_employee(
     if experience is not None:
         emp.experience_years = experience
         updated = True
-    if country is not None:
-        emp.country = country
-        updated = True
-    if state is not None:
-        emp.state = state
-        updated = True
-    if city is not None:
-        emp.city = city
-        updated = True
-    if pin is not None:
-        emp.pin = pin
-        updated = True
-    if address is not None:
-        emp.address = address
-        updated = True
+    # if country is not None:
+    #     emp.country = country
+    #     updated = True
+    # if state is not None:
+    #     emp.state = state
+    #     updated = True
+    # if city is not None:
+    #     emp.city = city
+    #     updated = True
+    # if pin is not None:
+    #     emp.pin = pin
+    #     updated = True
+    # if address is not None:
+    #     emp.address = address
+    #     updated = True
     if password is not None:
         emp.password_hash = password  # Hash if needed
         updated = True
