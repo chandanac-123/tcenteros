@@ -487,6 +487,9 @@ async def get_onboarding_temp_by_id(
     onboarding_id: UUID,
     db: AsyncSession = Depends(get_async_session)
 ):
+    """
+    Get onboarding temp details, including only the base amount (without GST).
+    """
     temp = await db.get(CenterOnboardingTemp, onboarding_id)
     if not temp:
         raise HTTPException(404, detail="Onboarding temp not found")
@@ -499,7 +502,7 @@ async def get_onboarding_temp_by_id(
             "name": category.name
         }
     else:
-        category_info = {}  # Return empty dict if not found
+        category_info = {}
 
     # Fetch platform features info
     feature_ids = temp.platform_feature_ids or []
@@ -513,6 +516,17 @@ async def get_onboarding_temp_by_id(
                 "description": feature.description
             })
 
+    # Calculate yearly base price from all selected features
+    yearly_base = 0.0
+    for feature_id in feature_ids:
+        feature = await db.get(PlatformFeature, feature_id)
+        if feature:
+            yearly_base += float(feature.base_price)
+
+    # Apply pricing logic based on subscription duration
+    pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
+    base_amount = pricing_info["base_price"]
+
     return {
         "id": str(temp.id),
         "center_name": temp.center_name,
@@ -520,7 +534,7 @@ async def get_onboarding_temp_by_id(
         "center_email": temp.center_email,
         "center_phone": temp.center_phone,
         "city": temp.city,
-        "center_category": category_info,  # Always a dict
+        "center_category": category_info,
         "kind_of_center": temp.kind_of_center,
         "members_count": temp.members_count,
         "trainer_count": temp.trainer_count,
@@ -529,64 +543,64 @@ async def get_onboarding_temp_by_id(
         "platform_features": features,
         "is_terms_and_conditions": temp.is_terms_and_conditions,
         "subscription_duration": temp.subscription_duration,
-        "calculated_amount": float(temp.calculated_amount)
+        "calculated_amount": float(base_amount)  # Only base amount, no GST
     }
 
 
-@router.get("/onboarding/calculate-plan", response_model=GSTCalculationResponse)
-async def calculate_gst_plan(
-    onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
-    db: AsyncSession = Depends(get_async_session)
-):
-    """
-    Calculate and return only the base price (before tax) for the onboarding temp.
-    """
-    temp = await db.get(CenterOnboardingTemp, onboarding_id)
-    if not temp:
-        raise HTTPException(status_code=404, detail="Onboarding temp not found")
+# @router.get("/onboarding/calculate-plan", response_model=GSTCalculationResponse)
+# async def calculate_gst_plan(
+#     onboarding_id: UUID = Query(..., description="Onboarding temp UUID"),
+#     db: AsyncSession = Depends(get_async_session)
+# ):
+#     """
+#     Calculate and return only the base price (before tax) for the onboarding temp.
+#     """
+#     temp = await db.get(CenterOnboardingTemp, onboarding_id)
+#     if not temp:
+#         raise HTTPException(status_code=404, detail="Onboarding temp not found")
 
-    feature_ids = temp.platform_feature_ids or []
-    if not isinstance(feature_ids, list):
-        raise HTTPException(status_code=400, detail="Invalid feature IDs format")
+#     feature_ids = temp.platform_feature_ids or []
+#     if not isinstance(feature_ids, list):
+#         raise HTTPException(status_code=400, detail="Invalid feature IDs format")
 
-    # Calculate yearly base price from features
-    yearly_base = 0.0
-    for feature_id in feature_ids:
-        try:
-            feature = await db.get(PlatformFeature, UUID(feature_id))
-            if not feature:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Feature {feature_id} not found"
-                )
-            yearly_base += float(feature.base_price)
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid feature ID format: {feature_id}"
-            )
+#     # Calculate yearly base price from features
+#     yearly_base = 0.0
+#     for feature_id in feature_ids:
+#         try:
+#             feature = await db.get(PlatformFeature, UUID(feature_id))
+#             if not feature:
+#                 raise HTTPException(
+#                     status_code=404,
+#                     detail=f"Feature {feature_id} not found"
+#                 )
+#             yearly_base += float(feature.base_price)
+#         except ValueError:
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail=f"Invalid feature ID format: {feature_id}"
+#             )
 
-    # Apply pricing logic based on subscription duration
-    pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
-    total_base = pricing_info["base_price"]
-    pricing_note = pricing_info["note"]
+#     # Apply pricing logic based on subscription duration
+#     pricing_info = calculate_subscription_price(yearly_base, temp.subscription_duration)
+#     total_base = pricing_info["base_price"]
+#     pricing_note = pricing_info["note"]
 
-    # Update the calculated_amount in temp record (base only, no tax)
-    temp.calculated_amount = total_base
-    await db.commit()
-    await db.refresh(temp)
+#     # Update the calculated_amount in temp record (base only, no tax)
+#     temp.calculated_amount = total_base
+#     await db.commit()
+#     await db.refresh(temp)
 
-    # Return only the base price (before tax)
-    return GSTCalculationResponse(
-        center_name=temp.center_name,
-        center_phone=temp.center_phone,
-        city=temp.city,
-        total_base_price=total_base,
-        total_tax=0.0,
-        total_amount=total_base,
-        tax=None,
-        pricing_note=pricing_note
-    )  
+#     # Return only the base price (before tax)
+#     return GSTCalculationResponse(
+#         center_name=temp.center_name,
+#         center_phone=temp.center_phone,
+#         city=temp.city,
+#         total_base_price=total_base,
+#         total_tax=0.0,
+#         total_amount=total_base,
+#         tax=None,
+#         pricing_note=pricing_note
+#     )  
 
 
 @router.get("/onboarding/calculate", response_model=GSTCalculationResponse)
