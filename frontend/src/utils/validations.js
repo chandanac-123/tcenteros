@@ -190,31 +190,34 @@ export const salaryValidationSchema = Yup.object().shape({
   pay_cycle: Yup.string().required('Select pay cycle')
 })
 
-export const memberValidationSchema = Yup.object().shape({
-  full_name: Yup.string()
-    .trim()
-    .required('Full name is required')
-    .min(3, 'Name must be at least 3 characters'),
-  email: Yup.string()
-    .email('Enter a valid email')
-    .required('Email is required'),
-  mobile: Yup.string()
-    .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
-    .required('Mobile number is required'),
-  date_of_birth: Yup.date().nullable().required('Date of birth is required'),
-  membership_id: Yup.string().required('Please select a membership plan'),
-  time_slot_id: Yup.string().required('Please select a time slot'),
-  payment_method: Yup.string().when('payment_status', {
-    is: 'paid',
-    then: schema => schema.required('Select payment method'),
-    otherwise: schema => schema.nullable()
-  }),
-  password: Yup.string().when('payment_status', {
-    is: 'paid',
-    then: schema => schema.required('Password is required'),
-    otherwise: schema => schema.nullable()
-  })
-})
+export const memberValidationSchema = (isEdit = false) =>
+  Yup.object().shape({
+    full_name: Yup.string()
+      .trim()
+      .required('Full name is required')
+      .min(3, 'Name must be at least 3 characters'),
+    email: Yup.string()
+      .email('Enter a valid email')
+      .required('Email is required'),
+    mobile: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
+      .required('Mobile number is required'),
+    date_of_birth: Yup.date().nullable().required('Date of birth is required'),
+    membership_id: isEdit
+  ? Yup.string().nullable().notRequired() // optional for edit
+  : Yup.string().required('Please select a membership plan'), // required for create
+    time_slot_id: Yup.string().required('Please select a time slot'),
+    payment_method: Yup.string().when('payment_status', {
+      is: 'paid',
+      then: schema => schema.required('Select payment method'),
+      otherwise: schema => schema.nullable(),
+    }),
+    password: Yup.string().when('payment_status', {
+      is: 'paid',
+      then: schema => schema.required('Password is required'),
+      otherwise: schema => schema.notRequired(),
+    }),
+  });
 
 export const productValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Product name is required'),

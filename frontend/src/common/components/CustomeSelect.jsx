@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@pages/components/ui/select'
+import EmployeeTable from '@pages/employee-management/employee/table';
 
 export default function CustomeSelect ({
   label,
@@ -18,6 +19,8 @@ export default function CustomeSelect ({
   disabled = false
 }) {
   const [searchVal, setSearchVal] = useState('')
+  console.log('value: ', value);
+  console.log('options: ', options);
 
   const filteredOptions = useMemo(() => {
     return options.filter(item => {
