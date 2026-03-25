@@ -4,7 +4,7 @@ import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
 import CustomHexColorPicker from '@common/components/CustomeHexColorPicker'
-import { useEffect, useState } from 'react'
+import {  useState } from 'react'
 import DocumentCard from './components/DocumentCard'
 import DocumentModal from './components/DocumentModal'
 import {
@@ -18,7 +18,7 @@ import { useBrandingStore } from '@store/brandingStore'
 
 const Branding = () => {
   const { setBranding } = useBrandingStore()
-  
+
   const { data: brandingData, isFetching } = useAllBrandQuery()
   const { mutateAsync: createBranding, isLoading: isCreating } =
     useCreateBrandMutation()
@@ -50,6 +50,16 @@ const Branding = () => {
     return ''
   }
 
+  const getDocumentTitle = () => {
+    if (updatedTermsandPrivacyData?.title) {
+      return updatedTermsandPrivacyData.title
+    }
+    if (termsandprivacyData?.title) {
+      return termsandprivacyData.title
+    }
+    return ''
+  }
+
   const initialValues = {
     primary_color:
       brandingData?.centers?.[0]?.branding?.primary_color || '#1452D4',
@@ -76,24 +86,21 @@ const Branding = () => {
           primary_color: response?.primary_color,
           secondary_color: response?.secondary_color
         }
-        setBranding(updatedBranding) // 🔥🔥 THIS updates instantly
+        setBranding(updatedBranding) // THIS updates instantly
       } catch (error) {
         console.error(error)
       }
     }
   })
 
-  const handleSaveDocument = async updatedContent => {
+  const handleSaveDocument = async (updatedTitle, updatedContent) => {
     try {
       const payload = {
-        type: modalState.type, // terms or privacy
+        // type: modalState.type, // terms or privacy
+        title: updatedTitle, // Use updated title
         content: updatedContent
       }
       await createTermsandPrivacy(payload)
-      setDocuments(prev => ({
-        ...prev,
-        [modalState.type]: updatedContent
-      }))
     } catch (error) {
       console.error(error)
     }
@@ -173,11 +180,7 @@ const Branding = () => {
       <DocumentModal
         open={modalState.open}
         mode={modalState.mode}
-        title={
-          modalState.type === 'terms'
-            ? 'Terms and Conditions'
-            : 'Privacy Policy'
-        }
+        title={getDocumentTitle()}
         initialContent={getDocumentContent(modalState.type)}
         onClose={() => setModalState({ open: false, type: null, mode: 'view' })}
         onSave={handleSaveDocument}

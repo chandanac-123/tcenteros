@@ -130,7 +130,7 @@ export const branchValidationSchema = Yup.object().shape({
 
 export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
-  secondary_color: Yup.string().required(),
+  secondary_color: Yup.string().required('Secondary color is required'),
   app_logo: Yup.mixed().test(
     'file-or-url',
     'Logo is required',
@@ -142,7 +142,11 @@ export const brandingValidationSchema = Yup.object({
       if (typeof value === 'string') return true
       return false
     }
-  )
+  ).test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    )
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({
