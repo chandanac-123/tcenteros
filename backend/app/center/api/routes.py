@@ -539,8 +539,7 @@ async def calculate_gst(
     db: AsyncSession = Depends(get_async_session)
 ):
     """
-    Calculate GST and total amount with pricing breakdown.
-    Shows savings comparison between monthly and yearly plans.
+    Calculate and return only the base price (before tax) for the onboarding temp.
     """
     temp = await db.get(CenterOnboardingTemp, onboarding_id)
     if not temp:
@@ -572,40 +571,20 @@ async def calculate_gst(
     total_base = pricing_info["base_price"]
     pricing_note = pricing_info["note"]
 
-    # Get applicable tax
-    tax_query = await db.execute(
-        select(TaxCategory)
-        .where(TaxCategory.tax_scope == "center_subscription", TaxCategory.is_active == True)
-        .limit(1)
-    )
-    tax = tax_query.scalar_one_or_none()
-    
-    total_tax = 0.0
-    tax_info = None
-    if tax:
-        # Convert Decimal to float to avoid type mismatch
-        total_tax = (total_base * float(tax.tax_percentage)) / 100
-        tax_info = {
-            "id": str(tax.id),
-            "name": tax.name,
-            "tax_type": tax.tax_type,
-            "tax_percentage": float(tax.tax_percentage),
-            "tax_scope": tax.tax_scope
-        }
-
-    # Update the calculated_amount in temp record (base + tax)
-    temp.calculated_amount = total_base + total_tax
+    # Update the calculated_amount in temp record (base only, no tax)
+    temp.calculated_amount = total_base
     await db.commit()
     await db.refresh(temp)
 
+    # Return only the base price (before tax)
     return GSTCalculationResponse(
         center_name=temp.center_name,
         center_phone=temp.center_phone,
         city=temp.city,
         total_base_price=total_base,
-        total_tax=total_tax,
-        total_amount=total_base + total_tax,
-        tax=tax_info,
+        total_tax=0.0,
+        total_amount=total_base,
+        tax=None,
         pricing_note=pricing_note
     )
 
