@@ -113,6 +113,7 @@ export const useCartAmountQuery = data => {
   return useQuery({
     queryKey: ['cart', data],
     queryFn: () => getCartAmount(data),
+    enabled: Boolean(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
