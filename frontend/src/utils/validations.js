@@ -10,7 +10,9 @@ export const onboardingValidationSchema = Yup.object().shape({
     .matches(/^[0-9]{10,12}$/, 'Invalid phone number')
     .required('Contact phone is required'),
   city: Yup.string().required('City is required'),
-  subscription_duration: Yup.string().required('Subscription duration is required'),
+  subscription_duration: Yup.string().required(
+    'Subscription duration is required'
+  ),
   is_terms_and_conditions: Yup.boolean().oneOf(
     [true],
     'You must accept the terms'
@@ -131,18 +133,18 @@ export const branchValidationSchema = Yup.object().shape({
 export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
   secondary_color: Yup.string().required('Secondary color is required'),
-  app_logo: Yup.mixed().test(
-    'file-or-url',
-    'Logo is required',
-    function (value) {
+  app_logo: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test('file-or-url', 'Logo is required', function (value) {
       if (!value) return false
       // If it's a File object
       if (value instanceof File) return true
       // If it's existing URL string
       if (typeof value === 'string') return true
       return false
-    }
-  ).test(
+    })
+    .test(
       'fileSize',
       'Image size must be less than 2MB',
       value => !value || value.size <= 2 * 1024 * 1024
