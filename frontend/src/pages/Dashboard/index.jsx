@@ -98,7 +98,7 @@ const Dashboard = () => {
         <div className='flex justify-between items-center mb-4'>
           <div className='flex flex-col'>
             <span>{greeting}</span>
-            <span className='text-xs'>Center Admin</span>
+            <span className='text-xs'>{data?.centeradmin_name}</span>
           </div>
           <div>
             {' '}
