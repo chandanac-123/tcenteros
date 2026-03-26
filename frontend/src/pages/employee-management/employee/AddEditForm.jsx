@@ -275,6 +275,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 </div>
                 <div className='flex-1'>
                   <CustomDatePicker
+                   disableFuture={true}
                     label='Joining Date'
                     name='joining_date'
                     value={
