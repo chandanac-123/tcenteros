@@ -7,32 +7,32 @@ import Settlements from '@pages/billing/tab-modules/Settlements'
 
 export const billing_modules = [
   {
-    id: 1,
+    id: 'overview',
     name: 'Overview',
     component: <Overview />
   },
   {
-    id: 2,
+    id: 'sales',
     name: 'Sales',
     component: <Sales />
   },
   {
-    id: 3,
+    id: 'memberships',
     name: 'Memberships',
     component: <Memberships />
   },
   {
-    id: 4,
+    id: 'network',
     name: 'Network',
     component: <Network />
   },
   {
-    id: 5,
+    id: 'settlements',
     name: 'Settlements',
     component: <Settlements />
   },
   {
-    id: 6,
+    id: 'reports',
     name: 'Reports',
     component: <Reports />
   }

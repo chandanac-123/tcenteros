@@ -2,14 +2,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useNetworkTabStore = create((set) => ({
-    activeTab: "Requests",
+    activeTab: "requests",
     setActiveTab: (tab) => set({ activeTab: tab }),
 }));
 
 export const useInventoryStore = create(
   persist(
     (set) => ({
-      activeTab: "Overview",
+      activeTab: "overview",
       setActiveTab: (tab) => set({ activeTab: tab }),
     }),
     {

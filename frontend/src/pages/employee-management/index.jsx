@@ -11,7 +11,7 @@ import { useAllCentersQuery } from '@api-queries/center-profile/Query'
 import Payroll from './payroll'
 
 const EmployeeManagement = () => {
-  const [activeTab, setActiveTab] = useState('Employee')
+  const [activeTab, setActiveTab] = useState('employee')
   const [open, setOpen] = useState(false)
   const [structureOpen, setStructureOpen] = useState(false)
   const { data: centersData, isFetching: isCentersFetching } =
@@ -26,9 +26,9 @@ const EmployeeManagement = () => {
     setOpen(true)
   }
   const employeeOrCenter = [
-    { id: 1, name: 'Employee' },
-    { id: 2, name: 'Salary Structure' },
-    { id: 3, name: 'Payroll' }
+    { id: 'employee', name: 'Employee' },
+    { id: 'salary_structure', name: 'Salary Structure' },
+    { id: 'payroll', name: 'Payroll' }
   ]
 
   return (
@@ -47,12 +47,12 @@ const EmployeeManagement = () => {
               setTableParams(prev => ({ ...prev, payment_status: value }))
             }
           />
-          {activeTab === 'Employee' && (
+          {activeTab === 'employee' && (
             <Button onClick={handleOpen} size='addbutton'>
               + Add Employee
             </Button>
           )}
-          {activeTab === 'Salary Structure' && (
+          {activeTab === 'salary_structure' && (
             <Button onClick={() => setStructureOpen(true)} size='addbutton'>
               + Add Salary Structure
             </Button>
@@ -62,12 +62,12 @@ const EmployeeManagement = () => {
       <div className=' gap-4 mt-4 flex flex-col'>
         <CustomeTab
           tabList={employeeOrCenter}
-          defaultVal='Employee'
+          defaultVal='employee'
           tabsListClass=' w-[400px] p-[1px]'
           onChange={value => setActiveTab(value)}
         />
 
-        {activeTab === 'Employee' && (
+        {activeTab === 'employee' && (
           <Employee
             open={open}
             setOpen={setOpen}
@@ -75,8 +75,8 @@ const EmployeeManagement = () => {
             setTableParams={setTableParams}
           />
         )}
-        {activeTab === 'Salary Structure' && <SalaryStructure />}
-        {activeTab === 'Payroll' && <Payroll />}
+        {activeTab === 'salary_structure' && <SalaryStructure />}
+        {activeTab === 'payroll' && <Payroll />}
         <AddEditForm
           open={open}
           setOpen={setOpen}

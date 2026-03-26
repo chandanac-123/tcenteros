@@ -9,7 +9,7 @@ const Inventories = () => {
   // console.log("Active Store", activeTab);
 
 
-  const activeModule = inventory_modules.find(module => module.name === activeTab)
+  const activeModule = inventory_modules.find(module => module?.id === activeTab)
   // console.log("ActiveModule", activeModule);
 
 

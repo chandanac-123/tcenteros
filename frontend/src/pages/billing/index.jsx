@@ -4,9 +4,9 @@ import CustomeTab from '@common/components/CustomeTab'
 import { billing_modules } from '@constants/billing_module'
 
 const Billing = () => {
-  const [activeTab, setActiveTab] = useState('Overview')
+  const [activeTab, setActiveTab] = useState('overview')
 
-  const activeModule = billing_modules.find(module => module.name === activeTab)
+  const activeModule = billing_modules.find(module => module?.id === activeTab)
 
   return (
     <ContentLayout>
@@ -17,7 +17,7 @@ const Billing = () => {
         <CustomeTab
           tabList={billing_modules}
           value={activeTab}
-          defaultVal='Overview'
+          defaultVal='overview'
           tabsListClass='p-[1px]'
           onChange={setActiveTab}
         />

@@ -91,12 +91,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     password: ''
   }
 
-  // useEffect(() => {
-  //   formik.setValues({
-  //     ...initialValues
-  //   })
-  // }, [])
-
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
@@ -308,7 +302,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           </div>
         </div>
-        {formik?.values?.payment_status === 'Paid' && (
+        {formik?.values?.payment_status === 'paid' && (
           <div className='flex gap-4 '>
             <div className='flex-1'>
               <CustomeSelect
@@ -337,7 +331,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           <div className='flex justify-end'>
             <CustomeTab
               tabList={paidStatus}
-              defaultVal={formik.values.payment_status}
+              defaultVal='unpaid'
               tabsListClass='w-40 p-[1px] rounded-full'
               tabsTriggerClass='rounded-full'
               onChange={value => formik.setFieldValue('payment_status', value)}
