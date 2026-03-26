@@ -102,6 +102,9 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         if (isEdit) {
           // Don't send membership_id during edit
           delete payload.membership_id
+          delete payload.payment_method
+          delete payload.password
+          delete payload.payment_status
         }
 
         if (payload.payment_status === 'unpaid') {
@@ -302,7 +305,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           </div>
         </div>
-        {formik?.values?.payment_status === 'paid' && (
+        {formik?.values?.payment_status === 'paid' && !isEdit && (
           <div className='flex gap-4 '>
             <div className='flex-1'>
               <CustomeSelect

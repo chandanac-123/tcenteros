@@ -204,20 +204,24 @@ export const memberValidationSchema = (isEdit = false) =>
       .required('Mobile number is required'),
     date_of_birth: Yup.date().nullable().required('Date of birth is required'),
     membership_id: isEdit
-  ? Yup.string().nullable().notRequired() // optional for edit
-  : Yup.string().required('Please select a membership plan'), // required for create
+      ? Yup.string().nullable().notRequired() // optional for edit
+      : Yup.string().required('Please select a membership plan'), // required for create
     time_slot_id: Yup.string().required('Please select a time slot'),
-    payment_method: Yup.string().when('payment_status', {
-      is: 'paid',
-      then: schema => schema.required('Select payment method'),
-      otherwise: schema => schema.nullable(),
-    }),
-    password: Yup.string().when('payment_status', {
-      is: 'paid',
-      then: schema => schema.required('Password is required'),
-      otherwise: schema => schema.notRequired(),
-    }),
-  });
+    payment_method: isEdit
+      ? Yup.string().nullable().notRequired()
+      : Yup.string().when('payment_status', {
+          is: 'paid',
+          then: schema => schema.required('Select payment method'),
+          otherwise: schema => schema.nullable()
+        }),
+    password: isEdit
+      ? Yup.string().nullable().notRequired()
+      : Yup.string().when('payment_status', {
+          is: 'paid',
+          then: schema => schema.required('Password is required'),
+          otherwise: schema => schema.notRequired()
+        })
+  })
 
 export const productValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Product name is required'),
