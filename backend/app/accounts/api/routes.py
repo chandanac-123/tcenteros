@@ -133,22 +133,32 @@ async def get_accounting_dashboard(
 
     # 4. Expense Breakdown
     expense_codes = {
-        "networking": "5500",
-        "salary": "5000",
-        "branching": "5600",  # General Expense used for branching
-        "inventory_purchase": "5400",
-        "other": "5100"  # Rent Expense as example for other
-    }
+    "networking": "5500",
+    "salary": "5000",
+    "branching": ["5600", "5700"],  # Include both General Expense and Branch Purchase Expense
+    "inventory_purchase": "5400",
+    "other": "5100"
+}
     expense_breakdown = {}
     for key, code in expense_codes.items():
-        value = await session.execute(
-            select(func.sum(GeneralLedger.debit))
-            .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
-            .where(
-                GeneralLedger.center_id == center_id,
-                ChartOfAccounts.code == code
+        if isinstance(code, list):
+            value = await session.execute(
+                select(func.sum(GeneralLedger.debit))
+                .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+                .where(
+                    GeneralLedger.center_id == center_id,
+                    ChartOfAccounts.code.in_(code)
+                )
             )
-        )
+        else:
+            value = await session.execute(
+                select(func.sum(GeneralLedger.debit))
+                .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
+                .where(
+                    GeneralLedger.center_id == center_id,
+                    ChartOfAccounts.code == code
+                )
+            )
         expense_breakdown[key] = float(value.scalar() or 0)
     total_expense_for_breakdown = sum(expense_breakdown.values())
     for key in expense_breakdown:

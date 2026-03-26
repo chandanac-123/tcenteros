@@ -40,7 +40,7 @@ async def get_billing_dashboard(
 ):
     """
     Get comprehensive billing dashboard data.
-    
+
     Returns:
     - Total revenue (all time)
     - Pending payments
@@ -49,18 +49,17 @@ async def get_billing_dashboard(
     - Revenue trend chart (monthly: memberships, inventory sales, networking)
     """
     from sqlalchemy import extract
-    
+
     center_id = current_admin["center_id"]
     today = date.today()
     current_year = today.year
-    
+
     # Current month date range
     month_start = today.replace(day=1)
     next_month = month_start.replace(day=28) + timedelta(days=4)
     month_end = next_month.replace(day=1) - timedelta(days=1)
-    
+
     # ===== 1. TOTAL REVENUE (All Time) =====
-    # Sum all paid payment orders for this center
     total_revenue_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
@@ -69,9 +68,8 @@ async def get_billing_dashboard(
     )
     total_revenue_result = await db.execute(total_revenue_query)
     total_revenue = float(total_revenue_result.scalar_one() or 0)
-    
+
     # ===== 2. PENDING PAYMENTS =====
-    # Sum all pending/unpaid payment orders
     pending_payments_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
@@ -84,21 +82,20 @@ async def get_billing_dashboard(
     )
     pending_payments_result = await db.execute(pending_payments_query)
     pending_payments = float(pending_payments_result.scalar_one() or 0)
-    
+
     # ===== 3. NETWORK EARNINGS =====
-    # Sum all paid networking_access payment orders
+    # Sum all paid networking payment orders (network_in and network_out)
     network_earnings_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type == OrderType.networking_access,
+        PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
         PaymentOrder.status == PaymentOrderStatus.paid
     )
     network_earnings_result = await db.execute(network_earnings_query)
     network_earnings = float(network_earnings_result.scalar_one() or 0)
-    
+
     # ===== 4. THIS MONTH TOTAL =====
-    # Sum all paid payments for current month
     this_month_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
@@ -109,37 +106,34 @@ async def get_billing_dashboard(
     )
     this_month_result = await db.execute(this_month_query)
     this_month_total = float(this_month_result.scalar_one() or 0)
-    
+
     # ===== 5. REVENUE TREND CHART (Monthly for current year) =====
     month_names = [
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ]
-    
+
     # A. Monthly Membership Revenue
-    # membership and renewal order types
     membership_revenue_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
         func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal]),
+        PaymentOrder.order_type.in_([OrderType.membership, OrderType.membership_renewal]),
         PaymentOrder.status == PaymentOrderStatus.paid,
         extract('year', PaymentOrder.created_at) == current_year
     ).group_by('month')
-    
+
     membership_result = await db.execute(membership_revenue_query)
     monthly_membership = {int(row.month): float(row.revenue) for row in membership_result}
-    
+
     # B. Monthly Inventory Sales Revenue
-    # Get product IDs for this center
     product_ids_query = select(Product.id).where(Product.center_id == center_id)
     product_ids_result = await db.execute(product_ids_query)
     product_ids = [str(row[0]) for row in product_ids_result.all()]
-    
+
     monthly_inventory = {}
     if product_ids:
-        # Sum completed sales for products
         inventory_revenue_query = select(
             extract('month', Sale.created_at).label('month'),
             func.coalesce(func.sum(Sale.total_amount), 0).label('revenue')
@@ -148,24 +142,24 @@ async def get_billing_dashboard(
             Sale.status == "completed",
             extract('year', Sale.created_at) == current_year
         ).group_by('month')
-        
+
         inventory_result = await db.execute(inventory_revenue_query)
         monthly_inventory = {int(row.month): float(row.revenue) for row in inventory_result}
-    
-    # C. Monthly Networking Revenue
+
+    # C. Monthly Networking Revenue (network_in and network_out)
     networking_revenue_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
         func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type == OrderType.networking_access,
+        PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
         PaymentOrder.status == PaymentOrderStatus.paid,
         extract('year', PaymentOrder.created_at) == current_year
     ).group_by('month')
-    
+
     networking_result = await db.execute(networking_revenue_query)
     monthly_networking = {int(row.month): float(row.revenue) for row in networking_result}
-    
+
     # Build revenue trend array for all 12 months
     revenue_trend_chart = []
     for month_num in range(1, 13):
@@ -175,7 +169,7 @@ async def get_billing_dashboard(
             "inventory_sales": round(monthly_inventory.get(month_num, 0), 2),
             "networking": round(monthly_networking.get(month_num, 0), 2)
         })
-    
+
     return {
         "center_id": str(center_id),
         "generated_at": datetime.now().isoformat(),
@@ -211,7 +205,7 @@ async def get_unified_sales_transactions(
     """
     from app.auth.models.models import CenterAdmin, Employee
     from sqlalchemy.orm import joinedload
-    
+
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
@@ -240,9 +234,9 @@ async def get_unified_sales_transactions(
         or_(
             PaymentOrder.order_type == OrderType.membership,
             PaymentOrder.order_type == OrderType.center_subscription,
-            PaymentOrder.order_type == OrderType.renewal,
-            PaymentOrder.order_type == OrderType.networking_access,
-            PaymentOrder.order_type == OrderType.stock_purchase,
+            PaymentOrder.order_type == OrderType.membership_renewal,
+            PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
+            PaymentOrder.order_type == OrderType.inventory_sale,
             PaymentOrder.order_type == OrderType.feature_purchase
         )
     )
@@ -274,15 +268,17 @@ async def get_unified_sales_transactions(
                 or_(
                     PaymentOrder.order_type == OrderType.membership,
                     PaymentOrder.order_type == OrderType.center_subscription,
-                    PaymentOrder.order_type == OrderType.renewal
+                    PaymentOrder.order_type == OrderType.membership_renewal
                 )
             )
         elif order_type == "networking_access":
-            where_clauses.append(PaymentOrder.order_type == OrderType.networking_access)
+            where_clauses.append(
+                PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out])
+            )
         elif order_type == "stock_purchase":
             where_clauses.append(
                 or_(
-                    PaymentOrder.order_type == OrderType.stock_purchase,
+                    PaymentOrder.order_type == OrderType.inventory_sale,
                     PaymentOrder.order_type == OrderType.feature_purchase
                 )
             )
@@ -291,7 +287,7 @@ async def get_unified_sales_transactions(
 
     # Base query - fetch payment orders only first
     query = select(PaymentOrder).where(*where_clauses)
-    
+
     # Apply sorting
     if sort_by == "total_amount":
         query = query.order_by(
@@ -311,7 +307,7 @@ async def get_unified_sales_transactions(
 
     # Collect all unique user IDs
     user_ids = {po.payer_user_id for po in payment_orders if po.payer_user_id}
-    
+
     # Fetch all users in a single query
     user_map = {}
     if user_ids:
@@ -320,12 +316,12 @@ async def get_unified_sales_transactions(
         )
         users = users_result.scalars().all()
         user_map = {user.id: user for user in users}
-    
+
     # Fetch members, admins, and employees in separate queries
     member_map = {}
     admin_map = {}
     employee_map = {}
-    
+
     member_ids = {uid for uid, user in user_map.items() if user.role == "member"}
     if member_ids:
         members_result = await db.execute(
@@ -333,7 +329,7 @@ async def get_unified_sales_transactions(
         )
         members = members_result.scalars().all()
         member_map = {m.id: m for m in members}
-    
+
     admin_ids = {uid for uid, user in user_map.items() if user.role == "centeradmin"}
     if admin_ids:
         admins_result = await db.execute(
@@ -341,7 +337,7 @@ async def get_unified_sales_transactions(
         )
         admins = admins_result.scalars().all()
         admin_map = {a.id: a for a in admins}
-    
+
     employee_ids = {uid for uid, user in user_map.items() if user.role == "employee"}
     if employee_ids:
         employees_result = await db.execute(
@@ -356,11 +352,11 @@ async def get_unified_sales_transactions(
         # Get user details from maps
         customer_name = "N/A"
         customer_mobile = None
-        
+
         if payment_order.payer_user_id and payment_order.payer_user_id in user_map:
             user = user_map[payment_order.payer_user_id]
             customer_mobile = user.mobile
-            
+
             # Get full_name based on user role
             if user.role == "member" and payment_order.payer_user_id in member_map:
                 member = member_map[payment_order.payer_user_id]
@@ -384,13 +380,13 @@ async def get_unified_sales_transactions(
                 continue
 
         # Determine display labels
-        if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+        if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.membership_renewal]:
             type_label = "Membership"
             source_label = "Local"
-        elif payment_order.order_type == OrderType.networking_access:
+        elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
             type_label = "Network"
             source_label = "Visit"
-        elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+        elif payment_order.order_type in [OrderType.inventory_sale, OrderType.feature_purchase]:
             type_label = "Product"
             source_label = "POS"
         else:

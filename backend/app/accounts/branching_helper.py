@@ -21,20 +21,28 @@ async def post_branching_purchase_journal(
     created_by
 ):
     now = datetime.utcnow()
-    # Use General Expense instead of Branching Expense
+    # Use Branch Purchase Expense if available, else fallback to General Expense
     expense_acct = await session.execute(
         select(ChartOfAccounts).where(
             ChartOfAccounts.center_id == center_id,
-            ChartOfAccounts.account_type == "expense",
-            ChartOfAccounts.name.ilike("General Expense")
+            ChartOfAccounts.code == "5700"  # Branch Purchase Expense
         )
     )
     expense_acct = expense_acct.scalar_one_or_none()
+    if not expense_acct:
+        expense_acct = await session.execute(
+            select(ChartOfAccounts).where(
+                ChartOfAccounts.center_id == center_id,
+                ChartOfAccounts.account_type == "expense",
+                ChartOfAccounts.name.ilike("General Expense")
+            )
+        )
+        expense_acct = expense_acct.scalar_one_or_none()
+
     cash_acct = await session.execute(
         select(ChartOfAccounts).where(
             ChartOfAccounts.center_id == center_id,
-            ChartOfAccounts.account_type == "asset",
-            ChartOfAccounts.name.ilike("Cash/Bank")
+            ChartOfAccounts.code == "1100"  # Cash in Hand
         )
     )
     cash_acct = cash_acct.scalar_one_or_none()
@@ -54,7 +62,7 @@ async def post_branching_purchase_journal(
                 id=uuid4(),
                 account_id=expense_acct.id,
                 entry_date=now,
-                description="Branching purchase expense",
+                description="Branch purchase expense",
                 debit=subtotal_amount,
                 credit=0
             )
@@ -65,7 +73,7 @@ async def post_branching_purchase_journal(
                 id=uuid4(),
                 account_id=cash_acct.id,
                 entry_date=now,
-                description="Branching purchase payment",
+                description="Branch purchase payment",
                 debit=0,
                 credit=total_amount
             )
@@ -76,7 +84,7 @@ async def post_branching_purchase_journal(
                 id=uuid4(),
                 account_id=output_tax_acct.id,
                 entry_date=now,
-                description="Output Tax on Branching",
+                description="GST on branch purchase",
                 debit=0,
                 credit=tax_amount
             )
@@ -87,8 +95,8 @@ async def post_branching_purchase_journal(
             id=uuid4(),
             entry_number=f"BRANCH-{uuid4().hex[:8]}",
             entry_date=now,
-            description=f"Branching purchase for PaymentOrder {payment_order_id}",
-            source=TransactionSource.GENERAL_EXPENSE.value,
+            description=f"Branch purchase for PaymentOrder {payment_order_id}",
+            source=TransactionSource.BRANCH_PURCHASE.value,
             source_id=str(payment_order_id),
             center_id=center_id,
             status=EntryStatus.POSTED.value,
@@ -133,11 +141,10 @@ async def post_branching_purchase_journal(
                 tax_rate=tax_rate,
                 taxable_amount=subtotal_amount,
                 tax_amount=tax_amount,
-                source=TransactionSource.GENERAL_EXPENSE.value,
+                source=TransactionSource.BRANCH_PURCHASE.value,
                 source_id=str(payment_order_id),
                 created_at=now,
             ))
 
         await session.flush()
-
-    # Skip platform-side entries if platform_center_id is None
+    # Platform-side entries can be added here if needed in the future

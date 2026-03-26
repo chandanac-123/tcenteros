@@ -98,21 +98,21 @@ async def request_branch_creation(
         tax_amount = 0.0
 
     total_amount = subtotal_amount + tax_amount
-
+    from app.billing.models.models import PaymentOrder, PaymentOrderStatus, OrderType, PayeeType, PayerType, ReferenceSchema, Currency
     # 3. Create payment order (simulate payment success)
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
         center_id=current_admin["center_id"],
         payer_user_id=current_admin["user_id"],
-        payer_type="center_admin",
-        payee_type="platform",
-        order_type="add_on",
-        reference_schema="center",
+        payer_type=PayerType.center_admin,
+        payee_type=PayeeType.platform,
+        order_type=OrderType.branch_purchase,  # Use the correct enum value as per your DB
+        reference_schema=ReferenceSchema.center,
         reference_id=current_admin["center_id"],
         subtotal_amount=subtotal_amount,
         tax_amount=tax_amount,
         total_amount=total_amount,
-        currency="INR",
+        currency=Currency.INR,
         status=PaymentOrderStatus.paid,
         created_by=current_admin["user_id"],
         updated_by=current_admin["user_id"],
@@ -143,6 +143,7 @@ async def request_branch_creation(
         payment_order_id=payment_order.payment_order_id,
         created_by=current_admin["user_id"]
     )
+    await session.commit()
 
     return {
         "branch_count": branch_count,
