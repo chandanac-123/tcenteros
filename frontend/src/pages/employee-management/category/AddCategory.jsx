@@ -91,7 +91,6 @@ const AddCategory = ({ id, categoryOpen, setCategoryOpen }) => {
             formik.setFieldValue('image_url', null)
             formik.setFieldTouched('image_url', true, false)
           }}
-          error={formik.touched.image_url && formik.errors.image_url}
         />
 
         <div className='flex justify-end'>

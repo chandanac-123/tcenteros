@@ -25,21 +25,7 @@ export const invoiceValidationSchema = Yup.object().shape({
 })
 
 export const categoryValidationSchema = Yup.object().shape({
-  name: Yup.string().required('Enter Designation'),
-  image_url: Yup.mixed()
-    .nullable()
-    .required('Upload an image')
-    .test(
-      'fileType',
-      'Only JPG, JPEG, PNG files are allowed',
-      value =>
-        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    )
+  name: Yup.string().required('Enter Designation')
 })
 
 export const employeeValidationSchema = isEdit =>

@@ -6,11 +6,11 @@ const SlotCard = ({ startTime, endTime, capacity, onDelete, sku_name }) => {
     <div className='border border-textgrey rounded-md p-4 flex justify-between items-center bg-white hover:shadow-md transition-all duration-200'>
       <div className='flex flex-col'>
         <span className='text-sm text-grey'>
-          {sku_name == 'null'
-            ? convertTo12Hour(startTime) - convertTo12Hour(endTime)
+          {sku_name == null
+            ? `${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`
             : ''}
         </span>
-        {sku_name == 'null' ? (
+        {sku_name == null ? (
           <span className='text-sm text-grey'>Total Capacity: {capacity}</span>
         ) : (
           <span className='text-sm text-grey'>{sku_name}</span>

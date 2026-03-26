@@ -19,8 +19,6 @@ export default function CustomeSelect ({
   disabled = false
 }) {
   const [searchVal, setSearchVal] = useState('')
-  console.log('value: ', value);
-  console.log('options: ', options);
 
   const filteredOptions = useMemo(() => {
     return options.filter(item => {

@@ -15,7 +15,7 @@ import {
 import { useFormik } from 'formik'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'
-import { useCrmStore } from '@store/tabStore'
+import { useCrmStore, useSettingsTabStore } from '@store/tabStore'
 import { useNavigate } from 'react-router-dom'
 import { memberValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
@@ -42,10 +42,10 @@ const genderOption = [
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const {
     selectedVisitorId,
-    setSelectedTab,
     selectedGuestId,
     clearSelectedIds
   } = useCrmStore()
+  const{setSelectedTab}= useSettingsTabStore()
   const { data: visitorData, isFetching: isVisitorFetching } =
     useVisitorById(selectedVisitorId)
   const { data: guestData, isFetching: isGuestFetching } =
@@ -143,7 +143,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   //   )
   // }
 
-  console.log('formi: ', formik.values)
+  // console.log('formi: ', formik.values)
   return (
     <div className='flex flex-col gap-4 pb-6'>
       <CustomeBreadcrumb
