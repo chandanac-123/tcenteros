@@ -16,6 +16,8 @@ import AddBranchButton from '@pages/branch'
 import { useCrmStore } from '@store/tabStore'
 import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
 import GoogleMapComponent from '../components/GoogleMapComponent'
+import defalutUser from '@assets/header-icons/user.svg'
+
 
 const Header = () => {
   const { setSelectedTab, setMemberView } = useCrmStore()
@@ -66,7 +68,7 @@ const Header = () => {
               <div className='flex items-center'>
                 <div className='flex items-center gap-0'>
                   <img
-                    src={data?.profile_photo}
+                    src={data?.profile_photo || defalutUser}
                     alt='logo'
                     className='w-8 h-8 mr-4 rounded-full'
                   />
