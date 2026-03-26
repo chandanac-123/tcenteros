@@ -5,7 +5,7 @@ import {
   useRenewMembershipMutation,
   useGetRenewMembershipByIdQuery
 } from '@api-queries/billing/Query'
-import { useMembersPlanQuery } from '@api-queries/crm/Query'
+import { useActiveMembersPlanQuery } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
 import { Checkbox } from '@pages/components/ui/checkbox'
 
@@ -17,7 +17,7 @@ const paymentTypes = [
 
 const RenewMembership = ({ open, setOpen, membershipId }) => {
   const { data, isFetching } = useGetRenewMembershipByIdQuery(membershipId)
-  const { data: memberPlan } = useMembersPlanQuery()
+  const { data: memberPlan } = useActiveMembersPlanQuery()
   const { mutateAsync: renew_membership, isPending } =
     useRenewMembershipMutation()
 

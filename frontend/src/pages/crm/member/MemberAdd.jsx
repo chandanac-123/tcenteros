@@ -8,7 +8,7 @@ import {
   useMembersTimeSlotQuery,
   useMembersGetByIdQuery,
   useUpdateMemberMutation,
-  useMembersPlanQuery,
+  useActiveMembersPlanQuery,
   useVisitorById,
   useGuestById
 } from '@api-queries/crm/Query'
@@ -22,6 +22,7 @@ import { Spinner } from '@pages/components/ui/spinner'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
+import { useEffect } from 'react'
 
 const paidStatus = [
   { id: 'unpaid', name: 'Unpaid' },
@@ -57,7 +58,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   )
   const { data: memberData, isFetching: isMemberFetching } =
     useMembersGetByIdQuery(memberId)
-  const { data: memberPlan } = useMembersPlanQuery()
+  const { data: memberPlan } = useActiveMembersPlanQuery()
   const isFormLoading = isVisitorFetching || isGuestFetching || isMemberFetching
 
   const sourceData = isEdit
@@ -73,7 +74,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     full_name: sourceData?.full_name || '',
     email: sourceData?.email || '',
     mobile: sourceData?.mobile || '',
-    gender: sourceData?.gender || '',
+    gender: sourceData?.gender || 'male',
     date_of_birth: sourceData?.date_of_birth || '',
     blood_group: sourceData?.blood_group || '',
     address_line_1: sourceData?.address?.address_line_1 || '',
@@ -85,10 +86,16 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     membership_id: sourceData?.membership_id || '',
     time_slot_id: sourceData?.time_slot_id || '',
     member_status: 'member',
-    payment_method: sourceData?.payment_method || '',
+    payment_method: sourceData?.payment_method || 'cash',
     payment_status: sourceData?.payment_status || 'unpaid',
     password: ''
   }
+
+  // useEffect(() => {
+  //   formik.setValues({
+  //     ...initialValues
+  //   })
+  // }, [])
 
   const formik = useFormik({
     initialValues,
@@ -127,14 +134,14 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     }
   })
 
-  if (isFormLoading) {
-    return (
-      <div className='flex justify-center items-center h-[300px]'>
-        <Spinner />
-      </div>
-    )
-  }
- console.log('formi: ', formik.values);
+  // if (isFormLoading) {
+  //   return (
+  //     <div className='flex justify-center items-center h-[300px]'>
+  //       <Spinner />
+  //     </div>
+  //   )
+  // }
+  // console.log('formi: ', formik.values)
   return (
     <div className='flex flex-col gap-4 pb-6'>
       <CustomeBreadcrumb
@@ -190,11 +197,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           <div className='flex-1'>
             <CustomeSelect
               label='Gender'
-              name='gender'
               options={genderOption}
               placeholder='Select Gender'
               value={formik.values.gender}
-              onChange={value => formik.setFieldValue('gender', value)}
+              onChange={option => formik.setFieldValue('gender', option)}
             />
           </div>
         </div>
@@ -281,21 +287,17 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-            {/* Only render CustomeSelect when memberPlan is loaded and value is set */}
-            {memberPlan && memberPlan.length > 0 && formik.values.membership_id !== undefined && (
-              <CustomeSelect
-                options={memberPlan}
-                search={true}
-                disabled={isEdit}
-                value={formik.values.membership_id}
-                onChange={value => formik.setFieldValue('membership_id', value)}
-                label='Membership Plan '
-                name='membership_id'
-                error={
-                  formik.touched.membership_id && formik.errors.membership_id
-                }
-              />
-            )}
+            <CustomeSelect
+              options={memberPlan}
+              search={true}
+              disabled={isEdit}
+              value={formik.values.membership_id}
+              onChange={option => formik.setFieldValue('membership_id', option)}
+              label='Membership Plan '
+              error={
+                formik.touched.membership_id && formik.errors.membership_id
+              }
+            />
           </div>
           <div className='flex-1'>
             <div className='flex-1'>
