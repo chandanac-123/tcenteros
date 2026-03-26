@@ -4,7 +4,7 @@ import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import { brandingValidationSchema } from '@utils/validations'
 import CustomHexColorPicker from '@common/components/CustomeHexColorPicker'
-import {  useState } from 'react'
+import { useState } from 'react'
 import DocumentCard from './components/DocumentCard'
 import DocumentModal from './components/DocumentModal'
 import {
@@ -15,6 +15,7 @@ import {
   getUpdatedTermsandPrivacyQuery
 } from '@api-queries/branding/Query'
 import { useBrandingStore } from '@store/brandingStore'
+import { Input } from '@pages/components/ui/input'
 
 const Branding = () => {
   const { setBranding } = useBrandingStore()
@@ -65,7 +66,8 @@ const Branding = () => {
       brandingData?.centers?.[0]?.branding?.primary_color || '#1452D4',
     secondary_color:
       brandingData?.centers?.[0]?.branding?.secondary_color || '#8B24E2',
-    app_logo: brandingData?.centers?.[0]?.branding?.logo_url || null
+    app_logo: brandingData?.centers?.[0]?.branding?.logo_url || null,
+    app_name: brandingData?.centers?.[0]?.branding?.app_name || null
   }
 
   const formik = useFormik({
@@ -77,6 +79,7 @@ const Branding = () => {
         const formData = new FormData()
         formData.append('primary_color', values.primary_color)
         formData.append('secondary_color', values.secondary_color)
+        formData.append('app_name', values.app_name)
         if (values.app_logo instanceof File) {
           formData.append('logo', values.app_logo)
         }
@@ -84,7 +87,8 @@ const Branding = () => {
         const updatedBranding = {
           logo_url: response?.logo_url,
           primary_color: response?.primary_color,
-          secondary_color: response?.secondary_color
+          secondary_color: response?.secondary_color,
+          app_name: response?.app_name
         }
         setBranding(updatedBranding) // THIS updates instantly
       } catch (error) {
@@ -112,6 +116,15 @@ const Branding = () => {
       <form onSubmit={formik.handleSubmit} className='space-y-4'>
         <div className='flex gap-4'>
           <div className='flex-1'>
+            <Input
+              label='App Name'
+              name='app_name'
+              value={formik.values.app_name}
+              onChange={formik.handleChange}
+              error={formik.touched.app_name && formik.errors.app_name}
+            />
+          </div>
+          <div className='flex-1'>
             <InputFile
               label='Upload Image'
               name='app_logo'
@@ -127,7 +140,6 @@ const Branding = () => {
               error={formik.touched.app_logo && formik.errors.app_logo}
             />
           </div>
-          <div className='flex-1'></div>
         </div>
         <div className='flex gap-4'>
           <div className='flex-1'>

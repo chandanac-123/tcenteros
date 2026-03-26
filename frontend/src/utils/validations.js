@@ -119,6 +119,7 @@ export const branchValidationSchema = Yup.object().shape({
 export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
   secondary_color: Yup.string().required('Secondary color is required'),
+  app_name: Yup.string().required('App name is required'),
   app_logo: Yup.mixed()
     .nullable()
     .required('Upload an image')
