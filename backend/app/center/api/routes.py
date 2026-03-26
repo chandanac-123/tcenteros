@@ -2014,7 +2014,7 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
         select(Designation.id)
         .where(Designation.name == "Trainer")
     )
-    trainer_designation_id = designation_result.scalar_one_or_none()
+    trainer_designation_id = designation_result.scalar_one_or_none().all()  # Get all matching designations (in case of multiple "Trainer" entries)
     if not trainer_designation_id:
         trainers = []
     else:
