@@ -2014,14 +2014,14 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
         select(Designation.id)
         .where(Designation.name == "Trainer")
     )
-    trainer_designation_id = designation_result.scalar_one_or_none().all()  # Get all matching designations (in case of multiple "Trainer" entries)
-    if not trainer_designation_id:
+    trainer_designation_ids = designation_result.scalars().all()  # Get all matching designations (in case of multiple "Trainer" entries)
+    if not trainer_designation_ids:
         trainers = []
     else:
         trainers_result = await session.execute(
             select(Employee.full_name, Employee.profile_photo)
             .where(Employee.center_id == center_id)
-            .where(Employee.designation_id == trainer_designation_id)
+            .where(Employee.designation_id.in_(trainer_designation_ids))
         )
         trainers = [
             TrainerOut(name=row[0], profile_photo=row[1])
