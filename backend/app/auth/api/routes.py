@@ -986,6 +986,7 @@ async def centeradmin_change_password(
 
     return {
         "detail": "Password updated successfully",
+        "center_id": str(admin.center_id) if admin.center_id else None,
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
