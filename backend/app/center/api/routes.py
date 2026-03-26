@@ -173,8 +173,7 @@ async def get_center_dashboard(
         PaymentOrder.center_id == center_id,
         PaymentOrder.status == PaymentOrderStatus.paid,
         PaymentOrder.order_type.in_([
-            'membership', 'renewal', 'upgrade', 
-            'networking_access', 'add_on', 'feature_purchase'
+            'membership', 'membership_renewal', 'membership_upgrade', 'network_in', 'add_on', 'feature_purchase'
         ])
     )
     revenue_result = await db.execute(revenue_query)
@@ -245,8 +244,7 @@ async def get_center_dashboard(
         PaymentOrder.center_id == center_id,
         PaymentOrder.status == PaymentOrderStatus.paid,
         PaymentOrder.order_type.in_([
-            'membership', 'renewal', 'upgrade', 
-            'networking_access', 'add_on', 'feature_purchase'
+            'membership', 'membership_renewal', 'membership_upgrade', 'network_in', 'add_on', 'feature_purchase'
         ]),
         extract('year', PaymentOrder.created_at) == current_year
     ).group_by('month')

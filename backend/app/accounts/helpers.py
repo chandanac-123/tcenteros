@@ -31,9 +31,6 @@ async def record_membership_sale(
     tax_amount = Decimal(str(payment_order.tax_amount or 0))
     revenue_amount = total_amount - tax_amount
 
-    total_debit = total_amount
-    total_credit = revenue_amount + tax_amount
-
     journal_entry = JournalEntry(
         id=uuid4(),
         entry_number=f"JE-{uuid4().hex[:8]}",
@@ -45,8 +42,8 @@ async def record_membership_sale(
         status="posted",
         posted_at=None,
         posted_by=None,
-        total_debit=total_debit,
-        total_credit=total_credit,
+        total_debit=total_amount,
+        total_credit=total_amount,
         created_by=created_by,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
@@ -94,7 +91,6 @@ async def record_membership_sale(
 
     for line in lines:
         db.add(line)
-
     await db.flush()
 
     for line in lines:
@@ -132,7 +128,7 @@ async def record_membership_sale(
         )
         db.add(tax_ledger_entry)
 
-    await db.commit()
+    # Do NOT commit here! Commit only in the API after all operations.
     return journal_entry
 
 async def auto_record_payment_in_accounts(
@@ -142,7 +138,6 @@ async def auto_record_payment_in_accounts(
 ):
     if not payment_order:
         return None
-        
     if payment_order.order_type == "membership":
         return await record_membership_sale(db, payment_order, created_by)
     else:
@@ -259,6 +254,5 @@ async def auto_record_payroll_payment(
         db.add(ledger_entry)
 
     await db.flush()
+    print("[DEBUG] Finished auto_record_payroll_payment (no commit here).")
     return journal_entry
-
-

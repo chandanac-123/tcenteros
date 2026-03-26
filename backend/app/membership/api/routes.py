@@ -343,6 +343,9 @@ async def create_member(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
+    
+    print(f"[DEBUG] Called create_member for email={payload.email}, center_id={payload.center_id}")
+
     from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
     from app.accounts.helpers import auto_record_payment_in_accounts
     from app.settings.models.models import TaxCategory, TaxScope
@@ -487,7 +490,7 @@ async def create_member(
             end_date = start_date + relativedelta(days=membership.duration_count)
         else:
             end_date = None
-        
+
         # Automatically fetch tax category with tax_scope = "membership"
         subtotal_amount = float(membership.default_price)
         tax_amount = 0.0
@@ -512,7 +515,7 @@ async def create_member(
         else:
             # No tax category found - set warning message
             tax_warning_message = "Tax category for membership not found. Please add it in settings."
-        
+
         total_amount = subtotal_amount + tax_amount
 
         # Create MemberMembership with tax info
@@ -530,7 +533,7 @@ async def create_member(
             updated_by=current_user["user_id"],
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            action_type=MembershipActionTypeEnum.created  # <-- Set action_type
+            action_type=MembershipActionTypeEnum.created
         )
         db.add(member_membership)
         await db.flush()
@@ -539,12 +542,12 @@ async def create_member(
         if hasattr(payload, "payment_status") and payload.payment_status == "paid":
             if not hasattr(payload, "payment_method") or not payload.payment_method:
                 raise HTTPException(status_code=400, detail="payment_method required for paid member")
-            
+
             try:
                 payment_status_enum = PaymentOrderStatus(payload.payment_status)
             except Exception:
                 raise HTTPException(status_code=400, detail="Invalid payment_status")
-            
+
             try:
                 payment_method_enum = PaymentMethod(payload.payment_method)
             except Exception:
@@ -572,24 +575,17 @@ async def create_member(
             )
             db.add(payment_order)
             await db.flush()
-            
-            # AUTO-RECORD IN ACCOUNTING MODULE
-            if payment_order.status == PaymentOrderStatus.paid:
-                try:
-                    await auto_record_payment_in_accounts(
-                        db=db,
-                        payment_order=payment_order,
-                        member=member,
-                        center=target_center,
-                        membership=membership,
-                        member_membership=member_membership,
-                    )
-                except Exception as e:
-                    # Log or handle accounting error if needed
-                    pass
 
+            # AUTO-RECORD IN ACCOUNTING MODULE
+            await auto_record_payment_in_accounts(
+            db=db,
+            payment_order=payment_order,
+            created_by=current_user["user_id"]
+        )
+
+    # 6. Commit all at once
     await db.commit()
-    await db.refresh(member)
+
 
     # Build response
     response_data = {
