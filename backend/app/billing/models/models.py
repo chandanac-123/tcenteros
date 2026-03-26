@@ -28,16 +28,21 @@ class TransactionSourceEnum(str, Enum):
 
 
 class OrderType(enum.Enum):
-    center_subscription = "center_subscription"
-    feature_purchase = "feature_purchase"
-    renewal = "renewal"
-    upgrade = "upgrade"
-    add_on = "add_on"
-    refund = "refund"
-    stock_purchase = "stock_purchase"
-    membership = "membership"
-    networking_access = "networking_access"
-
+    MEMBERSHIP = "membership"                      # New membership purchase
+    MEMBERSHIP_RENEWAL = "membership_renewal"      # Membership renewal
+    MEMBERSHIP_UPGRADE = "membership_upgrade"      # Membership plan upgrade/change
+    INVENTORY_SALE = "inventory_sale"              # Sale of inventory/products
+    INVENTORY_PURCHASE = "inventory_purchase"      # Purchase of inventory
+    PAYROLL = "payroll"                            # Salary/payroll
+    NETWORK_IN = "network_in"                      # Networking in (receiving member from other center)
+    NETWORK_OUT = "network_out"                    # Networking out (sending member to other center)
+    NETWORK_SETTLEMENT = "network_settlement"      # Settlement between centers/platform for networking
+    BRANCH_PURCHASE = "branch_purchase"            # Purchase of branch from platform
+    CENTER_SUBSCRIPTION = "center_subscription"    # Center subscription to platform
+    FEATURE_PURCHASE = "feature_purchase"          # Purchase of platform features
+    ADD_ON = "add_on"                              # Add-on purchases
+    REFUND = "refund"                              # Refunds
+    OTHER_CHARGES = "other_charges" 
 
 class ReferenceSchema(enum.Enum):
     center = "center"

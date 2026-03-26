@@ -22,13 +22,19 @@ class EntryStatus(str, enum.Enum):
 
 
 class TransactionSource(str, enum.Enum):
-    MEMBERSHIP = "membership"
-    INVENTORY_SALE = "inventory_sale"
-    INVENTORY_PURCHASE = "inventory_purchase"
-    PAYROLL = "payroll"
-    NETWORK_SETTLEMENT = "network_settlement"
-    GENERAL_EXPENSE = "general_expense"
-    MANUAL = "manual"
+    MEMBERSHIP = "membership"                      # New membership purchase
+    MEMBERSHIP_RENEWAL = "membership_renewal"      # Membership renewal
+    MEMBERSHIP_UPGRADE = "membership_upgrade"      # Membership plan upgrade/change
+    INVENTORY_SALE = "inventory_sale"              # Sale of inventory/products
+    INVENTORY_PURCHASE = "inventory_purchase"      # Purchase of inventory
+    PAYROLL = "payroll"                            # Salary/payroll
+    NETWORK_IN = "network_in"                      # Networking in (receiving member from other center)
+    NETWORK_OUT = "network_out"                    # Networking out (sending member to other center)
+    NETWORK_SETTLEMENT = "network_settlement"      # Settlement between centers/platform for networking
+    BRANCH_PURCHASE = "branch_purchase"            # Purchase of branch from platform
+    OTHER_CHARGES = "other_charges"                # Miscellaneous/other expenses
+    GENERAL_EXPENSE = "general_expense"            # General expenses
+    MANUAL = "manual"   
 
 
 # Create PostgreSQL ENUM types with schema specified
