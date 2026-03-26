@@ -68,9 +68,11 @@ export const useDeleteProductMutation = () => {
     mutationFn: id => deleteProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['Product'] })
+      showSuccess('Product deleted successfully')
     },
     onError: err => {
       console.error(err)
+      showError(err?.response?.data?.detail || 'Failed to delete product')
     }
   })
 }

@@ -48,10 +48,6 @@ const Attendance = () => {
           />
           {activeTab === 'employees' && (
             <div className='flex gap-2'>
-              <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
-                + Add Attendance
-              </Button>
-
               <CustomFilter
                 onApply={id => setSelectedCategoryId(id)}
                 options={data?.map(category => ({
@@ -59,6 +55,9 @@ const Attendance = () => {
                   value: category.id
                 }))}
               />
+               <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
+                + Add Attendance
+              </Button>
             </div>
           )}
         </div>

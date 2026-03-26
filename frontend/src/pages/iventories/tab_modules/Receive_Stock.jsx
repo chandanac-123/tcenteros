@@ -39,17 +39,17 @@ const Receive_Stock = () => {
       accessorKey: 'total',
       header: 'Total Cost'
     },
-    {
-      header: 'Actions',
-      cell: ({ row }) => (
-        <div className='flex items-center gap-2'>
+    // {
+    //   header: 'Actions',
+    //   cell: ({ row }) => (
+    //     <div className='flex items-center gap-2'>
          
-          <button>
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
-          </button>
-        </div>
-      )
-    }
+    //       <button>
+    //         <img src={deleteicon} alt='delete' className='w-6 h-6' />
+    //       </button>
+    //     </div>
+    //   )
+    // }
   ]
 
 

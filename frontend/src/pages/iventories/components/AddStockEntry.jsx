@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
@@ -11,11 +11,12 @@ import {
 } from '@api-queries/inventory/Query'
 import { format } from 'date-fns'
 import CustomeSelect from '@common/components/CustomeSelect'
+import AddProductModal from './AddProductModal'
 
 const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
+  const [open, setOpen] = useState(false)
   const { mutateAsync: createStockEntry } = useCreateStockEntryMutation()
   const { data: productDropdownData } = useProductDropdownQuery()
-  console.log('productDropdownData: ', productDropdownData);
 
   const initialValues = {
     product_id: '',
@@ -53,6 +54,18 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
       onOpenChange={setOpenStockEntry}
       header='Add Stock Entry'
     >
+      {productDropdownData?.products?.length === 0 && (
+        <div className='col-span-2 flex gap-1 border justify-center items-center border-dashed rounded-lg p-2 bg-primary/5 '>
+          <p className='text-sm text-gray-600'>
+            No product found. Please add a product.
+          </p>
+          <Button size='addbutton' type='submit' onClick={() => setOpen(true)}>
+            + Add Product
+          </Button>
+          <AddProductModal open={open} setOpen={setOpen} />
+        </div>
+      )}
+
       <form
         onSubmit={formik.handleSubmit}
         className='w-full max-w-2xl space-y-5 '

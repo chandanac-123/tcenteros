@@ -71,7 +71,7 @@ const Products = () => {
           </button> */}
           <button
             onClick={() => {
-              setDeleteId(row.original.id)
+              setDeleteId(row.original.product_id)
               setDeleteOpen(true)
             }}
           >
@@ -83,7 +83,6 @@ const Products = () => {
   ]
 
   const handleDelete = async () => {
-    if (!deleteId) return
     try {
       await deleteProduct(deleteId)
       setDeleteOpen(false)
