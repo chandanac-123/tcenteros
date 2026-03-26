@@ -28,21 +28,21 @@ class TransactionSourceEnum(str, Enum):
 
 
 class OrderType(enum.Enum):
-    MEMBERSHIP = "membership"                      # New membership purchase
-    MEMBERSHIP_RENEWAL = "membership_renewal"      # Membership renewal
-    MEMBERSHIP_UPGRADE = "membership_upgrade"      # Membership plan upgrade/change
-    INVENTORY_SALE = "inventory_sale"              # Sale of inventory/products
-    INVENTORY_PURCHASE = "inventory_purchase"      # Purchase of inventory
-    PAYROLL = "payroll"                            # Salary/payroll
-    NETWORK_IN = "network_in"                      # Networking in (receiving member from other center)
-    NETWORK_OUT = "network_out"                    # Networking out (sending member to other center)
-    NETWORK_SETTLEMENT = "network_settlement"      # Settlement between centers/platform for networking
-    BRANCH_PURCHASE = "branch_purchase"            # Purchase of branch from platform
-    CENTER_SUBSCRIPTION = "center_subscription"    # Center subscription to platform
-    FEATURE_PURCHASE = "feature_purchase"          # Purchase of platform features
-    ADD_ON = "add_on"                              # Add-on purchases
-    REFUND = "refund"                              # Refunds
-    OTHER_CHARGES = "other_charges" 
+    membership = "membership"
+    membership_renewal = "membership_renewal"
+    membership_upgrade = "membership_upgrade"
+    inventory_sale = "inventory_sale"
+    inventory_purchase = "inventory_purchase"
+    payroll = "payroll"
+    network_in = "network_in"
+    network_out = "network_out"
+    network_settlement = "network_settlement"
+    branch_purchase = "branch_purchase"
+    center_subscription = "center_subscription"
+    feature_purchase = "feature_purchase"
+    add_on = "add_on"
+    refund = "refund"
+    other_charges = "other_charges"
 
 class ReferenceSchema(enum.Enum):
     center = "center"
@@ -111,9 +111,9 @@ class PaymentOrder(Base, AuditMixin):
     )
 
     order_type = Column(
-        Enum(OrderType),
-        nullable=False, index=True
-    )
+    Enum(OrderType, name="ordertype", schema="public"),
+    nullable=False, index=True
+   )
 
     reference_schema = Column(
         Enum(ReferenceSchema),
@@ -122,7 +122,7 @@ class PaymentOrder(Base, AuditMixin):
 
     reference_id = Column(
         UUID(as_uuid=True),
-        nullable=True
+        nullable=False
     )
 
     subtotal_amount = Column(

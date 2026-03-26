@@ -2005,7 +2005,7 @@ async def get_center_operational_info(center_id: str, session: AsyncSession = De
         select(CenterOperationalSetting)
         .where(CenterOperationalSetting.center_id == center_id)
     )
-    op_setting = op_settings.scalar_one_or_none()
+    op_setting = op_settings.scalars().first()
     if not op_setting:
         raise HTTPException(status_code=404, detail="Operational settings not found")
 
