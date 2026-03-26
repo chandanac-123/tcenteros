@@ -11,7 +11,7 @@ const Sidebar = () => {
       <div className='flex flex-col justify-center items-center'>
         <img src={branding.logo_url || logo} alt='' className='w-28 h-28' />
       </div>
-      <div className='flex flex-col gap-2 w-full mt-3 px-2'>
+      <div className='flex flex-col gap-2 w-full mt-3 px-2 overflow-auto'>
         {routes.map((item, index) => {
           if (item.menubar) {
             return (

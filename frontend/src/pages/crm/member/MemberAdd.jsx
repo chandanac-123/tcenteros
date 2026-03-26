@@ -23,6 +23,7 @@ import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
 import { useEffect } from 'react'
+import { formatToDDMMYYYY } from '@utils/helper'
 
 const paidStatus = [
   { id: 'unpaid', name: 'Unpaid' },
@@ -75,7 +76,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     email: sourceData?.email || '',
     mobile: sourceData?.mobile || '',
     gender: sourceData?.gender || 'male',
-    date_of_birth: sourceData?.date_of_birth || '',
+    date_of_birth: formatToDDMMYYYY(sourceData?.date_of_birth) || '',
     blood_group: sourceData?.blood_group || '',
     address_line_1: sourceData?.address?.address_line_1 || '',
     address_line_2: sourceData?.address?.address_line_2 || '',
@@ -98,7 +99,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     onSubmit: async values => {
       try {
         const payload = { ...values }
-
+        if (payload.date_of_birth) {
+          const [day, month, year] = payload.date_of_birth.split('-')
+          payload.date_of_birth = `${year}-${month}-${day}`
+        }
         if (isEdit) {
           // Don't send membership_id during edit
           delete payload.membership_id
@@ -126,7 +130,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           goBack()
         }
       } catch (error) {
-        console.error(error)
+        console.error(error.re)
       }
     }
   })
@@ -138,7 +142,8 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   //     </div>
   //   )
   // }
-  // console.log('formi: ', formik.values)
+
+  console.log('formi: ', formik.values)
   return (
     <div className='flex flex-col gap-4 pb-6'>
       <CustomeBreadcrumb
@@ -206,7 +211,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             <Input
               label='Date of Birth'
               name='date_of_birth'
-              placeholder='YYYY-MM-DD'
+              placeholder='DD-MM-YYYY'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
               error={
