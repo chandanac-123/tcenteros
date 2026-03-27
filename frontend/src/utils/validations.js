@@ -10,7 +10,9 @@ export const onboardingValidationSchema = Yup.object().shape({
     .matches(/^[0-9]{10,12}$/, 'Invalid phone number')
     .required('Contact phone is required'),
   city: Yup.string().required('City is required'),
-  subscription_duration: Yup.string().required('Subscription duration is required'),
+  subscription_duration: Yup.string().required(
+    'Subscription duration is required'
+  ),
   is_terms_and_conditions: Yup.boolean().oneOf(
     [true],
     'You must accept the terms'
@@ -23,21 +25,7 @@ export const invoiceValidationSchema = Yup.object().shape({
 })
 
 export const categoryValidationSchema = Yup.object().shape({
-  name: Yup.string().required('Enter Designation'),
-  image_url: Yup.mixed()
-    .nullable()
-    .required('Upload an image')
-    .test(
-      'fileType',
-      'Only JPG, JPEG, PNG files are allowed',
-      value =>
-        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    )
+  name: Yup.string().required('Enter Designation')
 })
 
 export const employeeValidationSchema = isEdit =>
@@ -130,19 +118,24 @@ export const branchValidationSchema = Yup.object().shape({
 
 export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
-  secondary_color: Yup.string().required(),
-  app_logo: Yup.mixed().test(
-    'file-or-url',
-    'Logo is required',
-    function (value) {
+  secondary_color: Yup.string().required('Secondary color is required'),
+  app_name: Yup.string().required('App name is required'),
+  app_logo: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    .test('file-or-url', 'Logo is required', function (value) {
       if (!value) return false
       // If it's a File object
       if (value instanceof File) return true
       // If it's existing URL string
       if (typeof value === 'string') return true
       return false
-    }
-  )
+    })
+    .test(
+      'fileSize',
+      'Image size must be less than 2MB',
+      value => !value || value.size <= 2 * 1024 * 1024
+    )
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({
@@ -184,31 +177,38 @@ export const salaryValidationSchema = Yup.object().shape({
   pay_cycle: Yup.string().required('Select pay cycle')
 })
 
-export const memberValidationSchema = Yup.object().shape({
-  full_name: Yup.string()
-    .trim()
-    .required('Full name is required')
-    .min(3, 'Name must be at least 3 characters'),
-  email: Yup.string()
-    .email('Enter a valid email')
-    .required('Email is required'),
-  mobile: Yup.string()
-    .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
-    .required('Mobile number is required'),
-  date_of_birth: Yup.date().nullable().required('Date of birth is required'),
-  membership_id: Yup.string().required('Please select a membership plan'),
-  time_slot_id: Yup.string().required('Please select a time slot'),
-  payment_method: Yup.string().when('payment_status', {
-    is: 'paid',
-    then: schema => schema.required('Select payment method'),
-    otherwise: schema => schema.nullable()
-  }),
-  password: Yup.string().when('payment_status', {
-    is: 'paid',
-    then: schema => schema.required('Password is required'),
-    otherwise: schema => schema.nullable()
+export const memberValidationSchema = (isEdit = false) =>
+  Yup.object().shape({
+    full_name: Yup.string()
+      .trim()
+      .required('Full name is required')
+      .min(3, 'Name must be at least 3 characters'),
+    email: Yup.string()
+      .email('Enter a valid email')
+      .required('Email is required'),
+    mobile: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
+      .required('Mobile number is required'),
+    date_of_birth: Yup.string().nullable().required('Date of birth is required'),
+    membership_id: isEdit
+      ? Yup.string().nullable().notRequired() // optional for edit
+      : Yup.string().required('Please select a membership plan'), // required for create
+    time_slot_id: Yup.string().required('Please select a time slot'),
+    payment_method: isEdit
+      ? Yup.string().nullable().notRequired()
+      : Yup.string().when('payment_status', {
+          is: 'paid',
+          then: schema => schema.required('Select payment method'),
+          otherwise: schema => schema.nullable()
+        }),
+    password: isEdit
+      ? Yup.string().nullable().notRequired()
+      : Yup.string().when('payment_status', {
+          is: 'paid',
+          then: schema => schema.required('Password is required'),
+          otherwise: schema => schema.notRequired()
+        })
   })
-})
 
 export const productValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Product name is required'),

@@ -8,25 +8,26 @@ import {
   useMembersTimeSlotQuery,
   useMembersGetByIdQuery,
   useUpdateMemberMutation,
-  useMembersPlanQuery,
+  useActiveMembersPlanQuery,
   useVisitorById,
   useGuestById
 } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'
-import { useCrmStore } from '@store/tabStore'
+import { useCrmStore, useSettingsTabStore } from '@store/tabStore'
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
 import { memberValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
+import { useEffect } from 'react'
+import { formatToDDMMYYYY } from '@utils/helper'
 
 const paidStatus = [
-  { id: 'unpaid', name: 'unpaid' },
-  { id: 'paid', name: 'paid' }
+  { id: 'unpaid', name: 'Unpaid' },
+  { id: 'paid', name: 'Paid' }
 ]
 const paymentMethod = [
   { id: 'cash', name: 'Cash' },
@@ -41,10 +42,10 @@ const genderOption = [
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const {
     selectedVisitorId,
-    setSelectedTab,
     selectedGuestId,
     clearSelectedIds
   } = useCrmStore()
+  const{setSelectedTab}= useSettingsTabStore()
   const { data: visitorData, isFetching: isVisitorFetching } =
     useVisitorById(selectedVisitorId)
   const { data: guestData, isFetching: isGuestFetching } =
@@ -58,7 +59,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   )
   const { data: memberData, isFetching: isMemberFetching } =
     useMembersGetByIdQuery(memberId)
-  const { data: memberPlan } = useMembersPlanQuery()
+  const { data: memberPlan } = useActiveMembersPlanQuery()
   const isFormLoading = isVisitorFetching || isGuestFetching || isMemberFetching
 
   const sourceData = isEdit
@@ -71,41 +72,50 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
   const initialValues = {
     center_id: state?.auth?.center_id,
-    full_name: '',
-    email: '',
-    mobile: '',
-    gender: '',
-    date_of_birth: '',
-    blood_group: '',
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    state: '',
-    country: '',
-    postal_code: '',
-    membership_id: '',
-    time_slot_id: '',
+    full_name: sourceData?.full_name || '',
+    email: sourceData?.email || '',
+    mobile: sourceData?.mobile || '',
+    gender: sourceData?.gender || 'male',
+    date_of_birth: formatToDDMMYYYY(sourceData?.date_of_birth) || '',
+    blood_group: sourceData?.blood_group || '',
+    address_line_1: sourceData?.address?.address_line_1 || '',
+    address_line_2: sourceData?.address?.address_line_2 || '',
+    city: sourceData?.address?.city || '',
+    state: sourceData?.address?.state || '',
+    country: sourceData?.address?.country || '',
+    postal_code: sourceData?.address?.postal_code || '',
+    membership_id: sourceData?.membership_id || '',
+    time_slot_id: sourceData?.time_slot_id || '',
     member_status: 'member',
-    payment_method: '',
-    payment_status: 'unpaid',
+    payment_method: sourceData?.payment_method || 'cash',
+    payment_status: sourceData?.payment_status || 'unpaid',
     password: ''
   }
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    validationSchema: memberValidationSchema,
+    validationSchema: memberValidationSchema(isEdit),
     onSubmit: async values => {
       try {
-        const payload = {
-          ...values,
-          country: values.country,
-          state: values.state
+        const payload = { ...values }
+        if (payload.date_of_birth) {
+          const [day, month, year] = payload.date_of_birth.split('-')
+          payload.date_of_birth = `${year}-${month}-${day}`
         }
+        if (isEdit) {
+          // Don't send membership_id during edit
+          delete payload.membership_id
+          delete payload.payment_method
+          delete payload.password
+          delete payload.payment_status
+        }
+
         if (payload.payment_status === 'unpaid') {
           delete payload.password
           delete payload.payment_method
         }
+
         if (isEdit || selectedVisitorId || selectedGuestId) {
           await updateMember({
             data: payload,
@@ -120,45 +130,20 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           goBack()
         }
       } catch (error) {
-        console.error(error)
+        console.error(error.re)
       }
     }
   })
 
-  useEffect(() => {
-    if (!sourceData) return
+  // if (isFormLoading) {
+  //   return (
+  //     <div className='flex justify-center items-center h-[300px]'>
+  //       <Spinner />
+  //     </div>
+  //   )
+  // }
 
-    formik.setValues({
-      center_id: state?.auth?.center_id,
-      full_name: sourceData?.full_name || '',
-      email: sourceData?.email || '',
-      mobile: sourceData?.mobile || '',
-      gender: sourceData?.gender || '',
-      date_of_birth: sourceData?.date_of_birth || '',
-      blood_group: sourceData?.blood_group || '',
-      address_line_1: sourceData?.address?.address_line_1 || '',
-      address_line_2: sourceData?.address?.address_line_2 || '',
-      city: sourceData?.address?.city || '',
-      country: sourceData?.address?.country || '',
-      state: sourceData?.address?.state || '',
-      postal_code: sourceData?.address?.postal_code || '',
-      membership_id: sourceData?.membership_id || '',
-      time_slot_id: sourceData?.time_slot_id || '',
-      member_status: 'member',
-      payment_method: sourceData?.payment_method || '',
-      payment_status: sourceData?.payment_status || 'unpaid',
-      password: ''
-    })
-  }, [sourceData])
-
-  if (isFormLoading) {
-    return (
-      <div className='flex justify-center items-center h-[300px]'>
-        <Spinner />
-      </div>
-    )
-  }
-
+  // console.log('formi: ', formik.values)
   return (
     <div className='flex flex-col gap-4 pb-6'>
       <CustomeBreadcrumb
@@ -168,6 +153,15 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           isEdit ? 'Member Updation Form' : 'Member Creation Form'
         }
       />
+      {memberPlan?.length === 0 && (
+        <div className='flex justify-center items-center text-red_text'>
+          Currently there is no active membership plan. Please create a
+          membership plan to proceed.
+          <Button variant='link' onClick={() => navigate('/membership-plan')}>
+            Click to Proceed
+          </Button>
+        </div>
+      )}
       <form className='space-y-2' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
           <div className='flex-1'>
@@ -205,11 +199,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           <div className='flex-1'>
             <CustomeSelect
               label='Gender'
-              name='gender'
               options={genderOption}
               placeholder='Select Gender'
               value={formik.values.gender}
-              onChange={value => formik.setFieldValue('gender', value)}
+              onChange={option => formik.setFieldValue('gender', option)}
             />
           </div>
         </div>
@@ -218,7 +211,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             <Input
               label='Date of Birth'
               name='date_of_birth'
-              placeholder='YYYY-MM-DD'
+              placeholder='DD-MM-YYYY'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
               error={
@@ -299,10 +292,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             <CustomeSelect
               options={memberPlan}
               search={true}
+              disabled={isEdit}
               value={formik.values.membership_id}
-              onChange={value => formik.setFieldValue('membership_id', value)}
+              onChange={option => formik.setFieldValue('membership_id', option)}
               label='Membership Plan '
-              name='membership_id'
               error={
                 formik.touched.membership_id && formik.errors.membership_id
               }
@@ -317,7 +310,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           </div>
         </div>
-        {formik?.values?.payment_status == 'paid' && (
+        {formik?.values?.payment_status === 'paid' && !isEdit && (
           <div className='flex gap-4 '>
             <div className='flex-1'>
               <CustomeSelect
@@ -342,18 +335,20 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         )}
 
-        <div className='flex justify-end'>
-          <CustomeTab
-            tabList={paidStatus}
-            defaultVal={formik.values.payment_status}
-            tabsListClass='w-40 p-[1px] rounded-full'
-            tabsTriggerClass='rounded-full'
-            onChange={value => formik.setFieldValue('payment_status', value)}
-            error={
-              formik.touched.payment_status && formik.errors.payment_status
-            }
-          />
-        </div>
+        {!isEdit && !selectedGuestId && !selectedGuestId && (
+          <div className='flex justify-end'>
+            <CustomeTab
+              tabList={paidStatus}
+              defaultVal='unpaid'
+              tabsListClass='w-40 p-[1px] rounded-full'
+              tabsTriggerClass='rounded-full'
+              onChange={value => formik.setFieldValue('payment_status', value)}
+              error={
+                formik.touched.payment_status && formik.errors.payment_status
+              }
+            />
+          </div>
+        )}
         <div className='flex justify-between items-center pt-4'>
           <span className='text-md font-semibold'>Select Time Slot</span>
           <Button

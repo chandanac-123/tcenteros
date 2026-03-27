@@ -3,6 +3,7 @@ import { Camera } from 'lucide-react'
 import { useState } from 'react'
 import UpdateProfile from './UpdateProfile'
 import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
+import defalutUser from '@assets/header-icons/user.svg'
 
 const ProfileUpload = () => {
   const [open, setOpen] = useState(false)
@@ -20,7 +21,7 @@ const ProfileUpload = () => {
       <div className='relative self-center -mt-20'>
         {/* Profile Image */}
         <img
-          src={data?.profile_photo}
+          src={data?.profile_photo || defalutUser }
           alt='User'
           className='w-28 h-28 rounded-full border-2 border-bordergreylight'
         />

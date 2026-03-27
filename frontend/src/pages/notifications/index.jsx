@@ -6,13 +6,13 @@ import CenterNotifications from './components/CenterNotifications'
 import Tickets from './components/Tickets'
 
 const notificationsTabs = [
-  { id: 2, name: 'Network' },
-  { id: 3, name: 'Center' },
-  { id: 4, name: 'Tickets' }
+  { id: 'network', name: 'Network' },
+  { id: 'center', name: 'Center' },
+  { id: 'tickets', name: 'Tickets' }
 ]
 
 const Notifications = () => {
-  const [activeTab, setActiveTab] = useState('Network')
+  const [activeTab, setActiveTab] = useState('network')
 
   return (
     <ContentLayout>
@@ -27,7 +27,7 @@ const Notifications = () => {
         <div className='flex w-auto'>
           <CustomeTab
             tabList={notificationsTabs}
-            defaultVal='Network'
+            defaultVal='network'
             tabsListClass=' w-[400px] p-[1px]'
             onChange={value => setActiveTab(value)}
           />
@@ -35,11 +35,11 @@ const Notifications = () => {
 
         {/* Tab Content */}
 
-        {activeTab === 'Network' && <NetworkNotifications />}
+        {activeTab === 'network' && <NetworkNotifications />}
 
-        {activeTab === 'Center' && <CenterNotifications />}
+        {activeTab === 'center' && <CenterNotifications />}
 
-        {activeTab === 'Tickets' && <Tickets />}
+        {activeTab === 'tickets' && <Tickets />}
       </div>
     </ContentLayout>
   )

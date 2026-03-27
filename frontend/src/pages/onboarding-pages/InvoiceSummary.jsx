@@ -46,6 +46,9 @@ const InvoiceSummary = () => {
     }
   })
 
+  const yearlyPrice = data?.total_amount
+    ? (data.total_amount * 12).toFixed(2)
+    : 0
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -164,7 +167,9 @@ const InvoiceSummary = () => {
                       GST ({data?.tax?.tax_percentage}%)
                     </span>
                     <span>
-                      {data?.total_tax ? `₹${data?.total_tax}` : '₹00.00'}
+                      {data?.total_tax
+                        ? `₹${data?.total_tax.toFixed(2)}`
+                        : '₹00.00'}
                     </span>
                   </div>
                 </div>
@@ -179,9 +184,7 @@ const InvoiceSummary = () => {
                   </p>
                 </div>
                 <p className='text-2xl font-bold text-purple-600'>
-                  {data?.total_amount
-                    ? `₹${data?.total_amount.toFixed(2)}`
-                    : '₹00.00'}
+                  {data?.total_amount ? `₹${data?.total_amount.toFixed(2)}` : '₹00.00'}
                 </p>
               </div>
 

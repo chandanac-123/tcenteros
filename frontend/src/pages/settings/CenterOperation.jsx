@@ -230,7 +230,7 @@ const CenterOperations = () => {
           {slots?.map(slot => (
             <SlotCard
               key={slot.id}
-              sku_name ='null'
+              sku_name ={null}
               startTime={slot.start_time}
               endTime={slot.end_time}
               capacity={slot.slot_capacity}

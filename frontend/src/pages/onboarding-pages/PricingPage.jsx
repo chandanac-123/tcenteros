@@ -1,6 +1,5 @@
 import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
 import { Button } from '@pages/components/ui/button'
-import backarrow from '@assets/navigate-icons/backarrow.svg'
 import check from '@assets/form-icons/check.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
@@ -14,9 +13,8 @@ const PricingPage = () => {
 
   const amount = data?.calculated_amount || 0
   const isYearly = data?.subscription_duration === 'yearly'
-
   const monthlyPrice = isYearly ? amount / 12 : amount
-  const yearlyPrice = isYearly ? amount : amount * 12
+
   return (
     <SecondaryLayout>
       <OnboardHeader />
@@ -49,10 +47,6 @@ const PricingPage = () => {
                   {' '}
                   / Monthly
                 </span>
-
-                <span className='ml-2 text-md text-textblack font-bold'>
-                 -  Billed Annually : ₹{yearlyPrice.toFixed(2)}
-                </span>
               </div>
 
               {/* Divider */}
@@ -77,10 +71,9 @@ const PricingPage = () => {
 
               {/* Total */}
               <div className='text-center text-lg font-semibold text-onboard_secondary'>
-                Total 1-{data?.subscription_duration} Cost :{' '}
-                {data?.calculated_amount
-                  ? `₹${data.calculated_amount.toFixed(2)}`
-                  : '₹0'}
+                <span className='ml-2 text-md text-textblack font-bold'>
+                  {isYearly ? 'Billed Annually' : 'Billed Monthly'}
+                </span>
               </div>
             </div>
 

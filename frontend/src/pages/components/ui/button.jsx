@@ -21,7 +21,8 @@ const buttonVariants = cva(
         onboard_button_filled: 'bg-onboard_primary text-white',
         button_outlined: ' text-primary outline ',
         button_outlined_textleft: 'text-primary outline justify-start',
-        button_filter: 'text-textgrey border-2 border-filter_border'
+        button_filter: 'text-textgrey border-2 border-filter_border',
+        link: 'text-primary underline-offset-4 underline',
       },
       size: {
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-16',

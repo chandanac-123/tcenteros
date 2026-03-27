@@ -8,11 +8,11 @@ import { Download } from 'lucide-react'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = useState('Income')
+  const [activeTab, setActiveTab] = useState('income')
   const employeeOrMember = [
-    { id: 1, name: 'Income' },
-    { id: 2, name: 'Expenses '},
-    { id: 3, name: 'Settlement' }
+    { id: 'income', name: 'Income' },
+    { id: 'expenses', name: 'Expenses '},
+    { id: 'settlement', name: 'Settlement' }
   ]
   const [dateRange, setDateRange] = useState({ from: null, to: null })
   const [tableParams, setTableParams] = useState({
@@ -39,7 +39,7 @@ const Reports = () => {
         {/* Tabs */}
         <CustomeTab
           tabList={employeeOrMember}
-          defaultVal='Income'
+          defaultVal='income'
           tabsListClass='p-[1px] w-[400px] '
           onChange={value => changeReportType(value)}
         />
@@ -77,19 +77,19 @@ const Reports = () => {
         </div>
       </div>
       {/* Render table based on activeTab */}
-      {activeTab === 'Income' && (
+      {activeTab === 'income' && (
         <IncomeTable
           tableParams={tableParams}
           setTableParams={setTableParams}
         />
       )}
-      {activeTab === 'Expenses ' && (
+      {activeTab === 'expenses' && (
         <ExpenseTable
           tableParams={tableParams}
           setTableParams={setTableParams}
         />
       )}
-      {activeTab === 'Settlement' && (
+      {activeTab === 'settlement' && (
         <SettlementTable
           tableParams={tableParams}
           setTableParams={setTableParams}

@@ -31,9 +31,9 @@ const Network = () => {
   const networkActive = networkToggle?.network_enabled ?? false
 
   const networkTabs = [
-    { id: 1, name: 'Requests' },
-    { id: 2, name: 'Network' },
-    { id: 3, name: 'Completed' }
+    { id: 'requests', name: 'Requests' },
+    { id: 'network', name: 'Network' },
+    { id: 'completed', name: 'Completed' }
   ]
 
   // ::: Filter the List data with status and Date ::: //
@@ -49,12 +49,12 @@ const Network = () => {
 
       
     // Network Tab → ONLY approved
-    if (activeTab === "Network") {
+    if (activeTab === "network") {
       return status === "approved";
     }
 
     // Requests Tab
-    if (activeTab === "Requests") {
+    if (activeTab === "requests") {
       return (
         ["pending", "approved", "paid"].includes(status) &&
         endDateTime !== null &&
@@ -63,7 +63,7 @@ const Network = () => {
     }
 
     // Completed Tab
-    if (activeTab === "Completed") {
+    if (activeTab === "completed") {
       return endDateTime !== null && endDateTime < now;
     }
 
@@ -179,7 +179,7 @@ const Network = () => {
             activeTab={activeTab}
             data={filteredData}
             tableParams={tableParams}
-            pagination={data?.total}
+            pagination={filteredData?.total}
             loading={isFetching}
             setTableParams={setTableParams}
           />

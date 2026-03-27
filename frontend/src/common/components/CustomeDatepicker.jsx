@@ -14,6 +14,7 @@ const CustomDatePicker = ({
   value,
   onChange,
   error,
+  disableFuture = false,
   pickerType = 'date' // default = single date
 }) => {
   const [open, setOpen] = useState(false)
@@ -192,6 +193,11 @@ const CustomDatePicker = ({
                 pickerType === 'range'
                   ? date?.from || new Date()
                   : date || new Date()
+              }
+              disabled={
+                disableFuture
+                  ? date => date > new Date() //  block future
+                  : undefined
               }
             />
           )}

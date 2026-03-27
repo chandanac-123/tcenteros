@@ -185,7 +185,7 @@ const VisitorAdd = ({ goBack }) => {
         </div>
 
         <div className='flex justify-end mt-6'>
-          <Button size='addbutton' variant='default' type='submit'>
+          <Button size='addbutton' variant='default' type='submit'  disabled={!formik.dirty}>
             Create Visitor
           </Button>
         </div>

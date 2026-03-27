@@ -11,18 +11,18 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { formatRange } from '@utils/helper'
 
 const Attendance = () => {
-  const [activeTab, setActiveTab] = useState('Members')
+  const [activeTab, setActiveTab] = useState('members')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const { data, isLoading } = useCategoriesQuery()
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
   const [dateRanges, setDateRanges] = useState({
-    Members: { from: null, to: null },
-    Employees: { from: null, to: null }
+    members: { from: null, to: null },
+    employees: { from: null, to: null }
   })
 
   const employeeOrMember = [
-    { id: 1, name: 'Members' },
-    { id: 2, name: 'Employees' }
+    { id: 'members', name: 'Members' },
+    { id: 'employees', name: 'Employees' }
   ]
 
   return (
@@ -31,7 +31,7 @@ const Attendance = () => {
       <div className='flex justify-between items-center mb-4'>
         <CustomeTab
           tabList={employeeOrMember}
-          defaultVal='Members'
+          defaultVal='members'
           tabsListClass='p-[1px]'
           onChange={value => setActiveTab(value)}
         />
@@ -46,12 +46,8 @@ const Attendance = () => {
               }))
             }
           />
-          {activeTab === 'Employees' && (
+          {activeTab === 'employees' && (
             <div className='flex gap-2'>
-              <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
-                + Add Attendance
-              </Button>
-
               <CustomFilter
                 onApply={id => setSelectedCategoryId(id)}
                 options={data?.map(category => ({
@@ -59,23 +55,26 @@ const Attendance = () => {
                   value: category.id
                 }))}
               />
+               <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
+                + Add Attendance
+              </Button>
             </div>
           )}
         </div>
       </div>
       <div className='text-tabelsubtitle font-semibold text-md mb-3'>
-        {activeTab === 'Members'
+        {activeTab === 'members'
           ? 'Member Attendance History'
           : 'Employee Attendance History'}
       </div>
-      {activeTab === 'Members' && (
-        <MemberAttendance dateRange={formatRange(dateRanges.Members)} />
+      {activeTab === 'members' && (
+        <MemberAttendance dateRange={formatRange(dateRanges.members)} />
       )}
 
-      {activeTab === 'Employees' && (
+      {activeTab === 'employees' && (
         <EmployeeAttendance
           categoryId={selectedCategoryId}
-          dateRange={formatRange(dateRanges.Employees)}
+          dateRange={formatRange(dateRanges.employees)}
         />
       )}
       <AddEmployeeAttendance

@@ -20,13 +20,13 @@ export const setting_tabs = [
   },
 
   {
-    id: 4,
+    id: 3,
     name: ' Holidays',
     heading: '',
     component_view: <CenterHolidays />
   },
   {
-    id: 3,
+    id: 4,
     name: ' Designation',
     heading: '',
     component_view: <CenterDesignations />

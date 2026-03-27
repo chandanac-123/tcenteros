@@ -7,32 +7,32 @@ import Product from '@pages/iventories/tab_modules/Products'
 
 export const inventory_modules = [
   {
-    id: 1,
+    id: 'overview',
     name: 'Overview',
     component: <Overview />
   },
   {
-    id: 2,
+    id: 'products',
     name: 'Products',
     component: <Product />
   },
   {
-    id: 3,
+    id: 'receive_stock',
     name: 'Receive Stock',
     component: <ReceiveStock />
   },
   {
-    id: 4,
+    id: 'stock_activity',
     name: 'Stock Activity',
     component: <StockActivity />
   },
   {
-    id: 5,
+    id: 'pos',
     name: 'POS',
     component: <POS />
   },
   {
-    id: 6,
+    id: 'reports',
     name: 'Reports',
     component: <Reports />
   }

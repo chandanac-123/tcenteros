@@ -73,3 +73,15 @@ export const formatDate = date => {
   if (!date) return null
   return format(new Date(date), 'yyyy-MM-dd')
 }
+
+export  const formatToDDMMYYYY = date => {
+  if (!date) return ''
+  const parts = date.split('-')
+  // If already in YYYY-MM-DD
+  if (parts[0]?.length === 4) {
+    const [year, month, day] = parts
+    return `${day}-${month}-${year}`
+  }
+
+  return date // already correct format
+}

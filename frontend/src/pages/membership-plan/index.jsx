@@ -11,15 +11,15 @@ import { usePlansQuery } from '@api-queries/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 
 const MembershipPlan = () => {
-  const [activeTab, setActiveTab] = useState('All')
+  const [activeTab, setActiveTab] = useState('all')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
 
   const Status = [
-    { id: 1, name: 'All' },
-    { id: 2, name: 'active' },
-    { id: 3, name: 'inactive' }
+    { id: 'all', name: 'All' },
+    { id: 'active', name: 'Active' },
+    { id: 'inactive', name: 'Inactive' }
   ]
 
   return (
@@ -32,7 +32,7 @@ const MembershipPlan = () => {
         <div>
           <CustomeTab
             tabList={Status}
-            defaultVal='All'
+            defaultVal='all'
             tabsListClass=' w-[400px] p-[1px]'
             onChange={value => setActiveTab(value)}
           />

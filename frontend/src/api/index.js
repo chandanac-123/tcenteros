@@ -65,7 +65,7 @@ export const deleteMultipleEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee/delete-multiple', details)
 
 export const getPayrollApiCall = data =>
-  axiosInstance.get(`/payrole/payroll/history?page=${data?.page||1}`)
+  axiosInstance.get(`/payrole/payroll/history?page=${data?.page || 1}`)
 export const runPayrollApiCall = details =>
   axiosInstance.post('/payrole/payroll/run', details)
 
@@ -108,7 +108,7 @@ export const updateCenterTimeApiCall = details =>
 //MEMBERSHIP PLAN API
 export const getMembershipPlanApiCall = status =>
   axiosInstance.get(
-    `/membership/memberships-plans${status == 'All' ? '' : `?status=${status}`}`
+    `/membership/memberships-plans${status == 'all' ? '' : `?status=${status}`}`
   )
 export const createMembershipPlanApiCall = details =>
   axiosInstance.post('/membership/memberships-plans', details)
@@ -258,7 +258,11 @@ export const createBrandingApiCall = details =>
 export const getTermsandPrivacyApiCall = id =>
   axiosInstance.get(`/branding/terms-privacy/global`)
 export const createTermsandPrivacyApiCall = details =>
-  axiosInstance.post(`/branding/terms-privacy/center`, details)
+  axiosInstance.post(`/branding/terms-privacy/center`, details, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  })
 export const getUpdatedTermsandPrivacyApiCall = () =>
   axiosInstance.get(`/branding/terms-privacy/center`)
 
@@ -300,6 +304,8 @@ export const getMemberTimeSlotApiCall = id =>
   axiosInstance.get(`/membership/center/time-slots?center_id=${id}`)
 export const getMemberPlanApiCall = () =>
   axiosInstance.get(`/membership/memberships-plans-mini`)
+export const getActiveMemberPlanApiCall = () =>
+  axiosInstance.get(`/membership/memberships-plans-mini?status=active`)
 export const getMemberCountApiCall = () =>
   axiosInstance.get(`/membership/center/member-counts`)
 export const updateMemberStatusApiCall = (id, status) =>

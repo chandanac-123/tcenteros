@@ -12,7 +12,8 @@ import {
   getVisitor,
   getGuestInfo,
   getVisitorById,
-  getGuestById
+  getGuestById,
+  getActiveMemberPlan
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -34,7 +35,7 @@ export const useCreateMemberMutation = () => {
       showSuccess('Member created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create member')
+      showError(err?.response?.data?.detail || 'Failed to create member')
       return err
     }
   })
@@ -44,12 +45,12 @@ export const useUpdateMemberMutation = () => {
   const query = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }) => updateMember(data, id),
-    onSuccess: async data => {
+    onSuccess: async   => {
       query.invalidateQueries('members')
       showSuccess('Member updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update member')
+      showError(err?.response?.data?.detail || 'Failed to update member')
       return err
     }
   })
@@ -64,7 +65,7 @@ export const useDeleteMemberMutation = () => {
       showSuccess('Member deleted successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to delete member')
+      showError(err?.response?.data?.detail || 'Failed to delete member')
       return err
     }
   })
@@ -98,6 +99,16 @@ export const useMembersPlanQuery = () => {
     refetchOnMount: true
   })
 }
+
+export const useActiveMembersPlanQuery = () => {
+  return useQuery({
+    queryKey: ['membersPlan'],
+    queryFn: () => getActiveMemberPlan(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
 
 export const useMembersCountQuery = () => {
   return useQuery({

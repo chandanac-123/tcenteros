@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@pages/components/ui/select'
+import EmployeeTable from '@pages/employee-management/employee/table';
 
 export default function CustomeSelect ({
   label,
