@@ -22,7 +22,8 @@ const Inventories = () => {
         </div>
         <CustomeTab
           tabList={inventory_modules}
-          defaultVal={activeTab}
+          value={activeTab}
+          defaultVal='overview'
           tabsListClass='p-[1px]'
           onChange={setActiveTab}
         />
