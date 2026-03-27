@@ -243,27 +243,16 @@ async def run_payroll(
     """
     Run payroll for all active employees of the center.
     Creates PaymentOrder and records in accounts module as expense.
-    
-    Flow:
-    1. Validate if payroll can be run (based on payroll_cycle_day)
-    2. Get all active employees
-    3. Calculate salary (with deductions like TDS if applicable)
-    4. Create PayrollRecord for each employee
-    5. Create PaymentOrder for center (expense)
-    6. Record in accounts module:
-       Dr 5000 Salary Expense [total_salary]
-       Dr 2300 TDS Payable [tds_amount] (if applicable)
-           Cr 1200 Bank Account [net_payable]
     """
     import traceback
-    
+
     # Get center admin and center details
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
-    
+
     center_id = center_admin.center_id
-    
+
     # Get operational settings
     settings_result = await db.execute(
         select(CenterOperationalSetting).where(
@@ -271,29 +260,29 @@ async def run_payroll(
         )
     )
     settings = settings_result.scalar_one_or_none()
-    
+
     if not settings:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Operational settings not configured. Please set payroll cycle day in settings."
         )
-    
+
     # Validate payroll cycle day
     today = date.today()
     payroll_cycle_day = settings.payroll_cycle_day
-    
+
     # Check if today is the payroll day
     if today.day != payroll_cycle_day:
         raise HTTPException(
             status_code=400,
             detail=f"Payroll can only be run on day {payroll_cycle_day} of the month. Today is day {today.day}."
         )
-    
+
     # Calculate payroll period (previous month)
     payroll_month = today.replace(day=1) - relativedelta(days=1)  # Last month
     period_start = payroll_month.replace(day=1)
     period_end = payroll_month.replace(day=payroll_month.day)
-    
+
     # Check if payroll already run for this period
     existing_payroll = await db.execute(
         select(PayrollRecord).where(
@@ -310,7 +299,7 @@ async def run_payroll(
             status_code=400,
             detail=f"Payroll already processed for {payroll_month.strftime('%B %Y')}"
         )
-    
+
     # Get all active employees for this center
     employees_result = await db.execute(
         select(Employee).where(
@@ -321,34 +310,42 @@ async def run_payroll(
         )
     )
     employees = employees_result.scalars().all()
-    
+
     if not employees:
         raise HTTPException(
             status_code=400,
             detail="No active employees found for this center"
         )
-    
+
     # Calculate salaries
     payroll_records = []
     total_gross_salary = Decimal('0')
     total_deductions = Decimal('0')
     total_net_salary = Decimal('0')
-    
+    skipped_employees = []
+
     for employee in employees:
-        # Basic salary calculation
-        gross_salary = Decimal(str(employee.salary))
-        
+        # Skip employees with no salary set
+        if employee.salary is None:
+            skipped_employees.append(f"Employee '{employee.full_name}' (ID: {employee.id}) has no salary set and was skipped.")
+            continue
+        try:
+            gross_salary = Decimal(str(employee.salary))
+        except Exception:
+            skipped_employees.append(f"Employee '{employee.full_name}' (ID: {employee.id}) has invalid salary value and was skipped.")
+            continue
+
         # Calculate deductions (TDS: 10% if salary > 50000)
         tds_amount = Decimal('0')
         if gross_salary > 50000:
             tds_amount = gross_salary * Decimal('0.10')  # 10% TDS
-        
+
         # Other deductions (from employee model if exists)
         other_deductions = Decimal(str(getattr(employee, 'deductions', 0)))
-        
+
         total_deductions_emp = tds_amount + other_deductions
         net_salary = gross_salary - total_deductions_emp
-        
+
         # Create payroll record - Use PayrollPaymentMethod
         payroll_record = PayrollRecord(
             id=uuid4(),
@@ -373,13 +370,21 @@ async def run_payroll(
         )
         db.add(payroll_record)
         payroll_records.append(payroll_record)
-        
+
         total_gross_salary += gross_salary
         total_deductions += total_deductions_emp
         total_net_salary += net_salary
-    
+
     await db.flush()
-    
+
+    # If no employees processed, raise error
+    if not payroll_records:
+        raise HTTPException(
+            status_code=400,
+            detail="No employees with valid salary found for payroll run. " +
+                   " ".join(skipped_employees)
+        )
+
     # Create PaymentOrder (Expense for center) - Use BillingPaymentMethod
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
@@ -403,7 +408,7 @@ async def run_payroll(
     )
     db.add(payment_order)
     await db.flush()
-    
+
     # Record in accounts module
     try:
         await auto_record_payroll_payment(
@@ -419,9 +424,9 @@ async def run_payroll(
         print(f"❌ Failed to record payroll in accounts: {str(e)}")
         traceback.print_exc()
         # Don't fail payroll run, just log the error
-    
+
     await db.commit()
-    
+
     # Build response
     return {
         "message": f"Payroll processed successfully for {payroll_month.strftime('%B %Y')}",
@@ -432,7 +437,7 @@ async def run_payroll(
             "period_end": str(period_end)
         },
         "summary": {
-            "total_employees": len(employees),
+            "total_employees": len(payroll_records),
             "total_gross_salary": float(total_gross_salary),
             "total_deductions": float(total_deductions),
             "total_net_salary": float(total_net_salary)
@@ -444,7 +449,7 @@ async def run_payroll(
                 "id": str(record.id),
                 "employee_id": str(record.employee_id),
                 "employee_name": next(
-                    (emp.full_name for emp in employees if emp.id == record.employee_id), 
+                    (emp.full_name for emp in employees if emp.id == record.employee_id),
                     "Unknown"
                 ),
                 "gross_salary": float(record.gross_salary),
@@ -452,7 +457,8 @@ async def run_payroll(
                 "net_salary": float(record.net_salary)
             }
             for record in payroll_records
-        ]
+        ],
+        "skipped_employees": skipped_employees
     }
 
 

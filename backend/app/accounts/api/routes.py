@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime, date
 from decimal import Decimal
 from uuid import UUID
-
+from sqlalchemy.orm import selectinload
 from app.core.database import get_async_session
 from app.core.dependencies import get_current_user, centeradmin_required
 from app.accounts.models.models import (
@@ -895,6 +895,8 @@ async def get_inventory_accounting(
 # 6. SETTLEMENTS TAB - Network & Trainer Payouts
 # ============================================
 
+
+
 @router.get("/settlements", summary="Get settlement entries")
 async def get_settlement_entries(
     page: int = Query(1, ge=1),
@@ -909,8 +911,21 @@ async def get_settlement_entries(
     """
     Get all settlement entries for the center, filtered by type, status, and date.
     Includes other charges (miscellaneous income/expense) in the results.
+    Membership revenue is never included.
     """
     center_id = current_admin["center_id"]
+
+    # Only allow these sources in settlements
+    settlement_sources = [
+        TransactionSource.BRANCH_PURCHASE.value,
+        TransactionSource.NETWORK_IN.value,
+        TransactionSource.NETWORK_OUT.value,
+        TransactionSource.INVENTORY_PURCHASE.value,
+        TransactionSource.PAYROLL.value,
+        TransactionSource.OTHER_CHARGES.value,
+        TransactionSource.GENERAL_EXPENSE.value,
+        TransactionSource.GENERAL_INCOME.value
+    ]
 
     # Map settlement_type to TransactionSource
     settlement_type_map = {
@@ -926,7 +941,11 @@ async def get_settlement_entries(
         ]
     }
 
-    query = select(JournalEntry).where(JournalEntry.center_id == center_id)
+    # Always restrict to settlement sources
+    query = select(JournalEntry).options(selectinload(JournalEntry.lines)).where(
+        JournalEntry.center_id == center_id,
+        JournalEntry.source.in_(settlement_sources)
+    )
 
     # Filter by settlement_type
     if settlement_type:
