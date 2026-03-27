@@ -74,7 +74,7 @@ const Header = () => {
                   />
                   <div className='flex flex-col'>
                     <span className='text-textwhite text-xs font-normal whitespace-nowrap'>
-                      Hello,{data?.full_name || '-'}
+                      {data?.full_name || '-'}
                     </span>
                     <span className='text-textwhite/50 text-xs font-light'>
                       {data?.role
