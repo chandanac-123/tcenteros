@@ -23,6 +23,46 @@ from app.payrole.models.models import PayrollRecord
 
 router = APIRouter()
 
+async def get_other_charges_for_period(center_id: UUID, period_start: date, period_end: date, db: AsyncSession):
+    """
+    Get all other charges (miscellaneous income/expense) for the period.
+    """
+    from app.accounts.models.models import GeneralLedger
+
+    # Sources to include for other charges
+    sources = ["general_expense", "general_income", "other_charges"]
+
+    # Expenses
+    expense_query = (
+        select(func.sum(GeneralLedger.debit))
+        .where(
+            GeneralLedger.center_id == center_id,
+            GeneralLedger.source.in_(sources),
+            GeneralLedger.transaction_date >= period_start,
+            GeneralLedger.transaction_date <= period_end
+        )
+    )
+    expense_result = await db.execute(expense_query)
+    total_expense = expense_result.scalar() or 0
+
+    # Income
+    income_query = (
+        select(func.sum(GeneralLedger.credit))
+        .where(
+            GeneralLedger.center_id == center_id,
+            GeneralLedger.source.in_(sources),
+            GeneralLedger.transaction_date >= period_start,
+            GeneralLedger.transaction_date <= period_end
+        )
+    )
+    income_result = await db.execute(income_query)
+    total_income = income_result.scalar() or 0
+
+    return {
+        "other_charges_income": float(total_income),
+        "other_charges_expense": float(total_expense)
+    }
+
 @router.get("/dashboard/accounting")
 async def get_accounting_dashboard(
     start_year: int = Query(None, description="Year for monthly chart"),
@@ -859,7 +899,7 @@ async def get_inventory_accounting(
 async def get_settlement_entries(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    settlement_type: Optional[str] = Query(None, description="network, trainer"),
+    settlement_type: Optional[str] = Query(None, description="network_in, network_out, branch_purchase, inventory_purchase, payroll, other"),
     status: Optional[str] = Query(None, description="pending, completed"),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
@@ -867,81 +907,105 @@ async def get_settlement_entries(
     current_admin=Depends(centeradmin_required)
 ):
     """
-    Get network and trainer settlement entries
-    Shows: Date, Settlement Type, Amount, Platform Fee, Net Amount, Status
+    Get all settlement entries for the center, filtered by type, status, and date.
+    Includes other charges (miscellaneous income/expense) in the results.
     """
     center_id = current_admin["center_id"]
-    
-    # Query network income and receivable accounts
-    query = select(
-        GeneralLedger,
-        ChartOfAccounts.code.label('account_code'),
-        ChartOfAccounts.name.label('account_name'),
-        JournalEntry.entry_number.label('entry_number'),
-        JournalEntry.description.label('description')
-    ).join(
-        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
-    ).join(
-        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
-    ).where(
-        GeneralLedger.center_id == UUID(center_id),
-        GeneralLedger.source == TransactionSource.NETWORK_SETTLEMENT
-    )
-    
-    # Date filters
+
+    # Map settlement_type to TransactionSource
+    settlement_type_map = {
+        "branch_purchase": TransactionSource.BRANCH_PURCHASE.value,
+        "network_in": TransactionSource.NETWORK_IN.value,
+        "network_out": TransactionSource.NETWORK_OUT.value,
+        "inventory_purchase": TransactionSource.INVENTORY_PURCHASE.value,
+        "payroll": TransactionSource.PAYROLL.value,
+        "other": [
+            TransactionSource.OTHER_CHARGES.value,
+            TransactionSource.GENERAL_EXPENSE.value,
+            TransactionSource.GENERAL_INCOME.value
+        ]
+    }
+
+    query = select(JournalEntry).where(JournalEntry.center_id == center_id)
+
+    # Filter by settlement_type
+    if settlement_type:
+        mapped = settlement_type_map.get(settlement_type)
+        if isinstance(mapped, list):
+            query = query.where(JournalEntry.source.in_(mapped))
+        elif mapped:
+            query = query.where(JournalEntry.source == mapped)
+
+    # Filter by status
+    if status:
+        if status == "pending":
+            query = query.where(JournalEntry.status == EntryStatus.DRAFT.value)
+        elif status == "completed":
+            query = query.where(JournalEntry.status == EntryStatus.POSTED.value)
+
+    # Filter by date
     if start_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+        query = query.where(JournalEntry.entry_date >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
-    
-    # Total count
+        query = query.where(JournalEntry.entry_date <= datetime.combine(end_date, datetime.max.time()))
+
+    # Total count (must not include order_by)
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
-    total = total_result.scalar_one()
-    
-    # Pagination
-    query = query.order_by(desc(GeneralLedger.transaction_date))
-    query = query.offset((page - 1) * page_size).limit(page_size)
-    
-    result = await db.execute(query)
-    rows = result.all()
-    
-    entries = []
-    for row in rows:
-        # Get all entries in this journal entry to calculate platform fee
-        je_lines_query = select(GeneralLedger).where(
-            GeneralLedger.journal_entry_id == row.GeneralLedger.journal_entry_id
-        )
-        je_lines_result = await db.execute(je_lines_query)
-        je_lines = je_lines_result.scalars().all()
-        
-        gross_income = sum(float(line.credit) for line in je_lines if line.credit > 0)
-        platform_fee = sum(float(line.debit) for line in je_lines if line.debit > 0 and line.account_id != row.GeneralLedger.account_id)
-        net_amount = gross_income - platform_fee
-        
-        entries.append({
-            "id": row.GeneralLedger.id,
-            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
-            "entry_number": row.entry_number,
-            "settlement_type": "Network",  # Can extend for trainer
-            "description": row.description,
-            "gross_income": gross_income,
-            "platform_fee": platform_fee,
-            "net_amount": net_amount,
-            "status": "completed",  # From journal entry status
-            "source_id": row.GeneralLedger.source_id
+    total_count = total_result.scalar_one()
+
+    # Order and paginate
+    query = query.order_by(JournalEntry.entry_date.desc())
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    entries = result.scalars().all()
+
+    # For each entry, if it's an "other charge", add a breakdown of income/expense
+    data = []
+    for entry in entries:
+        other_charges_breakdown = None
+        if entry.source in [
+            TransactionSource.OTHER_CHARGES.value,
+            TransactionSource.GENERAL_EXPENSE.value,
+            TransactionSource.GENERAL_INCOME.value,
+            "other_charges", "general_expense", "general_income"
+        ]:
+            period_start = entry.entry_date.date()
+            period_end = entry.entry_date.date()
+            other_charges = await get_other_charges_for_period(center_id, period_start, period_end, db)
+            other_charges_breakdown = {
+                "other_charges_income": other_charges["other_charges_income"],
+                "other_charges_expense": other_charges["other_charges_expense"]
+            }
+
+        data.append({
+            "id": str(entry.id),
+            "entry_number": entry.entry_number,
+            "entry_date": entry.entry_date.isoformat(),
+            "description": entry.description,
+            "source": entry.source,
+            "source_id": entry.source_id,
+            "status": entry.status,
+            "posted_at": entry.posted_at.isoformat() if entry.posted_at else None,
+            "total_debit": float(entry.total_debit),
+            "total_credit": float(entry.total_credit),
+            "created_by": str(entry.created_by) if entry.created_by else None,
+            "lines": [
+                {
+                    "account_id": line.account_id,
+                    "description": line.description,
+                    "debit": float(line.debit),
+                    "credit": float(line.credit)
+                }
+                for line in entry.lines
+            ],
+            "other_charges_breakdown": other_charges_breakdown
         })
-    
+
     return {
-        "total": total,
         "page": page,
         "page_size": page_size,
-        "entries": entries,
-        "summary": {
-            "total_gross_income": sum(e["gross_income"] for e in entries),
-            "total_platform_fee": sum(e["platform_fee"] for e in entries),
-            "total_net_amount": sum(e["net_amount"] for e in entries)
-        }
+        "total": total_count,
+        "data": data
     }
 
 
