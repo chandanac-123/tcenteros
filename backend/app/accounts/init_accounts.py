@@ -38,6 +38,7 @@ async def initialize_center_accounts(db: AsyncSession, center_id):
         {"code": "4020", "name": "Membership Upgrade Income", "account_type": "revenue", "description": "Revenue from membership upgrades"},
         {"code": "4100", "name": "Inventory Sales Income", "account_type": "revenue", "description": "Revenue from product sales"},
         {"code": "4200", "name": "Network Income", "account_type": "revenue", "description": "Revenue from network visits (networking in)"},
+        {"code": "4250", "name": "Platform Commission", "account_type": "revenue", "description": "Platform commission income"},  # <-- Added
         {"code": "4300", "name": "Other Income", "account_type": "revenue", "description": "Miscellaneous income"},
 
         # Expenses (5000-5999)

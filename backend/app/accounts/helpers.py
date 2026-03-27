@@ -149,7 +149,8 @@ async def auto_record_payroll_payment(
     total_salary: Decimal,
     tds_amount: Decimal,
     net_payable: Decimal,
-    created_by: str
+    created_by: str,
+    source_id: str  # <-- PayrollRecord.id
 ):
     center_id = payment_order.center_id
 
@@ -174,8 +175,8 @@ async def auto_record_payroll_payment(
         center_id=center_id,
         entry_date=datetime.utcnow(),
         source="payroll",
-        source_id=str(payment_order.payment_order_id),
-        description=f"Payroll payment - Order #{str(payment_order.payment_order_id)[:8]}",
+        source_id=source_id,  # <-- Link to PayrollRecord.id
+        description=f"Payroll payment - PayrollRecord #{source_id[:8]}",
         status="posted",
         posted_at=None,
         posted_by=None,
@@ -248,7 +249,7 @@ async def auto_record_payroll_payment(
             balance=balance,
             center_id=center_id,
             source="payroll",
-            source_id=str(payment_order.payment_order_id),
+            source_id=source_id,  # <-- Link to PayrollRecord.id
             created_at=datetime.utcnow()
         )
         db.add(ledger_entry)

@@ -629,6 +629,8 @@ async def approve_networking_access(
     d1 = membership.start_date
     d2 = membership.end_date
     total_days = (d2 - d1).days + 1
+    if total_days < 1:
+        raise HTTPException(400, "Invalid date range")
     total_amount = per_day * Decimal(total_days)
     platform_share = (total_amount * Decimal("0.15")).quantize(Decimal("0.01"))
     center_share = (total_amount - platform_share).quantize(Decimal("0.01"))
@@ -638,15 +640,13 @@ async def approve_networking_access(
         select(CenterWallet).where(CenterWallet.center_id == network_center.id)
     )
     network_wallet = network_wallet.scalar_one_or_none()
-    if not network_wallet or network_wallet.deposit < 20000 or network_wallet.balance < 10000:
+    if not network_wallet or network_wallet.balance < 10000:
         raise HTTPException(400, "Network center wallet does not meet requirements")
 
     home_wallet = await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == member.home_center_id)
     )
     home_wallet = home_wallet.scalar_one_or_none()
-
-    # 5. Check home wallet balance
     if not home_wallet or home_wallet.balance < center_share:
         # Mark as pending settlement
         membership.network_status = NetworkingStatusEnum.pending_settlement
@@ -658,7 +658,7 @@ async def approve_networking_access(
             "Home center has insufficient balance, request marked as pending settlement."
         )
 
-    # 6. Ensure platform wallet exists, create if not
+    # 5. Ensure platform wallet exists, create if not
     platform_wallet = await session.execute(select(PlatformWallet))
     platform_wallet = platform_wallet.scalar_one_or_none()
     if not platform_wallet:
@@ -674,7 +674,7 @@ async def approve_networking_access(
         session.add(platform_wallet)
         await session.flush()
 
-    # 7. Update wallet balances
+    # 6. Update wallet balances
     home_wallet.balance -= center_share
     network_wallet.balance += center_share
     platform_wallet.balance += platform_share
@@ -682,14 +682,14 @@ async def approve_networking_access(
     platform_wallet.updated_at = datetime.utcnow()
     platform_wallet.updated_by = current_admin["user_id"]
 
-    # 8. Create PaymentOrder for networking transaction
-    payment_order = PaymentOrder(
+    # 7. Create PaymentOrder for home center (network_out)
+    payment_order_home = PaymentOrder(
         payment_order_id=uuid4(),
         payer_user_id=member.id,
         payer_type=PayerType.user,
         payee_type=PayeeType.center,
-        center_id=network_center.id,
-        order_type=OrderType.networking_access,
+        center_id=member.home_center_id,
+        order_type=OrderType.network_out,
         reference_schema=ReferenceSchema.networking_access_request,
         reference_id=membership.id,
         subtotal_amount=total_amount,
@@ -703,7 +703,30 @@ async def approve_networking_access(
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
-    session.add(payment_order)
+    session.add(payment_order_home)
+
+    # 8. Create PaymentOrder for networking center (network_in)
+    payment_order_network = PaymentOrder(
+        payment_order_id=uuid4(),
+        payer_user_id=member.id,
+        payer_type=PayerType.user,
+        payee_type=PayeeType.center,
+        center_id=network_center.id,
+        order_type=OrderType.network_in,
+        reference_schema=ReferenceSchema.networking_access_request,
+        reference_id=membership.id,
+        subtotal_amount=center_share,
+        tax_amount=Decimal("0.00"),
+        total_amount=center_share,
+        currency=Currency.INR,
+        status=PaymentOrderStatus.paid,
+        payment_method=PaymentMethod.other,
+        created_by=current_admin["user_id"],
+        updated_by=current_admin["user_id"],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    session.add(payment_order_network)
 
     # 9. Log WalletTransaction (one for home center, one for network center)
     session.add(WalletTransaction(
@@ -770,7 +793,8 @@ async def approve_networking_access(
         "amount": float(total_amount),
         "platform_income": float(platform_share),
         "transferred_to_network_center": float(center_share),
-        "payment_order_id": str(payment_order.payment_order_id)
+        "payment_order_id_home": str(payment_order_home.payment_order_id),
+        "payment_order_id_network": str(payment_order_network.payment_order_id)
     }
 
 

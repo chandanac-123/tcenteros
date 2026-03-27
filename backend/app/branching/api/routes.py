@@ -319,7 +319,7 @@ async def get_purchased_branch_count(
         .where(
             PaymentOrder.center_id == parent_center_id,
             PaymentOrder.status == "paid",
-            PaymentOrder.order_type == "add_on"
+            PaymentOrder.order_type == "branch_purchase"
         )
         .order_by(PaymentOrder.created_at.desc())
         .limit(1)

@@ -705,6 +705,9 @@ async def get_expense_entries(
 # 4. PAYROLL TAB - Salary Accounting
 # ============================================
 
+from sqlalchemy.orm import selectinload
+
+
 @router.get("/payroll", summary="Get payroll accounting entries")
 async def get_payroll_entries(
     page: int = Query(1, ge=1),
@@ -720,7 +723,7 @@ async def get_payroll_entries(
     Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
     """
     center_id = current_admin["center_id"]
-    
+
     # Query salary expense account (5000)
     query = select(
         GeneralLedger,
@@ -733,51 +736,76 @@ async def get_payroll_entries(
     ).where(
         GeneralLedger.center_id == UUID(center_id),
         GeneralLedger.source == TransactionSource.PAYROLL,
-        ChartOfAccounts.code == "5000"  # Salary Expense
+        ChartOfAccounts.code == "5000"
     )
-    
+
     # Filters
     if month:
         query = query.where(func.extract('month', GeneralLedger.transaction_date) == month)
     if year:
         query = query.where(func.extract('year', GeneralLedger.transaction_date) == year)
     if employee_id:
-        query = query.where(GeneralLedger.source_id.like(f"%{employee_id}%"))
-    
+        query = query.where(GeneralLedger.source_id == employee_id)
+
     # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
-    
+
     # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
-    
+
     result = await db.execute(query)
     rows = result.all()
-    
+
+    # Collect all payroll IDs to batch fetch PayrollRecords and Employees
+    payroll_ids = [str(row.GeneralLedger.source_id) for row in rows if row.GeneralLedger.source_id]
+    payrolls = {}
+    employees = {}
+
+    if payroll_ids:
+        # Fetch PayrollRecords with employee relationship
+        payroll_result = await db.execute(
+            select(PayrollRecord)
+            .options(selectinload(PayrollRecord.employee))
+            .where(PayrollRecord.id.in_(payroll_ids))
+        )
+        for pr in payroll_result.scalars().all():
+            payrolls[str(pr.id)] = pr
+            if pr.employee:
+                employees[str(pr.employee.id)] = pr.employee
+
     entries = []
     for row in rows:
-        # Get corresponding PayrollRecord if exists
-        payroll_query = select(PayrollRecord).where(
-            PayrollRecord.id == UUID(row.GeneralLedger.source_id)
-        )
-        payroll_result = await db.execute(payroll_query)
-        payroll = payroll_result.scalar_one_or_none()
-        
+        payroll = payrolls.get(str(row.GeneralLedger.source_id))
+        employee_name = "Unknown"
+        status = "unknown"
+        gross_salary = float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0
+        deductions = 0
+        net_salary = 0
+        if payroll:
+            if payroll.employee:
+                # Try both .full_name and .name for compatibility
+                employee_name = getattr(payroll.employee, "full_name", None) or getattr(payroll.employee, "name", None) or "Unknown"
+            status = payroll.status.value if hasattr(payroll.status, "value") else str(payroll.status)
+            gross_salary = float(payroll.gross_salary) if payroll.gross_salary else gross_salary
+            deductions = float(payroll.total_deductions) if payroll.total_deductions else 0
+            net_salary = float(payroll.net_salary) if payroll.net_salary else 0
+
         entries.append({
-            "id": row.GeneralLedger.id,
+            "id": str(row.GeneralLedger.id),
             "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
             "entry_number": row.entry_number,
-            "payroll_id": row.GeneralLedger.source_id,
-            "employee_name": payroll.employee.full_name if payroll and payroll.employee else "Unknown",
-            "gross_salary": float(row.GeneralLedger.debit),  # Debit = expense
-            "deductions": float(payroll.total_deductions) if payroll else 0,
-            "net_salary": float(payroll.net_salary) if payroll else 0,
+            "payroll_id": str(row.GeneralLedger.source_id),
+            "employee_name": employee_name,
+            "gross_salary": gross_salary,
+            "deductions": deductions,
+            "net_salary": net_salary,
             "month": row.GeneralLedger.transaction_date.strftime("%B %Y"),
-            "status": payroll.status if payroll else "unknown"
+            "status": status
         })
-    
+
     return {
         "total": total,
         "page": page,
