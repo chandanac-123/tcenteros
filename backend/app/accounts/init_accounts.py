@@ -2,7 +2,6 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.accounts.models.models import ChartOfAccounts
-from sqlalchemy import text
 from datetime import datetime
 
 async def initialize_center_accounts(db: AsyncSession, center_id):
@@ -11,7 +10,8 @@ async def initialize_center_accounts(db: AsyncSession, center_id):
     standard_accounts = [
         # Assets (1000-1999)
         {"code": "1000", "name": "Cash and Bank", "account_type": "asset", "description": "Parent account for cash and bank"},
-        {"code": "1100", "name": "Cash in Hand", "account_type": "asset", "description": "Physical cash"},
+        {"code": "1100", "name": "Cash/Bank", "account_type": "asset", "description": "Cash and bank balance"},  # For helper compatibility
+        {"code": "1110", "name": "Cash in Hand", "account_type": "asset", "description": "Physical cash"},
         {"code": "1200", "name": "Bank Account", "account_type": "asset", "description": "Bank balance"},
         {"code": "1300", "name": "Accounts Receivable", "account_type": "asset", "description": "Money owed by customers"},
         {"code": "1310", "name": "Network Receivable", "account_type": "asset", "description": "Money owed from network centers"},
@@ -56,29 +56,22 @@ async def initialize_center_accounts(db: AsyncSession, center_id):
         {"code": "5930", "name": "Electricity Bill Expense", "account_type": "expense", "description": "Electricity utility bills"},
     ]
 
-    # Use raw SQL with proper asyncpg placeholders
     for account_data in standard_accounts:
-        query = text("""
-            INSERT INTO accounts.chart_of_accounts 
-            (center_id, code, name, account_type, parent_id, description, is_active, is_system, created_at, updated_at, created_by, updated_by)
-            VALUES 
-            (:center_id, :code, :name, CAST(:account_type AS accounts.account_type), :parent_id, :description, :is_active, :is_system, :created_at, :updated_at, :created_by, :updated_by)
-        """)
-
-        await db.execute(query, {
-            "center_id": str(center_id),
-            "code": account_data["code"],
-            "name": account_data["name"],
-            "account_type": account_data["account_type"],
-            "parent_id": None,
-            "description": account_data["description"],
-            "is_active": True,
-            "is_system": True,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-            "created_by": None,
-            "updated_by": None
-        })
+        account = ChartOfAccounts(
+            center_id=center_id,
+            code=account_data["code"],
+            name=account_data["name"],
+            account_type=account_data["account_type"],
+            parent_id=None,
+            description=account_data["description"],
+            is_active=True,
+            is_system=True,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            created_by=None,
+            updated_by=None
+        )
+        db.add(account)
 
     await db.flush()
     print(f"✅ Created {len(standard_accounts)} standard accounts for center {center_id}")

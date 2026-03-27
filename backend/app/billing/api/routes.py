@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 from app.core.dependencies import get_async_session, centeradmin_required
 from app.billing.schema.schema import *
-from app.billing.models.models import Currency, PaymentOrder, PaymentOrderStatus, ReferenceSchema, PaymentMethod, OrderType, MiscellaneousTransaction, PayerType
+from app.billing.models.models import Currency, PayeeType, PaymentOrder, PaymentOrderStatus, ReferenceSchema, PaymentMethod, OrderType, MiscellaneousTransaction, PayerType
 from app.inventory.models.models import Sale, SaleItem, Product
 from app.membership.models.models import MemberMembership, Membership, DurationUnitEnum
 from app.auth.models.models import Member, User, UserCenterMembership, NetworkingStatusEnum, Employee
@@ -202,9 +202,11 @@ async def get_unified_sales_transactions(
 ):
     """
     List all sales transactions: memberships, networking access, and product purchases.
+    Only includes sales where the center is the seller (payee_type == center).
     """
     from app.auth.models.models import CenterAdmin, Employee
     from sqlalchemy.orm import joinedload
+    from app.billing.models.models import PayeeType
 
     center_id = current_admin.get("center_id")
     if not center_id:
@@ -227,14 +229,17 @@ async def get_unified_sales_transactions(
             raise HTTPException(400, "Invalid date_to format. Use YYYY-MM-DD")
 
     # Build WHERE clauses
-    where_clauses = [PaymentOrder.center_id == center_id]
+    where_clauses = [
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.payee_type == PayeeType.center  # Only center's own sales
+    ]
 
     # Only include specific order types (membership, networking, product sales)
     where_clauses.append(
         or_(
             PaymentOrder.order_type == OrderType.membership,
-            PaymentOrder.order_type == OrderType.center_subscription,
             PaymentOrder.order_type == OrderType.membership_renewal,
+            PaymentOrder.order_type == OrderType.membership_upgrade,
             PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
             PaymentOrder.order_type == OrderType.inventory_sale,
             PaymentOrder.order_type == OrderType.feature_purchase
@@ -267,8 +272,8 @@ async def get_unified_sales_transactions(
             where_clauses.append(
                 or_(
                     PaymentOrder.order_type == OrderType.membership,
-                    PaymentOrder.order_type == OrderType.center_subscription,
-                    PaymentOrder.order_type == OrderType.membership_renewal
+                    PaymentOrder.order_type == OrderType.membership_renewal,
+                    PaymentOrder.order_type == OrderType.membership_upgrade
                 )
             )
         elif order_type == "networking_access":
@@ -380,7 +385,7 @@ async def get_unified_sales_transactions(
                 continue
 
         # Determine display labels
-        if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.membership_renewal]:
+        if payment_order.order_type in [OrderType.membership, OrderType.membership_renewal, OrderType.membership_upgrade]:
             type_label = "Membership"
             source_label = "Local"
         elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
@@ -392,6 +397,10 @@ async def get_unified_sales_transactions(
         else:
             type_label = "Other"
             source_label = "Other"
+
+        count_query = select(func.count()).where(*where_clauses)
+        total_result = await db.execute(count_query)
+        total = total_result.scalar_one()
 
         transactions.append({
             "payment_order_id": str(payment_order.payment_order_id),
@@ -417,7 +426,7 @@ async def get_unified_sales_transactions(
     return {
         "page": page,
         "page_size": page_size,
-        "total": None,
+        "total": total,
         "has_more": len(payment_orders) == page_size,
         "date_from": date_from_parsed.date().isoformat() if date_from_parsed else None,
         "date_to": date_to_parsed.date().isoformat() if date_to_parsed else None,
@@ -2896,10 +2905,6 @@ async def create_miscellaneous_transaction(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Create a new miscellaneous transaction (income/expense).
-    Examples: rent, electricity, maintenance, office supplies, etc.
-    """
     from app.center.models.models import Center
 
     center_id = current_admin.get("center_id")
@@ -2914,19 +2919,18 @@ async def create_miscellaneous_transaction(
     if not center:
         raise HTTPException(status_code=404, detail="Center not found.")
 
-    # Set defaults
     tax_amount = Decimal("0.00")
     total_amount = Decimal(str(payload.amount))
     transaction_date = date.today()
 
-    # Create PaymentOrder (always create for tracking)
+    # Create PaymentOrder
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
         payer_user_id=current_admin.get("user_id"),
-        payer_type=PayerType.center_admin,
-        payee_type=PayerType.platform if payload.transaction_type == "expense" else PayerType.center,
+        payer_type=PayerType.center_admin if payload.transaction_type == "expense" else PayerType.user,
+        payee_type=PayeeType.center,
         center_id=center_id,
-        order_type=OrderType.add_on,
+        order_type=OrderType.other_charges,
         reference_schema=ReferenceSchema.invoice,
         subtotal_amount=payload.amount,
         tax_amount=tax_amount,
@@ -2969,10 +2973,8 @@ async def create_miscellaneous_transaction(
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
-
     db.add(misc_transaction)
-    await db.commit()
-    await db.refresh(misc_transaction)
+    await db.flush()  # Ensure ID is available for helper
 
     # --- ACCOUNTING INTEGRATION ---
     await post_miscellaneous_transaction_journal(
@@ -2980,6 +2982,9 @@ async def create_miscellaneous_transaction(
         misc_txn=misc_transaction,
         created_by=current_admin.get("user_id")
     )
+
+    await db.commit()
+    await db.refresh(misc_transaction)
 
     # Prepare response
     response = {

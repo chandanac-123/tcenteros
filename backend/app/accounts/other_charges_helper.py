@@ -21,44 +21,65 @@ async def post_miscellaneous_transaction_journal(
     is_expense = misc_txn.transaction_type.lower() in ["expense", "payment", "debit"]
     is_income = misc_txn.transaction_type.lower() in ["income", "receipt", "credit"]
 
+    # Debug: Print transaction info
+    print(f"DEBUG: center_id={center_id}, category='{misc_txn.category}', transaction_type='{misc_txn.transaction_type}', is_expense={is_expense}, is_income={is_income}")
+
     # Get accounts
     if is_expense:
-        main_acct = await session.execute(
+        main_acct_result = await session.execute(
             select(ChartOfAccounts).where(
                 ChartOfAccounts.center_id == center_id,
                 ChartOfAccounts.account_type == "expense",
                 ChartOfAccounts.name.ilike(misc_txn.category)
             )
         )
-        main_acct = main_acct.scalar_one_or_none()
+        main_acct = main_acct_result.scalar_one_or_none()
+        if not main_acct:
+            main_acct_result = await session.execute(
+                select(ChartOfAccounts).where(
+                    ChartOfAccounts.center_id == center_id,
+                    ChartOfAccounts.account_type == "expense",
+                    ChartOfAccounts.name.ilike("General Expense")
+                )
+            )
+            main_acct = main_acct_result.scalar_one_or_none()
     else:
-        main_acct = await session.execute(
+        main_acct_result = await session.execute(
             select(ChartOfAccounts).where(
                 ChartOfAccounts.center_id == center_id,
                 ChartOfAccounts.account_type == "revenue",
                 ChartOfAccounts.name.ilike(misc_txn.category)
             )
         )
-        main_acct = main_acct.scalar_one_or_none()
+        main_acct = main_acct_result.scalar_one_or_none()
+        if not main_acct:
+            main_acct_result = await session.execute(
+                select(ChartOfAccounts).where(
+                    ChartOfAccounts.center_id == center_id,
+                    ChartOfAccounts.account_type == "revenue",
+                    ChartOfAccounts.name.ilike("Other Income")
+                )
+            )
+            main_acct = main_acct_result.scalar_one_or_none()
 
-    cash_acct = await session.execute(
+    cash_acct_result = await session.execute(
         select(ChartOfAccounts).where(
             ChartOfAccounts.center_id == center_id,
             ChartOfAccounts.account_type == "asset",
             ChartOfAccounts.name.ilike("Cash/Bank")
         )
     )
-    cash_acct = cash_acct.scalar_one_or_none()
+    cash_acct = cash_acct_result.scalar_one_or_none()
 
     tax_acct = None
     if tax_amount > 0:
-        tax_acct = await session.execute(
+        tax_acct_result = await session.execute(
             select(ChartOfAccounts).where(
                 ChartOfAccounts.center_id == center_id,
                 ChartOfAccounts.code == "2200"  # GST Payable
             )
         )
-        tax_acct = tax_acct.scalar_one_or_none()
+        tax_acct = tax_acct_result.scalar_one_or_none()
 
     if not all([main_acct, cash_acct]):
         raise Exception("Required ChartOfAccounts not found for miscellaneous transaction.")
