@@ -35,6 +35,7 @@ class TransactionSource(str, enum.Enum):
     OTHER_CHARGES = "other_charges"                # Miscellaneous/other expenses
     GENERAL_EXPENSE = "general_expense"            # General expenses
     MANUAL = "manual"   
+    GENERAL_INCOME = "general_income"
 
 
 # Create PostgreSQL ENUM types with schema specified

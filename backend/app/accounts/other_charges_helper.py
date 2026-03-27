@@ -138,12 +138,22 @@ async def post_miscellaneous_transaction_journal(
                 credit=tax_amount
             ))
 
+    # Set the source dynamically
+    if is_expense:
+        source = TransactionSource.GENERAL_EXPENSE.value
+    elif is_income:
+        # Use the new enum value if available, else fallback to string
+        source = getattr(TransactionSource, "GENERAL_INCOME", None)
+        source = source.value if source else "general_income"
+    else:
+        source = TransactionSource.MANUAL.value
+
     journal_entry = JournalEntry(
         id=uuid4(),
         entry_number=f"MISC-{uuid4().hex[:8]}",
         entry_date=now,
         description=f"Miscellaneous transaction {misc_txn.title}",
-        source=TransactionSource.GENERAL_EXPENSE.value,
+        source=source,
         source_id=str(misc_txn.id),
         center_id=center_id,
         status=EntryStatus.POSTED.value,
@@ -173,8 +183,8 @@ async def post_miscellaneous_transaction_journal(
             credit=line.credit,
             balance=0,
             center_id=center_id,
-            source=journal_entry.source,
-            source_id=journal_entry.source_id,
+            source=source,
+            source_id=str(misc_txn.id),
             created_at=now,
         ))
 
@@ -189,7 +199,7 @@ async def post_miscellaneous_transaction_journal(
             tax_rate=misc_txn.tax_category.tax_percentage if misc_txn.tax_category else 0,
             taxable_amount=amount,
             tax_amount=tax_amount,
-            source=TransactionSource.GENERAL_EXPENSE.value,
+            source=source,
             source_id=str(misc_txn.id),
             created_at=now,
         ))
