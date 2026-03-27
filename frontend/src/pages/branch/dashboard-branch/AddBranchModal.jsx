@@ -8,7 +8,7 @@ import SuccessModal from '../message-popup/success'
 import FaledModal from '../message-popup/failed'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
-  const [count, setCount] = useState(1)
+  const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
   const { data, isLoading } = useGetBranchPricesAndTaxQuery()
   const [openSuccess, setOpenSuccess] = useState(false)

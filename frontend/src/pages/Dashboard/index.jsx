@@ -34,13 +34,13 @@ const Dashboard = () => {
     {
       label: 'Active Memberships',
       value: data?.active_memberships || 0,
-      onClick: () => navigate('/membership-plan')
+      onClick: () => navigate('/membership-plan?tab=active')
     },
-    { label: 'Active Leads', value: 12, onClick: () => navigate('/crm') },
+    { label: 'Active Leads', value: 0, onClick: () => navigate('/crm?tab=leads') },
     {
       label: 'Total Guests',
       value: data?.total_guests || 0,
-      onClick: () => navigate('/crm')
+      onClick: () => navigate('/crm?tab=guests')
     },
     {
       label: 'Today Attendance',

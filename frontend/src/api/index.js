@@ -47,7 +47,7 @@ export const GetEmployeeCategoriesByIdApiCall = id =>
   axiosInstance.get(`/settings/superadmin/designation/${id}`)
 
 export const getEmployeeApiCall = data =>
-  axiosInstance.get(`/auth/employee?page=${data?.page}&page_size=${10}`)
+  axiosInstance.get(`/auth/employee?page=${data?.page}&page_size=${10}&search=${data?.search || ''}`)
 export const createEmployeeApiCall = details =>
   axiosInstance.post('/auth/employee', details)
 export const updateEmployeeApiCall = (details, id) =>
