@@ -347,7 +347,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         )}
 
-        {!isEdit && !selectedGuestId && !selectedGuestId && (
+        {!isEdit && !selectedVisitorId && !selectedGuestId && (
           <div className='flex justify-end'>
             <CustomeTab
               tabList={paidStatus}
@@ -355,9 +355,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               tabsListClass='w-40 p-[1px] rounded-full'
               tabsTriggerClass='rounded-full'
               onChange={value => formik.setFieldValue('payment_status', value)}
-              error={
-                formik.touched.payment_status && formik.errors.payment_status
-              }
             />
           </div>
         )}
