@@ -235,6 +235,8 @@ export const createNewBranchDetailsApiCall = ({ param, data }) => {
     }
   )
 }
+export const getBranchCountApiCall = () =>
+  axiosInstance.get('/branching/centeradmin/branch/purchased')
 
 //GALLERY API
 export const getGalleryApiCall = id =>

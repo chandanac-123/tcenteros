@@ -3,7 +3,8 @@ import {
     createNewBranchDetailsApiCall,
     getBranchCategoriesListApiCall,
     getBranchPricesAndTaxApiCall,
-    getPurchasedBranchesApiCall
+    getPurchasedBranchesApiCall,
+    getBranchCountApiCall
 } from "../../api/index";
 
 export const createBranchCount = async (data) => {
@@ -52,5 +53,15 @@ export const createNewBranch = async (details) => {
         console.error("Error at createNewBranch() in Urls.js..", err);
         console.log("ERR",err.response.data);
         
+    }
+}
+
+export const getBranchCount = async (data) => {
+    try {
+        const response = await getBranchCountApiCall(data);
+        return response.data
+    } catch (err) {
+        console.error("Error at getBranchCount() in Urls.js..", err);
+        throw err
     }
 }

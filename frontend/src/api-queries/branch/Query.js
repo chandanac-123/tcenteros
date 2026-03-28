@@ -3,6 +3,7 @@ import {
     createBranchCount,
     createNewBranch,
     getBranchCategoriesList,
+    getBranchCount,
     getBranchPricesAndTax,
     getPurchasedBranches
 } from "./Urls"
@@ -59,6 +60,20 @@ export const useCreateNewBranchMutation = () => {
         },
         onSuccess: () => {
             query.invalidateQueries({ queryKey: ['branchCount'] })
+        },
+        onError: (error) => {
+             showError(error?.response?.data?.detail || 'Failed to create branch')
         }
     })
+}
+
+
+
+export const useGetBranchCountQuery = () => {
+  return useQuery({
+    queryKey: ['branchCount'],
+    queryFn: getBranchCount,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  })
 }

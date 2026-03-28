@@ -12,7 +12,6 @@ import {
 } from '@api-queries/branch/Query'
 import { useFormik } from 'formik'
 import { branchValidationSchema } from '@utils/validations'
-import { showError, showSuccess } from '@utils/toast'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
@@ -47,30 +46,20 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
     validationSchema: branchValidationSchema,
     onSubmit: async values => {
       console.log('Values', values)
-
       try {
-        if (!param) {
-          console.error('payment_order_id missing')
-          return
-        }
-
         const formData = new FormData()
-
         Object.keys(values).forEach(key => {
           if (values[key] !== null && values[key] !== '') {
             formData.append(key, values[key])
           }
         })
-
         createNewBranch({
           param,
           data: formData
         })
-        showSuccess('Branch created successfully')
-        onOpenChange(false)
         formik.resetForm()
+        onOpenChange(false)
       } catch (error) {
-        showError('Failed to create branch. Please try again.')
         console.error(error)
       }
     }
