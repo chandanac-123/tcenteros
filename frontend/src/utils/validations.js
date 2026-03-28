@@ -188,7 +188,9 @@ export const memberValidationSchema = (isEdit = false) =>
     mobile: Yup.string()
       .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
       .required('Mobile number is required'),
-    date_of_birth: Yup.string().nullable().required('Date of birth is required'),
+    date_of_birth: Yup.string()
+      .nullable()
+      .required('Date of birth is required'),
     membership_id: isEdit
       ? Yup.string().nullable().notRequired() // optional for edit
       : Yup.string().required('Please select a membership plan'), // required for create
@@ -262,4 +264,73 @@ export const addChargeSchema = Yup.object({
     .typeError('Amount must be a number')
     .required('Amount is required'),
   title: Yup.string().required('Title is required')
+})
+
+export const visitorValidationSchema = (isEdit = false) =>
+  Yup.object().shape({
+    full_name: Yup.string().required('Full name is required'),
+    email: Yup.string()
+      .email('Enter a valid email')
+      .required('Email is required'),
+    mobile: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
+      .required('Mobile number is required'),
+    date_of_birth: Yup.string().nullable().required('Date of birth is required')
+  })
+
+export const centerTimingValidationSchema = Yup.object().shape({
+  opening_time: Yup.string().required('Opening time is required'),
+  closing_time: Yup.string()
+    .required('Closing time is required')
+    .test(
+      'is-after-opening',
+      'Closing time must be after opening time',
+      function (value) {
+        const { opening_time } = this.parent
+        if (!opening_time || !value) return true
+
+        return value > opening_time
+      }
+    ),
+  inventory_profit: Yup.number()
+    .typeError('Inventory profit must be a number')
+    .required('Inventory profit is required')
+    .min(0, 'Cannot be negative'),
+  payroll_cycle_day: Yup.number()
+    .typeError('Pay cycle must be a number')
+    .required('Pay cycle is required')
+    .min(1, 'Must be between 1 and 31')
+    .max(31, 'Must be between 1 and 31')
+})
+
+export const centerSlotValidationSchema = Yup.object().shape({
+  start_time: Yup.string().required('Opening time is required'),
+  end_time: Yup.string()
+    .required('Closing time is required')
+    .test(
+      'is-after-opening',
+      'Closing time must be after opening time',
+      function (value) {
+        const { start_time } = this.parent
+        if (!start_time || !value) return true
+
+        return value > start_time
+      }
+    ),
+  slot_capacity: Yup.number()
+    .typeError('Slot capacity must be a number')
+    .required('Slot capacity is required')
+    .min(0, 'Slot capacity cannot be negative')
+})
+
+export const profileValidationSchema = Yup.object().shape({
+  about: Yup.string().required('About is required'),
+  center_name: Yup.string().required('Center name is required'),
+  center_phone: Yup.string()
+    .required('Center phone is required')
+    .matches(/^[0-9]{10}$/, 'Center phone must be a valid 10-digit number'),
+  center_email: Yup.string()
+    .required('Center email is required')
+    .email('Invalid email format'),
+  whatsapp_number: Yup.number().required('Whatsapp number is required')
 })

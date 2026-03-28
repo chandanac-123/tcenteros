@@ -12,6 +12,7 @@ import DynamicListInput from './DynamicListInput'
 import CountrySelect from '@common/components/CountrySelect'
 import StateSelect from '@common/components/StateSelect'
 import CitySelect from '@common/components/CitySelect'
+import { profileValidationSchema } from '@utils/validations'
 
 
 const EditCenterInformation = ({ open, setOpen, editId }) => {
@@ -32,12 +33,13 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
   const initialValues = {
     center_name: data?.center_name || '',
     category: data?.center_category_name || '',
-    capacity: data?.capacity || '',
+    capacity: data?.capacity || null,
     kind_of_center: data?.kind_of_center || '',
+    contact_person: data?.contact_person || '',
     center_phone: data?.center_phone || '',
     gst_number: data?.gst_number || '',
     center_email: data?.center_email || '',
-    live_class_enable: data?.live_class_enable || '',
+    live_class_enable: data?.live_class_enable || true,
     country: data?.address?.country || '',
     state:
         data?.address?.state
@@ -57,6 +59,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema:profileValidationSchema,
     onSubmit: async values => {
       try {
         const payload = {
@@ -92,6 +95,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               placeholder='Enter Your Name'
               value={formik.values.about}
               onChange={formik.handleChange}
+              error={formik.touched.about && formik.errors.about}
             />
           </div>
           <div className='flex-1'>
@@ -101,6 +105,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               placeholder='Enter Your Name'
               value={formik.values.center_name}
               onChange={formik.handleChange}
+              error={formik.touched.center_name && formik.errors.center_name}
             />
           </div>
         </div>
@@ -128,9 +133,9 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           <div className='flex-1'>
             <Input
               label='Contact Person'
-              name='center_phone'
-              placeholder='Enter Center Phone'
-              value={formik.values.center_phone}
+              name='contact_person'
+              placeholder='Enter Contact Person'
+              value={formik.values.contact_person}
               onChange={formik.handleChange}
             />
           </div>
@@ -152,6 +157,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               placeholder='Enter Center Email'
               value={formik.values.center_email}
               onChange={formik.handleChange}
+              error={formik.touched.center_email && formik.errors.center_email}
             />
           </div>
           <div className='flex-1'>
@@ -161,6 +167,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               value={formik.values.center_phone}
               placeholder='Enter Center Phone'
               onChange={formik.handleChange}
+              error={formik.touched.center_phone && formik.errors.center_phone}
             />
           </div>
         </div>
@@ -185,6 +192,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               name='whatsapp_number'
               value={formik.values.whatsapp_number}
               onChange={formik.handleChange}
+              error={formik.touched.whatsapp_number && formik.errors.whatsapp_number}
             />
           </div>
         </div>

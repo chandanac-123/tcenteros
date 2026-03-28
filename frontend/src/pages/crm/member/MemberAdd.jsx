@@ -53,7 +53,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
     state?.auth?.center_id
   )
-  console.log('memberTimeSlot: ', memberTimeSlot)
 
   const { data: memberData, isFetching: isMemberFetching } =
     useMembersGetByIdQuery(memberId)
@@ -128,7 +127,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           goBack()
         }
       } catch (error) {
-        console.error(error.re)
+        console.error(error,'44444444')
       }
     }
   })
@@ -322,7 +321,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           </div>
         </div>
-        {formik?.values?.payment_status === 'paid' && !isEdit && (
+        {formik?.values?.payment_status === 'paid' && memberData?.payment_status == null  && (
           <div className='flex gap-4 '>
             <div className='flex-1'>
               <CustomeSelect
@@ -347,7 +346,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         )}
 
-        {!isEdit && !selectedVisitorId && !selectedGuestId && (
+        {memberData?.payment_status == null && (
           <div className='flex justify-end'>
             <CustomeTab
               tabList={paidStatus}

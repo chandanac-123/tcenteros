@@ -17,17 +17,18 @@ const BranchDetailsButton = ({ isLimitReached }) => {
   }
 
   return (
-    <div>
+    <div className='flex flex-col'>
+      <div className='flex justify-end'>
+        <Button size='addbutton' onClick={handleOpenBranch}>
+          + Create Branch
+        </Button>
+      </div>
+
       {showError && (
         <p className='text-red-500 mb-2'>
-          Branch limit reached. Please purchase more.
+          No branches purchased. Please purchase a branch.
         </p>
       )}
-
-      <Button size='addbutton' onClick={handleOpenBranch}>
-        + Create Branch
-      </Button>
-
       <AddBranchDetails open={openAddBranch} onOpenChange={setOpenAddbranch} />
     </div>
   )

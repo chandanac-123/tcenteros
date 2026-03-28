@@ -31,7 +31,7 @@ const UploadImage = ({ open, setOpen, refetch }) => {
   })
 
   return (
-    <CustomeModal open={open} onopenChange={setOpen} header='Upload Image'>
+    <CustomeModal open={open} onOpenChange={setOpen} header='Upload Image'>
       <form onSubmit={formik.handleSubmit}>
         <InputFile
           name='image_url'

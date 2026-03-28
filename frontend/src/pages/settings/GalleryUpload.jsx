@@ -39,7 +39,9 @@ const GalleryUpload = () => {
         </Button>
       </div>
 
-      <span className='text-sm text-textblack'>Gallery List</span>
+      {galleryData?.length > 0 && (
+        <span className='text-sm text-textblack'>Gallery List</span>
+      )}
 
       <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-4'>
         {galleryData?.map(image => (
