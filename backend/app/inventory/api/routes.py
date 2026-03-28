@@ -582,19 +582,18 @@ async def delete_product(
 @router.post("/stock/adjust")
 async def add_stock(
     payload: StockAdjustIn,
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required),
+    session: AsyncSession = Depends(get_async_session),
+    current_user: dict = Depends(centeradmin_required),
 ):
-   
     TRANSACTION_TYPE = "IN"
 
     # verify product exists
-    product = await db.get(Product, payload.product_id)
+    product = await session.get(Product, payload.product_id)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     # enforce centeradmin scope (avoid records for other centers)
-    center_id = current_admin.get("center_id")
+    center_id = current_user.get("center_id")
     if not center_id or str(product.center_id) != str(center_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to modify this product")
 
@@ -605,9 +604,9 @@ async def add_stock(
     tax_amount = Decimal("0.00")
     total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
 
-    payer_user_id = current_admin.get("id") or current_admin.get("user_id")
+    payer_user_id = current_user.get("id") or current_user.get("user_id")
 
-    try:
+    async def _work():
         # 1) create StockTransaction
         stock_tx = StockTransaction(
             product_id=product.id,
@@ -618,35 +617,35 @@ async def add_stock(
             supplier_name=payload.supplier_name,
             invoice_number=payload.invoice_number,
             invoice_date=payload.invoice_date,
-            created_by=payer_user_id,
         )
-        db.add(stock_tx)
-        await db.flush()  # ensure stock_tx.id
+        session.add(stock_tx)
+        await session.flush()  # ensure stock_tx.id
 
         # 2) update/create Stock aggregate
         q = select(Stock).where(Stock.product_id == product.id).limit(1)
-        res = await db.execute(q)
+        res = await session.execute(q)
         stock = res.scalars().first()
 
         if stock:
-            new_qty = int(stock.quantity_available) + qty
+            new_qty = (stock.quantity_available or 0) + qty
             stock.quantity_available = new_qty
             stock.last_cost = unit_cost
+            session.add(stock)
         else:
+            new_qty = qty
             stock = Stock(
                 product_id=product.id,
-                quantity_available=qty,
+                quantity_available=new_qty,
                 last_cost=unit_cost,
             )
-            db.add(stock)
-            new_qty = qty
+            session.add(stock)
 
-        await db.flush()  # populate stock.id if new
+        await session.flush()  # populate stock.id if new
 
         # update transaction balance_after and persist
         stock_tx.balance_after = new_qty
-        db.add(stock_tx)
-        await db.flush()
+        session.add(stock_tx)
+        await session.flush()
 
         # 3) create PaymentOrder linked to stock_tx
         po = PaymentOrder(
@@ -664,44 +663,44 @@ async def add_stock(
             status=PaymentOrderStatus.paid,
             payment_method=None,
         )
-        db.add(po)
-        await db.flush()
+        session.add(po)
+        await session.flush()
 
-        # --- ACCOUNTING INTEGRATION ---
+        # 4) POST ACCOUNTING ENTRIES (this is the missing part)
+        # Use a simple object for purchase
         class PurchaseObj:
-            # Minimal object to pass to the helper
-            def __init__(self, id, center_id, subtotal_amount, tax_amount, total_amount):
-                self.id = id
-                self.center_id = center_id
-                self.subtotal_amount = subtotal_amount
-                self.tax_amount = tax_amount
-                self.total_amount = total_amount
+            pass
 
-        purchase = PurchaseObj(
-            id=stock_tx.id,
-            center_id=center_id,
-            subtotal_amount=subtotal,
-            tax_amount=tax_amount,
-            total_amount=total_amount,
-        )
+        purchase_obj = PurchaseObj()
+        purchase_obj.id = po.payment_order_id
+        purchase_obj.center_id = po.center_id
+        purchase_obj.subtotal_amount = subtotal
+        purchase_obj.tax_amount = tax_amount
+        purchase_obj.total_amount = total_amount
 
-        await db.commit()
         await post_inventory_purchase_journal(
-            db,
-            purchase=purchase,
+            session,
+            purchase=purchase_obj,
             created_by=payer_user_id
         )
 
+        return stock_tx, stock, po
+
+    # perform work and explicitly commit (rollback on error)
+    try:
+        stock_tx, stock, po = await _work()
+        await session.commit()
     except Exception as exc:
-        await db.rollback()
+        await session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to add stock: {exc}") from exc
 
     # refresh to ensure we have latest DB state on objects
     try:
-        await db.refresh(stock_tx)
-        await db.refresh(stock)
-        await db.refresh(po)
+        await session.refresh(stock_tx)
+        await session.refresh(stock)
+        await session.refresh(po)
     except Exception:
+        # non-fatal; objects are still safe to read
         pass
 
     return {
