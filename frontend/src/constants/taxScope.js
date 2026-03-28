@@ -22,5 +22,9 @@ export const tax_scope = [
   {
     id: 'platform_fee',
     name: 'Platform Fee'
+  },
+  {
+    id: 'branch_purchase',
+    name: 'Branch Purchase'
   }
 ]

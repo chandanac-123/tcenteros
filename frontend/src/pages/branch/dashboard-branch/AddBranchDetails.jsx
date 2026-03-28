@@ -13,6 +13,9 @@ import {
 import { useFormik } from 'formik'
 import { branchValidationSchema } from '@utils/validations'
 import { showError, showSuccess } from '@utils/toast'
+import CitySelect from '@common/components/CitySelect'
+import StateSelect from '@common/components/StateSelect'
+import CountrySelect from '@common/components/CountrySelect'
 
 const AddBranchDetails = ({ open, onOpenChange }) => {
   const { data: purchasedData, isPending } = useGetPurchasedBranchesQuery()
@@ -35,7 +38,6 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
     country: '',
     state: '',
     city: '',
-    district: '',
     postal_code: ''
   }
 
@@ -168,40 +170,31 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
           </div>
 
           <div className='grid grid-col-1 sm:grid-cols-4 gap-4 p-3  space-y-1'>
-            <Input
-              label='Country'
-              name='country'
-              placeholder='Country'
-              value={formik.values.country}
-              onChange={formik.handleChange}
-              error={formik.touched.country && formik.errors.country}
-            />
-            <Input
-              label='State'
-              name='state'
-              placeholder='State'
-              value={formik.values.state}
-              onChange={formik.handleChange}
-              error={formik.touched.state && formik.errors.state}
-            />
-            <Input
-              label='City'
-              name='city'
-              placeholder='City'
+            <CitySelect
+              country={formik.values.countryCode}
               value={formik.values.city}
-              onChange={formik.handleChange}
-              error={formik.touched.city && formik.errors.city}
+              onChange={data => {
+                formik.setFieldValue('city', data.city)
+                formik.setFieldValue('state', data.state) // auto-fill
+                formik.setFieldValue('country', data.country) // auto-fill country
+              }}
+              label='City'
             />
 
-            <Input
-              label='District'
-              name='district'
-              placeholder='District'
-              value={formik.values.district}
-              onChange={formik.handleChange}
-              error={formik.touched.district && formik.errors.district}
+            <StateSelect
+              country={formik.values.countryCode}
+              value={formik.values.state}
+              onChange={val => formik.setFieldValue('state', val)}
+              label='State'
             />
 
+            <CountrySelect
+              value={formik.values.country}
+              onChange={val => {
+                formik.setFieldValue('country', val.country)
+              }}
+              label='Country'
+            />
             <Input
               label='Pincode'
               name='postal_code'

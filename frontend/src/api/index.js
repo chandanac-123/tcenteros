@@ -225,8 +225,6 @@ export const getPurchasedBranchesApiCall = () =>
 export const getBranchCategoriesListApiCall = () =>
   axiosInstance.get('/settings/superadmin/center-categories/')
 export const createNewBranchDetailsApiCall = ({ param, data }) => {
-  console.log('FormData', data)
-  console.log('Param', param)
   return axiosInstance.post(
     `/branching/centeradmin/branch/create?payment_order_id=${param}`,
     data,

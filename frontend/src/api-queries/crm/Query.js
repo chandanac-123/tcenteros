@@ -35,6 +35,7 @@ export const useCreateMemberMutation = () => {
       showSuccess('Member created successfully')
     },
     onError: err => {
+      console.log('err: ', err.response);
       showError(err?.response?.data?.detail || 'Failed to create member')
       return err
     }
