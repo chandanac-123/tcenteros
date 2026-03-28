@@ -322,3 +322,15 @@ export const centerSlotValidationSchema = Yup.object().shape({
     .required('Slot capacity is required')
     .min(0, 'Slot capacity cannot be negative')
 })
+
+export const profileValidationSchema = Yup.object().shape({
+  about: Yup.string().required('About is required'),
+  center_name: Yup.string().required('Center name is required'),
+  center_phone: Yup.string()
+    .required('Center phone is required')
+    .matches(/^[0-9]{10}$/, 'Center phone must be a valid 10-digit number'),
+  center_email: Yup.string()
+    .required('Center email is required')
+    .email('Invalid email format'),
+  whatsapp_number: Yup.number().required('Whatsapp number is required')
+})

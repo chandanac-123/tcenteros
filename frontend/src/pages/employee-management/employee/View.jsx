@@ -54,7 +54,7 @@ const ViewForm = ({ open, setOpen, id }) => {
             <div className='flex flex-col gap-1'>
               <span className='text-sm'>Total Experience</span>
               <span className='flex text-textgrey '>
-                {employeeData?.qualification}
+                {employeeData?.experience}
               </span>
             </div>
             <div className='flex flex-col gap-1'>
