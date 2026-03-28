@@ -2,13 +2,13 @@ import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import CustomeSelect from '@common/components/CustomeSelect'
 import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
-import {
-  useCreateMemberMutation,
-  useMembersGetByIdQuery,
-  useUpdateMemberMutation
-} from '@api-queries/crm/Query'
+import { useCreateMemberMutation } from '@api-queries/crm/Query'
 import { useFormik } from 'formik'
 import { useAuthStore } from '@store/authStore'
+import CountrySelect from '@common/components/CountrySelect'
+import StateSelect from '@common/components/StateSelect'
+import CitySelect from '@common/components/CitySelect'
+import { visitorValidationSchema } from '@utils/validations'
 
 const genderOption = [
   { id: 'male', name: 'Male' },
@@ -40,8 +40,13 @@ const VisitorAdd = ({ goBack }) => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: visitorValidationSchema,
     onSubmit: async values => {
       try {
+        if (values.date_of_birth) {
+          const [day, month, year] = values.date_of_birth.split('-')
+          values.date_of_birth = `${year}-${month}-${day}`
+        }
         await createMember(values)
         formik.resetForm()
         goBack()
@@ -67,6 +72,7 @@ const VisitorAdd = ({ goBack }) => {
               value={formik.values.full_name}
               onChange={formik.handleChange}
               placeholder='Enter Your Full Name'
+              error={formik.touched.full_name && formik.errors.full_name}
             />
           </div>
           <div className='flex-1'>
@@ -76,6 +82,7 @@ const VisitorAdd = ({ goBack }) => {
               value={formik.values.email}
               onChange={formik.handleChange}
               placeholder='Enter Your Email ID'
+              error={formik.touched.email && formik.errors.email}
             />
           </div>
         </div>
@@ -87,6 +94,7 @@ const VisitorAdd = ({ goBack }) => {
               value={formik.values.mobile}
               onChange={formik.handleChange}
               placeholder='Enter Your Mobile Number'
+              error={formik.touched.mobile && formik.errors.mobile}
             />
           </div>
           <div className='flex-1'>
@@ -105,8 +113,12 @@ const VisitorAdd = ({ goBack }) => {
             <Input
               label='Date of Birth'
               name='date_of_birth'
+              placeholder='DD-MM-YYYY'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
+              error={
+                formik.touched.date_of_birth && formik.errors.date_of_birth
+              }
             />
           </div>
           <div className='flex-1'>
@@ -138,29 +150,34 @@ const VisitorAdd = ({ goBack }) => {
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-            <Input
-              label='City'
-              name='city'
+            <CitySelect
+              country={formik.values.countryCode}
               value={formik.values.city}
-              onChange={formik.handleChange}
+              onChange={data => {
+                formik.setFieldValue('city', data.city)
+                formik.setFieldValue('state', data.state) // auto-fill
+                formik.setFieldValue('country', data.country) // auto-fill country
+              }}
+              label='City'
             />
           </div>
           <div className='flex-1'>
-            <Input
-              label='State'
-              name='state'
+            <StateSelect
+              country={formik.values.countryCode}
               value={formik.values.state}
-              onChange={formik.handleChange}
+              onChange={val => formik.setFieldValue('state', val)}
+              label='State'
             />
           </div>
         </div>
         <div className='flex gap-4 '>
           <div className='flex-1'>
-            <Input
-              label='Country'
-              name='country'
+            <CountrySelect
               value={formik.values.country}
-              onChange={formik.handleChange}
+              onChange={val => {
+                formik.setFieldValue('country', val.country)
+              }}
+              label='Country'
             />
           </div>
           <div className='flex-1'>
@@ -185,7 +202,7 @@ const VisitorAdd = ({ goBack }) => {
         </div>
 
         <div className='flex justify-end mt-6'>
-          <Button size='addbutton' variant='default' type='submit'  disabled={!formik.dirty}>
+          <Button size='addbutton' variant='default' type='submit'>
             Create Visitor
           </Button>
         </div>

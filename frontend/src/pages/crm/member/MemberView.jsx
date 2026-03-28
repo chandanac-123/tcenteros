@@ -1,10 +1,10 @@
 import { Button } from '@pages/components/ui/button'
 import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
-import { useMembersGetByIdQuery } from '@api-queries/crm/Query';
+import { useMembersGetByIdQuery } from '@api-queries/crm/Query'
+import { convertTo12Hour } from '@utils/helper'
 
-const MemberView = ({ goBack,memberId }) => {
-  console.log('memberId: ', memberId);
-   const { data: memberData } = useMembersGetByIdQuery(memberId)
+const MemberView = ({ goBack, memberId }) => {
+  const { data: memberData } = useMembersGetByIdQuery(memberId)
   return (
     <div className='flex gap-3 flex-col pb-6'>
       <CustomeBreadcrumb
@@ -83,13 +83,11 @@ const MemberView = ({ goBack,memberId }) => {
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Time Slot</span>
-            <span>{memberData?.time_slot_id}</span>
+            <span>
+              {convertTo12Hour(memberData?.time_slot?.start_time)} -{' '}
+              {convertTo12Hour(memberData?.time_slot?.end_time)}
+            </span>
           </div>
-        </div>
-        <div className='flex justify-end mt-4 '>
-          <Button size='addbutton' variant='default' type='submit'>
-            Upgrade Plan
-          </Button>
         </div>
       </div>
     </div>

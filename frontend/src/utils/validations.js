@@ -188,7 +188,9 @@ export const memberValidationSchema = (isEdit = false) =>
     mobile: Yup.string()
       .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
       .required('Mobile number is required'),
-    date_of_birth: Yup.string().nullable().required('Date of birth is required'),
+    date_of_birth: Yup.string()
+      .nullable()
+      .required('Date of birth is required'),
     membership_id: isEdit
       ? Yup.string().nullable().notRequired() // optional for edit
       : Yup.string().required('Please select a membership plan'), // required for create
@@ -263,3 +265,16 @@ export const addChargeSchema = Yup.object({
     .required('Amount is required'),
   title: Yup.string().required('Title is required')
 })
+
+export const visitorValidationSchema = (isEdit = false) =>
+  Yup.object().shape({
+    full_name: Yup.string()
+      .required('Full name is required'),
+    email: Yup.string()
+      .email('Enter a valid email')
+      .required('Email is required'),
+    mobile: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
+      .required('Mobile number is required'),
+    date_of_birth: Yup.string().nullable().required('Date of birth is required')
+  })
