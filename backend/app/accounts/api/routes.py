@@ -718,13 +718,8 @@ async def get_payroll_entries(
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    """
-    Get payroll accounting entries
-    Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
-    """
     center_id = current_admin["center_id"]
 
-    # Query salary expense account (5000)
     query = select(
         GeneralLedger,
         JournalEntry.entry_number.label('entry_number'),
@@ -737,12 +732,10 @@ async def get_payroll_entries(
         GeneralLedger.center_id == UUID(center_id),
         or_(
             GeneralLedger.source == "payroll",
-            GeneralLedger.source == TransactionSource.PAYROLL,
             ChartOfAccounts.code == "5000"
         )
     )
 
-    # Filters
     if month:
         query = query.where(func.extract('month', GeneralLedger.transaction_date) == month)
     if year:
@@ -750,15 +743,12 @@ async def get_payroll_entries(
     if employee_id:
         query = query.where(GeneralLedger.source_id == employee_id)
 
-    # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
-    # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
-
     result = await db.execute(query)
     rows = result.all()
 
@@ -768,7 +758,6 @@ async def get_payroll_entries(
     employees = {}
 
     if payroll_ids:
-        # Fetch PayrollRecords with employee relationship
         payroll_result = await db.execute(
             select(PayrollRecord)
             .options(selectinload(PayrollRecord.employee))
@@ -779,6 +768,7 @@ async def get_payroll_entries(
             if pr.employee:
                 employees[str(pr.employee.id)] = pr.employee
 
+    # Build entries while session is open!
     entries = []
     for row in rows:
         payroll = payrolls.get(str(row.GeneralLedger.source_id))
@@ -789,7 +779,6 @@ async def get_payroll_entries(
         net_salary = 0
         if payroll:
             if payroll.employee:
-                # Try both .full_name and .name for compatibility
                 employee_name = getattr(payroll.employee, "full_name", None) or getattr(payroll.employee, "name", None) or "Unknown"
             status = payroll.status.value if hasattr(payroll.status, "value") else str(payroll.status)
             gross_salary = float(payroll.gross_salary) if payroll.gross_salary else gross_salary
