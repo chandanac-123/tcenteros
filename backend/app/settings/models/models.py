@@ -38,6 +38,8 @@ class TaxScope(enum.Enum):
     service = "service"
     platform_fee = "platform_fee"
     add_on = "add_on"
+    branch_purchase = "branch_purchase"
+
 
 class Address(Base, AuditMixin):
     __tablename__ = "address"
