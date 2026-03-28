@@ -36,7 +36,7 @@ export const useCreateCategoryMutation = () => {
       showSuccess('Category created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create category')
+      showError(err?.response?.data?.detail || 'Failed to create category')
       return err
     }
   })

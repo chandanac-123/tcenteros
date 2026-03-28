@@ -9,9 +9,13 @@ import { CarouselSize } from '@common/components/CustomeCarousel'
 import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
+import { useLocation } from 'react-router-dom'
 
 const MembershipPlan = () => {
-  const [activeTab, setActiveTab] = useState('all')
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const initialTab = queryParams.get('tab') || 'all'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
@@ -32,7 +36,7 @@ const MembershipPlan = () => {
         <div>
           <CustomeTab
             tabList={Status}
-            defaultVal='all'
+            defaultVal={initialTab}
             tabsListClass=' w-[400px] p-[1px]'
             onChange={value => setActiveTab(value)}
           />

@@ -9,11 +9,19 @@ import { useDashboardQuery } from '@api-queries/Dashboard/Query'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
+import { useGetBranchCountQuery } from '@api-queries/branch/Query'
 
 const Dashboard = () => {
   const [greeting, setGreeting] = useState('')
   const navigate = useNavigate()
   const setFirstLogin = useAuthStore(state => state.setFirstLogin)
+  const { data: branchCountData } = useGetBranchCountQuery()
+  console.log('branchCountData: ', branchCountData);
+
+  const isLimitReached =
+  branchCountData &&
+  branchCountData.created_subcenters ===
+    branchCountData.branches_purchased
 
   useEffect(() => {
     setFirstLogin(false)
@@ -34,13 +42,13 @@ const Dashboard = () => {
     {
       label: 'Active Memberships',
       value: data?.active_memberships || 0,
-      onClick: () => navigate('/membership-plan')
+      onClick: () => navigate('/membership-plan?tab=active')
     },
-    { label: 'Active Leads', value: 12, onClick: () => navigate('/crm') },
+    { label: 'Active Leads', value: 0, onClick: () => navigate('/crm?tab=leads') },
     {
       label: 'Total Guests',
       value: data?.total_guests || 0,
-      onClick: () => navigate('/crm')
+      onClick: () => navigate('/crm?tab=guests')
     },
     {
       label: 'Today Attendance',
@@ -102,7 +110,8 @@ const Dashboard = () => {
           </div>
           <div>
             {' '}
-            <BranchDetailsButton />
+            
+            <BranchDetailsButton isLimitReached={isLimitReached} />
           </div>
         </div>
 

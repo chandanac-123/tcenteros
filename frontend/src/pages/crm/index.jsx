@@ -11,8 +11,25 @@ import VisitorAdd from './visitor/VisitorAdd'
 import Visitors from './visitor'
 import Guest from './guest'
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 const CRM = () => {
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const queryTab = queryParams.get('tab') // 'members', 'leads', 'guests', etc.
+
+  // Map query param to your crm_tabs id
+  const tabMapping = {
+    members: 1,
+    leads: 2, // make sure this matches your crm_tabs id for leads
+    guests: 3,
+    visitors: 4
+  }
+  const initialTab = tabMapping[queryTab] || 1 // default to Members tab
+  useEffect(() => {
+    setCrmSelectedTab(initialTab)
+  }, [initialTab])
+
   const {
     selectedTab: crmSelectedTab,
     setSelectedTab: setCrmSelectedTab,

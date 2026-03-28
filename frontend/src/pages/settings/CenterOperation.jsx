@@ -225,7 +225,7 @@ const CenterOperations = () => {
       </form>
 
       <div className='flex flex-col gap-4'>
-        <span className='font-semibold'>Existing Slots</span>
+       {slots?.length > 0 && <span className='font-semibold'>Existing Slots</span>}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
           {slots?.map(slot => (
             <SlotCard

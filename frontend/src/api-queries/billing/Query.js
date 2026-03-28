@@ -327,7 +327,7 @@ export const useAddChargeMutation = (details) => {
       showSuccess(data?.message || 'Charge added successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to add charge')
+      showError(err?.response?.data?.detail || 'Failed to add charge')
       return err
     }
   })

@@ -40,12 +40,8 @@ const genderOption = [
 ]
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
-  const {
-    selectedVisitorId,
-    selectedGuestId,
-    clearSelectedIds
-  } = useCrmStore()
-  const{setSelectedTab}= useSettingsTabStore()
+  const { selectedVisitorId, selectedGuestId, clearSelectedIds } = useCrmStore()
+  const { setSelectedTab } = useSettingsTabStore()
   const { data: visitorData, isFetching: isVisitorFetching } =
     useVisitorById(selectedVisitorId)
   const { data: guestData, isFetching: isGuestFetching } =
@@ -57,6 +53,8 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
     state?.auth?.center_id
   )
+  console.log('memberTimeSlot: ', memberTimeSlot)
+
   const { data: memberData, isFetching: isMemberFetching } =
     useMembersGetByIdQuery(memberId)
   const { data: memberPlan } = useActiveMembersPlanQuery()
@@ -145,7 +143,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
   // console.log('formi: ', formik.values)
   return (
-    <div className='flex flex-col gap-4 pb-6'>
+    <div className='flex flex-col gap-2 pb-6'>
       <CustomeBreadcrumb
         goBack={goBack}
         buttonName='Members Listing'
@@ -158,6 +156,20 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           Currently there is no active membership plan. Please create a
           membership plan to proceed.
           <Button variant='link' onClick={() => navigate('/membership-plan')}>
+            Click to Proceed
+          </Button>
+        </div>
+      )}
+      {memberTimeSlot?.length === 0 && (
+        <div className='flex justify-center items-center text-red_text'>
+          Currently there is no Timeslot. Please create a timeslot to proceed.
+          <Button
+            variant='link'
+            onClick={() => {
+              setSelectedTab(2)
+              navigate('/settings')
+            }}
+          >
             Click to Proceed
           </Button>
         </div>
@@ -335,7 +347,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         )}
 
-        {!isEdit && !selectedGuestId && !selectedGuestId && (
+        {!isEdit && !selectedVisitorId && !selectedGuestId && (
           <div className='flex justify-end'>
             <CustomeTab
               tabList={paidStatus}
@@ -343,26 +355,24 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               tabsListClass='w-40 p-[1px] rounded-full'
               tabsTriggerClass='rounded-full'
               onChange={value => formik.setFieldValue('payment_status', value)}
-              error={
-                formik.touched.payment_status && formik.errors.payment_status
-              }
             />
           </div>
         )}
-        <div className='flex justify-between items-center pt-4'>
-          <span className='text-md font-semibold'>Select Time Slot</span>
-          <Button
-            type='button'
-            size='addbutton'
-            onClick={() => {
-              setSelectedTab(2)
-              navigate('/settings')
-            }}
-          >
-            Add Time Slot
-          </Button>
-        </div>
-
+        {memberTimeSlot?.length > 0 && (
+          <div className='flex justify-between items-center pt-4'>
+            <span className='text-md font-semibold'>Select Time Slot</span>
+            <Button
+              type='button'
+              size='addbutton'
+              onClick={() => {
+                setSelectedTab(2)
+                navigate('/settings')
+              }}
+            >
+              Add Time Slot
+            </Button>
+          </div>
+        )}
         <div className='flex flex-col'>
           <TimeSlotSelector
             slots={memberTimeSlot}

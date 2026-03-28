@@ -112,7 +112,6 @@ export const branchValidationSchema = Yup.object().shape({
   country: Yup.string().required('Select country'),
   state: Yup.string().required('Select state'),
   city: Yup.string().required('Select city'),
-  district: Yup.string().required('Select district'),
   postal_code: Yup.string().required('Enter postal code')
 })
 

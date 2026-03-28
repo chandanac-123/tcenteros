@@ -1,16 +1,18 @@
 import CustomeModal from '@common/components/CustomeModal'
 import logo from '@assets/header-icons/logo_in_auth.svg'
 import { Button } from '@pages/components/ui/button'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAddBranchCountMutation } from '@api-queries/branch/Query'
 import { useGetBranchPricesAndTaxQuery } from '@api-queries/branch/Query'
 import SuccessModal from '../message-popup/success'
 import FaledModal from '../message-popup/failed'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
-  const [count, setCount] = useState(1)
+  const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
+  console.log('addCount: ', addCount);
   const { data, isLoading } = useGetBranchPricesAndTaxQuery()
+  console.log('data: ', data);
   const [openSuccess, setOpenSuccess] = useState(false)
   const [openFailed, setOpenFailed] = useState(false)
 
@@ -23,6 +25,12 @@ const AddBranchModal = ({ open, onOpenChange }) => {
   const taxAmount = (subtotal * taxPercentage) / 100
   // total payable
   const totalAmount = subtotal + taxAmount
+
+ useEffect(() => {
+  if (open) {
+    setCount(0)
+  }
+}, [open])
 
   const increment = () => {
     setCount(prev => prev + 1)

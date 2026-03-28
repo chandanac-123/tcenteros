@@ -65,6 +65,7 @@ const AddEmployeeAttendance = ({ open, setOpen }) => {
             <CustomDatePicker
               label='Date'
               name='date'
+               disableFuture={true}
               value={formik.values.date}
               onChange={val => handleDateChange('date', val)}
               error={formik?.touched?.date && formik?.errors?.date}
