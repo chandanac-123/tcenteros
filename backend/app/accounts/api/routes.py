@@ -718,8 +718,13 @@ async def get_payroll_entries(
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
+    """
+    Get payroll accounting entries
+    Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
+    """
     center_id = current_admin["center_id"]
 
+    # Query salary expense account (5000) and all possible payroll sources
     query = select(
         GeneralLedger,
         JournalEntry.entry_number.label('entry_number'),
@@ -743,10 +748,12 @@ async def get_payroll_entries(
     if employee_id:
         query = query.where(GeneralLedger.source_id == employee_id)
 
+    # Total count for pagination
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
+    # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
