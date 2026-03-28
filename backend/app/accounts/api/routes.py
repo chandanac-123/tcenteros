@@ -708,113 +708,46 @@ async def get_expense_entries(
 from sqlalchemy.orm import selectinload
 
 
-@router.get("/payroll", summary="Get payroll accounting entries")
+@router.get("/payroll")
 async def get_payroll_entries(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    month: Optional[int] = Query(None, ge=1, le=12),
-    year: Optional[int] = Query(None, ge=2020),
-    employee_id: Optional[str] = None,
-    db: AsyncSession = Depends(get_async_session),
-    current_admin=Depends(centeradmin_required)
+    session: AsyncSession = Depends(get_async_session),
 ):
-    """
-    Get payroll accounting entries
-    Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
-    """
-    center_id = current_admin["center_id"]
+    offset = (page - 1) * page_size
 
-    # Query salary expense account (5000) and all possible payroll sources
-    query = select(
-        GeneralLedger,
-        JournalEntry.entry_number.label('entry_number'),
-        JournalEntry.description.label('description')
-    ).join(
-        ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
-    ).join(
-        JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
-    ).where(
-        GeneralLedger.center_id == UUID(center_id),
-        or_(
-            GeneralLedger.source == "payroll",
-            ChartOfAccounts.code == "5000"
-        )
+    stmt = (
+        select(PayrollRecord)
+        .options(selectinload(PayrollRecord.employee))
+        .order_by(PayrollRecord.id.desc())
+        .offset(offset)
+        .limit(page_size)
     )
+    result = await session.execute(stmt)
+    payrolls = result.scalars().all()
 
-    if month:
-        query = query.where(func.extract('month', GeneralLedger.transaction_date) == month)
-    if year:
-        query = query.where(func.extract('year', GeneralLedger.transaction_date) == year)
-    if employee_id:
-        query = query.where(GeneralLedger.source_id == employee_id)
-
-    # Total count for pagination
-    count_query = select(func.count()).select_from(query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar_one()
-
-    # Pagination
-    query = query.order_by(desc(GeneralLedger.transaction_date))
-    query = query.offset((page - 1) * page_size).limit(page_size)
-    result = await db.execute(query)
-    rows = result.all()
-
-    # Collect all payroll IDs to batch fetch PayrollRecords and Employees
-    payroll_ids = [str(row.GeneralLedger.source_id) for row in rows if row.GeneralLedger.source_id]
-    payrolls = {}
-    employees = {}
-
-    if payroll_ids:
-        payroll_result = await db.execute(
-            select(PayrollRecord)
-            .options(selectinload(PayrollRecord.employee))
-            .where(PayrollRecord.id.in_(payroll_ids))
+    response = []
+    for payroll in payrolls:
+        employee = payroll.employee
+        employee_name = (
+            getattr(employee, "full_name", None)
+            or getattr(employee, "name", None)
+            or "Unknown"
         )
-        for pr in payroll_result.scalars().all():
-            payrolls[str(pr.id)] = pr
-            if pr.employee:
-                employees[str(pr.employee.id)] = pr.employee
-
-    # Build entries while session is open!
-    entries = []
-    for row in rows:
-        payroll = payrolls.get(str(row.GeneralLedger.source_id))
-        employee_name = "Unknown"
-        status = "unknown"
-        gross_salary = float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0
-        deductions = 0
-        net_salary = 0
-        if payroll:
-            if payroll.employee:
-                employee_name = getattr(payroll.employee, "full_name", None) or getattr(payroll.employee, "name", None) or "Unknown"
-            status = payroll.status.value if hasattr(payroll.status, "value") else str(payroll.status)
-            gross_salary = float(payroll.gross_salary) if payroll.gross_salary else gross_salary
-            deductions = float(payroll.total_deductions) if payroll.total_deductions else 0
-            net_salary = float(payroll.net_salary) if payroll.net_salary else 0
-
-        entries.append({
-            "id": str(row.GeneralLedger.id),
-            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
-            "entry_number": row.entry_number,
-            "payroll_id": str(row.GeneralLedger.source_id),
+        response.append({
+            "entry_number": getattr(payroll, "entry_number", getattr(payroll, "id", None)),
+            "date": getattr(payroll, "date", None),
             "employee_name": employee_name,
-            "gross_salary": gross_salary,
-            "deductions": deductions,
-            "net_salary": net_salary,
-            "month": row.GeneralLedger.transaction_date.strftime("%B %Y"),
-            "status": status
+            "gross_salary": getattr(payroll, "gross_salary", None),
+            "net_salary": getattr(payroll, "net_salary", None),
+            "status": getattr(payroll, "status", None),
         })
 
     return {
-        "total": total,
+        "data": response,
         "page": page,
         "page_size": page_size,
-        "entries": entries,
-        "summary": {
-            "total_gross_salary": sum(e["gross_salary"] for e in entries),
-            "total_deductions": sum(e["deductions"] for e in entries),
-            "total_net_salary": sum(e["net_salary"] for e in entries)
-        }
+        "count": len(response)
     }
 
 
