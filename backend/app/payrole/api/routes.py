@@ -240,17 +240,11 @@ async def run_payroll(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    """
-    Run payroll for all active employees of the center.
-    Creates PaymentOrder and records in accounts module as expense.
-    """
     import traceback
 
-    # Get center admin and center details
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
-
     center_id = center_admin.center_id
 
     # Get operational settings
@@ -260,26 +254,21 @@ async def run_payroll(
         )
     )
     settings = settings_result.scalar_one_or_none()
-
     if not settings:
         raise HTTPException(
             status_code=400,
             detail="Operational settings not configured. Please set payroll cycle day in settings."
         )
 
-    # Validate payroll cycle day
     today = date.today()
     payroll_cycle_day = settings.payroll_cycle_day
-
-    # Check if today is the payroll day
     if today.day != payroll_cycle_day:
         raise HTTPException(
             status_code=400,
             detail=f"Payroll can only be run on day {payroll_cycle_day} of the month. Today is day {today.day}."
         )
 
-    # Calculate payroll period (previous month)
-    payroll_month = today.replace(day=1) - relativedelta(days=1)  # Last month
+    payroll_month = today.replace(day=1) - relativedelta(days=1)
     period_start = payroll_month.replace(day=1)
     period_end = payroll_month.replace(day=payroll_month.day)
 
@@ -300,7 +289,6 @@ async def run_payroll(
             detail=f"Payroll already processed for {payroll_month.strftime('%B %Y')}"
         )
 
-    # Get all active employees for this center
     employees_result = await db.execute(
         select(Employee).where(
             and_(
@@ -310,14 +298,12 @@ async def run_payroll(
         )
     )
     employees = employees_result.scalars().all()
-
     if not employees:
         raise HTTPException(
             status_code=400,
             detail="No active employees found for this center"
         )
 
-    # Calculate salaries
     payroll_records = []
     total_gross_salary = Decimal('0')
     total_deductions = Decimal('0')
@@ -325,7 +311,6 @@ async def run_payroll(
     skipped_employees = []
 
     for employee in employees:
-        # Skip employees with no salary set
         if employee.salary is None:
             skipped_employees.append(f"Employee '{employee.full_name}' (ID: {employee.id}) has no salary set and was skipped.")
             continue
@@ -335,18 +320,13 @@ async def run_payroll(
             skipped_employees.append(f"Employee '{employee.full_name}' (ID: {employee.id}) has invalid salary value and was skipped.")
             continue
 
-        # Calculate deductions (TDS: 10% if salary > 50000)
         tds_amount = Decimal('0')
         if gross_salary > 50000:
-            tds_amount = gross_salary * Decimal('0.10')  # 10% TDS
-
-        # Other deductions (from employee model if exists)
+            tds_amount = gross_salary * Decimal('0.10')
         other_deductions = Decimal(str(getattr(employee, 'deductions', 0)))
-
         total_deductions_emp = tds_amount + other_deductions
         net_salary = gross_salary - total_deductions_emp
 
-        # Create payroll record - Use PayrollPaymentMethod
         payroll_record = PayrollRecord(
             id=uuid4(),
             employee_id=employee.id,
@@ -360,7 +340,7 @@ async def run_payroll(
             other_deductions=other_deductions,
             total_deductions=total_deductions_emp,
             net_salary=net_salary,
-            payment_method=PayrollPaymentMethod(payment_method),  # Use PayrollPaymentMethod
+            payment_method=PayrollPaymentMethod(payment_method),
             status=PayrollStatus.paid,
             paid_date=today,
             created_by=current_user["user_id"],
@@ -377,7 +357,6 @@ async def run_payroll(
 
     await db.flush()
 
-    # If no employees processed, raise error
     if not payroll_records:
         raise HTTPException(
             status_code=400,
@@ -385,22 +364,21 @@ async def run_payroll(
                    " ".join(skipped_employees)
         )
 
-    # Create PaymentOrder (Expense for center) - Use BillingPaymentMethod
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
-        payer_user_id=center_admin.id,  # Center admin pays
+        payer_user_id=center_admin.id,
         payer_type=PayerType.center_admin,
-        payee_type=PayeeType.center,  # Paid by center
+        payee_type=PayeeType.center,
         center_id=center_id,
-        order_type=OrderType.add_on,  # Using payroll for payroll expense
+        order_type=OrderType.payroll,
         reference_schema=ReferenceSchema.center,
         reference_id=center_id,
         subtotal_amount=float(total_gross_salary),
-        tax_amount=0.00,  # No tax on salary payment
+        tax_amount=0.00,
         total_amount=float(total_gross_salary),
         currency=Currency.INR,
         status=PaymentOrderStatus.paid,
-        payment_method=PaymentMethod(payment_method),  # Use BillingPaymentMethod
+        payment_method=PaymentMethod(payment_method),
         created_by=current_user["user_id"],
         updated_by=current_user["user_id"],
         created_at=datetime.utcnow(),
@@ -409,25 +387,26 @@ async def run_payroll(
     db.add(payment_order)
     await db.flush()
 
-    # Record in accounts module
-    try:
-        await auto_record_payroll_payment(
-            db=db,
-            payment_order=payment_order,
-            total_salary=total_gross_salary,
-            tds_amount=total_deductions,
-            net_payable=total_net_salary,
-            created_by=str(current_user["user_id"])
-        )
-        print(f"✅ Payroll accounting entry created for {payroll_month.strftime('%B %Y')}")
-    except Exception as e:
-        print(f"❌ Failed to record payroll in accounts: {str(e)}")
-        traceback.print_exc()
-        # Don't fail payroll run, just log the error
+    # --- CORRECTED: Call the helper for each payroll record ---
+    for record in payroll_records:
+        try:
+            await auto_record_payroll_payment(
+                db=db,
+                payment_order=payment_order,
+                total_salary=record.gross_salary,
+                tds_amount=record.total_deductions,
+                net_payable=record.net_salary,
+                created_by=str(current_user["user_id"]),
+                source_id=str(record.id)
+            )
+            print(f"✅ Payroll accounting entry created for employee {record.employee_id} ({record.gross_salary})")
+        except Exception as e:
+            print(f"❌ Failed to record payroll in accounts for employee {record.employee_id}: {str(e)}")
+            traceback.print_exc()
+            skipped_employees.append(f"Failed to record payroll for employee {record.employee_id}: {str(e)}")
 
     await db.commit()
 
-    # Build response
     return {
         "message": f"Payroll processed successfully for {payroll_month.strftime('%B %Y')}",
         "payroll_period": {
