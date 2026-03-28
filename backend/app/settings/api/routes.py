@@ -298,7 +298,7 @@ async def delete_center_operational_setting(
 @router.post("/designation", response_model=DesignationOut)
 async def create_designation(
     name: str = Form(...),
-    image: UploadFile = File(...),
+    image: UploadFile = File(None),  # <-- Now optional
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
@@ -315,6 +315,7 @@ async def create_designation(
         raise HTTPException(status_code=400, detail="There cannot be more than one designation with the same name in your center.")
 
     # Auto-generate code
+    import random, re, uuid
     name_part = ''.join(re.findall(r'[A-Za-z]', name))[:3].upper().ljust(3, 'X')
     while True:
         rand_part = f"{random.randint(0, 999):03d}"
@@ -325,10 +326,12 @@ async def create_designation(
         if not result_code.scalar_one_or_none():
             break
 
-    image_key = f"designations/{uuid.uuid4()}_{image.filename}"
-    image_bytes = await image.read()
-    upload_file(image_bytes, image_key, image.content_type)
-    image_url = get_file_url(image_key)
+    image_url = None
+    if image:
+        image_key = f"designations/{uuid.uuid4()}_{image.filename}"
+        image_bytes = await image.read()
+        upload_file(image_bytes, image_key, image.content_type)
+        image_url = get_file_url(image_key)
 
     designation = Designation(
         name=name,
