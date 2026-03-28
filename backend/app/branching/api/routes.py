@@ -313,7 +313,13 @@ async def get_purchased_branch_count(
 
     purchased_count = parent_center.branch_count or 0
 
-    # Get the latest payment order for branch purchase (only 'add_on')
+    # Count created subcenters (branches with this center as parent)
+    result = await session.execute(
+        select(Center).where(Center.parent_center_id == parent_center_id)
+    )
+    created_subcenters = len(result.scalars().all())
+
+    # Get the latest payment order for branch purchase
     result = await session.execute(
         select(PaymentOrder)
         .where(
@@ -330,6 +336,7 @@ async def get_purchased_branch_count(
     return {
         "center_id": str(parent_center_id),
         "branches_purchased": purchased_count,
+        "created_subcenters": created_subcenters,
         "payment_order_id": payment_order_id
     }
 
