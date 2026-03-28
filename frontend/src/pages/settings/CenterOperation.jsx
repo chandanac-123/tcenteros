@@ -18,6 +18,7 @@ import {
   useUpdateCenterTimeMutation
 } from '@api-queries/center-time/Query'
 import { convert12To24WithSeconds, convertTo12Hour } from '@utils/helper'
+import { centerSlotValidationSchema, centerTimingValidationSchema } from '@utils/validations'
 
 const CenterOperations = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -40,18 +41,19 @@ const CenterOperations = () => {
     closing_time: convertTo12Hour(centerTime?.closing_time) || '',
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
-    payroll_cycle_day: centerTime?.payroll_cycle_day || 0,
-    inventory_profit: centerTime?.inventory_profit || 0
+    payroll_cycle_day: centerTime?.payroll_cycle_day || null,
+    inventory_profit: centerTime?.inventory_profit || null
   }
 
   const initialValues = {
     start_time: '',
     end_time: '',
-    slot_capacity: 0
+    slot_capacity: null
   }
 
   const formik = useFormik({
     initialValues,
+    validationSchema: centerSlotValidationSchema,
     onSubmit: async values => {
       try {
         await createSlot(values)
@@ -65,6 +67,7 @@ const CenterOperations = () => {
   const centerTimeFormik = useFormik({
     initialValues: centerTimeInitialValues,
     enableReinitialize: true,
+    validationSchema: centerTimingValidationSchema,
     onSubmit: async values => {
       const formattedValues = {
         ...values,
@@ -116,6 +119,7 @@ const CenterOperations = () => {
               onChange={val =>
                 centerTimeFormik.setFieldValue('opening_time', val)
               }
+              error={centerTimeFormik.touched.opening_time && centerTimeFormik.errors.opening_time}
             />
           </div>
           <div className='flex-1'>
@@ -125,6 +129,7 @@ const CenterOperations = () => {
               onChange={val =>
                 centerTimeFormik.setFieldValue('closing_time', val)
               }
+              error={centerTimeFormik.touched.closing_time && centerTimeFormik.errors.closing_time}
             />
           </div>
         </div>
@@ -153,6 +158,7 @@ const CenterOperations = () => {
                   e.target.value
                 )
               }
+              error={centerTimeFormik.touched.inventory_profit && centerTimeFormik.errors.inventory_profit}
             />
           </div>
           <div className='flex-1'>
@@ -166,6 +172,7 @@ const CenterOperations = () => {
                   e.target.value
                 )
               }
+              error={centerTimeFormik.touched.payroll_cycle_day && centerTimeFormik.errors.payroll_cycle_day}
             />
           </div>
           <div className='flex-1 justify-end items-center flex'>
@@ -193,6 +200,7 @@ const CenterOperations = () => {
               label='Start Time'
               value={formik.values.start_time}
               onChange={val => formik.setFieldValue('start_time', val)}
+              error={formik.touched.start_time && formik.errors.start_time}
             />
           </div>
           <div className='flex-1'>
@@ -200,6 +208,7 @@ const CenterOperations = () => {
               label='Ending Time'
               value={formik.values.end_time}
               onChange={val => formik.setFieldValue('end_time', val)}
+              error={formik.touched.end_time && formik.errors.end_time}
             />
           </div>
           <div className='flex-1'>
@@ -209,6 +218,7 @@ const CenterOperations = () => {
               name='slot_capacity'
               value={formik.values.slot_capacity}
               onChange={formik.handleChange}
+              error={formik.touched.slot_capacity && formik.errors.slot_capacity}
             />
           </div>
         </div>
@@ -225,12 +235,14 @@ const CenterOperations = () => {
       </form>
 
       <div className='flex flex-col gap-4'>
-       {slots?.length > 0 && <span className='font-semibold'>Existing Slots</span>}
+        {slots?.length > 0 && (
+          <span className='font-semibold'>Existing Slots</span>
+        )}
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
           {slots?.map(slot => (
             <SlotCard
               key={slot.id}
-              sku_name ={null}
+              sku_name={null}
               startTime={slot.start_time}
               endTime={slot.end_time}
               capacity={slot.slot_capacity}
