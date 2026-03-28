@@ -17,12 +17,14 @@ async def initialize_center_accounts(db: AsyncSession, center_id):
         {"code": "1310", "name": "Network Receivable", "account_type": "asset", "description": "Money owed from network centers"},
         {"code": "1400", "name": "Inventory", "account_type": "asset", "description": "Stock/products"},
         {"code": "1500", "name": "Fixed Assets", "account_type": "asset", "description": "Equipment, furniture"},
+        # Input Tax (GST Receivable)
+        {"code": "2100", "name": "Input Tax (GST Receivable)", "account_type": "asset", "description": "GST input tax credit receivable"},
         # Optional: Settlement Receivable
         {"code": "6000", "name": "Settlement Receivable", "account_type": "asset", "description": "Amounts to be received from settlements"},
 
         # Liabilities (2000-2999)
         {"code": "2000", "name": "Accounts Payable", "account_type": "liability", "description": "Money owed to suppliers"},
-        {"code": "2100", "name": "Salaries Payable", "account_type": "liability", "description": "Unpaid salaries"},
+        {"code": "2110", "name": "Salaries Payable", "account_type": "liability", "description": "Unpaid salaries"},
         {"code": "2200", "name": "GST Payable", "account_type": "liability", "description": "GST to be paid to government"},
         {"code": "2300", "name": "TDS Payable", "account_type": "liability", "description": "TDS to be deposited"},
         # Optional: Settlement Payable
@@ -38,7 +40,7 @@ async def initialize_center_accounts(db: AsyncSession, center_id):
         {"code": "4020", "name": "Membership Upgrade Income", "account_type": "revenue", "description": "Revenue from membership upgrades"},
         {"code": "4100", "name": "Inventory Sales Income", "account_type": "revenue", "description": "Revenue from product sales"},
         {"code": "4200", "name": "Network Income", "account_type": "revenue", "description": "Revenue from network visits (networking in)"},
-        {"code": "4250", "name": "Platform Commission", "account_type": "revenue", "description": "Platform commission income"},  # <-- Added
+        {"code": "4250", "name": "Platform Commission", "account_type": "revenue", "description": "Platform commission income"},
         {"code": "4300", "name": "Other Income", "account_type": "revenue", "description": "Miscellaneous income"},
 
         # Expenses (5000-5999)

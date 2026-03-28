@@ -654,7 +654,7 @@ async def add_stock(
             payer_type=PayerType.center_admin,
             payee_type=PayeeType.center,
             center_id=center_id,
-            order_type=OrderType.stock_purchase,
+            order_type=OrderType.inventory_purchase,
             reference_schema=ReferenceSchema.invoice,
             reference_id=stock_tx.id,
             subtotal_amount=subtotal,

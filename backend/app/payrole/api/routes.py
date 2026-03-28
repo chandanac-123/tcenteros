@@ -392,7 +392,7 @@ async def run_payroll(
         payer_type=PayerType.center_admin,
         payee_type=PayeeType.center,  # Paid by center
         center_id=center_id,
-        order_type=OrderType.add_on,  # Using add_on for payroll expense
+        order_type=OrderType.payroll,  # Using payroll for payroll expense
         reference_schema=ReferenceSchema.center,
         reference_id=center_id,
         subtotal_amount=float(total_gross_salary),
