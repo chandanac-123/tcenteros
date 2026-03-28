@@ -735,8 +735,11 @@ async def get_payroll_entries(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
         GeneralLedger.center_id == UUID(center_id),
-        GeneralLedger.source == TransactionSource.PAYROLL,
-        ChartOfAccounts.code == "5000"
+        or_(
+            GeneralLedger.source == "payroll",
+            GeneralLedger.source == TransactionSource.PAYROLL,
+            ChartOfAccounts.code == "5000"
+        )
     )
 
     # Filters
@@ -945,27 +948,27 @@ async def get_settlement_entries(
 
     # Only allow these sources in settlements
     settlement_sources = [
-        TransactionSource.BRANCH_PURCHASE.value,
-        TransactionSource.NETWORK_IN.value,
-        TransactionSource.NETWORK_OUT.value,
-        TransactionSource.INVENTORY_PURCHASE.value,
-        TransactionSource.PAYROLL.value,
-        TransactionSource.OTHER_CHARGES.value,
-        TransactionSource.GENERAL_EXPENSE.value,
-        TransactionSource.GENERAL_INCOME.value
+        TransactionSource.BRANCH_PURCHASE.value, "branch_purchase",
+        TransactionSource.NETWORK_IN.value, "network_in",
+        TransactionSource.NETWORK_OUT.value, "network_out",
+        TransactionSource.INVENTORY_PURCHASE.value, "inventory_purchase",
+        TransactionSource.PAYROLL.value, "payroll",
+        TransactionSource.OTHER_CHARGES.value, "other_charges",
+        TransactionSource.GENERAL_EXPENSE.value, "general_expense",
+        TransactionSource.GENERAL_INCOME.value, "general_income"
     ]
 
     # Map settlement_type to TransactionSource
     settlement_type_map = {
-        "branch_purchase": TransactionSource.BRANCH_PURCHASE.value,
-        "network_in": TransactionSource.NETWORK_IN.value,
-        "network_out": TransactionSource.NETWORK_OUT.value,
-        "inventory_purchase": TransactionSource.INVENTORY_PURCHASE.value,
-        "payroll": TransactionSource.PAYROLL.value,
+        "branch_purchase": [TransactionSource.BRANCH_PURCHASE.value, "branch_purchase"],
+        "network_in": [TransactionSource.NETWORK_IN.value, "network_in"],
+        "network_out": [TransactionSource.NETWORK_OUT.value, "network_out"],
+        "inventory_purchase": [TransactionSource.INVENTORY_PURCHASE.value, "inventory_purchase"],
+        "payroll": [TransactionSource.PAYROLL.value, "payroll"],
         "other": [
-            TransactionSource.OTHER_CHARGES.value,
-            TransactionSource.GENERAL_EXPENSE.value,
-            TransactionSource.GENERAL_INCOME.value
+            TransactionSource.OTHER_CHARGES.value, "other_charges",
+            TransactionSource.GENERAL_EXPENSE.value, "general_expense",
+            TransactionSource.GENERAL_INCOME.value, "general_income"
         ]
     }
 
