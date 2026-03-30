@@ -119,22 +119,30 @@ export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
   secondary_color: Yup.string().required('Secondary color is required'),
   app_name: Yup.string().required('App name is required'),
-  app_logo: Yup.mixed()
-    .nullable()
-    .required('Upload an image')
-    .test('file-or-url', 'Logo is required', function (value) {
-      if (!value) return false
-      // If it's a File object
-      if (value instanceof File) return true
-      // If it's existing URL string
+ app_logo: Yup.mixed()
+  .nullable()
+  .required('Upload an image')
+  .test('file-or-url', 'Logo is required', function (value) {
+    if (!value) return false
+    // File object (new upload)
+    if (value instanceof File) return true
+    //  Existing URL (edit case)
+    if (typeof value === 'string') return true
+    return false
+  })
+  .test(
+    'fileSize',
+    'Image size must be less than 2MB',
+    value => {
+      // ✅ Skip size check for URL
       if (typeof value === 'string') return true
-      return false
-    })
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    )
+      // ✅ Validate file size
+      if (value instanceof File) {
+        return value.size <= 2 * 1024 * 1024
+      }
+      return true
+    }
+  )
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({

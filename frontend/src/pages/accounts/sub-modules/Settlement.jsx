@@ -23,7 +23,7 @@ const Settlement = () => {
     <>
       <DataTable
         columns={columns}
-        data={data?.entries || []}
+        data={data?.data || []}
         setTableParams={setTableParams}
         tableParams={tableParams}
         loading={isLoading}
