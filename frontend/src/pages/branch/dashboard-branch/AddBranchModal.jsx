@@ -6,13 +6,17 @@ import { useAddBranchCountMutation } from '@api-queries/branch/Query'
 import { useGetBranchPricesAndTaxQuery } from '@api-queries/branch/Query'
 import SuccessModal from '../message-popup/success'
 import FaledModal from '../message-popup/failed'
+import { useNavigate } from 'react-router-dom'
+import { useSettingsTabStore } from '@store/tabStore'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
+  const navigate = useNavigate()
+  const { setSelectedTab } = useSettingsTabStore()
   const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
-  console.log('addCount: ', addCount);
+  console.log('addCount: ', addCount)
   const { data, isLoading } = useGetBranchPricesAndTaxQuery()
-  console.log('data: ', data);
+  console.log('data: ', data)
   const [openSuccess, setOpenSuccess] = useState(false)
   const [openFailed, setOpenFailed] = useState(false)
 
@@ -26,11 +30,11 @@ const AddBranchModal = ({ open, onOpenChange }) => {
   // total payable
   const totalAmount = subtotal + taxAmount
 
- useEffect(() => {
-  if (open) {
-    setCount(0)
-  }
-}, [open])
+  useEffect(() => {
+    if (open) {
+      setCount(0)
+    }
+  }, [open])
 
   const increment = () => {
     setCount(prev => prev + 1)
@@ -58,7 +62,22 @@ const AddBranchModal = ({ open, onOpenChange }) => {
     <CustomeModal open={open} onOpenChange={onOpenChange}>
       <div className='flex flex-col space-y-4 min-w-[380px]'>
         <h2 className='text-sm font-semibold'>Purchase Branches</h2>
-
+        {data?.tax_percentage === 0 && (
+          <p className='flex justify-center items-center text-red_text'>
+            Purchase branch tax is currently 0%. You can add a Purchase Tax in
+            Tax Settings if required, otherwise it will continue as 0%.
+            <Button
+              variant='link'
+              onClick={() => {
+                setSelectedTab(1)
+                navigate('/settings')
+                onOpenChange(false)
+              }}
+            >
+              Go to Tax Settings
+            </Button>
+          </p>
+        )}
         <div className='flex justify-between items-center'>
           <div className='flex flex-col space-y-2 py-3'>
             <p className='text-[14px] text-[#7C7C7C]'>Branch Price</p>
