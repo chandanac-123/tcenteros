@@ -526,7 +526,7 @@ async def get_bill_detail(
     # Get line items based on order type
     line_items = []
     
-    if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+    if payment_order.order_type in [OrderType.membership, OrderType.membership_renewal, OrderType.membership_upgrade]:
         # Get membership details
         if payment_order.reference_id:
             mm_result = await db.execute(
@@ -548,7 +548,7 @@ async def get_bill_detail(
                         "total": str(member_membership.paid_amount),
                     })
 
-    elif payment_order.order_type == OrderType.networking_access:
+    elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
         # Get networking details
         if payment_order.reference_id:
             ucm_result = await db.execute(
@@ -575,8 +575,8 @@ async def get_bill_detail(
                     "total": str(payment_order.total_amount),
                     "period": f"{network_membership.start_date} to {network_membership.end_date}" if network_membership.start_date else None,
                 })
-
-    elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+    
+    elif payment_order.order_type == OrderType.inventory_sale:
         # Get product sale details
         if payment_order.reference_id:
             sale_result = await db.execute(
@@ -602,13 +602,13 @@ async def get_bill_detail(
                     })
 
     # Determine labels
-    if payment_order.order_type in [OrderType.membership, OrderType.center_subscription, OrderType.renewal]:
+    if payment_order.order_type in [OrderType.membership, OrderType.membership_renewal, OrderType.membership_upgrade]:
         type_label = "Membership"
         source_label = "Local"
-    elif payment_order.order_type == OrderType.networking_access:
+    elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
         type_label = "Network"
         source_label = "Visit"
-    elif payment_order.order_type in [OrderType.stock_purchase, OrderType.feature_purchase]:
+    elif payment_order.order_type == OrderType.inventory_sale:
         type_label = "Product"
         source_label = "POS"
     else:
