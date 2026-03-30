@@ -1530,215 +1530,175 @@ async def get_cart_amount(
 
 # POST checkout for an existing cart (cart_id via body or use current pending cart)
 @router.post("/sales/cart/checkout", status_code=status.HTTP_201_CREATED)
-async def checkout_cart(body: dict = Body(None), db: AsyncSession = Depends(get_async_session), current_admin: dict = Depends(centeradmin_required)):
+async def checkout_cart(
+    body: dict = Body(None),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required),
+):
+    """
+    Checkout a cart:
+    1. Lock cart as 'completed'
+    2. Decrement stock (create StockTransaction OUT)
+    3. Create PaymentOrder
+    4. Post accounting journal entries
+    """
     center_id = current_admin.get("center_id")
     user_id = current_admin.get("id") or current_admin.get("user_id")
+    
+    if not center_id or not user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing center_id or user_id")
 
-    if not center_id:
-        raise HTTPException(status_code=403, detail="No center assigned to this user")
-
+    # Extract cart_id and tax_category_id from body
     cart_id = body.get("cart_id") if body else None
-    payment = body.get("payment") if body else None
     tax_category_id = body.get("tax_category_id") if body else None
 
-    force_paid_flag = bool(
-        (body and body.get("force_paid"))
-        or (payment and payment.get("force_paid"))
-        or (payment and payment.get("force"))
-        or (body and body.get("force"))
-    )
+    if not cart_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="cart_id is required")
 
-    if cart_id:
-        cart = await db.get(Sale, cart_id)
-        if not cart:
-            raise HTTPException(status_code=404, detail="Cart not found")
-    else:
-        cart = await _get_or_create_cart(db, center_id, user_id)
-
-    if not cart or cart.status != "pending":
-        raise HTTPException(status_code=400, detail="Cart not found or not pending")
-
-    # load items
-    stmt = select(SaleItem).where(SaleItem.sale_id == cart.id)
-    res = await db.execute(stmt)
-    items = res.scalars().all()
-    if not items:
-        raise HTTPException(status_code=400, detail="Cart has no items")
-
-    # recompute authoritative totals
-    totals = await _compute_cart_totals(db, cart, tax_category_id)
-    subtotal = totals["subtotal"]
-    tax_amount = totals["tax_amount"]
-    total_amount = totals["total_amount"]
-
-    # Determine paid / payment details
-    paid = False
-    pay_amount = Decimal("0.00")
-    if payment and payment.get("amount") is not None:
-        try:
-            pay_amount = Decimal(str(payment.get("amount")))
-        except Exception:
-            pay_amount = Decimal("0.00")
-    if pay_amount >= total_amount and total_amount > Decimal("0.00"):
-        paid = True
-    if force_paid_flag:
-        paid = True
-
-    pm_value = None
-    if payment and "method" in payment:
-        try:
-            pm_value = PaymentMethod[payment["method"]]
-        except Exception:
-            pm_value = None
-
-    # Safe enum helpers
-    def _pick_order_type():
-        member = getattr(OrderType, "sale", None)
-        if member is not None:
-            return member
-        return next(iter(OrderType))
-
-    def _pick_reference_schema():
-        member = getattr(ReferenceSchema, "invoice", None)
-        if member is not None:
-            return member
-        return next(iter(ReferenceSchema))
-
-    order_type_member = _pick_order_type()
-    reference_schema_member = _pick_reference_schema()
-
-    created_stock_tx_ids = []
-    po_id = None
-    stock_after = {}
-
-    # Execute all work in ONE transaction
     try:
-        # persist authoritative prices on items
-        for it in items:
-            product = await db.get(Product, it.product_id)
-            if not product:
-                raise HTTPException(status_code=400, detail=f"Product {it.product_id} not found")
-            unit_price = getattr(product, "selling_price", None) or getattr(product, "base_price", None)
-            if unit_price is None:
-                raise HTTPException(status_code=400, detail=f"Product {it.product_id} has no price")
-            it.unit_price = Decimal(str(unit_price))
-            it.line_subtotal = (it.unit_price * int(it.quantity)).quantize(Decimal("0.01"))
-            db.add(it)
+        # Fetch cart with items eager-loaded
+        stmt = select(Sale).where(Sale.id == cart_id).options(selectinload(Sale.items))
+        res = await db.execute(stmt)
+        cart = res.scalar_one_or_none()
+
+        if not cart:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart not found")
+
+        # Verify cart belongs to center and is pending
+        if str(cart.center_id) != str(center_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cart does not belong to this center")
         
-        await db.flush()
+        if cart.status != "pending":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is not pending")
 
-        # Create PaymentOrder if payment info present
-        if payment or paid:
-            po = PaymentOrder(
-                payer_user_id=user_id,
-                payer_type=PayerType.center_admin,
-                payee_type=PayeeType.center,
-                center_id=center_id,
-                order_type=order_type_member,
-                reference_schema=reference_schema_member,
-                reference_id=cart.id,
-                subtotal_amount=subtotal,
-                tax_amount=tax_amount,
-                total_amount=total_amount,
-                currency=getattr(cart, "currency", Currency.INR),
-                status=PaymentOrderStatus.paid if paid else PaymentOrderStatus.pending,
-                payment_method=pm_value,
-            )
-            db.add(po)
-            await db.flush()
-            po_id = getattr(po, "payment_order_id", None) or getattr(po, "id", None)
+        # Verify items exist
+        items = cart.items
+        if not items:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
 
-        # Only decrease stock and create OUT transactions when paid
-        if paid:
-            for it in items:
-                qty = int(it.quantity)
-                unit_cost = Decimal(str(it.unit_price or "0.00"))
-
-                # Atomic stock decrement
-                upd = (
-                    update(Stock)
-                    .where(Stock.product_id == it.product_id, Stock.quantity_available >= qty)
-                    .values(quantity_available=Stock.quantity_available - qty, last_cost=unit_cost)
-                    .returning(Stock.id, Stock.quantity_available, Stock.last_cost)
-                )
-                result = await db.execute(upd)
-                row = result.fetchone()
-                if row is None:
-                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {it.product_id}")
-
-                stock_id, new_qty, last_cost = row
-
-                # Create OUT StockTransaction
-                stock_tx = StockTransaction(
-                    product_id=it.product_id,
-                    quantity=qty,
-                    transaction_type="OUT",
-                    unit_cost=unit_cost,
-                    subtotal=(unit_cost * qty).quantize(Decimal("0.01")),
-                    reference=f"sale:{cart.id}",
-                    balance_after=new_qty,
-                    created_by=user_id,
-                )
-                db.add(stock_tx)
-                await db.flush()
-                
-                created_stock_tx_ids.append(str(stock_tx.id))
-                stock_after[str(it.product_id)] = int(new_qty)
-
-        # Finalize sale
-        cart.subtotal_amount = subtotal
-        cart.tax_amount = tax_amount
-        cart.total_amount = total_amount
-        if paid:
-            cart.status = "completed"
+        # 1. Update cart totals (recalculate)
+        totals = await _compute_cart_totals(db, cart, tax_category_id)
+        cart.subtotal_amount = totals["subtotal"]
+        cart.tax_amount = totals["tax_amount"]
+        cart.total_amount = totals["total_amount"]
+        cart.tax_percentage = totals["tax_percentage"]
+        cart.tax_category_id = tax_category_id
+        cart.status = "completed"
+        cart.updated_by = user_id
         cart.updated_at = datetime.utcnow()
         db.add(cart)
-        
-        
-        await db.commit()
-        await db.refresh(cart)
+        await db.flush()
 
-        # --- ACCOUNTING INTEGRATION ---
-        if paid:
-            await post_inventory_sale_journal(
-                db,
-                sale=cart,
-                created_by=current_admin["user_id"]
-            )
+        # 2. Decrement stock and create StockTransaction OUT records
+        stock_transaction_ids = []
+        stock_updates = {}
         
+        for item in items:
+            # Fetch current stock
+            stock_stmt = select(Stock).where(Stock.product_id == item.product_id)
+            stock_res = await db.execute(stock_stmt)
+            stock = stock_res.scalar_one_or_none()
+
+            if not stock:
+                raise ValueError(f"Stock not found for product {item.product_id}")
+
+            if stock.quantity_available < item.quantity:
+                raise ValueError(f"Insufficient stock for product {item.product_id}. Available: {stock.quantity_available}, Requested: {item.quantity}")
+
+            # Decrement stock
+            new_quantity = stock.quantity_available - item.quantity
+            stmt_update = (
+                update(Stock)
+                .where(Stock.id == stock.id)
+                .values(
+                    quantity_available=new_quantity,
+                    updated_at=datetime.utcnow(),
+                    updated_by=user_id
+                )
+                .returning(Stock.quantity_available)
+            )
+            result = await db.execute(stmt_update)
+            updated_qty = result.scalar_one_or_none()
+            stock_updates[str(item.product_id)] = updated_qty
+
+            # Create StockTransaction OUT record
+            stock_tx = StockTransaction(
+                id=uuid4(),
+                product_id=item.product_id,
+                transaction_type="OUT",
+                quantity=item.quantity,
+                unit_cost=stock.last_cost or Decimal("0.00"),
+                subtotal=Decimal(str(item.line_subtotal)),
+                balance_after=new_quantity,
+                reference=f"SALE-{str(cart.id)[:8]}",
+                created_by=user_id,
+                updated_by=user_id,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(stock_tx)
+            await db.flush()
+            stock_transaction_ids.append(str(stock_tx.id))
+
+        # 3. Create PaymentOrder
+        payment_order = PaymentOrder(
+            payment_order_id=uuid4(),
+            payer_user_id=user_id,
+            payer_type=PayerType.center_admin,
+            payee_type=PayeeType.center,
+            center_id=center_id,
+            order_type=OrderType.inventory_sale,
+            reference_schema=ReferenceSchema.center,
+            reference_id=str(cart.id),
+            subtotal_amount=cart.subtotal_amount,
+            tax_amount=cart.tax_amount or Decimal("0.00"),
+            total_amount=cart.total_amount,
+            currency=cart.currency or "INR",
+            status=PaymentOrderStatus.paid,
+            payment_method=None,
+            created_by=user_id,
+            updated_by=user_id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(payment_order)
+        await db.flush()
+
+        # 4. Post accounting journal entries
+        # Ensure sale object is properly populated with all required fields
+        await post_inventory_sale_journal(
+            db,
+            sale=cart,
+            created_by=user_id
+        )
+
+        # Commit everything
+        await db.commit()
+
+        return {
+            "cart_id": str(cart.id),
+            "sale_id": str(cart.id),
+            "payment_order_id": str(payment_order.payment_order_id),
+            "stock_transaction_ids": stock_transaction_ids,
+            "stock_after": stock_updates,
+            "total_amount": float(cart.total_amount),
+            "status": "completed"
+        }
+
+    except ValueError as ve:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
     except HTTPException:
         await db.rollback()
         raise
     except Exception as exc:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Checkout failed: {exc}") from exc
-
-    # Best-effort refresh
-    # try:
-    #     await db.refresh(cart)
-    # except Exception:
-    #     pass
-
-    if paid:
-        payment_status = "paid"
-    elif payment:
-        payment_status = "pending"
-    else:
-        payment_status = "unpaid"
-
-    return {
-        "cart_id": str(cart.id),
-        "sale_id": str(cart.id),
-        "payment_order_id": str(po_id) if po_id else None,
-        "payment_status": payment_status,
-        "subtotal": str(subtotal),
-        "tax": str(tax_amount),
-        "total": str(total_amount),
-        "stock_transaction_ids": created_stock_tx_ids,
-        "stock_after": stock_after,
-        "status": cart.status,
-    }
-
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Checkout failed: {str(exc)}"
+        ) from exc
 
 
 @router.get("/pos/sales", summary="POS - List all sales transactions")

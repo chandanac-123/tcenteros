@@ -432,7 +432,7 @@ async def get_ledger_entries(
     account_type: Optional[AccountType] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
-    search: Optional[str] = None,  # Search in description
+    search: Optional[str] = None,
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
@@ -453,7 +453,7 @@ async def get_ledger_entries(
         ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
     ).join(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
-    ).where(GeneralLedger.center_id == UUID(center_id))
+    ).where(GeneralLedger.center_id == center_id)
     
     # Filters
     if account_code:
@@ -463,10 +463,10 @@ async def get_ledger_entries(
         query = query.where(ChartOfAccounts.account_type == account_type)
     
     if start_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+        query = query.where(GeneralLedger.transaction_date >= start_date)
     
     if end_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+        query = query.where(GeneralLedger.transaction_date <= end_date)
     
     if search:
         query = query.where(GeneralLedger.description.ilike(f"%{search}%"))
@@ -485,19 +485,19 @@ async def get_ledger_entries(
     
     entries = []
     for row in rows:
+        gl = row[0]
         entries.append({
-            "id": row.GeneralLedger.id,
-            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
-            "entry_number": row.entry_number,
+            "transaction_date": gl.transaction_date.isoformat() if gl.transaction_date else None,
             "account_code": row.account_code,
             "account_name": row.account_name,
             "account_type": row.account_type,
-            "description": row.GeneralLedger.description,
-            "debit": float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0,
-            "credit": float(row.GeneralLedger.credit) if row.GeneralLedger.credit else 0,
-            "balance": float(row.GeneralLedger.balance),
-            "source": row.GeneralLedger.source,
-            "source_id": row.GeneralLedger.source_id
+            "description": gl.description,
+            "debit": str(gl.debit),
+            "credit": str(gl.credit),
+            "balance": str(gl.balance),
+            "entry_number": row.entry_number,
+            "source": gl.source,
+            "source_id": str(gl.source_id) if gl.source_id else None
         })
     
     return {
@@ -624,6 +624,7 @@ async def get_expense_entries(
 ):
     """
     Get all expense entries, including inventory purchases.
+    EXCLUDES: inventory_sale (which is revenue-related)
     Shows: Date, Expense Type, Description, Amount
     """
     center_id = current_admin["center_id"]
@@ -642,6 +643,7 @@ async def get_expense_entries(
     from sqlalchemy import or_, and_
 
     # Base query: expenses from expense accounts or inventory_purchase source
+    # IMPORTANT: Exclude inventory_sale which is revenue, not expense
     query = select(
         GeneralLedger,
         ChartOfAccounts.code.label('account_code'),
@@ -653,29 +655,42 @@ async def get_expense_entries(
     ).join(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
-        GeneralLedger.center_id == UUID(center_id)
+        GeneralLedger.center_id == center_id
     )
 
-    # Build OR condition: expense accounts OR inventory_purchase source
+    # Build filter: expense accounts OR inventory_purchase source
+    # EXCLUDE inventory_sale completely
     expense_account_filter = ChartOfAccounts.account_type == AccountType.EXPENSE
-    inventory_purchase_filter = GeneralLedger.source == "inventory_purchase"
+    inventory_purchase_filter = and_(
+        GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value,
+        GeneralLedger.source != TransactionSource.INVENTORY_SALE.value
+    )
 
     if expense_type:
-        if expense_type == "inventory_purchase":
-            query = query.where(inventory_purchase_filter)
-        elif expense_type in expense_codes:
-            query = query.where(and_(expense_account_filter, ChartOfAccounts.code == expense_codes[expense_type]))
+        if expense_type in expense_codes:
+            code = expense_codes[expense_type]
+            query = query.where(ChartOfAccounts.code == code)
+        elif expense_type == "inventory_purchase":
+            query = query.where(GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value)
         else:
+            # For other expense types, filter by account type
             query = query.where(expense_account_filter)
     else:
-        # Show both expense accounts and inventory_purchase source
-        query = query.where(or_(expense_account_filter, inventory_purchase_filter))
+        # If no specific type, get all expenses and inventory purchases
+        # But EXCLUDE inventory_sale
+        query = query.where(
+            or_(
+                expense_account_filter,
+                GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value
+            ),
+            GeneralLedger.source != TransactionSource.INVENTORY_SALE.value
+        )
 
     # Date filters
     if start_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+        query = query.where(GeneralLedger.transaction_date >= start_date)
     if end_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
+        query = query.where(GeneralLedger.transaction_date <= end_date)
 
     # Total count
     count_query = select(func.count()).select_from(query.subquery())
@@ -691,16 +706,15 @@ async def get_expense_entries(
 
     entries = []
     for row in rows:
+        gl_entry, account_code, account_name, entry_number, je_description = row
         entries.append({
-            "id": row.GeneralLedger.id,
-            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
-            "entry_number": row.entry_number,
-            "expense_type": row.account_name,
-            "account_code": row.account_code,
-            "description": row.je_description,
-            "amount": float(row.GeneralLedger.debit),  # Expenses are debit
-            "source": row.GeneralLedger.source,
-            "source_id": row.GeneralLedger.source_id
+            "transaction_date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
+            "account_code": account_code,
+            "account_name": account_name,
+            "description": gl_entry.description or je_description,
+            "amount": float(gl_entry.debit or Decimal("0.00")),
+            "entry_number": entry_number,
+            "source": gl_entry.source
         })
 
     return {
@@ -846,87 +860,88 @@ async def get_inventory_accounting(
     current_admin=Depends(centeradmin_required)
 ):
     """
-    Get inventory accounting entries
-    Shows: Date, Type, Description, Quantity, Value, COGS (for sales)
+    Get inventory accounting entries (purchases, sales, adjustments).
+    Shows: Date, Type, Account, Description, Debit, Credit
     """
     center_id = current_admin["center_id"]
-    
-    # Query inventory and COGS accounts
+
+    # Map transaction types to sources
+    transaction_sources = {
+        "purchase": TransactionSource.INVENTORY_PURCHASE.value,
+        "sale": TransactionSource.INVENTORY_SALE.value,
+        "adjustment": "inventory_adjustment"
+    }
+
     query = select(
         GeneralLedger,
         ChartOfAccounts.code.label('account_code'),
         ChartOfAccounts.name.label('account_name'),
         JournalEntry.entry_number.label('entry_number'),
-        JournalEntry.description.label('description')
+        JournalEntry.description.label('je_description')
     ).join(
         ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id
     ).join(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
-        GeneralLedger.center_id == UUID(center_id),
+        GeneralLedger.center_id == center_id,
         or_(
-            GeneralLedger.source == TransactionSource.INVENTORY_SALE,
-            GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE
+            GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value,
+            GeneralLedger.source == TransactionSource.INVENTORY_SALE.value,
+            GeneralLedger.source == "inventory_adjustment"
         )
     )
-    
+
     # Filter by transaction type
-    if transaction_type == "purchase":
+    if transaction_type and transaction_type in transaction_sources:
         query = query.where(
-            GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE,
-            ChartOfAccounts.code == "1400"  # Inventory Asset
+            GeneralLedger.source == transaction_sources[transaction_type]
         )
-    elif transaction_type == "sale":
-        query = query.where(
-            GeneralLedger.source == TransactionSource.INVENTORY_SALE,
-            or_(
-                ChartOfAccounts.code == "4100",  # Sales Income
-                ChartOfAccounts.code == "5400"   # COGS
-            )
-        )
-    
+
     # Date filters
     if start_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
+        query = query.where(GeneralLedger.transaction_date >= start_date)
     if end_date:
-        query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
-    
+        query = query.where(GeneralLedger.transaction_date <= end_date)
+
     # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
-    
+
     # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
-    
+
     result = await db.execute(query)
     rows = result.all()
-    
+
     entries = []
     for row in rows:
-        transaction_type_label = "Purchase" if row.GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE else "Sale"
-        
+        gl_entry, account_code, account_name, entry_number, je_description = row
         entries.append({
-            "id": row.GeneralLedger.id,
-            "date": row.GeneralLedger.transaction_date.strftime("%Y-%m-%d"),
-            "entry_number": row.entry_number,
-            "transaction_type": transaction_type_label,
-            "account": row.account_name,
-            "description": row.description,
-            "debit": float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0,
-            "credit": float(row.GeneralLedger.credit) if row.GeneralLedger.credit else 0,
-            "source_id": row.GeneralLedger.source_id
+            "transaction_date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
+            "account_code": account_code,
+            "account_name": account_name,
+            "description": gl_entry.description or je_description,
+            "debit": float(gl_entry.debit or Decimal("0.00")),
+            "credit": float(gl_entry.credit or Decimal("0.00")),
+            "entry_number": entry_number,
+            "source": gl_entry.source,
+            "source_id": gl_entry.source_id
         })
-    
+
+    total_inventory_debit = sum(e["debit"] for e in entries)
+    total_inventory_credit = sum(e["credit"] for e in entries)
+
     return {
         "total": total,
         "page": page,
         "page_size": page_size,
         "entries": entries,
         "summary": {
-            "total_purchases": sum(e["debit"] for e in entries if e["transaction_type"] == "Purchase"),
-            "total_sales": sum(e["credit"] for e in entries if e["transaction_type"] == "Sale")
+            "total_debit": total_inventory_debit,
+            "total_credit": total_inventory_credit,
+            "total_amount": total_inventory_debit + total_inventory_credit
         }
     }
 
