@@ -18,6 +18,7 @@ import { Badge } from '@pages/components/ui/badge'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import DeleteModal from '@common/components/CustomeDelete'
+import { taxValidationSchema } from '@utils/validations'
 
 const TaxCategorySettings = () => {
   const [tableParams, setTableParams] = useState({
@@ -51,6 +52,7 @@ const TaxCategorySettings = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: taxValidationSchema,
     onSubmit: async values => {
       try {
         if (editId) {
@@ -154,6 +156,7 @@ const TaxCategorySettings = () => {
               value={formik.values.name}
               onChange={formik.handleChange}
               placeholder='Enter Tax Name'
+              error={formik.touched.name && formik.errors.name}
             />
           </div>
           <div className='flex-1'>
@@ -163,6 +166,7 @@ const TaxCategorySettings = () => {
               value={formik.values.tax_percentage}
               onChange={formik.handleChange}
               placeholder='Enter Tax Rate (Percentage)'
+              error={formik.touched.tax_percentage && formik.errors.tax_percentage}
             />
           </div>
         </div>
@@ -174,6 +178,7 @@ const TaxCategorySettings = () => {
               options={tax_type}
               value={formik.values.tax_type}
               onChange={value => formik.setFieldValue('tax_type', value)}
+              error={formik.touched.tax_type && formik.errors.tax_type}
             />
           </div>
           <div className='flex-1'>
@@ -183,6 +188,7 @@ const TaxCategorySettings = () => {
               options={tax_scope}
               value={formik.values.tax_scope}
               onChange={value => formik.setFieldValue('tax_scope', value)}
+               error={formik.touched.tax_scope && formik.errors.tax_scope}
             />
           </div>
         </div>

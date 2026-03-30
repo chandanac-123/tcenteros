@@ -52,12 +52,14 @@ export const useEditApproveNetworkMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
        mutationFn: ( id) => editApproveStatusNetwork( id),
-        onSuccess: () => { 
+        onSuccess: (data) => { 
             queryClient.invalidateQueries({ queryKey: ['network'] });
             showSuccess(data?.response?.data?.detail || '')
         },
         onError: (error) => {
-            showError(error?.response?.data?.detail || 'Failed to create holiday')
+            console.log('error: ', error);
+            console.log('error: ', error.response);
+            showError(error?.response?.data?.detail || 'Failed to update approval status')
             return error
         }
     });

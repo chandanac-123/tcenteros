@@ -334,3 +334,18 @@ export const profileValidationSchema = Yup.object().shape({
     .email('Invalid email format'),
   whatsapp_number: Yup.number().required('Whatsapp number is required')
 })
+
+export const taxValidationSchema = Yup.object({
+  name: Yup.string()
+    .trim()
+    .required('Tax name is required'),
+  tax_percentage: Yup.number()
+    .typeError('Tax rate must be a number')
+    .required('Tax rate is required')
+    .min(0, 'Tax rate cannot be negative')
+    .max(100, 'Tax rate cannot exceed 100'),
+  tax_type: Yup.string()
+    .required('Tax type is required'),
+  tax_scope: Yup.string()
+    .required('Tax scope is required')
+})
