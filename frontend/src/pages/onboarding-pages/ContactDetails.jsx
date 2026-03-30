@@ -5,7 +5,7 @@ import backarrow from '@assets/navigate-icons/backarrow.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { Input } from '@pages/components/ui/input'
 import { Checkbox } from '@pages/components/ui/checkbox'
-import { Mail, User, Phone, MapPinCheck, CalendarClock } from 'lucide-react'
+import { Mail, User, Phone, MapPinCheck, CalendarClock, MapPinCheckIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import { useState } from 'react'
@@ -150,6 +150,7 @@ const ContactDetails = () => {
                 />
 
                 <CitySelect
+                icon={<MapPinCheckIcon className='w-5 h-5 mr-2 text-onboard_primary' />}
                   country={formik.values.countryCode}
                   value={formik.values.city}
                   onChange={data => {

@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Autocomplete } from '@react-google-maps/api'
 
-const CitySelect = ({ value, onChange, label, icon, country="IN" }) => {
+const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
   const autocompleteRef = useRef(null)
 
   const onLoad = autocomplete => {
@@ -50,7 +50,11 @@ const CitySelect = ({ value, onChange, label, icon, country="IN" }) => {
   const hasIcon = !!icon
   return (
     <div>
-      {label && <label className='block mb-1 text-sm font-normal text-textblack'>{label}</label>}
+      {label && (
+        <label className='block mb-1 text-sm font-normal text-textblack'>
+          {label}
+        </label>
+      )}
       <div
         onMouseDown={e => e.stopPropagation()}
         onClick={e => e.stopPropagation()}
@@ -87,6 +91,14 @@ const CitySelect = ({ value, onChange, label, icon, country="IN" }) => {
               type='text'
               placeholder='Search City'
               defaultValue={value || ''}
+              onChange={e => {
+                const typedCity = e.target.value
+                onChange({
+                  city: typedCity,
+                  state: '',
+                  country: ''
+                })
+              }}
               onKeyDown={e => {
                 if (e.key === 'Enter') e.preventDefault()
               }}
