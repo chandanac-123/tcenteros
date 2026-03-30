@@ -126,7 +126,7 @@ const Branding = () => {
           </div>
           <div className='flex-1'>
             <InputFile
-              label='Upload Image'
+              label='Upload App Logo'
               name='app_logo'
               value={formik.values.app_logo}
               onChange={e => {
