@@ -9,7 +9,7 @@ from app.core.dependencies import superadmin_required, centeradmin_required
 from app.auth.models.models import CenterAdmin
 from app.core.security import get_password_hash
 from app.settings.models.models import Address, CenterCategory
-from app.billing.models.models import PaymentOrder, PaymentOrderStatus
+from app.billing.models.models import PaymentOrder, PaymentOrderStatus, OrderType
 from app.center.models.models import Center
 from app.auth.models.models import Employee, Member, MemberStatusEnum
 from uuid import uuid4
@@ -70,6 +70,19 @@ async def request_branch_creation(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
+    """
+    Request branch creation with payment and accounting.
+    
+    Tax Priority:
+    1. First checks for tax with tax_scope = "branch_purchase"
+    2. If not found, uses 0% tax (no fallback to "add_on")
+    
+    Creates:
+    - PaymentOrder with status = "paid"
+    - Increments parent_center.branch_count
+    - Posts journal entries for accounting
+    """
+    
     # 1. Get the current branching price from settings
     setting = await session.execute(
         select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
@@ -78,12 +91,18 @@ async def request_branch_creation(
     price = float(setting.value) if setting else 0.0
     subtotal_amount = branch_count * price
 
-    # 2. Check for tax category with tax_scope = "add_on"
+    # 2. Check for tax category with tax_scope = "branch_purchase"
     from app.settings.models.models import TaxCategory
+    
     tax_result = await session.execute(
-        select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
+        select(TaxCategory).where(
+            TaxCategory.tax_scope == "branch_purchase",
+            TaxCategory.is_active == True
+        )
     )
     tax_category = tax_result.scalar_one_or_none()
+    
+    # If tax found, use it; otherwise use 0%
     if tax_category:
         tax_percentage = float(tax_category.tax_percentage or 0)
         tax_category_id = str(tax_category.id)
@@ -98,7 +117,9 @@ async def request_branch_creation(
         tax_amount = 0.0
 
     total_amount = subtotal_amount + tax_amount
+    
     from app.billing.models.models import PaymentOrder, PaymentOrderStatus, OrderType, PayeeType, PayerType, ReferenceSchema, Currency
+    
     # 3. Create payment order (simulate payment success)
     payment_order = PaymentOrder(
         payment_order_id=uuid4(),
@@ -106,7 +127,7 @@ async def request_branch_creation(
         payer_user_id=current_admin["user_id"],
         payer_type=PayerType.center_admin,
         payee_type=PayeeType.platform,
-        order_type=OrderType.branch_purchase,  # Use the correct enum value as per your DB
+        order_type=OrderType.branch_purchase,
         reference_schema=ReferenceSchema.center,
         reference_id=current_admin["center_id"],
         subtotal_amount=subtotal_amount,
@@ -134,7 +155,7 @@ async def request_branch_creation(
     await post_branching_purchase_journal(
         session=session,
         center_id=current_admin["center_id"],
-        platform_center_id=None,  # No platform center
+        platform_center_id=None,
         subtotal_amount=subtotal_amount,
         tax_amount=tax_amount,
         total_amount=total_amount,
@@ -156,6 +177,7 @@ async def request_branch_creation(
         "payment_status": "success",
         "total_branch_count": total_branch_count,
         "tax_category_id": tax_category_id,
+        "tax_scope": tax_category.tax_scope if tax_category else None,
     }
 
 
@@ -240,59 +262,135 @@ async def get_branch_request_summary(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    # Get the current branching price from settings
+    """
+    Get branch purchase summary for the logged-in center admin.
+    Returns purchase details even if no branches have been created yet.
+    
+    Tax Priority:
+    1. First checks for tax with tax_scope = "branch_purchase"
+    2. Falls back to tax_scope = "add_on"
+    3. If neither found, uses 0% tax
+    
+    Returns:
+    - branch_count: Branches purchased in THIS order
+    - total_branch_count: All branches ever purchased (cumulative)
+    - branching_price: Price per branch
+    - subtotal_amount: Cost before tax
+    - tax_amount: Tax calculated on subtotal
+    - tax_percentage: Tax rate
+    - total_amount: Final paid amount (subtotal + tax)
+    - payment_order_id: Payment order ID
+    - payment_status: Payment status (paid)
+    - tax_category_id: Tax category ID
+    - available_slots: Remaining branches available to create
+    - created_branches: Number of branches already created
+    """
+    
+    # 1. Get the current branching price from settings
     setting = await session.execute(
-        select(PlatformBranchSetting).where(PlatformBranchSetting.key == "branching_price")
+        select(PlatformBranchSetting).where(
+            PlatformBranchSetting.key == "branching_price"
+        )
     )
     setting = setting.scalar_one_or_none()
     price = float(setting.value) if setting else 0.0
 
-    # Get the latest paid payment order for add_on
+    # 2. Get the parent center for current admin
+    parent_center = await session.get(Center, current_admin["center_id"])
+    if not parent_center:
+        raise HTTPException(404, "Parent center not found")
+
+    total_branch_count = parent_center.branch_count or 0
+
+    # 3. Count already created branches (sub-branches)
+    result = await session.execute(
+        select(Center).where(Center.parent_center_id == current_admin["center_id"])
+    )
+    created_branches = len(result.scalars().all())
+
+    # 4. Calculate available slots
+    available_slots = total_branch_count - created_branches
+
+    # 5. Get the latest paid payment order for branch_purchase
     result = await session.execute(
         select(PaymentOrder)
         .where(
             PaymentOrder.center_id == current_admin["center_id"],
-            PaymentOrder.status == "paid",
-            PaymentOrder.order_type == "branch_purchase"
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.order_type == OrderType.branch_purchase
         )
         .order_by(PaymentOrder.created_at.desc())
         .limit(1)
     )
     payment_order = result.scalar_one_or_none()
 
-    if not payment_order:
-        raise HTTPException(404, "No branch purchase found for this center.")
-
-    subtotal_amount = float(payment_order.subtotal_amount)
-    tax_amount = float(payment_order.tax_amount)
-    total_amount = float(payment_order.total_amount)
-    # Fix: convert both to float before division
-    branch_count = int(subtotal_amount // price) if price > 0 else 0
-
-    # Get tax details
+    # 6. Get tax details with priority: branch_purchase > add_on > 0%
     from app.settings.models.models import TaxCategory
+    
+    # First, try to get tax with scope "branch_purchase"
     tax_result = await session.execute(
-        select(TaxCategory).where(TaxCategory.tax_scope == "add_on")
+        select(TaxCategory).where(
+            TaxCategory.tax_scope == "branch_purchase",
+            TaxCategory.is_active == True
+        )
     )
     tax_category = tax_result.scalar_one_or_none()
+    
+    # If not found, fall back to "add_on"
+    if not tax_category:
+        tax_result = await session.execute(
+            select(TaxCategory).where(
+                TaxCategory.tax_scope == "add_on",
+                TaxCategory.is_active == True
+            )
+        )
+        tax_category = tax_result.scalar_one_or_none()
+    
+    # Extract tax details
     tax_percentage = float(tax_category.tax_percentage or 0) if tax_category else 0.0
     tax_category_id = str(tax_category.id) if tax_category else None
 
-    # Get total branch count
-    parent_center = await session.get(Center, current_admin["center_id"])
-    total_branch_count = parent_center.branch_count if parent_center else None
+    # 7. If no payment order found, return summary with 0 values
+    if not payment_order:
+        return {
+            "branch_count": 0,
+            "branching_price": price,
+            "subtotal_amount": 0.0,
+            "tax_percentage": tax_percentage,
+            "tax_amount": 0.0,
+            "total_amount": 0.0,
+            "payment_order_id": None,
+            "payment_status": None,
+            "total_branch_count": total_branch_count,
+            "tax_category_id": tax_category_id,
+            "created_branches": created_branches,
+            "available_slots": available_slots,
+            "tax_scope": tax_category.tax_scope if tax_category else None,
+            "message": "No branch purchase found for this center. Purchase branches to get started."
+        }
+
+    # 8. Extract payment order details
+    subtotal_amount = float(payment_order.subtotal_amount)
+    tax_amount = float(payment_order.tax_amount)
+    total_amount = float(payment_order.total_amount)
+    
+    # Calculate branch count from latest order (not cumulative)
+    branch_count = int(subtotal_amount // price) if price > 0 else 0
 
     return {
-        "branch_count": branch_count,
-        "branching_price": price,
-        "subtotal_amount": subtotal_amount,
-        "tax_percentage": tax_percentage,
-        "tax_amount": tax_amount,
-        "total_amount": total_amount,
+        "branch_count": branch_count,                        # From THIS payment order
+        "branching_price": price,                            # Per-branch price
+        "subtotal_amount": subtotal_amount,                  # Before tax
+        "tax_percentage": tax_percentage,                    # Tax rate
+        "tax_amount": tax_amount,                            # Tax calculated
+        "total_amount": total_amount,                        # After tax (subtotal + tax)
         "payment_order_id": str(payment_order.payment_order_id),
-        "payment_status": payment_order.status,
-        "total_branch_count": total_branch_count,
+        "payment_status": payment_order.status,              # "paid"
+        "total_branch_count": total_branch_count,            # Cumulative total purchased
         "tax_category_id": tax_category_id,
+        "created_branches": created_branches,                # Already created
+        "available_slots": available_slots,                  # Ready to create
+        "tax_scope": tax_category.tax_scope if tax_category else None,  # Which tax was applied
     }
 
 

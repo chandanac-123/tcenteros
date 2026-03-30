@@ -1,22 +1,30 @@
+# app/accounts/networking_helper.py
+
 from app.accounts.models.models import (
-    JournalEntry, JournalEntryLine, ChartOfAccounts, EntryStatus,
-    GeneralLedger, TaxLedger
+    JournalEntry, JournalEntryLine, ChartOfAccounts, EntryStatus, TransactionSource,
+    TaxLedger, GeneralLedger
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import uuid4
 from datetime import datetime
+from decimal import Decimal
 
-async def get_account(session: AsyncSession, center_id, account_type, name):
+
+async def get_account_by_code(session: AsyncSession, code: str, center_id):
+    """Fetch account by code for a specific center"""
     result = await session.execute(
-        select(ChartOfAccounts)
-        .where(
-            ChartOfAccounts.center_id == center_id,
-            ChartOfAccounts.account_type == account_type,
-            ChartOfAccounts.name.ilike(name)
+        select(ChartOfAccounts).where(
+            ChartOfAccounts.code == code,
+            ChartOfAccounts.center_id == center_id
         )
     )
-    return result.scalar_one_or_none()
+    account = result.scalar_one_or_none()
+    if not account:
+        print(f"❌ Account code {code} not found for center {center_id}")
+        raise ValueError(f"Account code {code} not found for center {center_id}")
+    return account
+
 
 async def post_networking_access_journal(
     session: AsyncSession,
@@ -27,164 +35,212 @@ async def post_networking_access_journal(
     platform_share,
     member_id,
     membership_id,
-    approved_by,
-    tax_type=None,
-    tax_rate=0,
-    tax_amount=0
+    approved_by
 ):
-    now = datetime.utcnow()
-    # 1. Get accounts
-    home_expense_acct = await get_account(session, home_center_id, "expense", "Networking Expense")
-    network_income_acct = await get_account(session, network_center_id, "revenue", "Networking Income")
-    platform_income_acct = await get_account(session, network_center_id, "revenue", "Platform Income")
+    """
+    Post journal entries for networking access (visit to another center).
+    
+    For Host Center (receiving visit):
+    - Debit: Cash/Bank (1100) - Amount received
+    - Credit: Network Income (4200) - Revenue from visit
+    
+    For Guest Center (paying for visit):
+    - Debit: Networking Expense (5800) - Fee for visiting
+    - Credit: Cash/Bank (1100) - Amount paid
+    """
+    try:
+        now = datetime.utcnow()
 
-    if not all([home_expense_acct, network_income_acct, platform_income_acct]):
-        raise Exception("Required ChartOfAccounts not found for networking transaction.")
+        # ============================================
+        # HOST CENTER (network_center_id) - NETWORK_IN
+        # ============================================
+        print(f"📍 Processing HOST center: {network_center_id}")
+        
+        host_cash_acct = await get_account_by_code(session, "1100", network_center_id)
+        host_network_income_acct = await get_account_by_code(session, "4200", network_center_id)
 
-    # 2. Home center: Expense entry
-    home_lines = [
-        JournalEntryLine(
-            id=uuid4(),
-            account_id=home_expense_acct.id,
+        print(f"✅ Host cash account: {host_cash_acct.code}")
+        print(f"✅ Host network income account: {host_network_income_acct.code}")
+
+        # Create Journal Entry for HOST (network_in)
+        entry_id_host = uuid4()
+        journal_entry_host = JournalEntry(
+            id=entry_id_host,
+            entry_number=f"NETIN-{uuid4().hex[:8].upper()}",
             entry_date=now,
-            description="Networking access expense",
-            debit=amount,
-            credit=0
-        ),
-        JournalEntryLine(
-            id=uuid4(),
-            account_id=home_expense_acct.id,  # Or a "Cash/Bank" account if you want to show outflow
-            entry_date=now,
-            description="Networking access payment",
-            debit=0,
-            credit=amount
-        )
-    ]
-    je_home = JournalEntry(
-        id=uuid4(),
-        entry_number=f"NET-{uuid4().hex[:8]}",
-        entry_date=now,
-        description=f"Networking access expense for membership {membership_id}",
-        source="network_settlement",
-        source_id=str(membership_id),
-        center_id=home_center_id,
-        status=EntryStatus.POSTED.value,
-        posted_at=now,
-        posted_by=approved_by,
-        total_debit=amount,
-        total_credit=amount,
-        created_by=approved_by,
-        updated_by=approved_by,
-        created_at=now,
-        updated_at=now,
-        lines=home_lines
-    )
-    session.add(je_home)
-    await session.flush()
-
-    # GeneralLedger for home center
-    for line in home_lines:
-        gl_entry = GeneralLedger(
-            id=uuid4(),
-            account_id=line.account_id,
-            journal_entry_id=je_home.id,
-            journal_entry_line_id=line.id,
-            transaction_date=now,
-            description=line.description,
-            debit=line.debit,
-            credit=line.credit,
-            balance=0,  # To be updated by a periodic process
-            center_id=home_center_id,
-            source=je_home.source,
-            source_id=je_home.source_id,
-            created_at=now,
-        )
-        session.add(gl_entry)
-
-    # 3. Network center: Income entry
-    network_lines = [
-        JournalEntryLine(
-            id=uuid4(),
-            account_id=network_income_acct.id,
-            entry_date=now,
-            description="Networking access income",
-            debit=0,
-            credit=amount - platform_share
-        ),
-        JournalEntryLine(
-            id=uuid4(),
-            account_id=platform_income_acct.id,
-            entry_date=now,
-            description="Platform share from networking",
-            debit=0,
-            credit=platform_share
-        ),
-        JournalEntryLine(
-            id=uuid4(),
-            account_id=network_income_acct.id,  # Or a "Cash/Bank" account if you want to show inflow
-            entry_date=now,
-            description="Networking access receipt",
-            debit=amount,
-            credit=0
-        )
-    ]
-    je_network = JournalEntry(
-        id=uuid4(),
-        entry_number=f"NET-{uuid4().hex[:8]}",
-        entry_date=now,
-        description=f"Networking access income for membership {membership_id}",
-        source="network_settlement",
-        source_id=str(membership_id),
-        center_id=network_center_id,
-        status=EntryStatus.POSTED.value,
-        posted_at=now,
-        posted_by=approved_by,
-        total_debit=amount,
-        total_credit=amount,
-        created_by=approved_by,
-        updated_by=approved_by,
-        created_at=now,
-        updated_at=now,
-        lines=network_lines
-    )
-    session.add(je_network)
-    await session.flush()
-
-    # GeneralLedger for network center
-    for line in network_lines:
-        gl_entry = GeneralLedger(
-            id=uuid4(),
-            account_id=line.account_id,
-            journal_entry_id=je_network.id,
-            journal_entry_line_id=line.id,
-            transaction_date=now,
-            description=line.description,
-            debit=line.debit,
-            credit=line.credit,
-            balance=0,  # To be updated by a periodic process
-            center_id=network_center_id,
-            source=je_network.source,
-            source_id=je_network.source_id,
-            created_at=now,
-        )
-        session.add(gl_entry)
-
-    # TaxLedger (optional, only if tax is involved)
-    if tax_amount and tax_amount > 0:
-        tax_ledger = TaxLedger(
-            id=uuid4(),
-            journal_entry_id=je_network.id,
-            center_id=network_center_id,
-            transaction_date=now,
-            tax_type=tax_type or "GST",
-            tax_rate=tax_rate,
-            taxable_amount=amount - tax_amount,
-            tax_amount=tax_amount,
-            source="network_settlement",
+            description=f"Networking Income - Member Visit",
+            source=TransactionSource.NETWORK_IN.value,
             source_id=str(membership_id),
+            center_id=network_center_id,
+            status=EntryStatus.POSTED.value,
+            posted_at=now,
+            posted_by=approved_by,
+            total_debit=amount,
+            total_credit=amount,
+            created_by=approved_by,
+            updated_by=approved_by,
             created_at=now,
+            updated_at=now,
         )
-        session.add(tax_ledger)
+        session.add(journal_entry_host)
+        await session.flush()
 
-    await session.flush()
-    return je_home.id, je_network.id
+        # Host center lines: DR Cash, CR Network Income
+        host_lines = [
+            {
+                "account": host_cash_acct,
+                "debit": amount,
+                "credit": Decimal("0.00"),
+                "description": "Network visit payment received"
+            },
+            {
+                "account": host_network_income_acct,
+                "debit": Decimal("0.00"),
+                "credit": amount,
+                "description": "Network income from member visit"
+            }
+        ]
+
+        for line_data in host_lines:
+            line_id = uuid4()
+            
+            journal_line = JournalEntryLine(
+                id=line_id,
+                journal_entry_id=entry_id_host,
+                account_id=line_data["account"].id,
+                entry_date=now,
+                description=line_data["description"],
+                debit=line_data["debit"],
+                credit=line_data["credit"],
+                created_at=now,
+                created_by=approved_by,
+            )
+            session.add(journal_line)
+            await session.flush()
+
+            gl_entry = GeneralLedger(
+                id=uuid4(),
+                account_id=line_data["account"].id,
+                journal_entry_id=entry_id_host,
+                journal_entry_line_id=line_id,
+                transaction_date=now,
+                description=line_data["description"],
+                debit=line_data["debit"],
+                credit=line_data["credit"],
+                balance=Decimal("0.00"),
+                center_id=network_center_id,
+                source=TransactionSource.NETWORK_IN.value,
+                source_id=str(membership_id),
+                created_at=now,
+                created_by=approved_by,
+            )
+            session.add(gl_entry)
+
+        await session.flush()
+        print(f"✅ Host center journal entry created: {journal_entry_host.entry_number}")
+
+        # ============================================
+        # GUEST CENTER (home_center_id) - NETWORK_OUT
+        # ============================================
+        print(f"📍 Processing GUEST center: {home_center_id}")
+        
+        guest_cash_acct = await get_account_by_code(session, "1100", home_center_id)
+        guest_network_expense_acct = await get_account_by_code(session, "5800", home_center_id)
+
+        print(f"✅ Guest cash account: {guest_cash_acct.code}")
+        print(f"✅ Guest network expense account: {guest_network_expense_acct.code}")
+
+        # Create Journal Entry for GUEST (network_out)
+        entry_id_guest = uuid4()
+        journal_entry_guest = JournalEntry(
+            id=entry_id_guest,
+            entry_number=f"NETOUT-{uuid4().hex[:8].upper()}",
+            entry_date=now,
+            description=f"Networking Expense - Member Visit to Another Center",
+            source=TransactionSource.NETWORK_OUT.value,
+            source_id=str(membership_id),
+            center_id=home_center_id,
+            status=EntryStatus.POSTED.value,
+            posted_at=now,
+            posted_by=approved_by,
+            total_debit=amount,
+            total_credit=amount,
+            created_by=approved_by,
+            updated_by=approved_by,
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(journal_entry_guest)
+        await session.flush()
+
+        # Guest center lines: DR Networking Expense, CR Cash
+        guest_lines = [
+            {
+                "account": guest_network_expense_acct,
+                "debit": amount,
+                "credit": Decimal("0.00"),
+                "description": "Networking expense for member visit"
+            },
+            {
+                "account": guest_cash_acct,
+                "debit": Decimal("0.00"),
+                "credit": amount,
+                "description": "Payment for networking visit"
+            }
+        ]
+
+        for line_data in guest_lines:
+            line_id = uuid4()
+            
+            journal_line = JournalEntryLine(
+                id=line_id,
+                journal_entry_id=entry_id_guest,
+                account_id=line_data["account"].id,
+                entry_date=now,
+                description=line_data["description"],
+                debit=line_data["debit"],
+                credit=line_data["credit"],
+                created_at=now,
+                created_by=approved_by,
+            )
+            session.add(journal_line)
+            await session.flush()
+
+            gl_entry = GeneralLedger(
+                id=uuid4(),
+                account_id=line_data["account"].id,
+                journal_entry_id=entry_id_guest,
+                journal_entry_line_id=line_id,
+                transaction_date=now,
+                description=line_data["description"],
+                debit=line_data["debit"],
+                credit=line_data["credit"],
+                balance=Decimal("0.00"),
+                center_id=home_center_id,
+                source=TransactionSource.NETWORK_OUT.value,
+                source_id=str(membership_id),
+                created_at=now,
+                created_by=approved_by,
+            )
+            session.add(gl_entry)
+
+        await session.flush()
+        print(f"✅ Guest center journal entry created: {journal_entry_guest.entry_number}")
+
+        return {
+            "host_entry_id": entry_id_host,
+            "guest_entry_id": entry_id_guest,
+            "host_entry_number": journal_entry_host.entry_number,
+            "guest_entry_number": journal_entry_guest.entry_number
+        }
+
+    except ValueError as ve:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Validation error: {str(ve)}")
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Error posting networking journal: {str(e)}")
+        raise ValueError(f"Failed to post networking access journal: {str(e)}")
