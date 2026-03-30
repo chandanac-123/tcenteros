@@ -215,7 +215,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           </div>
           <div className='flex-1'>
             <StateSelect
-              country={formik.values.countryCode}
+              country={formik.values.country}
               value={formik.values.state}
               onChange={val => formik.setFieldValue('state', val)}
               label='State'

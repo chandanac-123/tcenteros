@@ -14,6 +14,8 @@ import {
 import { useProductDropdownQuery } from '@api-queries/inventory/Query'
 import { useFormik } from 'formik'
 import { useCartStore } from '@store/cartStore'
+import AddProductModal from '@pages/iventories/components/AddProductModal'
+import { useState } from 'react'
 
 const paymentMethod = [
   { id: 'cash', name: 'Cash' },
@@ -21,6 +23,7 @@ const paymentMethod = [
 ]
 
 const NewSale = ({ saleOpen, setSaleOpen }) => {
+  const [open, setOpen] = useState(false)
   const { mutateAsync: addToCart } = useCreateCartMutation()
   const { mutateAsync: checkoutCart } = useCheckoutCartMutation()
   const { mutateAsync: updateCartItem, isPending: isUpdatingCart } =
@@ -93,43 +96,54 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
   return (
     <CustomeModal open={saleOpen} onOpenChange={setSaleOpen} header='Add Cart'>
       <form
-        className='flex flex-col gap-4 lg:w-96 w-full'
-        id='cart-add'
-        onSubmit={formik.handleSubmit}
-      >
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CustomeSelect
-              label='Product Name'
-              name='product_id'
-              placeholder='Enter'
-              options={productDropdownData?.products || []}
-              value={formik.values.product_id}
-              onChange={value => formik.setFieldValue('product_id', value)}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Stock Quantity'
-              name='quantity'
-              placeholder='Enter'
-              value={formik.values.quantity}
-              onChange={e => formik.setFieldValue('quantity', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className='flex justify-end mt-2'>
+  className='flex flex-col gap-4 w-full'
+  id='cart-add'
+  onSubmit={formik.handleSubmit}
+>
+  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+    <div>
+      {productDropdownData?.products?.length === 0 ||
+      productDropdownData === undefined ? (
+        <div className='flex flex-col gap-2 border border-dashed rounded-lg p-3 bg-primary/5'>
+          <p className='text-sm text-gray-600'>
+            No product found. Please add a product.
+          </p>
           <Button
             size='addbutton'
-            variant='outline_primary'
-            type='submit'
-            form='cart-add'
+            type='button'
+            onClick={() => setOpen(true)}
           >
-            Add To Cart
+            + Add Product
           </Button>
+          <AddProductModal open={open} setOpen={setOpen} />
         </div>
-      </form>
+      ) : (
+        <CustomeSelect
+          label='Product Name'
+          name='product_id'
+          placeholder='Select Product'
+          options={productDropdownData?.products || []}
+          value={formik.values.product_id}
+          onChange={value => formik.setFieldValue('product_id', value)}
+        />
+      )}
+    </div>
+
+    <Input
+      label='Quantity'
+      name='quantity'
+      placeholder='Enter quantity'
+      value={formik.values.quantity}
+      onChange={e => formik.setFieldValue('quantity', e.target.value)}
+    />
+  </div>
+
+  <div className='flex justify-end'>
+    <Button size='addbutton' variant='outline_primary' type='submit'>
+      Add To Cart
+    </Button>
+  </div>
+</form>
       {cartAmount?.products?.map(product => {
         console.log('product: ', product)
         return (

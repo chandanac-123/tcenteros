@@ -67,6 +67,16 @@ export const getAllProducts = async data => {
   }
 }
 
+export const getDropdownProducts = async data => {
+  try {
+    const response = await getProductDropdownApiCall(data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+
 export const createSKU = async details => {
   try {
     const response = await createSKUApiCall(details)

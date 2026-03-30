@@ -80,6 +80,14 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
                 type='text'
                 placeholder='Search City'
                 defaultValue={value || ''}
+                onChange={e => {
+                  const typedCity = e.target.value
+                  onChange({
+                    city: typedCity,
+                    state: '',
+                    country: ''
+                  })
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') e.preventDefault()
                 }}
@@ -90,7 +98,6 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
             <input
               type='text'
               placeholder='Search City'
-              defaultValue={value || ''}
               onChange={e => {
                 const typedCity = e.target.value
                 onChange({
