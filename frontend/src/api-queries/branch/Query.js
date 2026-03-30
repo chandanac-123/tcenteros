@@ -19,13 +19,12 @@ export const useAddBranchCountMutation = () => {
 }
 
 export const useGetBranchPricesAndTaxQuery = () => {
-    return useQuery({
-        queryKey: ['branchPricesAndTax'],
-        queryFn: getBranchPricesAndTax,
-        onSuccess: (data) => {
-            console.log("Branch Prices and Tax data fetched successfully:", data);
-        }
-    })
+  return useQuery({
+    queryKey: ['branchPricesAndTax'],
+    queryFn: () => getBranchPricesAndTax(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
 }
 
 export const useGetPurchasedBranchesQuery = () => {

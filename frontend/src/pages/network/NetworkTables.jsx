@@ -7,45 +7,70 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@pages/components/ui/button'
 import DeleteModal from './DeleteModal'
 
+const NetworkTables = ({
+  activeTab,
+  data,
+  tableParams,
+  setTableParams,
+  pagination
+}) => {
+  const [selectedRow, setSelectedRow] = useState(null)
+  const [approveOpen, setApproveOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
+  const navigate = useNavigate()
 
-
-const NetworkTables = ({ activeTab, data, tableParams, setTableParams, pagination }) => {
-
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-
-  console.log("Table",tableParams);
-  
-
-  const navigate = useNavigate();
-
-
-  const renderActions = (data) => {
+  const renderActions = data => {
     switch (activeTab) {
-      case "Network":
+      case 'Network':
         return (
-          <span className="flex gap-3">
-            <button onClick={() =>
-              navigate(`/centerview/${data.network_membership_id}`)
-            }>
-              <img src={view} alt="view" />
+          <span className='flex gap-3'>
+            <button
+              onClick={() =>
+                navigate(`/centerview/${data.network_membership_id}`)
+              }
+            >
+              <img src={view} alt='view' />
             </button>
-            <button onClick={() => {
-              setSelectedRow(data);
-              setDeleteOpen(true);
-            }}>
-              <img src={deleteicon} alt="delete" />
+            <button
+              onClick={() => {
+                setSelectedRow(data)
+                setDeleteOpen(true)
+              }}
+            >
+              <img src={deleteicon} alt='delete' />
             </button>
           </span>
-        );
-      case "Requests":
-        if (data.network_status?.toLowerCase() === "pending") {
+        )
+      case 'pending_settlement':
+        return (
+          <span className='flex gap-3'>
+            <Button
+              onClick={() => {
+                setSelectedRow(data)
+                setApproveOpen(true)
+              }}
+              size='notificationbutton'
+              variant='button_filled'
+              type='button'
+            >
+              {' '}
+              Approve
+            </Button>
+          </span>
+        )
+
+      case 'Requests':
+        if (data.network_status?.toLowerCase() === 'pending') {
           return (
-            <span className="flex items-center gap-2 w-full">
-              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
-                <img src={view} alt="view" />
+            <span className='flex items-center gap-2 w-full'>
+              <button
+                onClick={() =>
+                  navigate(`/centerview/${data.network_membership_id}`)
+                }
+                className=''
+              >
+                <img src={view} alt='view' />
               </button>
 
               {/* <Button
@@ -56,75 +81,84 @@ const NetworkTables = ({ activeTab, data, tableParams, setTableParams, paginatio
 
               <Button
                 onClick={() => {
-                  setSelectedRow(data);
-                  setApproveOpen(true);
-                }} size='notificationbutton'
+                  setSelectedRow(data)
+                  setApproveOpen(true)
+                }}
+                size='notificationbutton'
                 variant='button_filled'
                 type='button'
-              > Approve</Button>
+              >
+                {' '}
+                Approve
+              </Button>
             </span>
-
-          );
+          )
         }
 
-        if (data.network_status?.toLowerCase() === "approved") {
+        if (data.network_status?.toLowerCase() === 'approved') {
           return (
-            <span className="flex items-center gap-2 ">
-              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
-                <img src={view} alt="view" />
+            <span className='flex items-center gap-2 '>
+              <button
+                onClick={() =>
+                  navigate(`/centerview/${data.network_membership_id}`)
+                }
+                className=''
+              >
+                <img src={view} alt='view' />
               </button>
 
-              <Button
-
-                size='addbutton'
-                variant='outline_primary'
-                type='button'
-
-              > Approved</Button>
+              <Button size='addbutton' variant='outline_primary' type='button'>
+                {' '}
+                Approved
+              </Button>
             </span>
-
-          );
+          )
         }
 
-        if (data.network_status === "paid") {
+        if (data.network_status === 'paid') {
           return (
-            <span className="flex items-center gap-2 ">
-              <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} className="">
-                <img src={view} alt="view" />
+            <span className='flex items-center gap-2 '>
+              <button
+                onClick={() =>
+                  navigate(`/centerview/${data.network_membership_id}`)
+                }
+                className=''
+              >
+                <img src={view} alt='view' />
               </button>
 
-              <Button
-
-                size='addbutton'
-                variant='outline_primary'
-                type='button'
-
-              > Paid</Button>
+              <Button size='addbutton' variant='outline_primary' type='button'>
+                {' '}
+                Paid
+              </Button>
             </span>
-
-          );
+          )
         }
 
-        return null;
-
+        return null
 
       default:
         return (
-          <span className="flex gap-3">
-            <button onClick={() => navigate(`/centerview/${data.network_membership_id}`)} >
-              <img src={view} alt="view" />
+          <span className='flex gap-3'>
+            <button
+              onClick={() =>
+                navigate(`/centerview/${data.network_membership_id}`)
+              }
+            >
+              <img src={view} alt='view' />
             </button>
-            <button onClick={() => {
-              setSelectedRow(data);
-              setDeleteOpen(true);
-            }}>
-              <img src={deleteicon} alt="delete" />
+            <button
+              onClick={() => {
+                setSelectedRow(data)
+                setDeleteOpen(true)
+              }}
+            >
+              <img src={deleteicon} alt='delete' />
             </button>
           </span>
-        );
+        )
     }
-  };
-
+  }
 
   const columns = [
     {
@@ -151,8 +185,7 @@ const NetworkTables = ({ activeTab, data, tableParams, setTableParams, paginatio
       accessorKey: 'action',
       header: 'Action',
       cell: ({ row }) => renderActions(row.original)
-    },
-
+    }
   ]
 
   return (
@@ -175,7 +208,8 @@ const NetworkTables = ({ activeTab, data, tableParams, setTableParams, paginatio
       <DeleteModal
         open={deleteOpen}
         setOpen={setDeleteOpen}
-        data={selectedRow} />
+        data={selectedRow}
+      />
     </>
   )
 }
