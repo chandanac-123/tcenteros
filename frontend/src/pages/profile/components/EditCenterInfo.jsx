@@ -13,7 +13,7 @@ import CountrySelect from '@common/components/CountrySelect'
 import StateSelect from '@common/components/StateSelect'
 import CitySelect from '@common/components/CitySelect'
 import { profileValidationSchema } from '@utils/validations'
-
+import { classModes } from '@constants/classMode'
 
 const EditCenterInformation = ({ open, setOpen, editId }) => {
   const { data, isFetching } = useGetProfileByIdQuery(editId)
@@ -41,9 +41,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     center_email: data?.center_email || '',
     live_class_enable: data?.live_class_enable || true,
     country: data?.address?.country || '',
-    state:
-        data?.address?.state
-       || '',
+    state: data?.address?.state || '',
     city: data?.address?.city || '',
     postal_code: data?.address?.postal_code || '',
     address_line_1: data?.address?.address_line_1 || '',
@@ -59,14 +57,14 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    validationSchema:profileValidationSchema,
+    validationSchema: profileValidationSchema,
     onSubmit: async values => {
       try {
         const payload = {
           ...values,
           facilities,
           country: values.country,
-          state:values.state,
+          state: values.state,
           currently_using_digital_tool: digitalTools,
           marketing_platform: marketingPlatforms
         }
@@ -120,12 +118,15 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
             />
           </div>
           <div className='flex-1'>
-            <Input
+            <CustomeSelect
+              options={classModes}
               label='Kind of Center'
               name='kind_of_center'
               placeholder='Enter Kind of Center'
               value={formik.values.kind_of_center}
-              onChange={formik.handleChange}
+              onChange={option =>
+                formik.setFieldValue('kind_of_center', option)
+              }
             />
           </div>
         </div>
@@ -192,7 +193,9 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               name='whatsapp_number'
               value={formik.values.whatsapp_number}
               onChange={formik.handleChange}
-              error={formik.touched.whatsapp_number && formik.errors.whatsapp_number}
+              error={
+                formik.touched.whatsapp_number && formik.errors.whatsapp_number
+              }
             />
           </div>
         </div>
