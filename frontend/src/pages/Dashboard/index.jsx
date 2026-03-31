@@ -16,12 +16,11 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const setFirstLogin = useAuthStore(state => state.setFirstLogin)
   const { data: branchCountData } = useGetBranchCountQuery()
-  console.log('branchCountData: ', branchCountData);
+  console.log('branchCountData: ', branchCountData)
 
   const isLimitReached =
-  branchCountData &&
-  branchCountData.created_subcenters ===
-    branchCountData.branches_purchased
+    branchCountData &&
+    branchCountData.created_subcenters === branchCountData.branches_purchased
 
   useEffect(() => {
     setFirstLogin(false)
@@ -44,7 +43,11 @@ const Dashboard = () => {
       value: data?.active_memberships || 0,
       onClick: () => navigate('/membership-plan?tab=active')
     },
-    { label: 'Active Leads', value: 0, onClick: () => navigate('/crm?tab=leads') },
+    {
+      label: 'Active Leads',
+      value: 0,
+      onClick: () => navigate('/crm?tab=leads')
+    },
     {
       label: 'Total Guests',
       value: data?.total_guests || 0,
@@ -110,21 +113,35 @@ const Dashboard = () => {
           </div>
           <div>
             {' '}
-            
             <BranchDetailsButton isLimitReached={isLimitReached} />
           </div>
         </div>
 
-        <div className='grid gap-4   grid-cols-[repeat(auto-fit,minmax(220px,1fr))]'>
-          {cardsData.map((item, index) => (
-            <SubCard
-              key={index}
-              label={item.label}
-              value={item.value}
-              index={index}
-              onClick={item.onClick}
-            />
-          ))}
+        <div className='space-y-4'>
+          {/* Row 1 → 5 cards */}
+          <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4'>
+            {cardsData.slice(0, 5).map((item, index) => (
+              <SubCard
+                key={index}
+                label={item.label}
+                value={item.value}
+                index={index}
+                onClick={item.onClick}
+              />
+            ))}
+          </div>
+          {/* Row 2 → 4 cards (full width evenly spaced) */}
+          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4'>
+            {cardsData.slice(5, 9).map((item, index) => (
+              <SubCard
+                key={index}
+                label={item.label}
+                value={item.value}
+                index={index + 5}
+                onClick={item.onClick}
+              />
+            ))}
+          </div>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-4'>
