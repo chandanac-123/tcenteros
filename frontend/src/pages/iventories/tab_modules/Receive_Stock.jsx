@@ -6,7 +6,7 @@ import AddStockEntry from '../components/AddStockEntry'
 import { useAllStockQuery } from '@api-queries/inventory/Query'
 
 const Receive_Stock = () => {
-   const [tableParams, setTableParams] = useState({ page: 1 })
+  const [tableParams, setTableParams] = useState({ page: 1 })
   const [openStockEntry, setOpenStockEntry] = useState(false)
   const { data, isFetching } = useAllStockQuery(tableParams)
 
@@ -23,27 +23,25 @@ const Receive_Stock = () => {
       accessorKey: 'invoice_date',
       header: 'Invoice Date'
     },
+    { accessorKey: 'quantity_added', header: 'Quantity Added' },
     {
       accessorKey: 'available_quantity',
-      header: 'Quantity'
+      header: 'Available Quantity'
     },
     {
       accessorKey: 'cost_price',
       header: 'Unit Price'
     },
-    {
-      accessorKey: 'cost_price',
-      header: 'Purchase Cost'
-    },
+   
     {
       accessorKey: 'total',
       header: 'Total Cost'
-    },
+    }
     // {
     //   header: 'Actions',
     //   cell: ({ row }) => (
     //     <div className='flex items-center gap-2'>
-         
+
     //       <button>
     //         <img src={deleteicon} alt='delete' className='w-6 h-6' />
     //       </button>
@@ -51,7 +49,6 @@ const Receive_Stock = () => {
     //   )
     // }
   ]
-
 
   return (
     <div className='flex flex-col gap-4'>
