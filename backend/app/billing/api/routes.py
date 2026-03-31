@@ -3811,201 +3811,291 @@ async def generate_billing_networking_report(
     )
 
 
-@router.post("/billing/reports/generate/settlements", summary="Generate and Download Settlements Report")
-async def generate_billing_settlements_report(
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    format: str = Query("pdf", description="Output format: pdf, csv"),
-    period_type: str = Query("monthly", description="Period grouping: weekly, monthly"),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
+
+
+@router.get("/billing/reports/settlements", summary="Get detailed settlements list")
+async def get_settlement_list(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    settlement_type: Optional[str] = Query(None),  # filter
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Generate and download settlements report in PDF or CSV format.
-    """
+    from app.payrole.models.models import PayrollRecord
+    from app.inventory.models.models import StockTransaction
+  
+
+    center_id = current_admin.get("center_id")
+
+    if not center_id:
+        raise HTTPException(status_code=403, detail="Center ID not found")
+
+    settlements: List[dict] = []
+
+    # -------------------------------
+    # PAYMENT ORDERS (Networking + Branch)
+    # -------------------------------
+    po_query = select(PaymentOrder).where(
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.status == PaymentOrderStatus.paid
+    )
+
+    if start_date:
+        po_query = po_query.where(
+            PaymentOrder.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+
+    if end_date:
+        po_query = po_query.where(
+            PaymentOrder.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+
+    payment_orders = (await db.execute(po_query)).scalars().all()
+
+    for po in payment_orders:
+
+        # NETWORKING
+        if po.order_type in [OrderType.network_in, OrderType.network_out]:
+            s_type = "networking"
+            money_flow = "in" if po.order_type == OrderType.network_in else "out"
+
+        # BRANCH PURCHASE
+        elif po.order_type == OrderType.branch_purchase:
+            s_type = "branch_purchase"
+            money_flow = "out"
+
+        else:
+            continue
+
+        if settlement_type and settlement_type != s_type:
+            continue
+
+        settlements.append({
+            "settlement_type": s_type,
+            "money_flow": money_flow,
+            "amount": float(po.total_amount or 0),
+            "settlement_date": po.created_at.isoformat() if po.created_at else None,
+            "status": po.status.value
+        })
+
+    # -------------------------------
+    # PAYROLL
+    # -------------------------------
+    payrolls = (await db.execute(
+        select(PayrollRecord).where(
+            PayrollRecord.center_id == center_id,
+            PayrollRecord.status == "paid"
+        )
+    )).scalars().all()
+
+    for pr in payrolls:
+        if not pr.paid_date:
+            continue
+
+        if settlement_type and settlement_type != "payroll":
+            continue
+
+        settlements.append({
+            "settlement_type": "payroll",
+            "money_flow": "out",
+            "amount": float(pr.net_salary or 0),
+            "settlement_date": pr.paid_date.isoformat(),
+            "status": pr.status.value if hasattr(pr.status, "value") else pr.status
+        })
+
+    # -------------------------------
+    # INVENTORY PURCHASE
+    # -------------------------------
+    stock_txns = (await db.execute(
+        select(StockTransaction).where(
+            StockTransaction.transaction_type == "purchase"
+        )
+    )).scalars().all()
+
+    for txn in stock_txns:
+        if not txn.created_at:
+            continue
+
+        if settlement_type and settlement_type != "inventory_purchase":
+            continue
+
+        settlements.append({
+            "settlement_type": "inventory_purchase",
+            "money_flow": "out",
+            "amount": float(txn.subtotal or 0),
+            "settlement_date": txn.created_at.isoformat(),
+            "status": "completed"
+        })
+
+    # -------------------------------
+    # SORT (latest first)
+    # -------------------------------
+    settlements.sort(
+        key=lambda x: x["settlement_date"] or "",
+        reverse=True
+    )
+
+    # -------------------------------
+    # PAGINATION
+    # -------------------------------
+    total_records = len(settlements)
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    paginated_data = settlements[start:end]
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total_records,
+        "data": paginated_data,
+        "generated_at": datetime.utcnow().isoformat()
+    }
+
+
+
+@router.post("/billing/reports/generate/settlements", summary="Generate and Download Settlements Report")
+async def generate_billing_settlements_report(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    format: str = Query("pdf"),
+    settlement_type: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_async_session),
+    current_admin: dict = Depends(centeradmin_required)
+):
+    import io
+    from decimal import Decimal
+    from datetime import datetime
+    from app.payrole.models.models import PayrollRecord
+    from app.inventory.models.models import StockTransaction
+
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Get center details
-    center_result = await db.execute(select(Center).where(Center.id == center_id))
-    center = center_result.scalar_one_or_none()
-    
-    # Extract center details immediately
+
+    # -------------------------------
+    # Center
+    # -------------------------------
+    center = (await db.execute(
+        select(Center).where(Center.id == center_id)
+    )).scalar_one_or_none()
+
     center_name = center.center_name if center else "Center"
-    center_address = ""  # Center model uses address relationship, not direct field
-    
-    # Fetch data (reuse logic from above - simplified here)
+    center_address = ""
+
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
-    if not end_date_parsed:
-        end_date_parsed = datetime.utcnow().date()
-    if not start_date_parsed:
-        start_date_parsed = end_date_parsed - timedelta(days=90)
-    
-    platform_fee_percentage = Decimal("0.15")
-    
-    # Fetch income
-    income_query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(start_date_parsed, datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(end_date_parsed, datetime.max.time()),
-            PaymentOrder.status == PaymentOrderStatus.paid,
-            PaymentOrder.order_type.in_([
-                OrderType.membership,
-                OrderType.renewal,
-                OrderType.stock_purchase,
-                OrderType.networking_access
-            ])
-        )
+
+    settlements = []
+
+    # -------------------------------
+    # PAYMENT ORDERS
+    # -------------------------------
+    po_query = select(PaymentOrder).where(
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.status == PaymentOrderStatus.paid
     )
-    income_result = await db.execute(income_query)
-    income_payments = income_result.scalars().all()
-    
-    # Fetch networking visits
-    incoming_visits_query = select(UserCenterMembership).where(
-        and_(
-            UserCenterMembership.center_id == center_id,
-            UserCenterMembership.start_date >= start_date_parsed,
-            UserCenterMembership.start_date <= end_date_parsed
+
+    if start_date_parsed:
+        po_query = po_query.where(
+            PaymentOrder.created_at >= datetime.combine(start_date_parsed, datetime.min.time())
         )
-    )
-    incoming_result = await db.execute(incoming_visits_query)
-    incoming_visits = incoming_result.scalars().all()
-    
-    members_result = await db.execute(select(Member.id).where(Member.home_center_id == center_id))
-    center_member_ids = [m for m in members_result.scalars().all()]
-    
-    outgoing_visits = []
-    if center_member_ids:
-        outgoing_visits_query = select(UserCenterMembership).where(
-            and_(
-                UserCenterMembership.user_id.in_(center_member_ids),
-                UserCenterMembership.center_id != center_id,
-                UserCenterMembership.start_date >= start_date_parsed,
-                UserCenterMembership.start_date <= end_date_parsed
-            )
+
+    if end_date_parsed:
+        po_query = po_query.where(
+            PaymentOrder.created_at <= datetime.combine(end_date_parsed, datetime.max.time())
         )
-        outgoing_result = await db.execute(outgoing_visits_query)
-        outgoing_visits = outgoing_result.scalars().all()
-    
-    # Group by period (same logic as above)
-    period_groups = {}
-    
-    for payment in income_payments:
-        payment_date = payment.created_at.date()
-        period_key = get_period_key(payment_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        amount = Decimal(str(payment.total_amount))
-        
-        if payment.order_type in [OrderType.membership, OrderType.renewal]:
-            period_groups[period_key]["membership_income"] += amount
-        elif payment.order_type == OrderType.stock_purchase:
-            period_groups[period_key]["inventory_income"] += amount
-        elif payment.order_type == OrderType.networking_access:
-            period_groups[period_key]["networking_income"] += amount
-    
-    for visit in incoming_visits:
-        visit_date = visit.start_date if isinstance(visit.start_date, date) else visit.start_date.date()
-        period_key = get_period_key(visit_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        visit_payment_query = select(PaymentOrder).where(
-            and_(
-                PaymentOrder.reference_id == visit.id,
-                PaymentOrder.order_type == OrderType.networking_access
-            )
-        )
-        visit_payment_result = await db.execute(visit_payment_query)
-        visit_payment = visit_payment_result.scalar_one_or_none()
-        
-        if visit_payment:
-            visit_amount = Decimal(str(visit_payment.total_amount))
-            platform_fee = (visit_amount * platform_fee_percentage).quantize(Decimal("0.01"))
-            period_groups[period_key]["platform_fees"] += platform_fee
-    
-    for visit in outgoing_visits:
-        visit_date = visit.start_date if isinstance(visit.start_date, date) else visit.start_date.date()
-        period_key = get_period_key(visit_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        visit_payment_query = select(PaymentOrder).where(
-            and_(
-                PaymentOrder.reference_id == visit.id,
-                PaymentOrder.order_type == OrderType.networking_access
-            )
-        )
-        visit_payment_result = await db.execute(visit_payment_query)
-        visit_payment = visit_payment_result.scalar_one_or_none()
-        
-        if visit_payment:
-            visit_amount = Decimal(str(visit_payment.total_amount))
-            period_groups[period_key]["networking_expenses"] += visit_amount
-    
-    # Build report data
-    report_data = []
-    
-    for period_key, data in sorted(period_groups.items()):
-        period_start, period_end = parse_period_key(period_key, period_type)
-        
-        total_income = (
-            data["membership_income"] + 
-            data["inventory_income"] + 
-            data["networking_income"]
-        )
-        
-        total_expenses = data["networking_expenses"]
-        net_amount = (total_income - data["platform_fees"] - total_expenses).quantize(Decimal("0.01"))
-        
-        status = "Completed" if period_end < date.today() else "Pending"
-        
-        # Apply status filter
-        if status_filter and status.lower() != status_filter.lower():
+
+    payment_orders = (await db.execute(po_query)).scalars().all()
+
+    for po in payment_orders:
+
+        # NETWORKING
+        if po.order_type in [OrderType.network_in, OrderType.network_out]:
+            s_type = "networking"
+            money_flow = "in" if po.order_type == OrderType.network_in else "out"
+
+        # BRANCH PURCHASE
+        elif po.order_type == OrderType.branch_purchase:
+            s_type = "branch_purchase"
+            money_flow = "out"
+
+        else:
             continue
-        
-        report_data.append({
-            "Period": format_period_label(period_start, period_end),
-            "Start Date": period_start.isoformat(),
-            "End Date": period_end.isoformat(),
-            "Membership Income": str(data["membership_income"]),
-            "Inventory Income": str(data["inventory_income"]),
-            "Networking Income": str(data["networking_income"]),
-            "Total Income": str(total_income),
-            "Networking Expenses": str(data["networking_expenses"]),
-            "Platform Fees": str(data["platform_fees"]),
-            "Net Amount": str(net_amount),
-            "Status": status,
+
+        if settlement_type and settlement_type != s_type:
+            continue
+
+        settlements.append({
+            "Settlement Type": s_type,
+            "Money Flow": money_flow,
+            "Amount": str(po.total_amount or 0),
+            "Settlement Date": po.created_at.date().isoformat(),
+            "Status": po.status.value
         })
-    
+
+    # -------------------------------
+    # PAYROLL
+    # -------------------------------
+    payrolls = (await db.execute(
+        select(PayrollRecord).where(
+            PayrollRecord.center_id == center_id,
+            PayrollRecord.status == "paid"
+        )
+    )).scalars().all()
+
+    for pr in payrolls:
+        if not pr.paid_date:
+            continue
+
+        if settlement_type and settlement_type != "payroll":
+            continue
+
+        settlements.append({
+            "Settlement Type": "payroll",
+            "Money Flow": "out",
+            "Amount": str(pr.net_salary or 0),
+            "Settlement Date": pr.paid_date.isoformat(),
+            "Status": pr.status.value if hasattr(pr.status, "value") else pr.status
+        })
+
+    # -------------------------------
+    # INVENTORY PURCHASE
+    # -------------------------------
+    stock_txns = (await db.execute(
+        select(StockTransaction).where(
+            StockTransaction.transaction_type == "purchase"
+        )
+    )).scalars().all()
+
+    for txn in stock_txns:
+        if not txn.created_at:
+            continue
+
+        if settlement_type and settlement_type != "inventory_purchase":
+            continue
+
+        settlements.append({
+            "Settlement Type": "inventory_purchase",
+            "Money Flow": "out",
+            "Amount": str(txn.subtotal or 0),
+            "Settlement Date": txn.created_at.date().isoformat(),
+            "Status": "completed"
+        })
+
+    # -------------------------------
+    # SORT
+    # -------------------------------
+    settlements.sort(
+        key=lambda x: x["Settlement Date"],
+        reverse=True
+    )
+
+    # -------------------------------
     # Generate report
+    # -------------------------------
     report_generator = BillingReportGenerator(
         center_name=center_name,
         center_address=center_address,
@@ -4013,18 +4103,18 @@ async def generate_billing_settlements_report(
         start_date=start_date_parsed,
         end_date=end_date_parsed
     )
-    
+
     if format.lower() == "csv":
-        csv_content = report_generator.generate_csv(report_data)
+        csv_content = report_generator.generate_csv(settlements)
         return StreamingResponse(
             iter([csv_content]),
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=settlements_report_{datetime.now().strftime('%Y%m%d')}.csv"}
         )
-    else:  # PDF
-        pdf_content = report_generator.generate_pdf(report_data)
-        return StreamingResponse(
-            iter([pdf_content]),
-            media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=settlements_report_{datetime.now().strftime('%Y%m%d')}.pdf"}
-        )
+
+    pdf_content = report_generator.generate_pdf(settlements)
+    return StreamingResponse(
+        iter([pdf_content]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=settlements_report_{datetime.now().strftime('%Y%m%d')}.pdf"}
+    )

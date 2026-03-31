@@ -272,7 +272,7 @@ async def get_inventory_dashboard(
 
 
 #list products endpoint for lookup (id + name only, centeradmin only)
-@router.get("/products/lookup", summary="Lookup products (id + name only)")
+@router.get("/products/lookup", summary="Lookup products (id + name + base_price)")
 async def list_products_lookup(
     q: Optional[str] = Query(None, description="Optional name filter (partial, case-insensitive)"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of items to return"),
@@ -283,16 +283,37 @@ async def list_products_lookup(
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned to this user")
 
-    stmt = select(Product.id, Product.name).where(Product.center_id == center_id)
+    # ✅ include base_price
+    stmt = select(
+        Product.id,
+        Product.name,
+        Product.base_price   # 👈 added
+    ).where(
+        Product.center_id == center_id
+    )
+
     if q:
         stmt = stmt.where(Product.name.ilike(f"%{q}%"))
+
     stmt = stmt.order_by(Product.name).limit(limit)
 
     res = await db.execute(stmt)
     rows = res.all()
 
-    products = [{"product_id": str(r[0]), "name": r[1]} for r in rows]
-    return {"count": len(products), "products": products}
+    products = [
+        {
+            "product_id": str(r[0]),
+            "name": r[1],
+            "base_price": float(r[2]) if r[2] is not None else 0.0  # 👈 added
+        }
+        for r in rows
+    ]
+
+    return {
+        "count": len(products),
+        "products": products
+    }
+
 
 #create product endpoint
 @router.post("/products")
