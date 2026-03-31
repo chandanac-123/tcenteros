@@ -16,22 +16,21 @@ Settlements
 ------------
 
 Purchase branch from platform
-
 Settlement: Pay platform for branch
+
 Networking In
-
 Settlement: Receive from home center, share with platform
+
 Networking Out
-
 Settlement: Pay networking center, pay platform share
+
 Inventory Purchase
-
 Settlement: Pay supplier
+
 Salary Payroll
-
 Settlement: Pay employees
-Other Charges
 
-Settlement: Pay vendors/service providers
+Other Charges
+Settlement: Pay vendors/service providers etc
 
 
