@@ -2738,55 +2738,77 @@ async def get_billing_sales_report_data(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Get billing sales report data in JSON format for UI table display.
-    Supports pagination, filtering, and sorting.
-    """
     from app.auth.models.models import CenterAdmin, Member, User
-    
-    # Get center_id from current_admin (injected by centeradmin_required)
+
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="Center ID not found")
-    
+
+    # -------------------------------
     # Parse dates
+    # -------------------------------
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
-    # Build base query
-    query = select(PaymentOrder).where(PaymentOrder.center_id == center_id)
-    
-    # Apply date filters
+
+    # -------------------------------
+    # Base Query
+    # -------------------------------
+    query = select(PaymentOrder).where(
+        PaymentOrder.center_id == center_id
+    )
+
+    # -------------------------------
+    # ✅ ONLY MEMBERSHIP + INVENTORY SALES (MAIN CHANGE)
+    # -------------------------------
+    query = query.where(
+        PaymentOrder.order_type.in_([
+            OrderType.membership,
+            OrderType.membership_renewal,
+            OrderType.membership_upgrade,
+            OrderType.inventory_sale
+        ])
+    )
+
+    # -------------------------------
+    # Date Filters
+    # -------------------------------
     if start_date_parsed:
         query = query.where(func.date(PaymentOrder.created_at) >= start_date_parsed)
+
     if end_date_parsed:
         query = query.where(func.date(PaymentOrder.created_at) <= end_date_parsed)
-    
-    # Apply filters
+
+    # -------------------------------
+    # Optional Filters
+    # -------------------------------
     if order_type:
         try:
             query = query.where(PaymentOrder.order_type == OrderType(order_type))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid order_type: {order_type}")
-    
+
     if payment_status:
         try:
             query = query.where(PaymentOrder.status == PaymentOrderStatus(payment_status))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid payment_status: {payment_status}")
-    
+
     if payment_method:
         try:
             query = query.where(PaymentOrder.payment_method == PaymentMethod(payment_method))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid payment_method: {payment_method}")
-    
-    # Count total records
+
+    # -------------------------------
+    # Count total
+    # -------------------------------
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total_records = total_result.scalar()
-    
-    # Apply sorting
+
+    # -------------------------------
+    # Sorting
+    # -------------------------------
     if sort_by == "created_at":
         order_col = PaymentOrder.created_at
     elif sort_by == "total_amount":
@@ -2795,68 +2817,61 @@ async def get_billing_sales_report_data(
         order_col = PaymentOrder.order_type
     else:
         order_col = PaymentOrder.created_at
-    
+
     if sort_order == "desc":
         query = query.order_by(desc(order_col))
     else:
         query = query.order_by(order_col)
-    
-    # Apply pagination
+
+    # -------------------------------
+    # Pagination
+    # -------------------------------
     offset = (page - 1) * page_size
     query = query.offset(offset).limit(page_size)
-    
-    # Execute query
+
     result = await db.execute(query)
     payment_orders = result.scalars().all()
-    
-    # Fetch customer names - collect payer_user_ids
-    payer_user_ids = set()
-    for po in payment_orders:
-        if po.payer_user_id:
-            payer_user_ids.add(po.payer_user_id)
-    
-    # Fetch users and members
+
+    # -------------------------------
+    # Fetch Customer Names
+    # -------------------------------
+    payer_user_ids = {po.payer_user_id for po in payment_orders if po.payer_user_id}
+
     user_map = {}
     member_map = {}
-    
+
     if payer_user_ids:
-        # Fetch all users
-        users_query = select(User).where(User.id.in_(payer_user_ids))
-        users_result = await db.execute(users_query)
-        users = users_result.scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(payer_user_ids)))).scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(payer_user_ids)))).scalars().all()
+
         user_map = {str(u.id): u for u in users}
-        
-        # Fetch members (Member.id is the same as User.id for member users)
-        members_query = select(Member).where(Member.id.in_(payer_user_ids))
-        members_result = await db.execute(members_query)
-        members = members_result.scalars().all()
         member_map = {str(m.id): m for m in members}
-    
-    # Build response
+
+    # -------------------------------
+    # Build Response
+    # -------------------------------
     sales_data = []
     total_revenue = Decimal("0.00")
     total_tax = Decimal("0.00")
     total_subtotal = Decimal("0.00")
-    
+
     for po in payment_orders:
         customer_name = "N/A"
-        
-        # Get customer name based on payer_user_id
+
         if po.payer_user_id:
             user = user_map.get(str(po.payer_user_id))
             member = member_map.get(str(po.payer_user_id))
-            
-            if member and hasattr(member, 'full_name') and member.full_name:
+
+            if member and member.full_name:
                 customer_name = member.full_name
             elif user:
-                # Try to construct name from user
                 if user.username:
                     customer_name = user.username
                 elif user.email:
                     customer_name = user.email.split('@')[0]
                 elif user.mobile:
                     customer_name = user.mobile
-        
+
         sales_data.append({
             "payment_order_id": str(po.payment_order_id),
             "created_at": po.created_at.isoformat() if po.created_at else None,
@@ -2870,15 +2885,14 @@ async def get_billing_sales_report_data(
             "reference_id": str(po.reference_id) if po.reference_id else None,
             "currency": po.currency.value if hasattr(po.currency, 'value') else str(po.currency) if po.currency else "INR"
         })
-        
+
         if po.status == PaymentOrderStatus.paid:
             total_revenue += po.total_amount or Decimal("0.00")
             total_tax += po.tax_amount or Decimal("0.00")
             total_subtotal += po.subtotal_amount or Decimal("0.00")
-    
-    # Calculate pagination info
+
     total_pages = (total_records + page_size - 1) // page_size
-    
+
     return {
         "report_type": "billing_sales",
         "report_period": {
@@ -2914,90 +2928,115 @@ async def generate_billing_sales_report(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Generate and download billing sales report in PDF or CSV format.
-    Returns file download response.
-    """
-    from app.auth.models.models import CenterAdmin, Member, User
+    from app.auth.models.models import Member, User
     import io
-    
-    # Get center_id from current_admin
+
+    # -------------------------------
+    # Get center_id
+    # -------------------------------
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=403, detail="Center ID not found")
-    
+
+    # -------------------------------
     # Get center details
+    # -------------------------------
     center_query = select(Center).where(Center.id == center_id)
     center_result = await db.execute(center_query)
     center = center_result.scalar_one_or_none()
     center_name = center.center_name if center else "Center"
-    
+
+    # -------------------------------
     # Parse dates
+    # -------------------------------
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
-    # Build query (same as above but without pagination)
-    query = select(PaymentOrder).where(PaymentOrder.center_id == center_id)
-    
+
+    # -------------------------------
+    # Base Query
+    # -------------------------------
+    query = select(PaymentOrder).where(
+        PaymentOrder.center_id == center_id
+    )
+
+    # -------------------------------
+    # ✅ ONLY MEMBERSHIP + INVENTORY SALES
+    # -------------------------------
+    query = query.where(
+        PaymentOrder.order_type.in_([
+            OrderType.membership,
+            OrderType.membership_renewal,
+            OrderType.membership_upgrade,
+            OrderType.inventory_sale
+        ])
+    )
+
+    # -------------------------------
+    # Date Filters
+    # -------------------------------
     if start_date_parsed:
         query = query.where(func.date(PaymentOrder.created_at) >= start_date_parsed)
+
     if end_date_parsed:
         query = query.where(func.date(PaymentOrder.created_at) <= end_date_parsed)
-    
+
+    # -------------------------------
+    # Optional Filters
+    # -------------------------------
     if order_type:
         try:
             query = query.where(PaymentOrder.order_type == OrderType(order_type))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid order_type: {order_type}")
-    
+
     if payment_status:
         try:
             query = query.where(PaymentOrder.status == PaymentOrderStatus(payment_status))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid payment_status: {payment_status}")
-    
+
     if payment_method:
         try:
             query = query.where(PaymentOrder.payment_method == PaymentMethod(payment_method))
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid payment_method: {payment_method}")
-    
+
     query = query.order_by(desc(PaymentOrder.created_at))
-    
-    # Execute query
+
+    # -------------------------------
+    # Execute Query
+    # -------------------------------
     result = await db.execute(query)
     payment_orders = result.scalars().all()
-    
+
+    # -------------------------------
     # Fetch customer names
-    payer_user_ids = set()
-    for po in payment_orders:
-        if po.payer_user_id:
-            payer_user_ids.add(po.payer_user_id)
-    
+    # -------------------------------
+    payer_user_ids = {po.payer_user_id for po in payment_orders if po.payer_user_id}
+
     user_map = {}
     member_map = {}
-    
+
     if payer_user_ids:
-        users_query = select(User).where(User.id.in_(payer_user_ids))
-        users_result = await db.execute(users_query)
-        users = users_result.scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(payer_user_ids)))).scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(payer_user_ids)))).scalars().all()
+
         user_map = {str(u.id): u for u in users}
-        
-        members_query = select(Member).where(Member.id.in_(payer_user_ids))
-        members_result = await db.execute(members_query)
-        members = members_result.scalars().all()
         member_map = {str(m.id): m for m in members}
-    
+
+    # -------------------------------
     # Build sales data
+    # -------------------------------
     sales_data = []
+
     for po in payment_orders:
         customer_name = "N/A"
-        
+
         if po.payer_user_id:
             user = user_map.get(str(po.payer_user_id))
             member = member_map.get(str(po.payer_user_id))
-            
-            if member and hasattr(member, 'full_name') and member.full_name:
+
+            if member and member.full_name:
                 customer_name = member.full_name
             elif user:
                 if user.username:
@@ -3006,7 +3045,7 @@ async def generate_billing_sales_report(
                     customer_name = user.email.split('@')[0]
                 elif user.mobile:
                     customer_name = user.mobile
-        
+
         sales_data.append({
             "payment_order_id": str(po.payment_order_id),
             "created_at": po.created_at.isoformat() if po.created_at else None,
@@ -3020,12 +3059,16 @@ async def generate_billing_sales_report(
             "reference_id": str(po.reference_id) if po.reference_id else None,
             "currency": po.currency.value if hasattr(po.currency, 'value') else str(po.currency) if po.currency else "INR"
         })
-    
-    # Format dates for display
+
+    # -------------------------------
+    # Format dates
+    # -------------------------------
     date_from_str = str(start_date_parsed) if start_date_parsed else "all_time"
     date_to_str = str(end_date_parsed) if end_date_parsed else "all_time"
-    
-    # Generate report based on format
+
+    # -------------------------------
+    # Generate Report
+    # -------------------------------
     if format == "pdf":
         pdf_content = BillingReportGenerator.generate_sales_pdf(
             sales_data=sales_data,
@@ -3033,26 +3076,26 @@ async def generate_billing_sales_report(
             date_from=date_from_str,
             date_to=date_to_str
         )
-        
+
         filename = f"billing_sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        
+
         return StreamingResponse(
             io.BytesIO(pdf_content),
             media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
-    
+
     elif format == "csv":
         csv_content = BillingReportGenerator.generate_sales_csv(sales_data=sales_data)
-        
+
         filename = f"billing_sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
+
         return StreamingResponse(
             io.BytesIO(csv_content),
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
-    
+
     elif format == "json":
         return {
             "report_type": "billing_sales",
@@ -3064,232 +3107,162 @@ async def generate_billing_sales_report(
             "data": sales_data,
             "generated_at": datetime.utcnow().isoformat()
         }
-    
+
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use: json, pdf, or csv")
 
 
-
 #-----------BILLING MEMBERSHIP REPORTS API ENDPOINTS-----------
 
-#-----------BILLING MEMBERSHIP REPORTS API ENDPOINTS-----------
+
 
 @router.get("/billing/reports/memberships", summary="Get Membership Report Data for UI Table")
 async def get_billing_membership_report_data(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    membership_status: Optional[str] = Query(None, description="Filter by status: active, expired, cancelled"),
-    payment_status: Optional[str] = Query(None, description="Filter by payment status: paid, unpaid, pending"),
-    membership_type: Optional[str] = Query(None, description="Filter by membership type/plan name"),
-    sort_by: str = Query("start_date", description="Sort by: start_date, end_date, total_amount, member_name"),
-    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    membership_status: Optional[str] = Query(None),
+    payment_status: Optional[str] = Query(None),
+    membership_type: Optional[str] = Query(None),
+    sort_by: str = Query("start_date"),
+    sort_order: str = Query("desc"),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Get membership report data for UI table with pagination and filters.
-    Shows: Member | Plan | Start Date | End Date | Amount | Status | Payment Status
-    """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Parse dates
+
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
-    # Build query
+
     where_clauses = [MemberMembership.center_id == center_id]
-    
+
     if start_date_parsed:
         where_clauses.append(MemberMembership.start_date >= start_date_parsed)
-    
+
     if end_date_parsed:
         where_clauses.append(MemberMembership.end_date <= end_date_parsed)
-    
-    if membership_status:
-        try:
-            from app.membership.models.models import MembershipStatusEnum
-            status_enum = MembershipStatusEnum[membership_status.lower()]
-            where_clauses.append(MemberMembership.membership_status == status_enum)
-        except KeyError:
-            pass
-    
-    # Base query
+
     query = select(MemberMembership).where(*where_clauses)
     result = await db.execute(query)
     member_memberships = result.scalars().all()
-    
-    # Collect IDs for batch fetching
+
     member_ids = {mm.member_id for mm in member_memberships}
     membership_ids = {mm.membership_id for mm in member_memberships}
     mm_ids = {mm.id for mm in member_memberships}
-    
-    # Batch fetch members
+
     member_map = {}
     user_map = {}
+
     if member_ids:
-        members_result = await db.execute(select(Member).where(Member.id.in_(member_ids)))
-        members = members_result.scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(member_ids)))).scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(member_ids)))).scalars().all()
+
         member_map = {m.id: m for m in members}
-        
-        users_result = await db.execute(select(User).where(User.id.in_(member_ids)))
-        users = users_result.scalars().all()
         user_map = {u.id: u for u in users}
-    
-    # Batch fetch memberships
+
     membership_map = {}
     if membership_ids:
-        memberships_result = await db.execute(select(Membership).where(Membership.membership_id.in_(membership_ids)))
-        memberships = memberships_result.scalars().all()
+        memberships = (await db.execute(select(Membership).where(Membership.membership_id.in_(membership_ids)))).scalars().all()
         membership_map = {m.membership_id: m for m in memberships}
-    
-    # Batch fetch payment orders
+
+    # ✅ FIXED ENUM HERE
     payment_map = {}
     if mm_ids:
-        payments_result = await db.execute(
+        payments = (await db.execute(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(mm_ids),
-                    PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal])
+                    PaymentOrder.order_type.in_([
+                        OrderType.membership,
+                        OrderType.membership_renewal,
+                        OrderType.membership_upgrade
+                    ])
                 )
             )
-        )
-        payments = payments_result.scalars().all()
+        )).scalars().all()
+
         for payment in payments:
-            if payment.reference_id not in payment_map:
-                payment_map[payment.reference_id] = []
-            payment_map[payment.reference_id].append(payment)
-    
-    # Build response
+            payment_map.setdefault(payment.reference_id, []).append(payment)
+
     memberships_list = []
     today = date.today()
-    
+
     for mm in member_memberships:
         member = member_map.get(mm.member_id)
         user = user_map.get(mm.member_id)
         membership = membership_map.get(mm.membership_id)
         payments = payment_map.get(mm.id, [])
-        
+
         member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
-        member_mobile = user.mobile if user else None
-        
+
         plan_name = membership.membership_name if membership else "N/A"
-        plan_duration = f"{membership.duration_count} {membership.duration_unit.value}" if membership else "N/A"
-        
-        # Calculate payment status
+
         total_paid = sum(Decimal(str(p.total_amount)) for p in payments if p.status == PaymentOrderStatus.paid)
         total_expected = Decimal(str(mm.total_amount))
+
         payment_status_calc = "paid" if total_paid >= total_expected else ("partial" if total_paid > 0 else "unpaid")
-        
-        # Calculate membership status
+
         if mm.end_date and mm.end_date.date() < today:
             status_label = "expired"
         elif mm.membership_status:
             status_label = mm.membership_status.value
         else:
             status_label = "active"
-        
+
         memberships_list.append({
             "member_membership_id": str(mm.id),
-            "member_id": str(mm.member_id),
             "member_name": member_name,
-            "member_mobile": member_mobile,
             "plan_name": plan_name,
-            "plan_duration": plan_duration,
             "start_date": mm.start_date.date().isoformat() if mm.start_date else None,
             "end_date": mm.end_date.date().isoformat() if mm.end_date else None,
             "total_amount": str(mm.total_amount),
             "paid_amount": str(total_paid),
             "payment_status": payment_status_calc,
             "membership_status": status_label,
-            "auto_renewal": mm.auto_renewal_enabled,
         })
-    
-    # Apply additional filters
-    if payment_status:
-        memberships_list = [m for m in memberships_list if m["payment_status"] == payment_status]
-    
-    if membership_type:
-        memberships_list = [m for m in memberships_list if membership_type.lower() in m["plan_name"].lower()]
-    
-    # Sort
-    reverse = (sort_order == "desc")
-    if sort_by == "member_name":
-        memberships_list.sort(key=lambda x: x["member_name"], reverse=reverse)
-    elif sort_by == "total_amount":
-        memberships_list.sort(key=lambda x: Decimal(x["total_amount"]), reverse=reverse)
-    elif sort_by == "end_date":
-        memberships_list.sort(key=lambda x: x["end_date"] or "", reverse=reverse)
-    else:  # start_date
-        memberships_list.sort(key=lambda x: x["start_date"] or "", reverse=reverse)
-    
-    # Calculate summary
-    total_memberships = len(memberships_list)
-    total_revenue = sum(Decimal(m["total_amount"]) for m in memberships_list)
-    total_paid = sum(Decimal(m["paid_amount"]) for m in memberships_list)
-    active_count = sum(1 for m in memberships_list if m["membership_status"] == "active")
-    expired_count = sum(1 for m in memberships_list if m["membership_status"] == "expired")
-    
-    # Pagination
-    start_idx = (page - 1) * page_size
-    end_idx = start_idx + page_size
-    paginated = memberships_list[start_idx:end_idx]
-    
+
     return {
         "page": page,
         "page_size": page_size,
-        "total": total_memberships,
-        "start_date": start_date_parsed.isoformat() if start_date_parsed else None,
-        "end_date": end_date_parsed.isoformat() if end_date_parsed else None,
-        "summary": {
-            "total_memberships": total_memberships,
-            "total_revenue": str(total_revenue),
-            "total_paid": str(total_paid),
-            "active_memberships": active_count,
-            "expired_memberships": expired_count,
-        },
-        "memberships": paginated,
+        "total": len(memberships_list),
+        "memberships": memberships_list
     }
 
 
 @router.post("/billing/reports/generate/memberships", summary="Generate and Download Membership Report")
 async def generate_billing_membership_report(
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    format: str = Query("pdf", description="Output format: pdf, csv"),
-    membership_status: Optional[str] = Query(None, description="Filter by status"),
-    payment_status: Optional[str] = Query(None, description="Filter by payment status"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    format: str = Query("pdf"),
+    membership_status: Optional[str] = Query(None),
+    payment_status: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Generate and download membership report in PDF or CSV format.
-    """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Get center details
+
     center_result = await db.execute(select(Center).where(Center.id == center_id))
     center = center_result.scalar_one_or_none()
-    
-    # Extract center details immediately
+
     center_name = center.center_name if center else "Center"
-    center_address = ""  # Center model uses address relationship, not direct field
-    
-    # Fetch data (reuse logic from above)
+    center_address = ""
+
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
+
     where_clauses = [MemberMembership.center_id == center_id]
-    
+
     if start_date_parsed:
         where_clauses.append(MemberMembership.start_date >= start_date_parsed)
+
     if end_date_parsed:
         where_clauses.append(MemberMembership.end_date <= end_date_parsed)
+
     if membership_status:
         try:
             from app.membership.models.models import MembershipStatusEnum
@@ -3297,75 +3270,82 @@ async def generate_billing_membership_report(
             where_clauses.append(MemberMembership.membership_status == status_enum)
         except KeyError:
             pass
-    
+
     query = select(MemberMembership).where(*where_clauses)
     result = await db.execute(query)
     member_memberships = result.scalars().all()
-    
-    # Batch fetch related data
+
+    # -------------------------------
+    # Batch fetch
+    # -------------------------------
     member_ids = {mm.member_id for mm in member_memberships}
     membership_ids = {mm.membership_id for mm in member_memberships}
     mm_ids = {mm.id for mm in member_memberships}
-    
+
     member_map = {}
     user_map = {}
+
     if member_ids:
-        members_result = await db.execute(select(Member).where(Member.id.in_(member_ids)))
-        members = members_result.scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(member_ids)))).scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(member_ids)))).scalars().all()
+
         member_map = {m.id: m for m in members}
-        
-        users_result = await db.execute(select(User).where(User.id.in_(member_ids)))
-        users = users_result.scalars().all()
         user_map = {u.id: u for u in users}
-    
+
     membership_map = {}
     if membership_ids:
-        memberships_result = await db.execute(select(Membership).where(Membership.membership_id.in_(membership_ids)))
-        memberships = memberships_result.scalars().all()
+        memberships = (await db.execute(select(Membership).where(Membership.membership_id.in_(membership_ids)))).scalars().all()
         membership_map = {m.membership_id: m for m in memberships}
-    
+
+    # -------------------------------
+    # ✅ FIXED ENUM HERE
+    # -------------------------------
     payment_map = {}
     if mm_ids:
-        payments_result = await db.execute(
+        payments = (await db.execute(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(mm_ids),
-                    PaymentOrder.order_type.in_([OrderType.membership, OrderType.renewal])
+                    PaymentOrder.order_type.in_([
+                        OrderType.membership,
+                        OrderType.membership_renewal,
+                        OrderType.membership_upgrade
+                    ])
                 )
             )
-        )
-        payments = payments_result.scalars().all()
+        )).scalars().all()
+
         for payment in payments:
-            if payment.reference_id not in payment_map:
-                payment_map[payment.reference_id] = []
-            payment_map[payment.reference_id].append(payment)
-    
-    # Build report data
+            payment_map.setdefault(payment.reference_id, []).append(payment)
+
+    # -------------------------------
+    # Build report
+    # -------------------------------
     report_data = []
     today = date.today()
-    
+
     for mm in member_memberships:
         member = member_map.get(mm.member_id)
         user = user_map.get(mm.member_id)
         membership = membership_map.get(mm.membership_id)
         payments = payment_map.get(mm.id, [])
-        
+
         member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
         member_mobile = user.mobile if user else "N/A"
-        
         plan_name = membership.membership_name if membership else "N/A"
-        
+
         total_paid = sum(Decimal(str(p.total_amount)) for p in payments if p.status == PaymentOrderStatus.paid)
         total_expected = Decimal(str(mm.total_amount))
+
         payment_status_value = "Paid" if total_paid >= total_expected else ("Partial" if total_paid > 0 else "Unpaid")
-        
+
         if mm.end_date and mm.end_date.date() < today:
             status_label = "Expired"
         elif mm.membership_status:
             status_label = mm.membership_status.value.title()
         else:
             status_label = "Active"
-        
+
         report_data.append({
             "Member Name": member_name,
             "Mobile": member_mobile,
@@ -3377,12 +3357,16 @@ async def generate_billing_membership_report(
             "Payment Status": payment_status_value,
             "Status": status_label,
         })
-    
-    # Apply payment status filter if provided
+
+    # -------------------------------
+    # Filter
+    # -------------------------------
     if payment_status:
         report_data = [r for r in report_data if r["Payment Status"].lower() == payment_status.lower()]
-    
+
+    # -------------------------------
     # Generate report
+    # -------------------------------
     report_generator = BillingReportGenerator(
         center_name=center_name,
         center_address=center_address,
@@ -3390,7 +3374,7 @@ async def generate_billing_membership_report(
         start_date=start_date_parsed,
         end_date=end_date_parsed
     )
-    
+
     if format.lower() == "csv":
         csv_content = report_generator.generate_csv(report_data)
         return StreamingResponse(
@@ -3398,7 +3382,7 @@ async def generate_billing_membership_report(
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=membership_report_{datetime.now().strftime('%Y%m%d')}.csv"}
         )
-    else:  # PDF
+    else:
         pdf_content = report_generator.generate_pdf(report_data)
         return StreamingResponse(
             iter([pdf_content]),
@@ -3413,140 +3397,149 @@ async def generate_billing_membership_report(
 async def get_billing_networking_report_data(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    visit_type: Optional[str] = Query(None, description="Filter by: incoming, outgoing"),
-    status_filter: Optional[str] = Query(None, description="Filter by status: pending, approved, paid, completed"),
-    sort_by: str = Query("start_date", description="Sort by: start_date, total_charge, member_name"),
-    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    visit_type: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None),
+    sort_by: str = Query("start_date"),
+    sort_order: str = Query("desc"),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Get networking visits report data for UI table with pagination and filters.
-    Shows: Member | Home Center | Visited Center | Date | Charge | Fee | Net | Status
-    """
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Parse dates
+
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
+
     platform_fee_percentage = Decimal("0.15")
-    
-    # Fetch incoming visits (members from other centers visiting this center)
+
+    # -------------------------------
+    # Incoming
+    # -------------------------------
     incoming_where = [UserCenterMembership.center_id == center_id]
+
     if start_date_parsed:
         incoming_where.append(UserCenterMembership.start_date >= start_date_parsed)
+
     if end_date_parsed:
         incoming_where.append(UserCenterMembership.start_date <= end_date_parsed)
+
     if status_filter:
         try:
             status_enum = NetworkingStatusEnum[status_filter.lower()]
             incoming_where.append(UserCenterMembership.network_status == status_enum)
         except KeyError:
             pass
-    
-    incoming_query = select(UserCenterMembership).where(*incoming_where)
-    incoming_result = await db.execute(incoming_query)
-    incoming_visits = incoming_result.scalars().all()
-    
-    # Fetch outgoing visits (this center's members visiting other centers)
-    members_result = await db.execute(select(Member.id).where(Member.home_center_id == center_id))
-    center_member_ids = [m for m in members_result.scalars().all()]
-    
+
+    incoming_visits = (await db.execute(select(UserCenterMembership).where(*incoming_where))).scalars().all()
+
+    # -------------------------------
+    # Outgoing
+    # -------------------------------
+    members = (await db.execute(
+        select(Member.id).where(Member.home_center_id == center_id)
+    )).scalars().all()
+
     outgoing_visits = []
-    if center_member_ids:
+
+    if members:
         outgoing_where = [
-            UserCenterMembership.user_id.in_(center_member_ids),
+            UserCenterMembership.user_id.in_(members),
             UserCenterMembership.center_id != center_id
         ]
+
         if start_date_parsed:
             outgoing_where.append(UserCenterMembership.start_date >= start_date_parsed)
+
         if end_date_parsed:
             outgoing_where.append(UserCenterMembership.start_date <= end_date_parsed)
+
         if status_filter:
             try:
                 status_enum = NetworkingStatusEnum[status_filter.lower()]
                 outgoing_where.append(UserCenterMembership.network_status == status_enum)
             except KeyError:
                 pass
-        
-        outgoing_query = select(UserCenterMembership).where(*outgoing_where)
-        outgoing_result = await db.execute(outgoing_query)
-        outgoing_visits = outgoing_result.scalars().all()
-    
-    # Apply visit_type filter
+
+        outgoing_visits = (await db.execute(select(UserCenterMembership).where(*outgoing_where))).scalars().all()
+
+    # -------------------------------
+    # Merge
+    # -------------------------------
     if visit_type == "incoming":
         all_visits = incoming_visits
     elif visit_type == "outgoing":
         all_visits = outgoing_visits
     else:
         all_visits = list(incoming_visits) + list(outgoing_visits)
-    
-    # Batch fetch related data
+
+    # -------------------------------
+    # Fetch related
+    # -------------------------------
     user_ids = {v.user_id for v in all_visits}
     center_ids = {v.center_id for v in all_visits}
     visit_ids = {v.id for v in all_visits}
-    
-    # Fetch users and members
+
     user_map = {}
     member_map = {}
+
     if user_ids:
-        users_result = await db.execute(select(User).where(User.id.in_(user_ids)))
-        users = users_result.scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(user_ids)))).scalars().all()
+
         user_map = {u.id: u for u in users}
-        
-        members_result = await db.execute(select(Member).where(Member.id.in_(user_ids)))
-        members = members_result.scalars().all()
         member_map = {m.id: m for m in members}
-    
-    # Fetch centers
+
     center_map = {}
     if center_ids:
-        centers_result = await db.execute(select(Center).where(Center.id.in_(center_ids)))
-        centers = centers_result.scalars().all()
+        centers = (await db.execute(select(Center).where(Center.id.in_(center_ids)))).scalars().all()
         center_map = {c.id: c for c in centers}
-    
-    # Fetch payment orders
+
+    # -------------------------------
+    # ✅ FIXED HERE
+    # -------------------------------
     payment_map = {}
     if visit_ids:
-        payments_result = await db.execute(
+        payments = (await db.execute(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(visit_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type.in_([
+                        OrderType.network_in,
+                        OrderType.network_out
+                    ])
                 )
             )
-        )
-        payments = payments_result.scalars().all()
+        )).scalars().all()
+
         payment_map = {p.reference_id: p for p in payments}
-    
+
+    # -------------------------------
     # Build response
+    # -------------------------------
     visits_list = []
-    
+
     for visit in all_visits:
         member = member_map.get(visit.user_id)
         user = user_map.get(visit.user_id)
         visited_center = center_map.get(visit.center_id)
         payment = payment_map.get(visit.id)
-        
+
         member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
         member_mobile = user.mobile if user else None
-        
+
         home_center = None
         if member and member.home_center_id:
             home_center = center_map.get(member.home_center_id)
-        
+
         total_charge = Decimal(str(payment.total_amount)) if payment else Decimal("0.00")
         platform_fee = (total_charge * platform_fee_percentage).quantize(Decimal("0.01"))
-        
-        # Determine if incoming or outgoing
+
         is_incoming = str(visit.center_id) == str(center_id)
         net_amount = (total_charge - platform_fee).quantize(Decimal("0.01")) if is_incoming else total_charge
-        
+
         visits_list.append({
             "network_membership_id": str(visit.id),
             "visit_type": "incoming" if is_incoming else "outgoing",
@@ -3561,29 +3554,36 @@ async def get_billing_networking_report_data(
             "status": visit.network_status.value if visit.network_status else "pending",
             "payment_status": payment.status.value if payment else "unpaid",
         })
-    
+
+    # -------------------------------
     # Sort
+    # -------------------------------
     reverse = (sort_order == "desc")
+
     if sort_by == "member_name":
         visits_list.sort(key=lambda x: x["member_name"], reverse=reverse)
     elif sort_by == "total_charge":
         visits_list.sort(key=lambda x: Decimal(x["total_charge"]), reverse=reverse)
-    else:  # start_date
+    else:
         visits_list.sort(key=lambda x: x["visit_date"] or "", reverse=reverse)
-    
-    # Calculate summary
+
+    # -------------------------------
+    # Summary
+    # -------------------------------
     total_visits = len(visits_list)
     total_revenue = sum(Decimal(v["total_charge"]) for v in visits_list)
     total_fees = sum(Decimal(v["platform_fee"]) for v in visits_list)
     total_net = sum(Decimal(v["net_amount"]) for v in visits_list)
+
     incoming_count = sum(1 for v in visits_list if v["visit_type"] == "incoming")
     outgoing_count = sum(1 for v in visits_list if v["visit_type"] == "outgoing")
-    
+
+    # -------------------------------
     # Pagination
+    # -------------------------------
     start_idx = (page - 1) * page_size
     end_idx = start_idx + page_size
-    paginated = visits_list[start_idx:end_idx]
-    
+
     return {
         "page": page,
         "page_size": page_size,
@@ -3598,163 +3598,195 @@ async def get_billing_networking_report_data(
             "incoming_visits": incoming_count,
             "outgoing_visits": outgoing_count,
         },
-        "visits": paginated,
+        "visits": visits_list[start_idx:end_idx],
     }
 
 
+
+
+#-----------BILLING SETTLEMENTS REPORTS API ENDPOINTS-----------
+
 @router.post("/billing/reports/generate/networking", summary="Generate and Download Networking Report")
 async def generate_billing_networking_report(
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    format: str = Query("pdf", description="Output format: pdf, csv"),
-    visit_type: Optional[str] = Query(None, description="Filter by: incoming, outgoing"),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    format: str = Query("pdf"),
+    visit_type: Optional[str] = Query(None),
+    status_filter: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
-    """
-    Generate and download networking visits report in PDF or CSV format.
-    """
+    import io
+    from decimal import Decimal
+    from datetime import datetime
+
     center_id = current_admin.get("center_id")
     if not center_id:
         raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Get center details
-    center_result = await db.execute(select(Center).where(Center.id == center_id))
-    center = center_result.scalar_one_or_none()
-    
-    # Extract center details immediately
+
+    # -------------------------------
+    # Center
+    # -------------------------------
+    center = (await db.execute(
+        select(Center).where(Center.id == center_id)
+    )).scalar_one_or_none()
+
     center_name = center.center_name if center else "Center"
-    center_address = ""  # Center model uses address relationship, not direct field
-    
-    # Fetch data (reuse logic from above)
+    center_address = ""
+
     start_date_parsed = parse_date_param(start_date)
     end_date_parsed = parse_date_param(end_date)
-    
+
     platform_fee_percentage = Decimal("0.15")
-    
-    # Fetch incoming visits
+
+    # -------------------------------
+    # Incoming
+    # -------------------------------
     incoming_where = [UserCenterMembership.center_id == center_id]
+
     if start_date_parsed:
         incoming_where.append(UserCenterMembership.start_date >= start_date_parsed)
+
     if end_date_parsed:
         incoming_where.append(UserCenterMembership.start_date <= end_date_parsed)
+
     if status_filter:
         try:
-            status_enum = NetworkingStatusEnum[status_filter.lower()]
-            incoming_where.append(UserCenterMembership.network_status == status_enum)
+            incoming_where.append(
+                UserCenterMembership.network_status ==
+                NetworkingStatusEnum[status_filter.lower()]
+            )
         except KeyError:
             pass
-    
-    incoming_query = select(UserCenterMembership).where(*incoming_where)
-    incoming_result = await db.execute(incoming_query)
-    incoming_visits = incoming_result.scalars().all()
-    
-    # Fetch outgoing visits
-    members_result = await db.execute(select(Member.id).where(Member.home_center_id == center_id))
-    center_member_ids = [m for m in members_result.scalars().all()]
-    
+
+    incoming_visits = (await db.execute(
+        select(UserCenterMembership).where(*incoming_where)
+    )).scalars().all()
+
+    # -------------------------------
+    # Outgoing
+    # -------------------------------
+    member_ids = (await db.execute(
+        select(Member.id).where(Member.home_center_id == center_id)
+    )).scalars().all()
+
     outgoing_visits = []
-    if center_member_ids:
+
+    if member_ids:
         outgoing_where = [
-            UserCenterMembership.user_id.in_(center_member_ids),
+            UserCenterMembership.user_id.in_(member_ids),
             UserCenterMembership.center_id != center_id
         ]
+
         if start_date_parsed:
             outgoing_where.append(UserCenterMembership.start_date >= start_date_parsed)
+
         if end_date_parsed:
             outgoing_where.append(UserCenterMembership.start_date <= end_date_parsed)
+
         if status_filter:
             try:
-                status_enum = NetworkingStatusEnum[status_filter.lower()]
-                outgoing_where.append(UserCenterMembership.network_status == status_enum)
+                outgoing_where.append(
+                    UserCenterMembership.network_status ==
+                    NetworkingStatusEnum[status_filter.lower()]
+                )
             except KeyError:
                 pass
-        
-        outgoing_query = select(UserCenterMembership).where(*outgoing_where)
-        outgoing_result = await db.execute(outgoing_query)
-        outgoing_visits = outgoing_result.scalars().all()
-    
-    # Apply visit_type filter
+
+        outgoing_visits = (await db.execute(
+            select(UserCenterMembership).where(*outgoing_where)
+        )).scalars().all()
+
+    # -------------------------------
+    # Merge
+    # -------------------------------
     if visit_type == "incoming":
         all_visits = incoming_visits
     elif visit_type == "outgoing":
         all_visits = outgoing_visits
     else:
         all_visits = list(incoming_visits) + list(outgoing_visits)
-    
-    # Batch fetch related data
+
+    # -------------------------------
+    # Batch fetch
+    # -------------------------------
     user_ids = {v.user_id for v in all_visits}
     center_ids = {v.center_id for v in all_visits}
     visit_ids = {v.id for v in all_visits}
-    
-    user_map = {}
-    member_map = {}
+
+    user_map, member_map, center_map = {}, {}, {}
+
     if user_ids:
-        users_result = await db.execute(select(User).where(User.id.in_(user_ids)))
-        users = users_result.scalars().all()
+        users = (await db.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()
+        members = (await db.execute(select(Member).where(Member.id.in_(user_ids)))).scalars().all()
         user_map = {u.id: u for u in users}
-        
-        members_result = await db.execute(select(Member).where(Member.id.in_(user_ids)))
-        members = members_result.scalars().all()
         member_map = {m.id: m for m in members}
-    
-    center_map = {}
+
     if center_ids:
-        centers_result = await db.execute(select(Center).where(Center.id.in_(center_ids)))
-        centers = centers_result.scalars().all()
+        centers = (await db.execute(select(Center).where(Center.id.in_(center_ids)))).scalars().all()
         center_map = {c.id: c for c in centers}
-    
+
+    # -------------------------------
+    # ✅ FIXED PAYMENT QUERY (NO networking_access ANYWHERE)
+    # -------------------------------
     payment_map = {}
+
     if visit_ids:
-        payments_result = await db.execute(
+        payments = (await db.execute(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(visit_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type.in_([
+                        OrderType.network_in,
+                        OrderType.network_out
+                    ])
                 )
             )
-        )
-        payments = payments_result.scalars().all()
+        )).scalars().all()
+
         payment_map = {p.reference_id: p for p in payments}
-    
-    # Build report data
+
+    # -------------------------------
+    # Build report
+    # -------------------------------
     report_data = []
-    
+
     for visit in all_visits:
         member = member_map.get(visit.user_id)
         user = user_map.get(visit.user_id)
         visited_center = center_map.get(visit.center_id)
         payment = payment_map.get(visit.id)
-        
-        member_name = member.full_name if member and member.full_name else (user.email if user else "N/A")
-        
+
+        member_name = (
+            member.full_name if member and member.full_name
+            else (user.email if user else "N/A")
+        )
+
         home_center = None
         if member and member.home_center_id:
             home_center = center_map.get(member.home_center_id)
-        
+
         total_charge = Decimal(str(payment.total_amount)) if payment else Decimal("0.00")
         platform_fee = (total_charge * platform_fee_percentage).quantize(Decimal("0.01"))
-        
+
         is_incoming = str(visit.center_id) == str(center_id)
         net_amount = (total_charge - platform_fee).quantize(Decimal("0.01")) if is_incoming else total_charge
-        
-        # Handle visit.start_date - it's already a date object, no need to call .date()
-        visit_date_str = visit.start_date.isoformat() if visit.start_date else "N/A"
-        
+
         report_data.append({
             "Type": "Incoming" if is_incoming else "Outgoing",
             "Member": member_name,
             "Home Center": home_center.center_name if home_center else "N/A",
             "Visited Center": visited_center.center_name if visited_center else "N/A",
-            "Visit Date": visit_date_str,  # Fixed: no .date() call
+            "Visit Date": visit.start_date.isoformat() if visit.start_date else "N/A",
             "Charge": str(total_charge),
             "Platform Fee (15%)": str(platform_fee),
             "Net Amount": str(net_amount),
             "Status": visit.network_status.value.title() if visit.network_status else "Pending",
         })
-    
+
+    # -------------------------------
     # Generate report
+    # -------------------------------
     report_generator = BillingReportGenerator(
         center_name=center_name,
         center_address=center_address,
@@ -3762,7 +3794,7 @@ async def generate_billing_networking_report(
         start_date=start_date_parsed,
         end_date=end_date_parsed
     )
-    
+
     if format.lower() == "csv":
         csv_content = report_generator.generate_csv(report_data)
         return StreamingResponse(
@@ -3770,252 +3802,13 @@ async def generate_billing_networking_report(
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=networking_report_{datetime.now().strftime('%Y%m%d')}.csv"}
         )
-    else:  # PDF
-        pdf_content = report_generator.generate_pdf(report_data)
-        return StreamingResponse(
-            iter([pdf_content]),
-            media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=networking_report_{datetime.now().strftime('%Y%m%d')}.pdf"}
-        )
 
-
-#-----------BILLING SETTLEMENTS REPORTS API ENDPOINTS-----------
-
-@router.get("/billing/reports/settlements", summary="Get Settlements Report Data for UI Table")
-async def get_billing_settlements_report_data(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=200),
-    start_date: Optional[str] = Query(None, description="Start date for report (YYYY-MM-DD or null for all time)"),
-    end_date: Optional[str] = Query(None, description="End date for report (YYYY-MM-DD or null for all time)"),
-    period_type: str = Query("monthly", description="Period grouping: weekly, monthly"),
-    status_filter: Optional[str] = Query(None, description="Filter by: pending, completed"),
-    sort_by: str = Query("period_start", description="Sort by: period_start, net_amount, total_income"),
-    sort_order: str = Query("desc", description="Sort order: asc, desc"),
-    db: AsyncSession = Depends(get_async_session),
-    current_admin: dict = Depends(centeradmin_required)
-):
-    """
-    Get settlements report data for UI table with pagination and filters.
-    Shows: Period | Income | Expenses | Platform Fees | Net Amount | Status
-    """
-    center_id = current_admin.get("center_id")
-    if not center_id:
-        raise HTTPException(status_code=400, detail="Center ID not found")
-    
-    # Parse dates
-    start_date_parsed = parse_date_param(start_date)
-    end_date_parsed = parse_date_param(end_date)
-    
-    if not end_date_parsed:
-        end_date_parsed = datetime.utcnow().date()
-    if not start_date_parsed:
-        start_date_parsed = end_date_parsed - timedelta(days=90)
-    
-    platform_fee_percentage = Decimal("0.15")
-    
-    # Fetch all income sources
-    income_query = select(PaymentOrder).where(
-        and_(
-            PaymentOrder.center_id == center_id,
-            PaymentOrder.created_at >= datetime.combine(start_date_parsed, datetime.min.time()),
-            PaymentOrder.created_at <= datetime.combine(end_date_parsed, datetime.max.time()),
-            PaymentOrder.status == PaymentOrderStatus.paid,
-            PaymentOrder.order_type.in_([
-                OrderType.membership,
-                OrderType.renewal,
-                OrderType.stock_purchase,
-                OrderType.networking_access
-            ])
-        )
+    pdf_content = report_generator.generate_pdf(report_data)
+    return StreamingResponse(
+        iter([pdf_content]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=networking_report_{datetime.now().strftime('%Y%m%d')}.pdf"}
     )
-    income_result = await db.execute(income_query)
-    income_payments = income_result.scalars().all()
-    
-    # Fetch networking visits for platform fees
-    incoming_visits_query = select(UserCenterMembership).where(
-        and_(
-            UserCenterMembership.center_id == center_id,
-            UserCenterMembership.start_date >= start_date_parsed,
-            UserCenterMembership.start_date <= end_date_parsed
-        )
-    )
-    incoming_result = await db.execute(incoming_visits_query)
-    incoming_visits = incoming_result.scalars().all()
-    
-    # Fetch outgoing visits for expenses
-    members_result = await db.execute(select(Member.id).where(Member.home_center_id == center_id))
-    center_member_ids = [m for m in members_result.scalars().all()]
-    
-    outgoing_visits = []
-    if center_member_ids:
-        outgoing_visits_query = select(UserCenterMembership).where(
-            and_(
-                UserCenterMembership.user_id.in_(center_member_ids),
-                UserCenterMembership.center_id != center_id,
-                UserCenterMembership.start_date >= start_date_parsed,
-                UserCenterMembership.start_date <= end_date_parsed
-            )
-        )
-        outgoing_result = await db.execute(outgoing_visits_query)
-        outgoing_visits = outgoing_result.scalars().all()
-    
-    # Group by period
-    period_groups = {}
-    
-    for payment in income_payments:
-        payment_date = payment.created_at.date()
-        period_key = get_period_key(payment_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        amount = Decimal(str(payment.total_amount))
-        
-        if payment.order_type in [OrderType.membership, OrderType.renewal]:
-            period_groups[period_key]["membership_income"] += amount
-        elif payment.order_type == OrderType.stock_purchase:
-            period_groups[period_key]["inventory_income"] += amount
-        elif payment.order_type == OrderType.networking_access:
-            period_groups[period_key]["networking_income"] += amount
-    
-    # Add networking visits
-    for visit in incoming_visits:
-        visit_date = visit.start_date if isinstance(visit.start_date, date) else visit.start_date.date()
-        period_key = get_period_key(visit_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        # Platform fee on incoming visits
-        visit_payment_query = select(PaymentOrder).where(
-            and_(
-                PaymentOrder.reference_id == visit.id,
-                PaymentOrder.order_type == OrderType.networking_access
-            )
-        )
-        visit_payment_result = await db.execute(visit_payment_query)
-        visit_payment = visit_payment_result.scalar_one_or_none()
-        
-        if visit_payment:
-            visit_amount = Decimal(str(visit_payment.total_amount))
-            platform_fee = (visit_amount * platform_fee_percentage).quantize(Decimal("0.01"))
-            period_groups[period_key]["platform_fees"] += platform_fee
-    
-    for visit in outgoing_visits:
-        visit_date = visit.start_date if isinstance(visit.start_date, date) else visit.start_date.date()
-        period_key = get_period_key(visit_date, period_type)
-        
-        if period_key not in period_groups:
-            period_groups[period_key] = {
-                "membership_income": Decimal("0.00"),
-                "inventory_income": Decimal("0.00"),
-                "networking_income": Decimal("0.00"),
-                "networking_expenses": Decimal("0.00"),
-                "platform_fees": Decimal("0.00"),
-            }
-        
-        # Outgoing visit expense
-        visit_payment_query = select(PaymentOrder).where(
-            and_(
-                PaymentOrder.reference_id == visit.id,
-                PaymentOrder.order_type == OrderType.networking_access
-            )
-        )
-        visit_payment_result = await db.execute(visit_payment_query)
-        visit_payment = visit_payment_result.scalar_one_or_none()
-        
-        if visit_payment:
-            visit_amount = Decimal(str(visit_payment.total_amount))
-            period_groups[period_key]["networking_expenses"] += visit_amount
-    
-    # Build settlements list
-    settlements_list = []
-    
-    for period_key, data in period_groups.items():
-        period_start, period_end = parse_period_key(period_key, period_type)
-        
-        total_income = (
-            data["membership_income"] + 
-            data["inventory_income"] + 
-            data["networking_income"]
-        )
-        
-        total_expenses = data["networking_expenses"]
-        
-        net_amount = (total_income - data["platform_fees"] - total_expenses).quantize(Decimal("0.01"))
-        
-        # Determine status (you may want to track this in database)
-        status = "completed" if period_end < date.today() else "pending"
-        
-        settlements_list.append({
-            "period_key": period_key,
-            "period_label": format_period_label(period_start, period_end),
-            "period_start": period_start.isoformat(),
-            "period_end": period_end.isoformat(),
-            "membership_income": str(data["membership_income"]),
-            "inventory_income": str(data["inventory_income"]),
-            "networking_income": str(data["networking_income"]),
-            "total_income": str(total_income),
-            "networking_expenses": str(data["networking_expenses"]),
-            "total_expenses": str(total_expenses),
-            "platform_fees": str(data["platform_fees"]),
-            "net_amount": str(net_amount),
-            "status": status,
-        })
-    
-    # Apply status filter
-    if status_filter:
-        settlements_list = [s for s in settlements_list if s["status"] == status_filter]
-    
-    # Sort
-    reverse = (sort_order == "desc")
-    if sort_by == "net_amount":
-        settlements_list.sort(key=lambda x: Decimal(x["net_amount"]), reverse=reverse)
-    elif sort_by == "total_income":
-        settlements_list.sort(key=lambda x: Decimal(x["total_income"]), reverse=reverse)
-    else:  # period_start
-        settlements_list.sort(key=lambda x: x["period_start"], reverse=reverse)
-    
-    # Calculate summary
-    total_periods = len(settlements_list)
-    total_income_all = sum(Decimal(s["total_income"]) for s in settlements_list)
-    total_expenses_all = sum(Decimal(s["total_expenses"]) for s in settlements_list)
-    total_fees_all = sum(Decimal(s["platform_fees"]) for s in settlements_list)
-    total_net_all = sum(Decimal(s["net_amount"]) for s in settlements_list)
-    
-    # Pagination
-    start_idx = (page - 1) * page_size
-    end_idx = start_idx + page_size
-    paginated = settlements_list[start_idx:end_idx]
-    
-    return {
-        "page": page,
-        "page_size": page_size,
-        "total": total_periods,
-        "period_type": period_type,
-        "start_date": start_date_parsed.isoformat(),
-        "end_date": end_date_parsed.isoformat(),
-        "summary": {
-            "total_periods": total_periods,
-            "total_income": str(total_income_all),
-            "total_expenses": str(total_expenses_all),
-            "total_platform_fees": str(total_fees_all),
-            "total_net": str(total_net_all),
-        },
-        "settlements": paginated,
-    }
 
 
 @router.post("/billing/reports/generate/settlements", summary="Generate and Download Settlements Report")
