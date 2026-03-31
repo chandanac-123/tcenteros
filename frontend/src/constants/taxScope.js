@@ -26,9 +26,5 @@ export const tax_scope = [
   {
     id: 'branch_purchase',
     name: 'Branch Purchase'
-  },
-   {
-    id: 'add_on',
-    name: 'ADD ON'
   }
 ]

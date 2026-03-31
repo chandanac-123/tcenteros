@@ -51,7 +51,7 @@ const StatusDisplaycard = ({ data }) => {
                 return (
                     <div
                         key={index}
-                        className={` rounded-2xl px-4 py-6 flex items-center gap-4 shadow-md cursor-pointer 
+                        className={` rounded-2xl px-4 py-6 flex items-center gap-4 shadow-md 
                      hover:shadow-lg transition-all duration-200 
                      bg-white`}
                     >

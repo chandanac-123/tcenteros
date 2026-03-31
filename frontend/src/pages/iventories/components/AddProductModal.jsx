@@ -11,10 +11,24 @@ import { productValidationSchema } from '@utils/validations'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
+import AddProductCategory from '@pages/settings/components/AddProductCategory'
+
+const unitTypes = [
+  { id: 'Kilogram', name: 'Kilogram' },
+  { id: 'Gram', name: 'Gram ' },
+  { id: 'Liter', name: 'Liter ' },
+  { id: 'Milliliter', name: 'Milliliter' },
+  { id: 'Piece', name: 'Piece' },
+  { id: 'Pack', name: 'Pack' },
+  { id: 'box', name: 'Box' },
+  { id: 'unit', name: 'Unit' }
+]
 
 const AddProductModal = ({ open, setOpen }) => {
   const { setSelectedTab } = useSettingsTabStore()
+  const [categoryOpen, setCategoryOpen] = useState(false)
   const { mutateAsync: createProduct, isLoading } = useCreateProductMutation()
   const { data: inventoryProfitData, isFetching: isFetchingInventoryProfit } =
     useInventoryProfitQuery()
@@ -72,7 +86,7 @@ const AddProductModal = ({ open, setOpen }) => {
         className='w-full max-w-2xl space-y-5 '
       >
         {/* Grid Fields */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 '>
           <Input
             label='Product Name'
             placeholder='Enter Product Name'
@@ -82,45 +96,44 @@ const AddProductModal = ({ open, setOpen }) => {
             error={formik.touched.name && formik.errors.name}
           />
 
-          {isCategoryEmpty ? (
-            <div className='col-span-2 border border-dashed rounded-lg p-4 bg-primary/5 '>
-              <p className='text-sm text-gray-600'>
-                No product categories found. Please add a category from the
-                Settings before creating a product.
-              </p>
-
-              <Button
-                type='button'
-                size='addbutton'
-                onClick={() => {
-                  setSelectedTab(6)
-                  navigate('/settings')
-                }}
-              >
-                Go to Settings
-              </Button>
+          <div className='flex items-center gap-2'>
+            <div className='flex-1'>
+              {isCategoryEmpty ? (
+                <p className='flex text-red_text items-baseline '>
+                  Create a category first.
+                </p>
+              ) : (
+                <CustomeSelect
+                  label='Category'
+                  placeholder='Select Category'
+                  name='category'
+                  options={skus || []}
+                  value={formik.values.category}
+                  onChange={value => formik.setFieldValue('category', value)}
+                  error={formik.touched.category && formik.errors.category}
+                />
+              )}
             </div>
-          ) : (
-            <CustomeSelect
-              label='Category'
-              placeholder='Select Category'
-              name='category'
-              options={skus || []}
-              value={formik.values.category}
-              onChange={value => formik.setFieldValue('category', value)}
-              error={formik.touched.category && formik.errors.category}
+            <button
+              type='button'
+              className='h-9 w-9 flex items-center justify-center rounded-md border border-input mt-6'
+              onClick={() => setCategoryOpen(true)}
+            >
+              <Plus className='h-4 w-4 text-primary' />
+            </button>
+            <AddProductCategory
+              open={categoryOpen}
+              onOpenChange={setCategoryOpen}
             />
-          )}
+          </div>
 
-          <Input
+          <CustomeSelect
             label='Unit Type'
-            placeholder='e.g. Piece, Kg'
             name='unit_of_measure'
+            placeholder='Select Unit'
+            options={unitTypes}
             value={formik.values.unit_of_measure}
-            onChange={formik.handleChange}
-            error={
-              formik.touched.unit_of_measure && formik.errors.unit_of_measure
-            }
+            onChange={value => formik.setFieldValue('unit_of_measure', value)}
           />
 
           <Input

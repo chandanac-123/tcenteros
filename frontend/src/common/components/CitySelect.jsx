@@ -9,7 +9,8 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
   }
 
   const onPlaceChanged = () => {
-    const place = autocompleteRef.current.getPlace()
+    const place = autocompleteRef.current?.getPlace()
+
     if (!place || !place.address_components) return
 
     let city = ''
@@ -19,7 +20,6 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
     place.address_components.forEach(component => {
       const types = component.types
 
-      // ✅ Better city detection priority
       if (
         types.includes('locality') ||
         types.includes('postal_town') ||
@@ -37,9 +37,11 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
         selectedCountry = component.long_name
       }
     })
+
     if (!city) {
-      city = place.name //  VERY IMPORTANT (Coorg comes here)
+      city = place.name || place.formatted_address || ''
     }
+
     onChange({
       city,
       state,
@@ -47,23 +49,28 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
     })
   }
 
-  const hasIcon = !!icon
+  const handleInputChange = e => {
+    const typedCity = e.target.value
+    onChange({
+      city: typedCity,
+      state: '',
+      country: ''
+    })
+  }
+
   return (
     <div>
       {label && (
-        <label className='block mb-1 text-sm font-normal text-textblack'>
-          {label}
-        </label>
+        <label className='block mb-1 text-sm text-textblack'>{label}</label>
       )}
-      <div
-        onMouseDown={e => e.stopPropagation()}
-        onClick={e => e.stopPropagation()}
-      >
+
+      <div onMouseDown={e => e.stopPropagation()}>
         <Autocomplete
           onLoad={onLoad}
           onPlaceChanged={onPlaceChanged}
           options={{
             types: ['(cities)'],
+            fields: ['address_components', 'name'], // 🔥 important
             ...(country && {
               componentRestrictions: {
                 country: country.toLowerCase()
@@ -71,40 +78,24 @@ const CitySelect = ({ value, onChange, label, icon, country = 'IN' }) => {
             })
           }}
         >
-          {hasIcon ? (
-            <div className='flex items-center relative rounded-lg '>
-              <span className='absolute  left-3 flex items-center text-gray-400'>
-                {icon}
-              </span>
-              <input
-                type='text'
-                placeholder='Search City'
-                defaultValue={value || ''}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') e.preventDefault()
-                }}
-                className='flex pl-10 h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm'
-              />
-            </div>
-          ) : (
+          <div className='relative flex items-center'>
+            {icon && (
+              <span className='absolute left-3 text-gray-400'>{icon}</span>
+            )}
+
             <input
               type='text'
               placeholder='Search City'
-              defaultValue={value || ''}
-              onChange={e => {
-                const typedCity = e.target.value
-                onChange({
-                  city: typedCity,
-                  state: '',
-                  country: ''
-                })
-              }}
+              value={value || ''}
+              onChange={handleInputChange}
               onKeyDown={e => {
                 if (e.key === 'Enter') e.preventDefault()
               }}
-              className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm'
+              className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                icon ? 'pl-10' : ''
+              }`}
             />
-          )}
+          </div>
         </Autocomplete>
       </div>
     </div>

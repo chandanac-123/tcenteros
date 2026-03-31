@@ -19,7 +19,8 @@ import {
   getGeneratePurchaseReport,
   getGenerateInventoryReport,
   getGenerateStockReport,
-  getDashboardData
+  getDashboardData,
+  getDropdownProducts
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -161,7 +162,7 @@ export const useInventoryProfitQuery = () => {
 export const useProductDropdownQuery = () => {
   return useQuery({
     queryKey: ['Product'],
-    queryFn: () => getProductDropdown(),
+    queryFn: () => getDropdownProducts(),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

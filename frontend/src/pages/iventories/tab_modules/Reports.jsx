@@ -51,9 +51,9 @@ const Reports = () => {
           filename = `purchase-report.${format}`
           break
 
-        case 'inventory':
+        case 'product':
           response = await generateInventoryReport(payload)
-          filename = `inventory-report.${format}`
+          filename = `product-report.${format}`
           break
 
         case 'stock':
@@ -92,7 +92,7 @@ const Reports = () => {
           options={[
             { value: 'sales', label: 'Sales Report' },
             { value: 'purchase', label: 'Purchase Report' },
-            { value: 'inventory', label: 'Inventory Report' },
+            { value: 'product', label: 'Product Report' },
             { value: 'stock', label: 'Stock Movement' }
           ]}
           value={reportType}
@@ -154,7 +154,7 @@ const Reports = () => {
             setTableParams={setTableParams}
           />
         )}
-        {reportType === 'inventory' && (
+        {reportType === 'product' && (
           <InventoryReport
             tableParams={tableParams}
             setTableParams={setTableParams}

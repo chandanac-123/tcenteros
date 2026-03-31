@@ -15,8 +15,7 @@ const AddBranchModal = ({ open, onOpenChange }) => {
   const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
   console.log('addCount: ', addCount)
-  const { data, isLoading } = useGetBranchPricesAndTaxQuery()
-  console.log('data: ', data)
+  const { data, isLoading ,refetch} = useGetBranchPricesAndTaxQuery()
   const [openSuccess, setOpenSuccess] = useState(false)
   const [openFailed, setOpenFailed] = useState(false)
 
@@ -32,6 +31,7 @@ const AddBranchModal = ({ open, onOpenChange }) => {
 
   useEffect(() => {
     if (open) {
+      refetch()
       setCount(0)
     }
   }, [open])

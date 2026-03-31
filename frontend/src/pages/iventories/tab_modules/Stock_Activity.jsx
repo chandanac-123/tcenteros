@@ -92,10 +92,8 @@ const Stock_Activity = () => {
     // }
   ]
   return (
-    <div>
-      <div className='flex justify-between px-4 py-2 items-center'>
-        <h1 className='text-xl font-medium'>Stock Activity List</h1>
-      </div>
+    <div className='flex flex-col gap-4'>
+        <h1 className='text-lg font-semibold'>Stock Activity List</h1>
       <div className=''>
         <DataTable
           columns={columns}

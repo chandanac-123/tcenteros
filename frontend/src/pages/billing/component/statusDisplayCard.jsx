@@ -33,7 +33,7 @@ const StatusDisplayCard = ({ data }) => {
         <div
           key={index}
           className='flex items-center gap-4 border border-tab_bg 
-                     rounded-lg p-4 cursor-pointer  shadow-primary-shadow
+                     rounded-lg p-4  shadow-primary-shadow
                      bg-white'
         >
           <img

@@ -6,7 +6,7 @@ import AddStockEntry from '../components/AddStockEntry'
 import { useAllStockQuery } from '@api-queries/inventory/Query'
 
 const Receive_Stock = () => {
-   const [tableParams, setTableParams] = useState({ page: 1 })
+  const [tableParams, setTableParams] = useState({ page: 1 })
   const [openStockEntry, setOpenStockEntry] = useState(false)
   const { data, isFetching } = useAllStockQuery(tableParams)
 
@@ -23,27 +23,25 @@ const Receive_Stock = () => {
       accessorKey: 'invoice_date',
       header: 'Invoice Date'
     },
+    { accessorKey: 'quantity_added', header: 'Quantity Added' },
     {
       accessorKey: 'available_quantity',
-      header: 'Quantity'
+      header: 'Available Quantity'
     },
     {
       accessorKey: 'cost_price',
-      header: 'Cost Price'
+      header: 'Unit Price'
     },
-    {
-      accessorKey: 'cost_price',
-      header: 'Purchase Cost'
-    },
+   
     {
       accessorKey: 'total',
       header: 'Total Cost'
-    },
+    }
     // {
     //   header: 'Actions',
     //   cell: ({ row }) => (
     //     <div className='flex items-center gap-2'>
-         
+
     //       <button>
     //         <img src={deleteicon} alt='delete' className='w-6 h-6' />
     //       </button>
@@ -52,11 +50,10 @@ const Receive_Stock = () => {
     // }
   ]
 
-
   return (
-    <div>
-      <div className='flex justify-between px-4 py-2 items-center'>
-        <h1 className='text-xl font-medium'>Receive Stock</h1>
+    <div className='flex flex-col gap-4'>
+      <div className='flex justify-between items-center'>
+        <h1 className='text-lg font-semibold'>Receive Stock</h1>
         <Button
           size='addbutton'
           type='submit'

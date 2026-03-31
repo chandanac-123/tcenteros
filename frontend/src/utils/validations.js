@@ -1,4 +1,6 @@
 import * as Yup from 'yup'
+const gstRegex =
+  /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
 export const onboardingValidationSchema = Yup.object().shape({
   center_name: Yup.string().required('Center name is required'),
@@ -21,7 +23,14 @@ export const onboardingValidationSchema = Yup.object().shape({
 
 export const invoiceValidationSchema = Yup.object().shape({
   address_line_1: Yup.string().required('Enter address'),
-  address_line_2: Yup.string().required('Enter pincode')
+  address_line_2: Yup.string().required('Enter pincode'),
+  gst_number: Yup.string()
+    .nullable()
+    .notRequired()
+    .test('gst-validation', 'Invalid GST number', value => {
+      if (!value) return true //  optional field
+      return gstRegex.test(value)
+    })
 })
 
 export const categoryValidationSchema = Yup.object().shape({
@@ -119,22 +128,30 @@ export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
   secondary_color: Yup.string().required('Secondary color is required'),
   app_name: Yup.string().required('App name is required'),
-  app_logo: Yup.mixed()
-    .nullable()
-    .required('Upload an image')
-    .test('file-or-url', 'Logo is required', function (value) {
-      if (!value) return false
-      // If it's a File object
-      if (value instanceof File) return true
-      // If it's existing URL string
+ app_logo: Yup.mixed()
+  .nullable()
+  .required('Upload an image')
+  .test('file-or-url', 'Logo is required', function (value) {
+    if (!value) return false
+    // File object (new upload)
+    if (value instanceof File) return true
+    //  Existing URL (edit case)
+    if (typeof value === 'string') return true
+    return false
+  })
+  .test(
+    'fileSize',
+    'Image size must be less than 2MB',
+    value => {
+      // ✅ Skip size check for URL
       if (typeof value === 'string') return true
-      return false
-    })
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    )
+      // ✅ Validate file size
+      if (value instanceof File) {
+        return value.size <= 2 * 1024 * 1024
+      }
+      return true
+    }
+  )
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({
@@ -250,10 +267,6 @@ export const purchaseValidationSchema = Yup.object({
   supplier_name: Yup.string().trim().required('Supplier name is required'),
   invoice_number: Yup.string().trim().required('Invoice number is required'),
   invoice_date: Yup.string().required('Enter  date'),
-  cost_price: Yup.number()
-    .typeError('Cost price must be a number')
-    .min(0, 'Cost price cannot be negative')
-    .required('Cost price is required')
 })
 
 export const addChargeSchema = Yup.object({

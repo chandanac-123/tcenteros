@@ -70,7 +70,7 @@ const Header = () => {
                   <img
                     src={data?.profile_photo || defalutUser}
                     alt='logo'
-                    className='w-8 h-8 mr-4 rounded-full'
+                    className='w-8 h-8 mr-2 rounded-full'
                   />
                   <div className='flex flex-col'>
                     <span className='text-textwhite text-xs font-normal whitespace-nowrap'>
