@@ -33,141 +33,287 @@ router = APIRouter()
 
 
 #dashboard data for billing - total revenue, pending payments, network earnings, this month total, revenue trend chart (monthly memberships, inventory sales, networking)
+# @router.get("/billing/dashboard", summary="Billing Dashboard")
+# async def get_billing_dashboard(
+#     db: AsyncSession = Depends(get_async_session),
+#     current_admin: dict = Depends(centeradmin_required),
+# ):
+#     """
+#     Get comprehensive billing dashboard data.
+
+#     Returns:
+#     - Total revenue (all time)
+#     - Pending payments
+#     - Network earnings
+#     - This month total revenue
+#     - Revenue trend chart (monthly: memberships, inventory sales, networking)
+#     """
+#     from sqlalchemy import extract
+
+#     center_id = current_admin["center_id"]
+#     today = date.today()
+#     current_year = today.year
+
+#     # Current month date range
+#     month_start = today.replace(day=1)
+#     next_month = month_start.replace(day=28) + timedelta(days=4)
+#     month_end = next_month.replace(day=1) - timedelta(days=1)
+
+#     # ===== 1. TOTAL REVENUE (All Time) =====
+#     total_revenue_query = select(
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.status == PaymentOrderStatus.paid
+#     )
+#     total_revenue_result = await db.execute(total_revenue_query)
+#     total_revenue = float(total_revenue_result.scalar_one() or 0)
+
+#     # ===== 2. PENDING PAYMENTS =====
+#     pending_payments_query = select(
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.status.in_([
+#             PaymentOrderStatus.pending, 
+#             PaymentOrderStatus.unpaid,
+#             PaymentOrderStatus.created
+#         ])
+#     )
+#     pending_payments_result = await db.execute(pending_payments_query)
+#     pending_payments = float(pending_payments_result.scalar_one() or 0)
+
+#     # ===== 3. NETWORK EARNINGS =====
+#     # Sum all paid networking payment orders (network_in and network_out)
+#     network_earnings_query = select(
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
+#         PaymentOrder.status == PaymentOrderStatus.paid
+#     )
+#     network_earnings_result = await db.execute(network_earnings_query)
+#     network_earnings = float(network_earnings_result.scalar_one() or 0)
+
+#     # ===== 4. THIS MONTH TOTAL =====
+#     this_month_query = select(
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.status == PaymentOrderStatus.paid,
+#         PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
+#         PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time())
+#     )
+#     this_month_result = await db.execute(this_month_query)
+#     this_month_total = float(this_month_result.scalar_one() or 0)
+
+#     # ===== 5. REVENUE TREND CHART (Monthly for current year) =====
+#     month_names = [
+#         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+#         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+#     ]
+
+#     # A. Monthly Membership Revenue
+#     membership_revenue_query = select(
+#         extract('month', PaymentOrder.created_at).label('month'),
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.order_type.in_([OrderType.membership, OrderType.membership_renewal]),
+#         PaymentOrder.status == PaymentOrderStatus.paid,
+#         extract('year', PaymentOrder.created_at) == current_year
+#     ).group_by('month')
+
+#     membership_result = await db.execute(membership_revenue_query)
+#     monthly_membership = {int(row.month): float(row.revenue) for row in membership_result}
+
+#     # B. Monthly Inventory Sales Revenue
+#     product_ids_query = select(Product.id).where(Product.center_id == center_id)
+#     product_ids_result = await db.execute(product_ids_query)
+#     product_ids = [str(row[0]) for row in product_ids_result.all()]
+
+#     monthly_inventory = {}
+#     if product_ids:
+#         inventory_revenue_query = select(
+#             extract('month', Sale.created_at).label('month'),
+#             func.coalesce(func.sum(Sale.total_amount), 0).label('revenue')
+#         ).where(
+#             Sale.center_id == center_id,
+#             Sale.status == "completed",
+#             extract('year', Sale.created_at) == current_year
+#         ).group_by('month')
+
+#         inventory_result = await db.execute(inventory_revenue_query)
+#         monthly_inventory = {int(row.month): float(row.revenue) for row in inventory_result}
+
+#     # C. Monthly Networking Revenue (network_in and network_out)
+#     networking_revenue_query = select(
+#         extract('month', PaymentOrder.created_at).label('month'),
+#         func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
+#     ).where(
+#         PaymentOrder.center_id == center_id,
+#         PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
+#         PaymentOrder.status == PaymentOrderStatus.paid,
+#         extract('year', PaymentOrder.created_at) == current_year
+#     ).group_by('month')
+
+#     networking_result = await db.execute(networking_revenue_query)
+#     monthly_networking = {int(row.month): float(row.revenue) for row in networking_result}
+
+#     # Build revenue trend array for all 12 months
+#     revenue_trend_chart = []
+#     for month_num in range(1, 13):
+#         revenue_trend_chart.append({
+#             "month": month_names[month_num - 1],
+#             "memberships": round(monthly_membership.get(month_num, 0), 2),
+#             "inventory_sales": round(monthly_inventory.get(month_num, 0), 2),
+#             "networking": round(monthly_networking.get(month_num, 0), 2)
+#         })
+
+#     return {
+#         "center_id": str(center_id),
+#         "generated_at": datetime.now().isoformat(),
+#         "total_revenue": round(total_revenue, 2),
+#         "pending_payments": round(pending_payments, 2),
+#         "network_earnings": round(network_earnings, 2),
+#         "this_month_total": round(this_month_total, 2),
+#         "revenue_trend_chart": revenue_trend_chart
+#     }
+
+
 @router.get("/billing/dashboard", summary="Billing Dashboard")
 async def get_billing_dashboard(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
-    """
-    Get comprehensive billing dashboard data.
-
-    Returns:
-    - Total revenue (all time)
-    - Pending payments
-    - Network earnings
-    - This month total revenue
-    - Revenue trend chart (monthly: memberships, inventory sales, networking)
-    """
     from sqlalchemy import extract
 
     center_id = current_admin["center_id"]
     today = date.today()
     current_year = today.year
 
-    # Current month date range
     month_start = today.replace(day=1)
     next_month = month_start.replace(day=28) + timedelta(days=4)
     month_end = next_month.replace(day=1) - timedelta(days=1)
 
-    # ===== 1. TOTAL REVENUE (All Time) =====
+    # ✅ ALLOWED ORDER TYPES (IMPORTANT FIX)
+    allowed_order_types = [
+        OrderType.membership,
+        OrderType.membership_renewal,
+        OrderType.membership_upgrade,
+        OrderType.inventory_sale,
+        OrderType.network_in,
+        OrderType.network_out,
+    ]
+
+    # ===== 1. TOTAL REVENUE =====
     total_revenue_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.status == PaymentOrderStatus.paid
+        PaymentOrder.status == PaymentOrderStatus.paid,
+        PaymentOrder.order_type.in_(allowed_order_types)  # ✅ FIX
     )
-    total_revenue_result = await db.execute(total_revenue_query)
-    total_revenue = float(total_revenue_result.scalar_one() or 0)
+    total_revenue = float((await db.execute(total_revenue_query)).scalar() or 0)
 
     # ===== 2. PENDING PAYMENTS =====
-    pending_payments_query = select(
+    pending_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
+        PaymentOrder.order_type.in_(allowed_order_types),  # ✅ FIX
         PaymentOrder.status.in_([
-            PaymentOrderStatus.pending, 
+            PaymentOrderStatus.pending,
             PaymentOrderStatus.unpaid,
             PaymentOrderStatus.created
         ])
     )
-    pending_payments_result = await db.execute(pending_payments_query)
-    pending_payments = float(pending_payments_result.scalar_one() or 0)
+    pending_payments = float((await db.execute(pending_query)).scalar() or 0)
 
     # ===== 3. NETWORK EARNINGS =====
-    # Sum all paid networking payment orders (network_in and network_out)
-    network_earnings_query = select(
+    network_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
         PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
         PaymentOrder.status == PaymentOrderStatus.paid
     )
-    network_earnings_result = await db.execute(network_earnings_query)
-    network_earnings = float(network_earnings_result.scalar_one() or 0)
+    network_earnings = float((await db.execute(network_query)).scalar() or 0)
 
     # ===== 4. THIS MONTH TOTAL =====
     this_month_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
+        PaymentOrder.order_type.in_(allowed_order_types),  # ✅ FIX
         PaymentOrder.status == PaymentOrderStatus.paid,
         PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
         PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time())
     )
-    this_month_result = await db.execute(this_month_query)
-    this_month_total = float(this_month_result.scalar_one() or 0)
+    this_month_total = float((await db.execute(this_month_query)).scalar() or 0)
 
-    # ===== 5. REVENUE TREND CHART (Monthly for current year) =====
-    month_names = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ]
+    # ===== 5. REVENUE TREND =====
+    month_names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
-    # A. Monthly Membership Revenue
-    membership_revenue_query = select(
+    # MEMBERSHIP
+    membership_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
+        func.sum(PaymentOrder.total_amount).label('revenue')
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_([OrderType.membership, OrderType.membership_renewal]),
+        PaymentOrder.order_type.in_([
+            OrderType.membership,
+            OrderType.membership_renewal,
+            OrderType.membership_upgrade
+        ]),
         PaymentOrder.status == PaymentOrderStatus.paid,
         extract('year', PaymentOrder.created_at) == current_year
     ).group_by('month')
 
-    membership_result = await db.execute(membership_revenue_query)
-    monthly_membership = {int(row.month): float(row.revenue) for row in membership_result}
+    monthly_membership = {
+        int(r.month): float(r.revenue) for r in (await db.execute(membership_query))
+    }
 
-    # B. Monthly Inventory Sales Revenue
-    product_ids_query = select(Product.id).where(Product.center_id == center_id)
-    product_ids_result = await db.execute(product_ids_query)
-    product_ids = [str(row[0]) for row in product_ids_result.all()]
+    # INVENTORY (from Sale)
+    inventory_query = select(
+        extract('month', Sale.created_at).label('month'),
+        func.sum(Sale.total_amount).label('revenue')
+    ).where(
+        Sale.center_id == center_id,
+        Sale.status == "completed",
+        extract('year', Sale.created_at) == current_year
+    ).group_by('month')
 
-    monthly_inventory = {}
-    if product_ids:
-        inventory_revenue_query = select(
-            extract('month', Sale.created_at).label('month'),
-            func.coalesce(func.sum(Sale.total_amount), 0).label('revenue')
-        ).where(
-            Sale.center_id == center_id,
-            Sale.status == "completed",
-            extract('year', Sale.created_at) == current_year
-        ).group_by('month')
+    monthly_inventory = {
+        int(r.month): float(r.revenue) for r in (await db.execute(inventory_query))
+    }
 
-        inventory_result = await db.execute(inventory_revenue_query)
-        monthly_inventory = {int(row.month): float(row.revenue) for row in inventory_result}
-
-    # C. Monthly Networking Revenue (network_in and network_out)
-    networking_revenue_query = select(
+    # NETWORKING
+    networking_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('revenue')
+        func.sum(PaymentOrder.total_amount).label('revenue')
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
+        PaymentOrder.order_type.in_([
+            OrderType.network_in,
+            OrderType.network_out
+        ]),
         PaymentOrder.status == PaymentOrderStatus.paid,
         extract('year', PaymentOrder.created_at) == current_year
     ).group_by('month')
 
-    networking_result = await db.execute(networking_revenue_query)
-    monthly_networking = {int(row.month): float(row.revenue) for row in networking_result}
+    monthly_networking = {
+        int(r.month): float(r.revenue) for r in (await db.execute(networking_query))
+    }
 
-    # Build revenue trend array for all 12 months
+    # FINAL CHART
     revenue_trend_chart = []
-    for month_num in range(1, 13):
+    for m in range(1, 13):
         revenue_trend_chart.append({
-            "month": month_names[month_num - 1],
-            "memberships": round(monthly_membership.get(month_num, 0), 2),
-            "inventory_sales": round(monthly_inventory.get(month_num, 0), 2),
-            "networking": round(monthly_networking.get(month_num, 0), 2)
+            "month": month_names[m-1],
+            "memberships": round(monthly_membership.get(m, 0), 2),
+            "inventory_sales": round(monthly_inventory.get(m, 0), 2),
+            "networking": round(monthly_networking.get(m, 0), 2)
         })
 
     return {
