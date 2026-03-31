@@ -16,7 +16,6 @@ const Products = () => {
     page: 1
   })
   const { data, isFetching } = useAllProductsQuery(tableParams)
- 
 
   const { mutateAsync: deleteProduct } = useDeleteProductMutation()
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -93,9 +92,9 @@ const Products = () => {
   }
 
   return (
-    <div className='flex flex-col'>
-      <div className='flex justify-between px-4 py-2 items-center'>
-        <h1 className='text-xl font-medium'>Products Lists</h1>
+    <div className='flex flex-col gap-4'>
+      <div className='flex justify-between items-center'>
+        <h1 className='text-lg font-semibold'>Products List</h1>
         <Button size='addbutton' type='submit' onClick={() => setOpen(true)}>
           + Add Product
         </Button>

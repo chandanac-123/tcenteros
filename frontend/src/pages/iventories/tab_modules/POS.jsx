@@ -63,10 +63,8 @@ const POS = () => {
   ]
 
   return (
-    <div>
-      <div className=''>
-        <h1 className='text-xl font-medium py-4'>POS</h1>
-      </div>
+    <div className='flex flex-col gap-4'>
+        <h1 className='text-lg font-semibold'>POS</h1>
       <div className=''>
         <DataTable
           columns={columns}

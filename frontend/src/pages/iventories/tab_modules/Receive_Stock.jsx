@@ -54,9 +54,9 @@ const Receive_Stock = () => {
 
 
   return (
-    <div>
-      <div className='flex justify-between px-4 py-2 items-center'>
-        <h1 className='text-xl font-medium'>Receive Stock</h1>
+    <div className='flex flex-col gap-4'>
+      <div className='flex justify-between items-center'>
+        <h1 className='text-lg font-semibold'>Receive Stock</h1>
         <Button
           size='addbutton'
           type='submit'

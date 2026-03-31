@@ -31,7 +31,24 @@ const Memberships = () => {
         return <span>{formatDate(row.original.end_date)}</span>
       }
     },
-    { accessorKey: 'days_until_expiry', header: 'Days until expiry' },
+    {
+      accessorKey: 'days_until_expiry',
+      header: `Day's until expiry`,
+      cell: ({ row }) => {
+        const days = row.original.days_until_expiry
+        if (days < 0) {
+          return (
+            <span className='text-red-500'>
+              Expired {Math.abs(days)} day's ago
+            </span>
+          )
+        }
+        if (days === 0) {
+          return <span className='text-orange-500'>Expires today</span>
+        }
+        return <span className='text-green-600'>{days} day's</span>
+      }
+    },
     { accessorKey: 'total_amount', header: 'Amount' },
     {
       header: 'Actions',

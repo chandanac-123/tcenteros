@@ -9,7 +9,7 @@ const CountrySelect = ({ value, onChange, label }) => {
   }
 
   const onPlaceChanged = () => {
-    const place = autocompleteRef.current.getPlace()
+    const place = autocompleteRef.current?.getPlace()
 
     if (!place || !place.address_components) return
 
@@ -19,9 +19,14 @@ const CountrySelect = ({ value, onChange, label }) => {
     place.address_components.forEach(component => {
       if (component.types.includes('country')) {
         country = component.long_name
-        countryCode = component.short_name //  IMPORTANT
+        countryCode = component.short_name
       }
     })
+
+    // fallback
+    if (!country) {
+      country = place.name || ''
+    }
 
     onChange({
       country,
@@ -29,26 +34,41 @@ const CountrySelect = ({ value, onChange, label }) => {
     })
   }
 
+  const handleInputChange = e => {
+    const typed = e.target.value
+
+    onChange({
+      country: typed,
+      countryCode: ''
+    })
+  }
+
   return (
     <div>
-      {label && <label className='block mb-1 text-sm font-normal text-textblack'>{label}</label>}
-      <div
-        onMouseDown={e => e.stopPropagation()}
-        onClick={e => e.stopPropagation()}
-      >
+      {label && (
+        <label className='block mb-1 text-sm text-textblack'>
+          {label}
+        </label>
+      )}
+
+      <div onMouseDown={e => e.stopPropagation()}>
         <Autocomplete
           onLoad={onLoad}
           onPlaceChanged={onPlaceChanged}
-          options={{ types: ['(regions)'] }}
+          options={{
+            types: ['(regions)'],
+            fields: ['address_components', 'name'] // 🔥 important
+          }}
         >
           <input
             type='text'
             placeholder='Search Country'
-            defaultValue={value || ''}
+            value={value || ''}
+            onChange={handleInputChange}
             onKeyDown={e => {
               if (e.key === 'Enter') e.preventDefault()
             }}
-            className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm disabled:opacity-50'
+            className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
           />
         </Autocomplete>
       </div>
