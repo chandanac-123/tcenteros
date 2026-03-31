@@ -267,10 +267,6 @@ export const purchaseValidationSchema = Yup.object({
   supplier_name: Yup.string().trim().required('Supplier name is required'),
   invoice_number: Yup.string().trim().required('Invoice number is required'),
   invoice_date: Yup.string().required('Enter  date'),
-  cost_price: Yup.number()
-    .typeError('Cost price must be a number')
-    .min(0, 'Cost price cannot be negative')
-    .required('Cost price is required')
 })
 
 export const addChargeSchema = Yup.object({

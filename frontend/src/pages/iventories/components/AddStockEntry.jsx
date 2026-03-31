@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
@@ -35,7 +35,7 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
         const payload = {
           ...values,
           quantity: parseInt(values.quantity, 10),
-          cost_price: parseInt(values.cost_price, 10)
+          cost_price: Number(values.cost_price || 0)
         }
         await createStockEntry(payload)
         formik.resetForm()
@@ -47,6 +47,18 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
   const handleDateChange = (field, val) => {
     formik.setFieldValue(field, val ? format(val, 'yyyy-MM-dd') : '')
   }
+
+  useEffect(() => {
+    const selectedProduct = productDropdownData?.products?.find(
+      p => p.product_id === formik.values.product_id
+    )
+    const unitPrice = selectedProduct?.base_price || 0
+    if (unitPrice) {
+      formik.setFieldValue('cost_price', unitPrice)
+    } else {
+      formik.setFieldValue('cost_price', '')
+    }
+  }, [formik.values.product_id, productDropdownData])
 
   return (
     <CustomeModal
@@ -123,12 +135,11 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
           />
 
           <Input
-            label='Cost Price'
-            placeholder='Add'
+            disabled={true}
+            label='Unit Cost'
             name='cost_price'
             value={formik.values.cost_price}
-            onChange={formik.handleChange}
-            error={formik.touched.cost_price && formik.errors.cost_price}
+            placeholder='Auto-calculated'
           />
         </div>
 

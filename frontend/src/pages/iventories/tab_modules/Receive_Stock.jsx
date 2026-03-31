@@ -29,7 +29,7 @@ const Receive_Stock = () => {
     },
     {
       accessorKey: 'cost_price',
-      header: 'Cost Price'
+      header: 'Unit Price'
     },
     {
       accessorKey: 'cost_price',
