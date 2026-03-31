@@ -185,13 +185,14 @@ async def get_billing_dashboard(
 #------------billing sales endpoints----------------
 
 # Add this to your billing routes file (or create a new billing API file)
+# API 1: Get unified sales/billing transactions (inventory sales & memberships only)
 @router.get("/billing/sales", summary="Get unified sales/billing transactions")
 async def get_unified_sales_transactions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     date_from: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     date_to: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
-    order_type: Optional[str] = Query(None, description="Filter by order type: membership, networking_access, stock_purchase"),
+    order_type: Optional[str] = Query(None, description="Filter by order type: membership, inventory_sale"),
     payment_status: Optional[str] = Query(None, description="Filter by status: paid, pending, unpaid, failed"),
     payment_method_filter: Optional[str] = Query(None, description="Filter by payment method: cash, upi, card, bank_transfer, other"),
     customer_search: Optional[str] = Query(None, description="Search by customer name or mobile"),
@@ -201,7 +202,7 @@ async def get_unified_sales_transactions(
     current_admin: dict = Depends(centeradmin_required)
 ):
     """
-    List all sales transactions: memberships, networking access, and product purchases.
+    List all sales transactions: memberships and inventory sales only.
     Only includes sales where the center is the seller (payee_type == center).
     """
     from app.auth.models.models import CenterAdmin, Employee
@@ -231,18 +232,16 @@ async def get_unified_sales_transactions(
     # Build WHERE clauses
     where_clauses = [
         PaymentOrder.center_id == center_id,
-        PaymentOrder.payee_type == PayeeType.center  # Only center's own sales
+        PaymentOrder.payee_type == PayeeType.center
     ]
 
-    # Only include specific order types (membership, networking, product sales)
+    # Only include membership and inventory_sale order types
     where_clauses.append(
         or_(
             PaymentOrder.order_type == OrderType.membership,
             PaymentOrder.order_type == OrderType.membership_renewal,
             PaymentOrder.order_type == OrderType.membership_upgrade,
-            PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
-            PaymentOrder.order_type == OrderType.inventory_sale,
-            PaymentOrder.order_type == OrderType.feature_purchase
+            PaymentOrder.order_type == OrderType.inventory_sale
         )
     )
 
@@ -276,19 +275,10 @@ async def get_unified_sales_transactions(
                     PaymentOrder.order_type == OrderType.membership_upgrade
                 )
             )
-        elif order_type == "networking_access":
-            where_clauses.append(
-                PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out])
-            )
-        elif order_type == "stock_purchase":
-            where_clauses.append(
-                or_(
-                    PaymentOrder.order_type == OrderType.inventory_sale,
-                    PaymentOrder.order_type == OrderType.feature_purchase
-                )
-            )
+        elif order_type == "inventory_sale":
+            where_clauses.append(PaymentOrder.order_type == OrderType.inventory_sale)
         else:
-            raise HTTPException(400, f"Invalid order_type. Use: membership, networking_access, or stock_purchase")
+            raise HTTPException(400, f"Invalid order_type. Use: membership or inventory_sale")
 
     # Base query - fetch payment orders only first
     query = select(PaymentOrder).where(*where_clauses)
@@ -302,6 +292,11 @@ async def get_unified_sales_transactions(
         query = query.order_by(
             PaymentOrder.created_at.desc() if sort_order == "desc" else PaymentOrder.created_at.asc()
         )
+
+    # Get total count
+    count_query = select(func.count()).select_from(PaymentOrder).where(*where_clauses)
+    total_result = await db.execute(count_query)
+    total = total_result.scalar_one()
 
     # Apply pagination
     query = query.offset((page - 1) * page_size).limit(page_size)
@@ -375,32 +370,16 @@ async def get_unified_sales_transactions(
             else:
                 customer_name = user.email
 
-        # Apply customer search filter in Python if needed
-        if customer_search:
-            search_lower = customer_search.lower()
-            if not (
-                (customer_name and search_lower in customer_name.lower()) or
-                (customer_mobile and search_lower in customer_mobile.lower())
-            ):
-                continue
-
         # Determine display labels
         if payment_order.order_type in [OrderType.membership, OrderType.membership_renewal, OrderType.membership_upgrade]:
             type_label = "Membership"
             source_label = "Local"
-        elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
-            type_label = "Network"
-            source_label = "Visit"
-        elif payment_order.order_type in [OrderType.inventory_sale, OrderType.feature_purchase]:
+        elif payment_order.order_type == OrderType.inventory_sale:
             type_label = "Product"
             source_label = "POS"
         else:
             type_label = "Other"
             source_label = "Other"
-
-        count_query = select(func.count()).where(*where_clauses)
-        total_result = await db.execute(count_query)
-        total = total_result.scalar_one()
 
         transactions.append({
             "payment_order_id": str(payment_order.payment_order_id),
@@ -434,8 +413,7 @@ async def get_unified_sales_transactions(
     }
 
 
-
-
+# API 2: Get bill detail (inventory sales & memberships only)
 @router.get("/billing/sales/{payment_order_id}", summary="Get bill detail")
 async def get_bill_detail(
     payment_order_id: str = Path(..., description="Payment Order ID"),
@@ -444,13 +422,13 @@ async def get_bill_detail(
 ):
     """
     Get detailed information about a specific bill/payment order.
+    Supports: memberships and inventory sales only.
     Used for the bill detail drawer when clicking on a transaction row.
     """
     from app.billing.models.models import PaymentOrder, OrderType
     from app.auth.models.models import Member, User, CenterAdmin, Employee
     from app.inventory.models.models import Sale, SaleItem, Product
     from app.membership.models.models import MemberMembership, Membership
-    from app.auth.models.models import UserCenterMembership
     from app.center.models.models import Center
 
     center_id = current_admin.get("center_id")
@@ -461,7 +439,7 @@ async def get_bill_detail(
     po_result = await db.execute(
         select(PaymentOrder).where(PaymentOrder.payment_order_id == payment_order_id)
     )
-    payment_order = po_result.scalar_one_or_none()
+    payment_order = po_result.unique().scalar_one_or_none()
     
     if not payment_order:
         raise HTTPException(404, "Payment order not found")
@@ -475,7 +453,7 @@ async def get_bill_detail(
         user_result = await db.execute(
             select(User).where(User.id == payment_order.payer_user_id)
         )
-        customer = user_result.scalar_one_or_none()
+        customer = user_result.unique().scalar_one_or_none()
         
         if customer:
             customer_name = customer.email
@@ -485,19 +463,19 @@ async def get_bill_detail(
                 member_result = await db.execute(
                     select(Member).where(Member.id == payment_order.payer_user_id)
                 )
-                member = member_result.scalar_one_or_none()
+                member = member_result.unique().scalar_one_or_none()
                 customer_name = member.full_name if member and member.full_name else customer.email
             elif customer.role == "centeradmin":
                 admin_result = await db.execute(
                     select(CenterAdmin).where(CenterAdmin.id == payment_order.payer_user_id)
                 )
-                admin = admin_result.scalar_one_or_none()
+                admin = admin_result.unique().scalar_one_or_none()
                 customer_name = admin.full_name if admin and admin.full_name else customer.email
             elif customer.role == "employee":
                 employee_result = await db.execute(
                     select(Employee).where(Employee.id == payment_order.payer_user_id)
                 )
-                employee = employee_result.scalar_one_or_none()
+                employee = employee_result.unique().scalar_one_or_none()
                 customer_name = employee.full_name if employee and employee.full_name else customer.email
             
             customer_info = {
@@ -513,7 +491,7 @@ async def get_bill_detail(
         center_result = await db.execute(
             select(Center).where(Center.id == payment_order.center_id)
         )
-        center = center_result.scalar_one_or_none()
+        center = center_result.unique().scalar_one_or_none()
         
         if center:
             center_info = {
@@ -532,49 +510,21 @@ async def get_bill_detail(
             mm_result = await db.execute(
                 select(MemberMembership).where(MemberMembership.id == payment_order.reference_id)
             )
-            member_membership = mm_result.scalar_one_or_none()
+            member_membership = mm_result.unique().scalar_one_or_none()
             
             if member_membership and member_membership.membership_id:
                 membership_result = await db.execute(
-                    select(Membership).where(Membership.id == member_membership.membership_id)
+                    select(Membership).where(Membership.membership_id == member_membership.membership_id)
                 )
-                membership = membership_result.scalar_one_or_none()
+                membership = membership_result.unique().scalar_one_or_none()
                 
                 if membership:
                     line_items.append({
                         "description": f"{membership.membership_name} - {membership.duration_count} {membership.duration_unit.value}",
                         "quantity": 1,
-                        "unit_price": str(member_membership.paid_amount),
-                        "total": str(member_membership.paid_amount),
+                        "unit_price": str(member_membership.total_amount),
+                        "total": str(member_membership.total_amount),
                     })
-
-    elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
-        # Get networking details
-        if payment_order.reference_id:
-            ucm_result = await db.execute(
-                select(UserCenterMembership).where(UserCenterMembership.id == payment_order.reference_id)
-            )
-            network_membership = ucm_result.scalar_one_or_none()
-            
-            if network_membership:
-                network_center = None
-                if network_membership.center_id:
-                    nc_result = await db.execute(
-                        select(Center).where(Center.id == network_membership.center_id)
-                    )
-                    network_center = nc_result.scalar_one_or_none()
-                
-                days = 1
-                if network_membership.start_date and network_membership.end_date:
-                    days = (network_membership.end_date - network_membership.start_date).days + 1
-                
-                line_items.append({
-                    "description": f"Networking Access - {network_center.center_name if network_center else 'N/A'}",
-                    "quantity": days,
-                    "unit_price": str(payment_order.total_amount / Decimal(days)),
-                    "total": str(payment_order.total_amount),
-                    "period": f"{network_membership.start_date} to {network_membership.end_date}" if network_membership.start_date else None,
-                })
     
     elif payment_order.order_type == OrderType.inventory_sale:
         # Get product sale details
@@ -582,7 +532,7 @@ async def get_bill_detail(
             sale_result = await db.execute(
                 select(Sale).where(Sale.id == payment_order.reference_id)
             )
-            sale = sale_result.scalar_one_or_none()
+            sale = sale_result.unique().scalar_one_or_none()
             
             if sale:
                 # Get sale items
@@ -591,23 +541,20 @@ async def get_bill_detail(
                     .join(Product, SaleItem.product_id == Product.id)
                     .where(SaleItem.sale_id == sale.id)
                 )
-                sale_items = sale_items_result.all()
+                sale_items = sale_items_result.unique().all()
                 
                 for sale_item, product in sale_items:
                     line_items.append({
                         "description": product.name if product else "Product",
                         "quantity": int(sale_item.quantity),
                         "unit_price": str(sale_item.unit_price),
-                        "total": str(sale_item.total_price),
+                        "total": str(sale_item.line_subtotal),
                     })
 
     # Determine labels
     if payment_order.order_type in [OrderType.membership, OrderType.membership_renewal, OrderType.membership_upgrade]:
         type_label = "Membership"
         source_label = "Local"
-    elif payment_order.order_type in [OrderType.network_in, OrderType.network_out]:
-        type_label = "Network"
-        source_label = "Visit"
     elif payment_order.order_type == OrderType.inventory_sale:
         type_label = "Product"
         source_label = "POS"
@@ -638,7 +585,7 @@ async def get_bill_detail(
         "reference_id": str(payment_order.reference_id) if payment_order.reference_id else None,
     }
 
-
+ 
 
 #------------billing membership endpoints----------------
 
@@ -831,24 +778,20 @@ async def get_renewal_details(
     }
 
 
-@router.post("/billing/memberships/{member_membership_id}/renew", summary="Renew membership")
-async def renew_membership(
+@router.get("/billing/memberships/{member_membership_id}", summary="Get membership billing detail")
+async def get_membership_billing_detail(
     member_membership_id: str = Path(..., description="Member Membership ID"),
-    payload: MembershipRenewalRequest = None,
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required)
 ):
     """
-    Process membership renewal with payment.
-    Creates a new membership period and payment order.
+    Get detailed billing information for a specific membership.
     """
     center_id = current_admin.get("center_id")
-    admin_id = current_admin.get("id")
-    
     if not center_id:
         raise HTTPException(status_code=403, detail="No center assigned")
 
-    # Get existing member membership
+    # Get member membership
     mm_result = await db.execute(
         select(MemberMembership).where(MemberMembership.id == member_membership_id)
     )
@@ -860,124 +803,71 @@ async def renew_membership(
     if str(member_membership.center_id) != str(center_id):
         raise HTTPException(403, "Access denied")
 
-    # Get membership plan
+    # Get membership
     membership_result = await db.execute(
         select(Membership).where(Membership.membership_id == member_membership.membership_id)
     )
     membership = membership_result.scalar_one_or_none()
 
-    if not membership:
-        raise HTTPException(404, "Membership plan not found")
+    # Get member
+    member_result = await db.execute(
+        select(Member).where(Member.id == member_membership.member_id)
+    )
+    member = member_result.scalar_one_or_none()
 
-    # Calculate new dates
-    current_end_date = member_membership.end_date or datetime.utcnow()
-    
-    if membership.duration_unit == DurationUnitEnum.day:
-        new_end_date = current_end_date + timedelta(days=membership.duration_count)
-    elif membership.duration_unit == DurationUnitEnum.month:
-        new_end_date = current_end_date + timedelta(days=membership.duration_count * 30)
-    elif membership.duration_unit == DurationUnitEnum.year:
-        new_end_date = current_end_date + timedelta(days=membership.duration_count * 365)
+    user_result = await db.execute(
+        select(User).where(User.id == member_membership.member_id)
+    )
+    user = user_result.scalar_one_or_none()
 
-    # Calculate amounts
-    base_price = Decimal(str(membership.default_price))
-    discount = Decimal(str(payload.discount_amount)) if payload.discount_amount else Decimal("0.00")
-    subtotal = (base_price - discount).quantize(Decimal("0.01"))
+    # Get payment history for this membership
+    payments_result = await db.execute(
+        select(PaymentOrder).where(
+            and_(
+                PaymentOrder.reference_id == member_membership.id,
+                PaymentOrder.order_type.in_([
+                    OrderType.membership,
+                    OrderType.membership_renewal,
+                    OrderType.membership_upgrade
+                ])
+            )
+        ).order_by(PaymentOrder.created_at.desc())
+    )
+    payments = payments_result.scalars().all()
 
-    # Calculate tax
-    tax_amount = Decimal("0.00")
-    tax_category_id = None
-    
-    if payload.tax_category_id:
-        tax_result = await db.execute(
-            select(TaxCategory).where(TaxCategory.id == payload.tax_category_id)
-        )
-        tax_category = tax_result.scalar_one_or_none()
-        if tax_category and tax_category.is_active:
-            tax_percentage = Decimal(str(tax_category.tax_percentage or "0.00"))
-            tax_amount = (subtotal * (tax_percentage / Decimal("100.0"))).quantize(Decimal("0.01"))
-            tax_category_id = tax_category.id
-    elif member_membership.tax_category_id:
-        # Use existing tax category
-        tax_result = await db.execute(
-            select(TaxCategory).where(TaxCategory.id == member_membership.tax_category_id)
-        )
-        tax_category = tax_result.scalar_one_or_none()
-        if tax_category and tax_category.is_active:
-            tax_percentage = Decimal(str(tax_category.tax_percentage or "0.00"))
-            tax_amount = (subtotal * (tax_percentage / Decimal("100.0"))).quantize(Decimal("0.01"))
-            tax_category_id = tax_category.id
-
-    total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"))
-
-    # Validate payment method
-    try:
-        payment_method_enum = PaymentMethod[payload.payment_method]
-    except KeyError:
-        raise HTTPException(400, f"Invalid payment method: {payload.payment_method}")
-
-    try:
-        # Create new member membership record for renewal
-        new_member_membership = MemberMembership(
-            member_id=member_membership.member_id,
-            membership_id=member_membership.membership_id,
-            center_id=UUID(center_id),
-            start_date=current_end_date,
-            end_date=new_end_date,
-            tax_category_id=tax_category_id,
-            total_amount=total_amount,
-            auto_renewal_enabled=member_membership.auto_renewal_enabled,
-            membership_status=member_membership.membership_status,
-            created_by=UUID(admin_id) if admin_id else None,
-        )
-        
-        db.add(new_member_membership)
-        await db.flush()
-
-        # Create payment order
-        payment_order = PaymentOrder(
-            payer_user_id=member_membership.member_id,
-            payer_type="user",
-            payee_type="center",
-            center_id=UUID(center_id),
-            order_type=OrderType.renewal,
-            reference_schema=ReferenceSchema.center,
-            reference_id=new_member_membership.id,
-            subtotal_amount=subtotal,
-            tax_amount=tax_amount,
-            total_amount=total_amount,
-            currency="INR",
-            status=PaymentOrderStatus.paid,
-            payment_method=payment_method_enum,
-            created_by=UUID(admin_id) if admin_id else None,
-        )
-
-        db.add(payment_order)
-        await db.flush()
-        
-        # Update the old membership end date to mark it as renewed
-        member_membership.membership_status = "inactive"
-        db.add(member_membership)
-        
-        await db.commit()
-        await db.refresh(new_member_membership)
-        await db.refresh(payment_order)
-
-        return {
-            "message": "Membership renewed successfully",
-            "member_membership_id": str(new_member_membership.id),
-            "payment_order_id": str(payment_order.payment_order_id),
-            "invoice_number": f"INV{str(payment_order.payment_order_id)[:8].upper()}",
-            "new_start_date": new_member_membership.start_date.date().isoformat(),
-            "new_end_date": new_member_membership.end_date.date().isoformat(),
-            "total_amount": str(total_amount),
-            "payment_status": "paid",
+    payment_history = [
+        {
+            "payment_order_id": str(p.payment_order_id),
+            "invoice_number": f"INV{str(p.payment_order_id)[:8].upper()}",
+            "date": p.created_at.date().isoformat() if p.created_at else None,
+            "amount": str(p.total_amount),
+            "payment_method": p.payment_method.value if p.payment_method else None,
+            "status": p.status.value if p.status else None,
         }
+        for p in payments
+    ]
 
-    except Exception as exc:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to renew membership: {exc}")
-
+    return {
+        "member_membership_id": str(member_membership.id),
+        "member": {
+            "id": str(member.id) if member else None,
+            "full_name": member.full_name if member and member.full_name else (user.email if user else "N/A"),
+            "mobile": user.mobile if user else None,
+            "email": user.email if user else None,
+        },
+        "membership": {
+            "id": str(membership.membership_id) if membership else None,
+            "name": membership.membership_name if membership else "N/A",
+            "code": membership.membership_code if membership else None,
+            "duration": f"{membership.duration_count} {membership.duration_unit.value}" if membership else None,
+        },
+        "start_date": member_membership.start_date.date().isoformat() if member_membership.start_date else None,
+        "end_date": member_membership.end_date.date().isoformat() if member_membership.end_date else None,
+        "total_amount": str(member_membership.total_amount),
+        "auto_renewal_enabled": member_membership.auto_renewal_enabled,
+        "membership_status": member_membership.membership_status.value if member_membership.membership_status else None,
+        "payment_history": payment_history,
+    }
 
 @router.get("/billing/memberships/{member_membership_id}", summary="Get membership billing detail")
 async def get_membership_billing_detail(
@@ -1168,7 +1058,7 @@ async def get_incoming_network_visits(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(network_membership_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type == OrderType.network_in
                 )
             )
         )
@@ -1351,7 +1241,7 @@ async def get_outgoing_network_visits(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(network_membership_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type == OrderType.network_out
                 )
             )
         )
@@ -1481,7 +1371,7 @@ async def get_network_visits_summary(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(incoming_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type == OrderType.network_in
                 )
             )
         )
@@ -1520,7 +1410,7 @@ async def get_network_visits_summary(
             select(PaymentOrder).where(
                 and_(
                     PaymentOrder.reference_id.in_(outgoing_ids),
-                    PaymentOrder.order_type == OrderType.networking_access
+                    PaymentOrder.order_type == OrderType.network_out
                 )
             )
         )
@@ -1601,12 +1491,21 @@ async def get_network_visit_detail(
     )
     visited_center = visited_center_result.scalar_one_or_none()
 
+    # Determine if this is incoming or outgoing for the current center
+    visit_type = "incoming" if str(network_membership.center_id) == str(center_id) else "outgoing"
+
+    # Set the correct order_type based on visit_type
+    if visit_type == "incoming":
+        order_type = OrderType.network_in
+    else:
+        order_type = OrderType.network_out
+
     # Get payment order
     payment_result = await db.execute(
         select(PaymentOrder).where(
             and_(
                 PaymentOrder.reference_id == network_membership.id,
-                PaymentOrder.order_type == OrderType.networking_access
+                PaymentOrder.order_type == order_type
             )
         )
     )
@@ -1656,9 +1555,6 @@ async def get_network_visit_detail(
     total_charge = payment_order.total_amount if payment_order else Decimal("0.00")
     platform_fee = (total_charge * platform_fee_percentage).quantize(Decimal("0.01"))
     earn = (total_charge - platform_fee).quantize(Decimal("0.01"))
-
-    # Determine if this is incoming or outgoing for the current center
-    visit_type = "incoming" if str(network_membership.center_id) == str(center_id) else "outgoing"
 
     return {
         "network_membership_id": str(network_membership.id),
