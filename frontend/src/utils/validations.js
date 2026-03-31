@@ -1,4 +1,6 @@
 import * as Yup from 'yup'
+const gstRegex =
+  /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
 export const onboardingValidationSchema = Yup.object().shape({
   center_name: Yup.string().required('Center name is required'),
@@ -21,7 +23,14 @@ export const onboardingValidationSchema = Yup.object().shape({
 
 export const invoiceValidationSchema = Yup.object().shape({
   address_line_1: Yup.string().required('Enter address'),
-  address_line_2: Yup.string().required('Enter pincode')
+  address_line_2: Yup.string().required('Enter pincode'),
+  gst_number: Yup.string()
+    .nullable()
+    .notRequired()
+    .test('gst-validation', 'Invalid GST number', value => {
+      if (!value) return true //  optional field
+      return gstRegex.test(value)
+    })
 })
 
 export const categoryValidationSchema = Yup.object().shape({

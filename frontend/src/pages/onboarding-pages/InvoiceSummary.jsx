@@ -127,7 +127,15 @@ const InvoiceSummary = () => {
                     }
                     name='gst_number'
                     value={formik.values.gst_number}
-                    onChange={formik.handleChange}
+                    onChange={e =>
+                      formik.setFieldValue(
+                        'gst_number',
+                        e.target.value.toUpperCase()
+                      )
+                    }
+                    error={
+                      formik.touched.gst_number && formik.errors.gst_number
+                    }
                   />
                 </form>
               </section>
@@ -184,7 +192,9 @@ const InvoiceSummary = () => {
                   </p>
                 </div>
                 <p className='text-2xl font-bold text-purple-600'>
-                  {data?.total_amount ? `₹${data?.total_amount.toFixed(2)}` : '₹00.00'}
+                  {data?.total_amount
+                    ? `₹${data?.total_amount.toFixed(2)}`
+                    : '₹00.00'}
                 </p>
               </div>
 

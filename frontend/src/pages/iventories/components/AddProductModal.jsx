@@ -15,6 +15,17 @@ import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import AddProductCategory from '@pages/settings/components/AddProductCategory'
 
+const unitTypes = [
+  { id: 'Kilogram', name: 'Kilogram' },
+  { id: 'Gram', name: 'Gram ' },
+  { id: 'Liter', name: 'Liter ' },
+  { id: 'Milliliter', name: 'Milliliter' },
+  { id: 'Piece', name: 'Piece' },
+  { id: 'Pack', name: 'Pack' },
+  { id: 'box', name: 'Box' },
+  { id: 'unit', name: 'Unit' }
+]
+
 const AddProductModal = ({ open, setOpen }) => {
   const { setSelectedTab } = useSettingsTabStore()
   const [categoryOpen, setCategoryOpen] = useState(false)
@@ -88,7 +99,9 @@ const AddProductModal = ({ open, setOpen }) => {
           <div className='flex items-center gap-2'>
             <div className='flex-1'>
               {isCategoryEmpty ? (
-                <p className='flex text-red_text items-baseline '>Create a category first.</p>
+                <p className='flex text-red_text items-baseline '>
+                  Create a category first.
+                </p>
               ) : (
                 <CustomeSelect
                   label='Category'
@@ -114,15 +127,13 @@ const AddProductModal = ({ open, setOpen }) => {
             />
           </div>
 
-          <Input
+          <CustomeSelect
             label='Unit Type'
-            placeholder='e.g. Piece, Kg'
             name='unit_of_measure'
+            placeholder='Select Unit'
+            options={unitTypes}
             value={formik.values.unit_of_measure}
-            onChange={formik.handleChange}
-            error={
-              formik.touched.unit_of_measure && formik.errors.unit_of_measure
-            }
+            onChange={value => formik.setFieldValue('unit_of_measure', value)}
           />
 
           <Input

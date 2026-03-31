@@ -36,7 +36,7 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
 
   const initialValues = {
     product_id: '',
-    quantity: ''
+    quantity: null
   }
 
   const formik = useFormik({
@@ -84,7 +84,7 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
     if (nextQuantity === currentQuantity) return
     await updateCartItem({
       id: itemId,
-      data: { quantity: nextQuantity }
+      data: { quantity: Number(nextQuantity) }
     })
   }
 

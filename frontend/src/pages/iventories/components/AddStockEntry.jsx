@@ -94,6 +94,7 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
           />
 
           <CustomDatePicker
+            disableFuture={true}
             label='Invoice Date'
             placeholder='Add'
             name='invoice_date'
@@ -122,7 +123,7 @@ const AddStockEntry = ({ openStockEntry, setOpenStockEntry }) => {
           />
 
           <Input
-            label='Total Cost'
+            label='Cost Price'
             placeholder='Add'
             name='cost_price'
             value={formik.values.cost_price}
