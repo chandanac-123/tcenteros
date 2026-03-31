@@ -126,7 +126,7 @@ const Network = () => {
       <div className='flex  flex-col gap-5 sm:gap-0 sm:flex-row justify-between items-center mb-4 p-3'>
         <CustomeTab
           tabList={networkTabs}
-          tabsListClass='p-[1px]'
+          tabsListClass='p-[1px] w-[500px]'
           defaultVal={activeTab}
           onChange={setActiveTab}
         />
