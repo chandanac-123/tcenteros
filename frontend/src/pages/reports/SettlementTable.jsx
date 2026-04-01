@@ -1,37 +1,41 @@
 import { DataTable } from '@common/components/DataTable'
 import { useConsolidatedSettlementsReportQuery } from '@api-queries/report/Query'
+import { formatDate } from '@utils/helper'
 
 const SettlementTable = ({ tableParams, setTableParams }) => {
-  const { data, isFetching } = useConsolidatedSettlementsReportQuery()
+  const { data, isFetching } =
+    useConsolidatedSettlementsReportQuery(tableParams)
 
   const columns = [
     {
-      accessorKey: 'center_name',
-      header: 'Center Name'
+      accessorKey: 'scenario',
+      header: 'Type'
+    },
+    {
+      accessorKey: 'type',
+      header: 'Scenario'
     },
     {
       accessorKey: 'date',
-      header: 'Date'
+      header: 'Date',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>{formatDate(row.original.date)}</span>
+      )
     },
     {
-      accessorKey: 'check_in_time',
-      header: 'Check In Time'
-    },
-    {
-      accessorKey: 'check_out_time',
-      header: 'Check Out Time '
-    },
-     {
-      accessorKey: 'total_income',
-      header: 'Total Income'
+      accessorKey: 'amount',
+      header: 'Amount'
     }
   ]
+
   return (
     <div>
       <DataTable
         columns={columns}
-        data={data?.by_center || []}
+        data={data?.data || []}
         paginationVisibile={true}
+        loading={isFetching}
+        pagination={data?.total_count}
         search={false}
         tableParams={tableParams}
         setTableParams={setTableParams}

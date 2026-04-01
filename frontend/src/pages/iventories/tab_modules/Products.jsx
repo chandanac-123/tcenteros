@@ -5,11 +5,11 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import {
   useAllProductsQuery,
   useDeleteProductMutation,
-  useInventoryProfitQuery
 } from '@api-queries/inventory/Query'
 import { Button } from '@pages/components/ui/button'
 import AddProductModal from '../components/AddProductModal'
 import DeleteModal from '@common/components/CustomeDelete'
+import AddInventoryProfit from '../components/AddInventoryProfit'
 
 const Products = () => {
   const [tableParams, setTableParams] = useState({
@@ -21,6 +21,7 @@ const Products = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
   const [open, setOpen] = useState(false)
+  const [inventoryOpen, setInventoryOpen] = useState(false)
 
   const columns = [
     {
@@ -95,10 +96,16 @@ const Products = () => {
     <div className='flex flex-col gap-4'>
       <div className='flex justify-between items-center'>
         <h1 className='text-lg font-semibold'>Products List</h1>
-        <Button size='addbutton' type='submit' onClick={() => setOpen(true)}>
-          + Add Product
-        </Button>
-        <AddProductModal open={open} setOpen={setOpen} />
+        <div className='flex gap-2'>
+          <Button size='addbutton' type='submit' onClick={() => setInventoryOpen(true)}>
+            + Inventory Profit
+          </Button>
+          <Button size='addbutton' type='submit' onClick={() => setOpen(true)}>
+            + Add Product
+          </Button>
+          <AddInventoryProfit open={inventoryOpen} setOpen={setInventoryOpen}/>
+          <AddProductModal open={open} setOpen={setOpen} />
+        </div>
       </div>
       <div className=''>
         <DataTable

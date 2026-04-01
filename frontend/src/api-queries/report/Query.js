@@ -36,19 +36,19 @@ export const useConsolidatedSettlementsReportQuery = data => {
   })
 }
 
-export const useGenerateConsolidatedIncomeReportMutation = () => {
+export const useGenerateConsolidatedIncomeReport = () => {
   return useMutation({
     mutationFn: data => generateConsolidatedIncomeReport(data)
   })
 }
 
-export const useGenerateConsolidatedExpensesReportMutation = () => {
+export const useGenerateConsolidatedExpensesReport = () => {
   return useMutation({
     mutationFn: data => generateConsolidatedExpensesReport(data)
   })
 }
 
-export const useGenerateConsolidatedSettlementsReportMutation = () => {
+export const useGenerateConsolidatedSettlementsReport = () => {
   return useMutation({
     mutationFn: data => generateConsolidatedSettlementsReport(data)
   })
