@@ -1,7 +1,7 @@
 import { Clock, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-export default function TimePicker ({ label, value, onChange ,error}) {
+export default function TimePicker ({ label, value, onChange, error }) {
   console.log('value: ', value)
   const [hour, setHour] = useState('')
   const [minute, setMinute] = useState('')
@@ -24,26 +24,26 @@ export default function TimePicker ({ label, value, onChange ,error}) {
     setPeriod(newPeriod)
   }, [value])
 
-const updateParent = (h, m, p) => {
-  if (h !== '' && m !== '') {
-    let hour24 = Number(h)
-    const minuteNum = Number(m)
-    if (isNaN(hour24) || isNaN(minuteNum)) {
-      onChange('')
-      return
-    }
-    if (p === 'PM' && hour24 !== 12) hour24 += 12
-    if (p === 'AM' && hour24 === 12) hour24 = 0
-    const formatted =
-      String(hour24).padStart(2, '0') +
-      ':' +
-      String(minuteNum).padStart(2, '0')
-    onChange(formatted)
-  } else {
-    onChange('')
-  }
-}
+  const updateParent = (h, m, p) => {
+    if (h !== '') {
+      let hour24 = Number(h)
+      let minuteNum = m === '' ? 0 : Number(m)
 
+      if (isNaN(hour24) || isNaN(minuteNum)) {
+        onChange('')
+        return
+      }
+      if (p === 'PM' && hour24 !== 12) hour24 += 12
+      if (p === 'AM' && hour24 === 12) hour24 = 0
+      const formatted =
+        String(hour24).padStart(2, '0') +
+        ':' +
+        String(minuteNum).padStart(2, '0')
+      onChange(formatted)
+    } else {
+      onChange('')
+    }
+  }
 
   const handleHourChange = e => {
     const value = e.target.value

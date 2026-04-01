@@ -147,7 +147,7 @@ const CenterOperations = () => {
         </div>
 
         <div className='flex gap-4'>
-          <div className='flex-1'>
+          {/* <div className='flex-1'>
             <Input
               label='Inventory Profit'
               name='inventory_profit'
@@ -160,8 +160,8 @@ const CenterOperations = () => {
               }
               error={centerTimeFormik.touched.inventory_profit && centerTimeFormik.errors.inventory_profit}
             />
-          </div>
-          <div className='flex-1'>
+          </div> */}
+          {/* <div className='flex-1'>
             <Input
               label='Pay Cycle'
               name='payroll_cycle_day'
@@ -174,7 +174,7 @@ const CenterOperations = () => {
               }
               error={centerTimeFormik.touched.payroll_cycle_day && centerTimeFormik.errors.payroll_cycle_day}
             />
-          </div>
+          </div> */}
           <div className='flex-1 justify-end items-center flex'>
             <Button
               id='center-timing'
@@ -188,7 +188,7 @@ const CenterOperations = () => {
         </div>
       </form>
 
-      <span className='text-lg font-medium'>Center Slots</span>
+      <span className='text-lg font-semibold'>Center Slots</span>
       <form
         className='space-y-4'
         id='create-center-slot'

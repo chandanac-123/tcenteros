@@ -22,9 +22,10 @@ import { Spinner } from '@pages/components/ui/spinner'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
-import {  useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatToDDMMYYYY } from '@utils/helper'
 import CreateMembershipForm from '@pages/membership-plan/CreateForm'
+import TimeslotModal from '@pages/settings/components/TimeslotModal'
 
 const paidStatus = [
   { id: 'unpaid', name: 'Unpaid' },
@@ -42,6 +43,7 @@ const genderOption = [
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const [planOpen, setPlanOpen] = useState(false)
+  const [timeslotOpen, setTimeslotOpen] = useState(false)
   const { selectedVisitorId, selectedGuestId, clearSelectedIds } = useCrmStore()
   const { setSelectedTab } = useSettingsTabStore()
   const { data: visitorData, isFetching: isVisitorFetching } =
@@ -68,6 +70,14 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     : selectedGuestId
     ? guestData
     : null
+
+  useEffect(() => {
+    if (memberPlan?.length === 0) {
+      setPlanOpen(true)
+    } else if (memberTimeSlot?.length === 0) {
+      setTimeslotOpen(true)
+    }
+  }, [memberPlan, memberTimeSlot])
 
   const initialValues = {
     center_id: state?.auth?.center_id,
@@ -143,6 +153,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   // }
 
   // console.log('formi: ', formik.values)
+  const isBlocked = memberPlan?.length === 0 || memberTimeSlot?.length === 0
   return (
     <div className='flex flex-col gap-2 pb-6'>
       <CustomeBreadcrumb
@@ -152,29 +163,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           isEdit ? 'Member Updation Form' : 'Member Creation Form'
         }
       />
-      {memberPlan?.length === 0 && (
-        <div className='flex justify-center items-center text-red_text'>
-          Currently there is no active membership plan. Please create a
-          membership plan to proceed.
-          <Button variant='link' onClick={() => setPlanOpen(true)}>
-            Click to Proceed
-          </Button>
-        </div>
-      )}
-      {memberTimeSlot?.length === 0 && (
-        <div className='flex justify-center items-center text-red_text'>
-          Currently there is no Timeslot. Please create a timeslot to proceed.
-          <Button
-            variant='link'
-            onClick={() => {
-              setSelectedTab(2)
-              navigate('/settings')
-            }}
-          >
-            Click to Proceed
-          </Button>
-        </div>
-      )}
+
       <form className='space-y-2' onSubmit={formik.handleSubmit}>
         <div className='flex gap-4'>
           <div className='flex-1'>
@@ -366,10 +355,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             <Button
               type='button'
               size='addbutton'
-              onClick={() => {
-                setSelectedTab(2)
-                navigate('/settings')
-              }}
+              onClick={() => setTimeslotOpen(true)}
             >
               Add Time Slot
             </Button>
@@ -387,12 +373,18 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         </div>
 
         <div className='flex justify-center mt-4 '>
-          <Button size='addbutton' variant='default' type='submit'>
+          <Button
+            size='addbutton'
+            variant='default'
+            type='submit'
+            disabled={isBlocked}
+          >
             {isEdit ? 'Update Member' : 'Create Member'}
           </Button>
         </div>
       </form>
       <CreateMembershipForm open={planOpen} setOpen={setPlanOpen} />
+      <TimeslotModal open={timeslotOpen} onOpenChange={setTimeslotOpen} />
     </div>
   )
 }
