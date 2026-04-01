@@ -1,8 +1,6 @@
 import logo from '@assets/header-icons/logo_in_auth.svg'
-import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
-import nextarrow from '@assets/navigate-icons/nextarrow.svg'
-import { Menu, X } from 'lucide-react'
+import { ArrowRight, Menu, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const navLinks = [
@@ -27,13 +25,12 @@ const Header = () => {
             {label}
           </a>
         ))}
-        <Button
-          variant='onboard_default'
-          rightIcon={nextarrow}
+        <button
           onClick={() => navigate('/login')}
+          className='bg-onboard_primary flex items-center gap-2 text-textwhite px-4 py-1 rounded-lg'
         >
-          Login
-        </Button>
+          Login <ArrowRight className='w-4 h-4 text-textwhite' />
+        </button>
       </nav>
 
       {/* Mobile Menu Button */}
@@ -49,13 +46,12 @@ const Header = () => {
               {label}
             </a>
           ))}
-          <Button
-            variant='onboard_default'
-            rightIcon={nextarrow}
+          <button
             onClick={() => navigate('/login')}
+            className='bg-onboard_primary flex items-center gap-2 text-textwhite px-4 py-1 rounded-lg'
           >
-            Login
-          </Button>
+            Login <ArrowRight className='w-4 h-4 text-textwhite' />
+          </button>
         </div>
       )}
     </header>
