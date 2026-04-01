@@ -1,5 +1,6 @@
-from pydantic import BaseModel, UUID4, condecimal
+from pydantic import BaseModel, UUID4, condecimal, conint
 from typing import Literal
+from uuid import UUID
 
 class EmployeeSalaryCreate(BaseModel):
     employee_id: UUID4
@@ -17,5 +18,19 @@ class EmployeeSalaryUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+
+class PayrollCycleCreateUpdate(BaseModel):
+    payroll_cycle_day: conint(ge=1, le=31)
+
+
+class PayrollCycleOut(BaseModel):
+    center_id: UUID
+    payroll_cycle_day: int
+
+    class Config:
+        orm_mode = True
 
 

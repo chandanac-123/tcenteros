@@ -206,13 +206,16 @@ async def create_center_operational_setting(
     center_admin = await session.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
+
     center_id = center_admin.center_id
 
-    # Check if already exists for this center
     result = await session.execute(
-        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
     )
     existing = result.scalar_one_or_none()
+
     if existing:
         raise HTTPException(status_code=400, detail="Operational settings already exist for this center")
 
@@ -220,14 +223,15 @@ async def create_center_operational_setting(
         center_id=center_id,
         opening_time=data.opening_time,
         closing_time=data.closing_time,
-        week_off_days=data.week_off_days,
-        inventory_profit=data.inventory_profit,
-        payroll_cycle_day=data.payroll_cycle_day
+        week_off_days=data.week_off_days
     )
+
     session.add(ops)
     await session.commit()
     await session.refresh(ops)
+
     return ops
+
 
 @router.get("/center-operational-settings/", response_model=CenterOperationalSettingOut)
 async def get_center_operational_setting(
@@ -237,14 +241,19 @@ async def get_center_operational_setting(
     center_admin = await session.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
+
     center_id = center_admin.center_id
 
     result = await session.execute(
-        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
     )
     ops = result.scalar_one_or_none()
+
     if not ops:
         raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+
     return ops
 
 @router.put("/center-operational-settings/", response_model=CenterOperationalSettingOut)
@@ -256,18 +265,25 @@ async def update_center_operational_setting(
     center_admin = await session.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
+
     center_id = center_admin.center_id
 
     result = await session.execute(
-        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
     )
     ops = result.scalar_one_or_none()
+
     if not ops:
         raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+
     for key, value in data.dict(exclude_unset=True).items():
         setattr(ops, key, value)
+
     await session.commit()
     await session.refresh(ops)
+
     return ops
 
 @router.delete("/center-operational-settings/", status_code=204)
@@ -278,17 +294,21 @@ async def delete_center_operational_setting(
     center_admin = await session.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
+
     center_id = center_admin.center_id
 
     result = await session.execute(
-        select(CenterOperationalSetting).where(CenterOperationalSetting.center_id == center_id)
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
     )
     ops = result.scalar_one_or_none()
+
     if not ops:
         raise HTTPException(status_code=404, detail="Operational settings not found for this center")
+
     await session.delete(ops)
     await session.commit()
-    return
 
 
 #------------------------------------

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_async_session
 from app.auth.models.models import CenterAdmin, Employee
-from app.payrole.schema.schema import EmployeeSalaryUpdate, EmployeeSalaryCreate
+from app.payrole.schema.schema import EmployeeSalaryUpdate, EmployeeSalaryCreate, PayrollCycleCreateUpdate, PayrollCycleOut
 from app.core.dependencies import centeradmin_required
 from sqlalchemy import select, or_, and_, func
 from pydantic import UUID4
@@ -511,3 +511,66 @@ async def get_payroll_history(
         "page_size": page_size,
         "total": total
     }
+
+
+
+#added route for setting payroll cycle day in operational settings
+@router.post("/payroll-cycle/", response_model=PayrollCycleOut)
+async def create_or_update_payroll_cycle(
+    data: PayrollCycleCreateUpdate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
+    )
+    ops = result.scalar_one_or_none()
+
+    if not ops:
+        ops = CenterOperationalSetting(
+            center_id=center_id,
+            payroll_cycle_day=data.payroll_cycle_day,
+            opening_time=None,
+            closing_time=None,
+            week_off_days=[]
+        )
+        session.add(ops)
+    else:
+        ops.payroll_cycle_day = data.payroll_cycle_day
+
+    await session.commit()
+    await session.refresh(ops)
+
+    return ops
+
+
+@router.get("/payroll-cycle/", response_model=PayrollCycleOut)
+async def get_payroll_cycle(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
+    )
+    ops = result.scalar_one_or_none()
+
+    if not ops or ops.payroll_cycle_day is None:
+        raise HTTPException(status_code=404, detail="Payroll cycle not set")
+
+    return ops
