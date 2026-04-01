@@ -85,308 +85,318 @@ def calculate_subscription_price(yearly_base: float, duration: str) -> dict:
 @router.get("/center/dashboard", summary="Get Center Dashboard Data")
 async def get_center_dashboard(
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(centeradmin_required)
+    current_user=Depends(centeradmin_required)
 ):
-    """
-    Get comprehensive dashboard data for logged-in center admin.
-    
-    Returns:
-    - Total employees
-    - Total members
-    - Active memberships
-    - Total guests (members with guest status)
-    - Today's attendance
-    - Total revenue
-    - Total expenses
-    - Net profit
-    - Revenue trend chart (monthly income and expense for current year)
-    - Attendance chart (monthly attendance percentage for current year)
-    """
     from app.auth.models.models import CenterAdmin, Employee, Member
     from app.membership.models.models import MemberMembership
-    from app.auth.models.models import UserCenterMembership
     from app.attendance.models.models import Attendance, AttendanceStatus
-    from app.billing.models.models import PaymentOrder, PaymentOrderStatus
+    from app.billing.models.models import (
+        PaymentOrder, PaymentOrderStatus, OrderType, MiscellaneousTransaction
+    )
     from app.payrole.models.models import PayrollRecord
-    from app.inventory.models.models import Sale
-    from datetime import date as date_type, timedelta
+    from app.inventory.models.models import Sale, StockTransaction, Product
+    from datetime import date as date_type
     from sqlalchemy import cast, Text, extract
     from calendar import monthrange
-    
-    # Get center admin and center_id
+    from decimal import Decimal
+    from datetime import datetime
+
+    # ========================
+    # GET CENTER
+    # ========================
     center_admin = await db.get(CenterAdmin, current_user["user_id"])
     if not center_admin:
         raise HTTPException(status_code=403, detail="Not a center admin")
-    
+
     center_id = center_admin.center_id
-    centeradmin_name = center_admin.full_name
     today = date_type.today()
     current_year = today.year
-    
-    # ===== 1. TOTAL EMPLOYEES =====
-    employees_query = select(func.count(Employee.id)).where(
-        Employee.center_id == center_id,
-        Employee.status == "active"
-    )
-    employees_result = await db.execute(employees_query)
-    total_employees = employees_result.scalar_one() or 0
-    
-    # ===== 2. TOTAL MEMBERS =====
-    # Members with status 'active' and member_status = 'member' (not guest)
-    members_query = select(func.count(Member.id)).where(
-        Member.home_center_id == center_id,
-        Member.status == "active",
-        cast(Member.member_status, Text) == "member"
-    )
-    members_result = await db.execute(members_query)
-    total_members = members_result.scalar_one() or 0
-    
-    # ===== 3. ACTIVE MEMBERSHIPS =====
-    active_memberships_query = select(func.count(MemberMembership.id)).where(
-        MemberMembership.center_id == center_id,
-        cast(MemberMembership.membership_status, Text) == "active"
-    )
-    active_memberships_result = await db.execute(active_memberships_query)
-    active_memberships = active_memberships_result.scalar_one() or 0
-    
-    # ===== 4. TOTAL GUESTS =====
-    # Guests are members with member_status = 'guest' assigned to this center
-    guests_query = select(func.count(Member.id)).where(
-        Member.home_center_id == center_id,
-        cast(Member.member_status, Text) == "guest"
-    )
-    guests_result = await db.execute(guests_query)
-    total_guests = guests_result.scalar_one() or 0
-    
-    # ===== 5. TODAY'S ATTENDANCE =====
-    today_attendance_query = select(func.count(Attendance.id)).where(
-        Attendance.center_id == center_id,
-        func.date(Attendance.check_in_time) == today
-    )
-    today_attendance_result = await db.execute(today_attendance_query)
-    today_attendance = today_attendance_result.scalar_one() or 0
-    
-    # ===== 6. TOTAL REVENUE =====
-    revenue_query = select(
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.status == PaymentOrderStatus.paid,
-        PaymentOrder.order_type.in_([
-            'membership', 'membership_renewal', 'membership_upgrade', 'network_in', 'add_on', 'feature_purchase'
-        ])
-    )
-    revenue_result = await db.execute(revenue_query)
-    total_revenue_from_orders = revenue_result.scalar_one() or 0
-    
-    # Add sales revenue
-    sales_revenue_query = select(
-        func.coalesce(func.sum(Sale.total_amount), 0)
-    ).where(
-        Sale.center_id == center_id,
-        Sale.status == "completed"
-    )
-    sales_revenue_result = await db.execute(sales_revenue_query)
-    total_sales_revenue = sales_revenue_result.scalar_one() or 0
-    
-    total_revenue = float(total_revenue_from_orders) + float(total_sales_revenue)
-    
-    # ===== 7. TOTAL EXPENSES =====
-    payroll_expense_query = select(
-        func.coalesce(func.sum(PayrollRecord.net_salary), 0)
-    ).where(
-        PayrollRecord.center_id == center_id,
-        PayrollRecord.status == 'paid'
-    )
-    payroll_expense_result = await db.execute(payroll_expense_query)
-    total_payroll_expense = payroll_expense_result.scalar_one() or 0
-    
-    # Stock purchases
-    from app.inventory.models.models import StockTransaction
-    from app.core.models.models import SKU
-    
-    sku_ids_query = select(SKU.id).where(SKU.center_id == center_id)
-    sku_ids_result = await db.execute(sku_ids_query)
-    sku_ids = [str(row[0]) for row in sku_ids_result.all()]
-    
-    total_stock_expense = 0
-    if sku_ids:
-        stock_expense_query = select(
-            func.coalesce(func.sum(StockTransaction.subtotal), 0)
-        ).where(
-            StockTransaction.product_id.in_(sku_ids),
-            StockTransaction.transaction_type == 'purchase'
+
+    # ========================
+    # BASIC COUNTS
+    # ========================
+    total_employees = (await db.execute(
+        select(func.count(Employee.id)).where(
+            Employee.center_id == center_id,
+            Employee.status == "active"
         )
-        stock_expense_result = await db.execute(stock_expense_query)
-        total_stock_expense = stock_expense_result.scalar_one() or 0
-    
-    # Refunds
-    refund_expense_query = select(
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type == 'refund'
-    )
-    refund_expense_result = await db.execute(refund_expense_query)
-    total_refund_expense = refund_expense_result.scalar_one() or 0
-    
-    total_expenses = float(total_payroll_expense) + float(total_stock_expense) + float(total_refund_expense)
-    
-    # Net profit
-    net_profit = total_revenue - total_expenses
-    
-    # ===== 8. REVENUE TREND CHART (Monthly for current year) =====
-    # Monthly income breakdown
-    monthly_income_query = select(
-        extract('month', PaymentOrder.created_at).label('month'),
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('income')
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.status == PaymentOrderStatus.paid,
-        PaymentOrder.order_type.in_([
-            'membership', 'membership_renewal', 'membership_upgrade', 'network_in', 'add_on', 'feature_purchase'
-        ]),
-        extract('year', PaymentOrder.created_at) == current_year
-    ).group_by('month')
-    
-    income_result = await db.execute(monthly_income_query)
-    monthly_income = {int(row.month): float(row.income) for row in income_result}
-    
-    # Add sales to monthly income
-    monthly_sales_query = select(
-        extract('month', Sale.created_at).label('month'),
-        func.coalesce(func.sum(Sale.total_amount), 0).label('sales')
-    ).where(
-        Sale.center_id == center_id,
-        Sale.status == "completed",
-        extract('year', Sale.created_at) == current_year
-    ).group_by('month')
-    
-    sales_result = await db.execute(monthly_sales_query)
-    for row in sales_result:
-        month = int(row.month)
-        monthly_income[month] = monthly_income.get(month, 0) + float(row.sales)
-    
-    # Monthly expense breakdown
-    # Payroll expenses by month
-    monthly_payroll_query = select(
-        extract('month', PayrollRecord.created_at).label('month'),
-        func.coalesce(func.sum(PayrollRecord.net_salary), 0).label('expense')
-    ).where(
-        PayrollRecord.center_id == center_id,
-        PayrollRecord.status == 'paid',
-        extract('year', PayrollRecord.created_at) == current_year
-    ).group_by('month')
-    
-    payroll_result = await db.execute(monthly_payroll_query)
-    monthly_expense = {int(row.month): float(row.expense) for row in payroll_result}
-    
-    # Stock expenses by month
-    if sku_ids:
-        monthly_stock_query = select(
-            extract('month', StockTransaction.created_at).label('month'),
-            func.coalesce(func.sum(StockTransaction.subtotal), 0).label('expense')
-        ).where(
-            StockTransaction.product_id.in_(sku_ids),
-            StockTransaction.transaction_type == 'purchase',
-            extract('year', StockTransaction.created_at) == current_year
-        ).group_by('month')
-        
-        stock_result = await db.execute(monthly_stock_query)
-        for row in stock_result:
-            month = int(row.month)
-            monthly_expense[month] = monthly_expense.get(month, 0) + float(row.expense)
-    
-    # Refund expenses by month
-    monthly_refund_query = select(
-        extract('month', PaymentOrder.created_at).label('month'),
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0).label('expense')
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type == 'refund',
-        extract('year', PaymentOrder.created_at) == current_year
-    ).group_by('month')
-    
-    refund_result = await db.execute(monthly_refund_query)
-    for row in refund_result:
-        month = int(row.month)
-        monthly_expense[month] = monthly_expense.get(month, 0) + float(row.expense)
-    
-    # Build revenue trend array (all 12 months)
-    month_names = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ]
-    
-    revenue_trend = []
-    for month_num in range(1, 13):
-        revenue_trend.append({
-            "month": month_names[month_num - 1],
-            "income": round(monthly_income.get(month_num, 0), 2),
-            "expense": round(monthly_expense.get(month_num, 0), 2)
-        })
-    
-    # ===== 9. ATTENDANCE CHART (Monthly attendance percentage) =====
-    # Get total members + employees for the center
-    total_users_query = select(func.count(Employee.id)).where(
-        Employee.center_id == center_id,
-        Employee.status == "active"
-    )
-    total_users_result = await db.execute(total_users_query)
-    total_center_users = total_users_result.scalar_one() or 0
-    
-    # Add members count
-    members_count_query = select(func.count(Member.id)).where(
-        Member.home_center_id == center_id,
-        Member.status == "active",
-        cast(Member.member_status, Text) == "member"
-    )
-    members_count_result = await db.execute(members_count_query)
-    total_center_users += members_count_result.scalar_one() or 0
-    
-    # Monthly attendance data
-    attendance_chart = []
-    
-    for month_num in range(1, 13):
-        # Get number of days in this month
-        days_in_month = monthrange(current_year, month_num)[1]
-        
-        # Count present attendances for this month
-        present_count_query = select(func.count(Attendance.id)).where(
+    )).scalar() or 0
+
+    total_members = (await db.execute(
+        select(func.count(Member.id)).where(
+            Member.home_center_id == center_id,
+            Member.status == "active",
+            cast(Member.member_status, Text) == "member"
+        )
+    )).scalar() or 0
+
+    active_memberships = (await db.execute(
+        select(func.count(MemberMembership.id)).where(
+            MemberMembership.center_id == center_id,
+            cast(MemberMembership.membership_status, Text) == "active"
+        )
+    )).scalar() or 0
+
+    total_guests = (await db.execute(
+        select(func.count(Member.id)).where(
+            Member.home_center_id == center_id,
+            cast(Member.member_status, Text) == "guest"
+        )
+    )).scalar() or 0
+
+    today_attendance = (await db.execute(
+        select(func.count(Attendance.id)).where(
             Attendance.center_id == center_id,
-            extract('year', Attendance.date) == current_year,
-            extract('month', Attendance.date) == month_num,
-            Attendance.status == AttendanceStatus.present
+            func.date(Attendance.check_in_time) == today
         )
-        present_count_result = await db.execute(present_count_query)
-        present_count = present_count_result.scalar_one() or 0
-        
-        # Calculate expected attendances (total users * days in month)
-        # Only count days up to today if it's the current month
-        if month_num == today.month and current_year == today.year:
+    )).scalar() or 0
+
+    # ========================
+    # TOTAL REVENUE
+    # ========================
+    payment_revenue = (await db.execute(
+        select(func.coalesce(func.sum(PaymentOrder.total_amount), 0)).where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.order_type.in_([
+                OrderType.membership,
+                OrderType.membership_renewal,
+                OrderType.membership_upgrade,
+                OrderType.network_in
+            ])
+        )
+    )).scalar() or Decimal("0")
+
+    sales_revenue = (await db.execute(
+        select(func.coalesce(func.sum(Sale.total_amount), 0)).where(
+            Sale.center_id == center_id,
+            Sale.status == "completed"
+        )
+    )).scalar() or Decimal("0")
+
+    other_income = (await db.execute(
+        select(func.coalesce(func.sum(MiscellaneousTransaction.total_amount), 0)).where(
+            MiscellaneousTransaction.center_id == center_id,
+            MiscellaneousTransaction.transaction_type == "income"
+        )
+    )).scalar() or Decimal("0")
+
+    total_revenue = float(payment_revenue + sales_revenue + other_income)
+
+    # ========================
+    # TOTAL EXPENSES
+    # ========================
+    payroll = (await db.execute(
+        select(func.coalesce(func.sum(PayrollRecord.net_salary), 0)).where(
+            PayrollRecord.center_id == center_id,
+            PayrollRecord.status == "paid"
+        )
+    )).scalar() or 0
+
+    payment_expense = (await db.execute(
+        select(func.coalesce(func.sum(PaymentOrder.total_amount), 0)).where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.order_type.in_([
+                OrderType.network_out,
+                OrderType.branch_purchase
+            ])
+        )
+    )).scalar() or 0
+
+    inventory_expense = (await db.execute(
+        select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
+        .join(Product, Product.id == StockTransaction.product_id)
+        .where(
+            Product.center_id == center_id,
+            StockTransaction.transaction_type == "purchase"
+        )
+    )).scalar() or 0
+
+    other_expense = (await db.execute(
+        select(func.coalesce(func.sum(MiscellaneousTransaction.total_amount), 0)).where(
+            MiscellaneousTransaction.center_id == center_id,
+            MiscellaneousTransaction.transaction_type == "expense"
+        )
+    )).scalar() or 0
+
+    total_expenses = float(payroll + payment_expense + inventory_expense + other_expense)
+
+    net_profit = total_revenue - total_expenses
+
+    # ========================
+    # REVENUE TREND CHART
+    # ========================
+    monthly_income = {}
+    monthly_expense = {}
+
+    month_expr_po = extract('month', PaymentOrder.created_at)
+
+    # Income (PaymentOrder)
+    res = await db.execute(
+        select(
+            extract('month', PaymentOrder.created_at),
+            func.sum(PaymentOrder.total_amount)
+        ).where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.order_type.in_([
+                OrderType.membership,
+                OrderType.membership_renewal,
+                OrderType.membership_upgrade,
+                OrderType.network_in
+            ]),
+            extract('year', PaymentOrder.created_at) == current_year
+        ).group_by(month_expr_po)
+    )
+    for m, v in res:
+        monthly_income[int(m)] = float(v)
+
+    # Inventory sales
+    month_expr_sale = extract('month', Sale.created_at) 
+
+    res = await db.execute(
+        select(
+            extract('month', Sale.created_at),
+            func.sum(Sale.total_amount)
+        ).where(
+            Sale.center_id == center_id,
+            Sale.status == "completed",
+            extract('year', Sale.created_at) == current_year
+        ).group_by(month_expr_sale)
+    )
+    for m, v in res:
+        monthly_income[int(m)] = monthly_income.get(int(m), 0) + float(v)
+
+    # Other income
+    month_expr_misc_income = extract('month', MiscellaneousTransaction.transaction_date)    
+    res = await db.execute(
+        select(
+            extract('month', MiscellaneousTransaction.transaction_date),
+            func.sum(MiscellaneousTransaction.total_amount)
+        ).where(
+            MiscellaneousTransaction.center_id == center_id,
+            MiscellaneousTransaction.transaction_type == "income",
+            extract('year', MiscellaneousTransaction.transaction_date) == current_year
+        ).group_by(month_expr_misc_income)
+    )
+
+    for m, v in res:
+        monthly_income[int(m)] = monthly_income.get(int(m), 0) + float(v)
+
+    # Expenses (PaymentOrder)
+    res = await db.execute(
+        select(
+            extract('month', PaymentOrder.created_at),
+            func.sum(PaymentOrder.total_amount)
+        ).where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.order_type.in_([
+                OrderType.network_out,
+                OrderType.branch_purchase
+            ]),
+            extract('year', PaymentOrder.created_at) == current_year
+        ).group_by(month_expr_po)
+    )
+    for m, v in res:
+        monthly_expense[int(m)] = float(v)
+
+    # Payroll
+    payroll_month_expr = extract('month', PayrollRecord.created_at)
+    res = await db.execute(
+        select(
+            extract('month', PayrollRecord.created_at),
+            func.sum(PayrollRecord.net_salary)
+        ).where(
+            PayrollRecord.center_id == center_id,
+            PayrollRecord.status == "paid",
+            extract('year', PayrollRecord.created_at) == current_year
+        ).group_by(payroll_month_expr)
+    )
+    for m, v in res:
+        monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
+
+    # Inventory purchase
+    month_expr_stock = extract('month', StockTransaction.created_at)
+    res = await db.execute(
+        select(
+            extract('month', StockTransaction.created_at),
+            func.sum(StockTransaction.subtotal)
+        ).join(Product).where(
+            Product.center_id == center_id,
+            StockTransaction.transaction_type == "purchase",
+            extract('year', StockTransaction.created_at) == current_year
+        ).group_by(month_expr_stock)
+    )
+    for m, v in res:
+        monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
+
+    # Other expense
+    month_expr_misc_expense = extract('month', MiscellaneousTransaction.transaction_date)
+    res = await db.execute(
+        select(
+            extract('month', MiscellaneousTransaction.transaction_date),
+            func.sum(MiscellaneousTransaction.total_amount)
+        ).where(
+            MiscellaneousTransaction.center_id == center_id,
+            MiscellaneousTransaction.transaction_type == "expense",
+            extract('year', MiscellaneousTransaction.transaction_date) == current_year
+        ).group_by(month_expr_misc_expense)
+    )
+    for m, v in res:
+        monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
+
+    # Final chart
+    month_names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+
+    revenue_trend = []
+    for i in range(1, 13):
+        revenue_trend.append({
+            "month": month_names[i-1],
+            "income": round(monthly_income.get(i, 0), 2),
+            "expense": round(monthly_expense.get(i, 0), 2)
+        })
+
+    # ========================
+    # ATTENDANCE CHART
+    # ========================
+    total_users = total_employees + total_members
+
+    attendance_chart = []
+
+    for month_num in range(1, 13):
+        days_in_month = monthrange(current_year, month_num)[1]
+
+        present_count = (await db.execute(
+            select(func.count(Attendance.id)).where(
+                Attendance.center_id == center_id,
+                extract('year', Attendance.date) == current_year,
+                extract('month', Attendance.date) == month_num,
+                Attendance.status == AttendanceStatus.present
+            )
+        )).scalar() or 0
+
+        if month_num == today.month:
             working_days = today.day
-        elif month_num > today.month and current_year == today.year:
-            # Future months have no attendance yet
+        elif month_num > today.month:
             working_days = 0
         else:
             working_days = days_in_month
-        
-        expected_attendances = total_center_users * working_days
-        
-        # Calculate percentage
-        if expected_attendances > 0:
-            attendance_percentage = (present_count / expected_attendances) * 100
-        else:
-            attendance_percentage = 0
-        
+
+        expected = total_users * working_days
+
+        percentage = (present_count / expected * 100) if expected > 0 else 0
+
         attendance_chart.append({
             "month": month_names[month_num - 1],
-            "attendance_percentage": round(attendance_percentage, 2)
+            "attendance_percentage": round(percentage, 2)
         })
-    
+
+    # ========================
+    # RESPONSE
+    # ========================
     return {
         "center_id": str(center_id),
-        "centeradmin_name": centeradmin_name,
         "generated_at": datetime.now().isoformat(),
         "total_employees": int(total_employees),
         "total_members": int(total_members),
