@@ -20,7 +20,9 @@ import {
   getGenerateInventoryReport,
   getGenerateStockReport,
   getDashboardData,
-  getDropdownProducts
+  getDropdownProducts,
+  getInventoryProfitValue,
+  createInventoryProfit
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -42,7 +44,7 @@ export const useCreateProductMutation = () => {
       showSuccess('Product created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create product')
+      showError(err?.response?.data?.detail || 'Failed to create product')
       return err
     }
   })
@@ -57,7 +59,7 @@ export const useUpdateProductMutation = () => {
       showSuccess('Product updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update product')
+      showError(err?.response?.data?.detail || 'Failed to update product')
       return err
     }
   })
@@ -96,7 +98,7 @@ export const useCreateSKUMutation = data => {
       showSuccess('SKU created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create SKU')
+      showError(err?.response?.data?.detail || 'Failed to create SKU')
       return err
     }
   })
@@ -111,7 +113,7 @@ export const useDeleteSKUMutation = id => {
       showSuccess('SKU deleted successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to delete SKU')
+      showError(err?.response?.data?.detail || 'Failed to delete SKU')
       return err
     }
   })
@@ -144,7 +146,7 @@ export const useCreateStockEntryMutation = data => {
       showSuccess('Stock entry created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create stock entry')
+      showError(err?.response?.data?.detail || 'Failed to create stock entry')
       return err
     }
   })
@@ -235,5 +237,29 @@ export const useInventoryDashboardQuery = () => {
     queryFn: getDashboardData,
     refetchOnWindowFocus: true,
     refetchOnMount: true
+  })
+}
+
+export const useInventoryProfitValueQuery = () => {
+  return useQuery({
+    queryKey: ['inventory-profit-value'],
+    queryFn: () => getInventoryProfitValue(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useCreateInventoryProfitMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => createInventoryProfit(data),
+    onSuccess: async data => {
+      query.invalidateQueries('inventory-profit-value')
+      showSuccess('Inventory profit created successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.detail || 'Failed to create inventory profit')
+      return err
+    }
   })
 }

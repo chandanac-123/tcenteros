@@ -76,3 +76,9 @@ export const getGenerateStockReportApiCall = data =>
 
 export const inventoryDashboardApiCall = data =>
   axiosInstance.get(`/inventory/dashboard`, data)
+
+//Inventory profit
+export const getInventoryProfitValueApiCall = data =>
+  axiosInstance.get(`/inventory/inventory-profit/`)
+export const createInventoryProfitApiCall = details =>
+  axiosInstance.post('/inventory/inventory-profit/', details)

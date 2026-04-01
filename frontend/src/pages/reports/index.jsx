@@ -6,12 +6,25 @@ import ExpenseTable from './ExpenseTable'
 import SettlementTable from './SettlementTable'
 import { Download } from 'lucide-react'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
+import { downloadFile, formatDate } from '@utils/helper'
+import {
+  useGenerateConsolidatedExpensesReport,
+  useGenerateConsolidatedIncomeReport,
+  useGenerateConsolidatedSettlementsReport
+} from '@api-queries/report/Query'
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('income')
+  const { mutateAsync: generateIncomeReport } =
+    useGenerateConsolidatedIncomeReport()
+  const { mutateAsync: generateExpensesReport } =
+    useGenerateConsolidatedExpensesReport()
+  const { mutateAsync: generateSettlementsReport } =
+    useGenerateConsolidatedSettlementsReport()
+
   const employeeOrMember = [
     { id: 'income', name: 'Income' },
-    { id: 'expenses', name: 'Expenses '},
+    { id: 'expenses', name: 'Expenses ' },
     { id: 'settlement', name: 'Settlement' }
   ]
   const [dateRange, setDateRange] = useState({ from: null, to: null })
@@ -20,6 +33,41 @@ const Reports = () => {
     date_from: null,
     date_to: null
   })
+
+  const handleDownload = async format => {
+    try {
+      const payload = {
+        date_from: tableParams?.date_from
+          ? formatDate(tableParams.date_from)
+          : null,
+        date_to: tableParams?.date_to ? formatDate(tableParams.date_to) : null,
+        format
+      }
+      let response
+      let filename
+      switch (activeTab) {
+        case 'income':
+          response = await generateIncomeReport(payload)
+          filename = `income-report.${format}`
+          break
+
+        case 'expenses':
+          response = await generateExpensesReport(payload)
+          filename = `expenses-report.${format}`
+          break
+
+        case 'settlement':
+          response = await generateSettlementsReport(payload)
+          filename = `settlement-report.${format}`
+          break
+        default:
+          return
+      }
+      downloadFile(response, filename)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   const changeReportType = type => {
     setActiveTab(type)
@@ -33,7 +81,7 @@ const Reports = () => {
   return (
     <ContentLayout>
       <h1 className='text-xl font-semibold text-textblack mb-4'>
-        Reports - {activeTab}
+        Reports -<>{activeTab?.charAt(0)?.toUpperCase() + activeTab?.slice(1)}</>
       </h1>
       <div className='flex justify-between items-center mb-4 gap-3'>
         {/* Tabs */}

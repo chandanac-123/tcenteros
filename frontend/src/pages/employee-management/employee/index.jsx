@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useEmployeeQuery } from '@api-queries/employee-management/Query'
 import MultiColorProgressBar from '@common/components/MulticolorProgressBar'
 import EmployeeTable from './table'

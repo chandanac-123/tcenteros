@@ -31,9 +31,10 @@ const Sales = () => {
     { accessorKey: 'customer_name', header: 'Customer Name' },
     { accessorKey: 'invoice_number', header: 'Invoice' },
     { accessorKey: 'type', header: 'Type' },
-    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'date', header: ' Date' },
     { accessorKey: 'total_amount', header: 'Amount' },
+    { accessorKey: '', header: 'Tax Amount' },
+    { accessorKey: '', header: 'Total Amount' },
     { accessorKey: 'payment_method', header: 'Payment Method' },
     { accessorKey: 'payment_status', header: 'Status' },
     {

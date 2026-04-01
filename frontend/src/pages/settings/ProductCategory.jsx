@@ -26,6 +26,15 @@ const ProductCategory = () => {
 
   return (
     <>
+      <div className='flex justify-end mb-4'>
+        <Button
+          onClick={() => setOpen(true)}
+          size='addbutton'
+          variant='default'
+        >
+          + Add New Product Category
+        </Button>
+      </div>
       <div className='grid md:grid-cols-4 gap-4'>
         {data?.map(item => (
           <SlotCard
@@ -38,16 +47,6 @@ const ProductCategory = () => {
           />
         ))}
       </div>
-      <div className='flex justify-end mt-4'>
-        <Button
-          onClick={() => setOpen(true)}
-          size='addbutton'
-          variant='default'
-        >
-          + Add New Product Category
-        </Button>
-      </div>
-
       <AddProductCategory open={open} onOpenChange={setOpen} />
       <DeleteModal
         open={deleteOpen}

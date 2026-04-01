@@ -40,7 +40,7 @@ export const categoryValidationSchema = Yup.object().shape({
 export const employeeValidationSchema = isEdit =>
   Yup.object().shape({
     full_name: Yup.string().required('Full name is required'),
-    email: Yup.string().email().required('Email is required'),
+    email: Yup.string().email('Invalid email format').required('Email is required'),
     mobile: Yup.string().required('Mobile is required'),
     designation_id: isEdit
       ? Yup.string()
@@ -82,7 +82,18 @@ export const attendanceValidationSchema = Yup.object().shape({
   employee_id: Yup.string().required('Select full name'),
   date: Yup.string().required('Enter date'),
   check_in_time: Yup.string().required('Enter check-in time'),
-  check_out_time: Yup.string().required('Enter check-out time')
+  check_out_time: Yup.string()
+    .required('Checkout time is required')
+    .test(
+      'is-after-opening',
+      'Checkout time must be after checkin time',
+      function (value) {
+        const { check_in_time } = this.parent
+        if (!check_in_time || !value) return true
+
+        return value > check_in_time
+      }
+    ),
 })
 
 export const branchValidationSchema = Yup.object().shape({
@@ -305,15 +316,15 @@ export const centerTimingValidationSchema = Yup.object().shape({
         return value > opening_time
       }
     ),
-  inventory_profit: Yup.number()
-    .typeError('Inventory profit must be a number')
-    .required('Inventory profit is required')
-    .min(0, 'Cannot be negative'),
-  payroll_cycle_day: Yup.number()
-    .typeError('Pay cycle must be a number')
-    .required('Pay cycle is required')
-    .min(1, 'Must be between 1 and 31')
-    .max(31, 'Must be between 1 and 31')
+  // inventory_profit: Yup.number()
+  //   .typeError('Inventory profit must be a number')
+  //   .required('Inventory profit is required')
+  //   .min(0, 'Cannot be negative'),
+  // payroll_cycle_day: Yup.number()
+  //   .typeError('Pay cycle must be a number')
+  //   .required('Pay cycle is required')
+  //   .min(1, 'Must be between 1 and 31')
+  //   .max(31, 'Must be between 1 and 31')
 })
 
 export const centerSlotValidationSchema = Yup.object().shape({

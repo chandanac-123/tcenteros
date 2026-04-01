@@ -33,6 +33,7 @@ const buttonVariants = cva(
         editbutton: 'h-9 w-20 px-4 rounded-2xl text-sm gap-2',
         icon: 'h-9 w-9',
         notificationbutton: 'h-6 px-3 rounded-lg text-xs gap-1',
+        mini: 'h-9 px-3 rounded-lg text-sm gap-1',
       }
     },
     defaultVariants: {
