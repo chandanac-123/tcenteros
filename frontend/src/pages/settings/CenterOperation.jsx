@@ -18,7 +18,10 @@ import {
   useUpdateCenterTimeMutation
 } from '@api-queries/center-time/Query'
 import { convert12To24WithSeconds, convertTo12Hour } from '@utils/helper'
-import { centerSlotValidationSchema, centerTimingValidationSchema } from '@utils/validations'
+import {
+  centerSlotValidationSchema,
+  centerTimingValidationSchema
+} from '@utils/validations'
 
 const CenterOperations = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -41,8 +44,6 @@ const CenterOperations = () => {
     closing_time: convertTo12Hour(centerTime?.closing_time) || '',
     week_off_days:
       centerTime?.week_off_days?.map(day => day.toLowerCase()) || [],
-    payroll_cycle_day: centerTime?.payroll_cycle_day || null,
-    inventory_profit: centerTime?.inventory_profit || null
   }
 
   const initialValues = {
@@ -72,9 +73,7 @@ const CenterOperations = () => {
       const formattedValues = {
         ...values,
         opening_time: convert12To24WithSeconds(values.opening_time),
-        closing_time: convert12To24WithSeconds(values.closing_time),
-        payroll_cycle_day: parseInt(values.payroll_cycle_day),
-        inventory_profit: parseInt(values.inventory_profit)
+        closing_time: convert12To24WithSeconds(values.closing_time)
       }
       try {
         if (centerTime) {
@@ -119,7 +118,10 @@ const CenterOperations = () => {
               onChange={val =>
                 centerTimeFormik.setFieldValue('opening_time', val)
               }
-              error={centerTimeFormik.touched.opening_time && centerTimeFormik.errors.opening_time}
+              error={
+                centerTimeFormik.touched.opening_time &&
+                centerTimeFormik.errors.opening_time
+              }
             />
           </div>
           <div className='flex-1'>
@@ -129,7 +131,10 @@ const CenterOperations = () => {
               onChange={val =>
                 centerTimeFormik.setFieldValue('closing_time', val)
               }
-              error={centerTimeFormik.touched.closing_time && centerTimeFormik.errors.closing_time}
+              error={
+                centerTimeFormik.touched.closing_time &&
+                centerTimeFormik.errors.closing_time
+              }
             />
           </div>
         </div>
@@ -145,46 +150,15 @@ const CenterOperations = () => {
             }
           />
         </div>
-
-        <div className='flex gap-4'>
-          {/* <div className='flex-1'>
-            <Input
-              label='Inventory Profit'
-              name='inventory_profit'
-              value={centerTimeFormik.values.inventory_profit}
-              onChange={e =>
-                centerTimeFormik.setFieldValue(
-                  'inventory_profit',
-                  e.target.value
-                )
-              }
-              error={centerTimeFormik.touched.inventory_profit && centerTimeFormik.errors.inventory_profit}
-            />
-          </div> */}
-          {/* <div className='flex-1'>
-            <Input
-              label='Pay Cycle'
-              name='payroll_cycle_day'
-              value={centerTimeFormik.values.payroll_cycle_day}
-              onChange={e =>
-                centerTimeFormik.setFieldValue(
-                  'payroll_cycle_day',
-                  e.target.value
-                )
-              }
-              error={centerTimeFormik.touched.payroll_cycle_day && centerTimeFormik.errors.payroll_cycle_day}
-            />
-          </div> */}
-          <div className='flex-1 justify-end items-center flex'>
-            <Button
-              id='center-timing'
-              size='addbutton'
-              variant='button_outlined'
-              type='submit'
-            >
-              Save Changes
-            </Button>
-          </div>
+        <div className='flex-1 justify-end items-center flex'>
+          <Button
+            id='center-timing'
+            size='addbutton'
+            variant='button_outlined'
+            type='submit'
+          >
+            Save Changes
+          </Button>
         </div>
       </form>
 
@@ -218,7 +192,9 @@ const CenterOperations = () => {
               name='slot_capacity'
               value={formik.values.slot_capacity}
               onChange={formik.handleChange}
-              error={formik.touched.slot_capacity && formik.errors.slot_capacity}
+              error={
+                formik.touched.slot_capacity && formik.errors.slot_capacity
+              }
             />
           </div>
         </div>

@@ -40,7 +40,7 @@ export const categoryValidationSchema = Yup.object().shape({
 export const employeeValidationSchema = isEdit =>
   Yup.object().shape({
     full_name: Yup.string().required('Full name is required'),
-    email: Yup.string().email().required('Email is required'),
+    email: Yup.string().email('Invalid email format').required('Email is required'),
     mobile: Yup.string().required('Mobile is required'),
     designation_id: isEdit
       ? Yup.string()
