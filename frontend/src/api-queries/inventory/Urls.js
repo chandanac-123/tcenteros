@@ -19,7 +19,9 @@ import {
   getGenerateInventoryReportApiCall,
   getGeneratePurchaseReportApiCall,
   getGenerateSaleReportApiCall,
-  inventoryDashboardApiCall
+  inventoryDashboardApiCall,
+  getInventoryProfitValueApiCall,
+  createInventoryProfitApiCall
 } from './index'
 
 export const getAllSKU = async () => {
@@ -205,6 +207,24 @@ export const getGenerateStockReport = async (data) => {
 export const getDashboardData = async () => {
   try {
     const response = await inventoryDashboardApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getInventoryProfitValue = async () => {
+  try {
+    const response = await getInventoryProfitValueApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const createInventoryProfit = async details => {
+  try {
+    const response = await createInventoryProfitApiCall(details)
     return response.data
   } catch (error) {
     throw error

@@ -69,6 +69,11 @@ export const getPayrollApiCall = data =>
 export const runPayrollApiCall = details =>
   axiosInstance.post('/payrole/payroll/run', details)
 
+export const getPayCycleApiCall = data =>
+  axiosInstance.get(`/payrole/payroll-cycle/`)
+export const createPayCycleApiCall = details =>
+  axiosInstance.post('/payrole/payroll-cycle/', details)
+
 // TAX API
 export const getTaxApiCall = () =>
   axiosInstance.get(`/settings/superadmin/tax-categories/`)

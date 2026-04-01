@@ -1,3 +1,4 @@
+import { de } from 'date-fns/locale'
 import {
   createEmployeeApiCall,
   CreateEmployeeCategoriesApiCall,
@@ -13,7 +14,9 @@ import {
   deleteMultipleEmployeeApiCall,
   getEmployeesDropdownApiCall,
   getPayrollApiCall,
-  runPayrollApiCall
+  runPayrollApiCall,
+  getPayCycleApiCall,
+  createPayCycleApiCall
 } from '../../api'
 
 export const getAllCategories = async () => {
@@ -141,6 +144,24 @@ export const getPayroll = async data => {
 export const runPayroll = async details => {
   try {
     const response = await runPayrollApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getPayCycles = async () => {
+  try {
+    const response = await getPayCycleApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const createPayCycle = async details => {
+  try {
+    const response = await createPayCycleApiCall(details)  
     return response.data
   } catch (error) {
     throw error

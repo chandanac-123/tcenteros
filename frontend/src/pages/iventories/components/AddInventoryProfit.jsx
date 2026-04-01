@@ -1,17 +1,31 @@
 import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  useCreateInventoryProfitMutation,
+  useInventoryProfitValueQuery
+} from '@api-queries/inventory/Query'
 
 const AddInventoryProfit = ({ open, setOpen }) => {
   const [inventoryProfit, setInventoryProfit] = useState('')
+  const { data } = useInventoryProfitValueQuery()
+  const { mutate: createInventoryProfit } = useCreateInventoryProfitMutation()
+  
+    useEffect(() => {
+      if (data?.inventory_profit) {
+        setInventoryProfit(data.inventory_profit)
+      }
+    }, [data])
 
   const handleInventoryProfit = async () => {
     try {
-      await runPayroll({ payroll_cycle_day: Number(payrollCycleDay) })
-      setPayrollCycleDay('')
+      await createInventoryProfit({ inventory_profit: Number(inventoryProfit) })
+      setOpen(false)
+      setInventoryProfit('')
     } catch (error) {}
   }
+
   return (
     <CustomeModal
       open={open}

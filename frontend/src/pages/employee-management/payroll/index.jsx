@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DataTable } from '@common/components/DataTable'
 import {
   usePayrollQuery,
-  useRunPayrollMutation
+  useRunPayrollMutation,
+  useCreatePayCycleMutation,
+  usePayCyclesQuery
 } from '@api-queries/employee-management/Query'
 import { Button } from '@pages/components/ui/button'
 import { ArrowBigRightDash } from 'lucide-react'
@@ -11,16 +13,28 @@ import { Input } from '@pages/components/ui/input'
 const statusVariantMap = { paid: 'active', unpaid: 'inactive' }
 
 const Payroll = () => {
-  const [payrollCycleDay, setPayrollCycleDay] = useState('')
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
   })
   const { data: payrollData, isFetching } = usePayrollQuery(tableParams)
-  const { mutate: runPayroll } = useRunPayrollMutation()
+  const { mutate: runPayroll, isPending: isRunning } = useRunPayrollMutation()
+  const { data: payCycles } = usePayCyclesQuery()
+  const { mutate: createPayCycle, isPending: isCreating } =
+    useCreatePayCycleMutation()
+  const [payrollCycleDay, setPayrollCycleDay] = useState('')
+  const [initialCycleDay, setInitialCycleDay] = useState('')
+
+  useEffect(() => {
+    if (payCycles?.payroll_cycle_day) {
+      const value = String(payCycles.payroll_cycle_day)
+      setPayrollCycleDay(value)
+      setInitialCycleDay(value)
+    }
+  }, [payCycles])
 
   const columns = [
-    { accessorKey: 'employee_name', header: 'EmployeeName' },
+    { accessorKey: 'employee_name', header: 'Employee Name' },
     { accessorKey: 'paid_date', header: 'Paid Date' },
     { accessorKey: 'payment_method', header: 'Payment Method' },
     { accessorKey: 'period', header: 'Period' },
@@ -47,15 +61,21 @@ const Payroll = () => {
 
   const handleAddCycleDay = async () => {
     try {
-      await runPayroll({ payroll_cycle_day: Number(payrollCycleDay) })
+      await createPayCycle({ payroll_cycle_day: Number(payrollCycleDay) })
       setPayrollCycleDay('')
     } catch (error) {}
   }
 
+  const isSameValue = payrollCycleDay === initialCycleDay
+  const isDisabled = isSameValue || isCreating
   return (
     <div className='flex gap-3 flex-col'>
       <div className='flex justify-between'>
-        <Button size='addbutton' onClick={handleRunPayroll}>
+        <Button
+          size='addbutton'
+          onClick={handleRunPayroll}
+          disabled={isRunning}
+        >
           Run Payroll <ArrowBigRightDash />
         </Button>
         <div className='flex gap-2 justify-center items-center'>
@@ -71,15 +91,7 @@ const Payroll = () => {
               }
             }}
           />
-          <Button
-            size='mini'
-            onClick={handleAddCycleDay}
-            disabled={
-              !payrollCycleDay ||
-              Number(payrollCycleDay) < 1 ||
-              Number(payrollCycleDay) > 31
-            }
-          >
+          <Button size='mini' onClick={handleAddCycleDay} disabled={isDisabled}>
             Add
           </Button>
         </div>

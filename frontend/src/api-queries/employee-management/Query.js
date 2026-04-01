@@ -14,7 +14,9 @@ import {
   deleteMultipleEmployees,
   getEmployeesDropdown,
   getPayroll,
-  runPayroll
+  runPayroll,
+  getPayCycles,
+  createPayCycle
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -51,7 +53,7 @@ export const useUpdateCategoryMutation = () => {
       showSuccess('Category updated successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to update category')
+      showError(err?.response?.data?.detail || 'Failed to update category')
       return err
     }
   })
@@ -66,7 +68,7 @@ export const useDeleteCategoryMutation = () => {
       showSuccess('Category deleted successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to delete category')
+      showError(err?.response?.data?.detail || 'Failed to delete category')
       return err
     }
   })
@@ -130,7 +132,7 @@ export const useDeleteEmployeeMutation = () => {
       showSuccess('Employee deleted successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to delete employee')
+      showError(err?.response?.data?.detail || 'Failed to delete employee')
       return err
     }
   })
@@ -156,7 +158,7 @@ export const useUpdateEmployeeStatusMutation = () => {
     },
     onError: err => {
       showError(
-        err?.response?.data?.message || 'Failed to update employee status'
+        err?.response?.data?.detail || 'Failed to update employee status'
       )
       return err
     }
@@ -173,7 +175,7 @@ export const useDeleteMultipleEmployeeMutation = () => {
     },
     onError: err => {
       showError(
-        err?.response?.data?.message || 'Failed to delete selected employees'
+        err?.response?.data?.detail || 'Failed to delete selected employees'
       )
       return err
     }
@@ -208,6 +210,30 @@ export const useRunPayrollMutation = () => {
     },
     onError: err => {
       showError(err?.response?.data?.detail || 'Failed to run payroll')
+      return err
+    }
+  })
+}
+
+export const usePayCyclesQuery = () => {
+  return useQuery({
+    queryKey: ['pay-cycles'],
+    queryFn: () => getPayCycles(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useCreatePayCycleMutation = () => {
+  const query = useQueryClient()
+  return useMutation({
+    mutationFn: data => createPayCycle(data),
+    onSuccess: async data => {
+      query.invalidateQueries('pay-cycles')
+      showSuccess('Pay cycle created successfully')
+    },
+    onError: err => {
+      showError(err?.response?.data?.detail || 'Failed to create pay cycle')
       return err
     }
   })

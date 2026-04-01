@@ -66,7 +66,10 @@ const AddProductModal = ({ open, setOpen }) => {
 
   const suggestedSellingPrice =
     formik.values.base_price && profitPercent
-      ? Number(formik.values.base_price) * (1 + Number(profitPercent) / 100)
+      ? (
+          Number(formik.values.base_price) *
+          (1 + Number(profitPercent) / 100)
+        ).toFixed(2)
       : ''
 
   useEffect(() => {
@@ -157,12 +160,13 @@ const AddProductModal = ({ open, setOpen }) => {
               }
             />
 
-            {formik.values.base_price && (
-              <p className='text-xs text-gray-500 mt-1'>
-                Recommended price based on profit settings: ₹
-                {suggestedSellingPrice}. You can change it if needed.
-              </p>
-            )}
+            {formik.values.base_price &&
+              inventoryProfitData?.inventory_profit > 0 && (
+                <p className='text-xs text-gray-500 mt-1'>
+                  Recommended price based on inventory profit: ₹
+                  {suggestedSellingPrice}. You can change it if needed.
+                </p>
+              )}
           </div>
 
           <Input
