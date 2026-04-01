@@ -98,6 +98,15 @@ async def get_all_center_ids_async(center_id, db) -> List:
 
     return ids
 
+async def normalize_date(date_str: Optional[str]):
+    if not date_str or str(date_str).lower() == "null":
+        return None
+
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except Exception:
+        raise ValueError(f"Invalid date format: {date_str}. Expected YYYY-MM-DD")
+
 
 # ============================================================================
 # API 1: CONSOLIDATED INCOME REPORT
@@ -119,6 +128,9 @@ async def get_consolidated_income(
     current_user = Depends(centeradmin_required)
 ):
     try:
+        start_date = await normalize_date(start_date)
+        end_date = await normalize_date(end_date)
+
         center_id = current_user.get("center_id")
 
         if not center_id:
@@ -278,6 +290,9 @@ async def get_consolidated_expense(
     current_user = Depends(centeradmin_required)
 ):
     try:
+        start_date = await normalize_date(start_date)
+        end_date = await normalize_date(end_date)
+
         center_id = current_user.get("center_id")
 
         if not center_id:
@@ -440,6 +455,9 @@ async def get_consolidated_settlement(
     current_user = Depends(centeradmin_required)
 ):
     try:
+        start_date = await normalize_date(start_date)
+        end_date = await normalize_date(end_date)
+        
         center_id = current_user.get("center_id")
 
         if not center_id:
