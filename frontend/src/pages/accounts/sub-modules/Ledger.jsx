@@ -12,7 +12,6 @@ const Ledger = () => {
     { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'account_name', header: 'Accounts Name' },
     { accessorKey: 'account_type', header: 'Account Type' },
-    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'date', header: 'Date' },
     { accessorKey: 'credit', header: 'Credit' },
     { accessorKey: 'debit', header: 'Debit' },

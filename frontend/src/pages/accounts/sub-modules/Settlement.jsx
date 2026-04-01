@@ -9,14 +9,11 @@ const Settlement = () => {
   })
   const { data, isLoading, isError } = useAllSettlementsQuery(tableParams)
   const columns = [
-    { accessorKey: 'income_type', header: 'Income Type' },
-    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'entry_number', header: 'Entry Number' },
+    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'date', header: 'Date' },
-    { accessorKey: 'account_code', header: 'Account Code' },
-    { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'tax_amount', header: 'Tax Amount' },
-    { accessorKey: 'total_amount', header: 'Total Amount' },
+    { accessorKey: 'total_credit', header: 'Total Credit' },
+    { accessorKey: 'total_debit', header: 'Total Debit' },
     { accessorKey: 'description', header: 'Description' }
   ]
   return (

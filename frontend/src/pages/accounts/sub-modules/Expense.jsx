@@ -10,10 +10,12 @@ const Expense = () => {
   const { data, isLoading, isError } = useAllExpensesQuery(tableParams)
   const columns = [
     { accessorKey: 'entry_number', header: 'Entry Number' },
-    { accessorKey: 'expense_type', header: 'Expense Type' },
+    { accessorKey: 'income_type', header: 'Expense Type' },
+    { accessorKey: 'source', header: 'Source' },
     { accessorKey: 'date', header: 'Date' },
     { accessorKey: 'amount', header: 'Amount' },
-    { accessorKey: 'source', header: 'Source' },
+    { accessorKey: 'tax_amount', header: 'Tax Amount' },
+    { accessorKey: 'total_amount', header: 'Total Amount' },
     { accessorKey: 'description', header: 'Description' }
   ]
   return (
