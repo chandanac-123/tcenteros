@@ -9,7 +9,14 @@ const SettlementTable = ({ tableParams, setTableParams }) => {
   const columns = [
     {
       accessorKey: 'scenario',
-      header: 'Type'
+      header: 'Type',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          {row.original.scenario
+            ?.replace(/_/g, ' ')
+            ?.replace(/\b\w/g, c => c?.toUpperCase())}
+        </span>
+      )
     },
     {
       accessorKey: 'type',

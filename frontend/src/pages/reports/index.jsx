@@ -81,7 +81,7 @@ const Reports = () => {
   return (
     <ContentLayout>
       <h1 className='text-xl font-semibold text-textblack mb-4'>
-        Reports - {activeTab}
+        Reports -<>{activeTab?.charAt(0)?.toUpperCase() + activeTab?.slice(1)}</>
       </h1>
       <div className='flex justify-between items-center mb-4 gap-3'>
         {/* Tabs */}

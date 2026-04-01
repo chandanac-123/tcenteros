@@ -8,7 +8,14 @@ const IncomeTable = ({ tableParams, setTableParams }) => {
   const columns = [
     {
       accessorKey: 'type',
-      header: 'Type'
+      header: 'Type',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          {row?.original?.type
+            ?.replace(/_/g, ' ')
+            ?.replace(/\b\w/g, c => c?.toUpperCase())}
+        </span>
+      )
     },
     {
       accessorKey: 'center_name',
