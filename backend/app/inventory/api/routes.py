@@ -7,8 +7,9 @@ from app.inventory.schema.schema import *
 from app.core.models.models import SKU
 from app.inventory.models.models import *
 from app.core.security import generate_sku_code
+from app.auth.models.models import CenterAdmin
 from app.inventory.models.models import Sale, SaleItem, Product, Stock, StockTransaction
-from app.settings.models.models import TaxCategory, TaxScope
+from app.settings.models.models import TaxCategory, TaxScope, CenterOperationalSetting
 from app.billing.models.models import PaymentOrder, PayerType, PayeeType, OrderType, ReferenceSchema, PaymentOrderStatus, PaymentMethod
 import asyncio
 from uuid import uuid4
@@ -19,6 +20,7 @@ from decimal import Decimal
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 from app.inventory.utils.reports import ReportGenerator
+from app.inventory.schema.schema import InventoryProfitCreateUpdate, InventoryProfitOut
 from app.accounts.inventory_helper import post_inventory_sale_journal, post_inventory_purchase_journal
 import io
 import pandas as pd
@@ -3144,3 +3146,75 @@ async def get_stock_movement_report_data(
         "transaction_type_counts": type_counts,
         "movements": movements_data,
     }
+
+
+
+
+#add or update inventory profit percentage (CenterAdmin)
+@router.post("/inventory-profit/", response_model=InventoryProfitOut)
+async def create_or_update_inventory_profit(
+    data: InventoryProfitCreateUpdate,
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
+    )
+    ops = result.scalar_one_or_none()
+
+    try:
+        if not ops:
+            ops = CenterOperationalSetting(
+                center_id=center_id,
+                inventory_profit=data.inventory_profit,
+                opening_time=None,   # will trigger error if not set
+                closing_time=None,
+                week_off_days=[]
+            )
+            session.add(ops)
+        else:
+            ops.inventory_profit = data.inventory_profit
+
+        await session.commit()
+        await session.refresh(ops)
+
+        return ops
+
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="plz add the operation detilas"
+        )
+
+
+@router.get("/inventory-profit/", response_model=InventoryProfitOut)
+async def get_inventory_profit(
+    session: AsyncSession = Depends(get_async_session),
+    current_user=Depends(centeradmin_required)
+):
+    center_admin = await session.get(CenterAdmin, current_user["user_id"])
+    if not center_admin:
+        raise HTTPException(status_code=403, detail="Not a center admin")
+
+    center_id = center_admin.center_id
+
+    result = await session.execute(
+        select(CenterOperationalSetting).where(
+            CenterOperationalSetting.center_id == center_id
+        )
+    )
+    ops = result.scalar_one_or_none()
+
+    if not ops or ops.inventory_profit is None:
+        raise HTTPException(status_code=404, detail="Inventory profit not set")
+
+    return ops

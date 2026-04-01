@@ -1,5 +1,6 @@
 # backend/app/auth/api/employee_salary_routes.py
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_async_session
 from app.auth.models.models import CenterAdmin, Employee
@@ -257,7 +258,7 @@ async def run_payroll(
     if not settings:
         raise HTTPException(
             status_code=400,
-            detail="Operational settings not configured. Please set payroll cycle day in settings."
+            detail="Operational settings not configured. Please set payroll cycle day."
         )
 
     today = date.today()
@@ -534,22 +535,30 @@ async def create_or_update_payroll_cycle(
     )
     ops = result.scalar_one_or_none()
 
-    if not ops:
-        ops = CenterOperationalSetting(
-            center_id=center_id,
-            payroll_cycle_day=data.payroll_cycle_day,
-            opening_time=None,
-            closing_time=None,
-            week_off_days=[]
+    try:
+        if not ops:
+            ops = CenterOperationalSetting(
+                center_id=center_id,
+                payroll_cycle_day=data.payroll_cycle_day,
+                opening_time=None,   # will trigger error
+                closing_time=None,
+                week_off_days=[]
+            )
+            session.add(ops)
+        else:
+            ops.payroll_cycle_day = data.payroll_cycle_day
+
+        await session.commit()
+        await session.refresh(ops)
+
+        return ops
+
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="plz add the operation detilas"
         )
-        session.add(ops)
-    else:
-        ops.payroll_cycle_day = data.payroll_cycle_day
-
-    await session.commit()
-    await session.refresh(ops)
-
-    return ops
 
 
 @router.get("/payroll-cycle/", response_model=PayrollCycleOut)

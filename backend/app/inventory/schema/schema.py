@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, condecimal
 from typing import  Optional, List
 from decimal import Decimal
 from uuid import UUID
@@ -102,6 +102,19 @@ class CheckoutIn(BaseModel):
     tax_category_id: Optional[UUID] = None
     customer_id: Optional[UUID] = None
     client_reference: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+
+
+class InventoryProfitCreateUpdate(BaseModel):
+    inventory_profit: condecimal(max_digits=10, decimal_places=2)
+
+
+class InventoryProfitOut(BaseModel):
+    center_id: UUID
+    inventory_profit: float
 
     class Config:
         orm_mode = True

@@ -12,7 +12,7 @@ from datetime import datetime
 from app.auth.models.models import Member, MemberStatusEnum
 from app.core.database import get_async_session
 from app.center.models.models import Center
-from app.settings.models.models import Address, CenterOperationalSetting
+from app.settings.models.models import Address
 from decimal import Decimal
 from app.accounts.networking_helper import post_networking_access_journal   
 
@@ -1074,66 +1074,3 @@ async def delete_networking_booking(
     await session.commit()
     return {"detail": "Networking booking deleted successfully"}
 
-
-#add or update inventory profit percentage (CenterAdmin)
-@router.post("/inventory-profit/", response_model=InventoryProfitOut)
-async def create_or_update_inventory_profit(
-    data: InventoryProfitCreateUpdate,
-    session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(centeradmin_required)
-):
-    center_admin = await session.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-
-    center_id = center_admin.center_id
-
-    result = await session.execute(
-        select(CenterOperationalSetting).where(
-            CenterOperationalSetting.center_id == center_id
-        )
-    )
-    ops = result.scalar_one_or_none()
-
-    if not ops:
-        # Create if not exists
-        ops = CenterOperationalSetting(
-            center_id=center_id,
-            inventory_profit=data.inventory_profit,
-            opening_time=None,
-            closing_time=None,
-            week_off_days=[]
-        )
-        session.add(ops)
-    else:
-        ops.inventory_profit = data.inventory_profit
-
-    await session.commit()
-    await session.refresh(ops)
-
-    return ops
-
-
-
-@router.get("/inventory-profit/", response_model=InventoryProfitOut)
-async def get_inventory_profit(
-    session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(centeradmin_required)
-):
-    center_admin = await session.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-
-    center_id = center_admin.center_id
-
-    result = await session.execute(
-        select(CenterOperationalSetting).where(
-            CenterOperationalSetting.center_id == center_id
-        )
-    )
-    ops = result.scalar_one_or_none()
-
-    if not ops or ops.inventory_profit is None:
-        raise HTTPException(status_code=404, detail="Inventory profit not set")
-
-    return ops
