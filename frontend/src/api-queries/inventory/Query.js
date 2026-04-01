@@ -144,7 +144,7 @@ export const useCreateStockEntryMutation = data => {
       showSuccess('Stock entry created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create stock entry')
+      showError(err?.response?.data?.detail || 'Failed to create stock entry')
       return err
     }
   })
