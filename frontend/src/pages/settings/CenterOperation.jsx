@@ -48,7 +48,7 @@ const CenterOperations = () => {
   const initialValues = {
     start_time: '',
     end_time: '',
-    slot_capacity: null
+    slot_capacity: 0
   }
 
   const formik = useFormik({
