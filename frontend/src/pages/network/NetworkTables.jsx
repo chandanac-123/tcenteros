@@ -27,7 +27,7 @@ const NetworkTables = ({
           <span className='flex gap-3'>
             <button
               onClick={() =>
-                navigate(`/centerview/${data.network_membership_id}`)
+                navigate(`/network/${data.network_membership_id}`)
               }
             >
               <img src={view} alt='view' />
@@ -66,7 +66,7 @@ const NetworkTables = ({
             <span className='flex items-center gap-2 w-full'>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
@@ -93,7 +93,7 @@ const NetworkTables = ({
             <span className='flex items-center gap-2 '>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
@@ -113,7 +113,7 @@ const NetworkTables = ({
             <span className='flex items-center gap-2 '>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
@@ -135,7 +135,7 @@ const NetworkTables = ({
           <span className='flex gap-3'>
             <button
               onClick={() =>
-                navigate(`/centerview/${data.network_membership_id}`)
+                navigate(`/network/${data.network_membership_id}`)
               }
             >
               <img src={view} alt='view' />
