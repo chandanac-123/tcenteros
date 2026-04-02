@@ -57,7 +57,7 @@ const PlanCard = ({ data, colors }) => {
             ₹{data?.default_price} /
           </span>
           <span className='text-base font-semibold text-textblack'>
-            {data?.duration_unit}
+            {data?.duration_count} {data?.duration_unit}
           </span>
         </div>
 
