@@ -2,33 +2,29 @@ export const modulesData = [
   {
     id: 'dashboard',
     name: 'Dashboard',
-    submodules: []
+    submodules: ['Add branch','Create Branch']
   },
   {
     id: 'employee_management',
     name: 'Employee Management',
     submodules: ['Employee', 'Salary Structure', 'Payroll'],
     sub_submodules: {
-      Employee: ['Add', 'Edit', 'Delete'],
-      Payroll: ['Generate', 'View']
+      Employee: ['List', 'Add', 'Edit', 'Delete'],
     }
   },
   {
     id: 'membership_plan',
     name: 'Membership Plan',
-    submodules: ['Plan', 'Subscription'],
-    sub_submodules: {
-      Member: ['List', 'Add', 'Edit', 'Delete'],
-      Visitor: ['Add', 'Edit']
-    }
+    submodules: ['List', 'Add', 'Edit', 'Delete','Enable/Disable'],
   },
   {
     id: 'crm',
     name: 'CRM',
-    submodules: ['Member', 'Visitor'],
+    submodules: ['Member','Leads' ,'Guest','Visitor'],
     sub_submodules: {
-      Member: ['List', 'Add', 'Edit', 'Delete'],
-      Visitor: ['Add', 'Edit']
+      Member: ['List', 'Add', 'Edit', 'Delete','Enable/Disable'],
+      Visitor: ['Add', 'Convert to Member'],
+      Guest: ['Add', 'Convert to Member'],
     }
   },
   {
@@ -102,7 +98,7 @@ export const modulesData = [
     }
   },{
     id: 'role',
-    name: 'Account',
+    name: 'Role and Permission',
     submodules: ['Member', 'Visitor'],
     sub_submodules: {
       Member: ['List', 'Add', 'Edit', 'Delete'],
