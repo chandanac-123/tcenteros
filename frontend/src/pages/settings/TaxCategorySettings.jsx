@@ -111,9 +111,9 @@ const TaxCategorySettings = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
-            label={row.original.status == 'active' ? 'Active' : 'Inactive'}
+            label={row.original.is_active == true ? 'Active' : 'Inactive'}
             variant={
-              row.original.status == 'Active Member' ? 'active' : 'inactive'
+              row.original.is_active === true ? 'active' : 'inactive'
             }
           />
         </span>
