@@ -14,6 +14,8 @@ import {
   useDeleteMemberMutation,
   useUpdateMemberStatusMutation
 } from '@api-queries/crm/Query'
+const statusVariantMap = { active: 'active', inactive: 'inactive' }
+const paymentVariantMap = { paid: 'future_lead', null: 'inactive' }
 
 const Members = ({ onView, onEdit }) => {
   const [tableParams, setTableParams] = useState({
@@ -45,16 +47,13 @@ const Members = ({ onView, onEdit }) => {
     }
   }
 
-  const statusVariantMap = {
-    active: 'active',
-    inactive: 'inactive'
-  }
-
   const columns = [
-    {  accessorKey: 'full_name',  header: 'Member  Name' },
-    {  accessorKey: 'email',  header: 'Email'},
-    {  accessorKey: 'mobile',  header: 'Phone Number'},
-    {  accessorKey: 'status', header: 'Status',
+    { accessorKey: 'full_name', header: 'Member  Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'mobile', header: 'Phone Number' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Badge
@@ -64,7 +63,26 @@ const Members = ({ onView, onEdit }) => {
         </span>
       )
     },
-    {  header: 'Action',
+    {
+      accessorKey: 'payment_status',
+      header: 'Payment Status',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          <Badge
+            label={
+              row.original.payment_status == null
+                ? 'UNPAID'
+                : row.original.payment_status.toUpperCase()
+            }
+            variant={
+              paymentVariantMap[row.original.payment_status] || 'inactive'
+            }
+          />
+        </span>
+      )
+    },
+    {
+      header: 'Action',
       accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>

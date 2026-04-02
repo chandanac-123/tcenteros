@@ -92,7 +92,7 @@ const Network = () => {
 
       <div className='bg-[#F5EEFC] flex flex-col gap-5 lg:flex-row justify-between items-center p-5 rounded-[12px]'>
         <div className=''>
-          <span className='text-[20px] text-plan_purple'>Enable Networks</span>
+          <span className='text-[20px] text-secondary'>Enable Networks</span>
           <br />
           <span className='text-[16px] text-[#3F3939]'>
             Enable Network Access to allow members from other affiliated centers
@@ -104,7 +104,7 @@ const Network = () => {
 
         <button
           onClick={() => setOpen(true)}
-          className='px-4 py-2 rounded-[12px] border-2 border-overview_bg text-overview_bg font-medium hover:bg-overview_bg hover:text-white transition'
+          className='px-4 py-2 rounded-[12px] border-2 border-primary text-primary font-medium hover:bg-primary hover:text-white transition'
         >
           Add Network Amount
         </button>
