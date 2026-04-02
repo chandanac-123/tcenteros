@@ -1,6 +1,5 @@
 import * as Yup from 'yup'
-const gstRegex =
-  /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
+const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
 export const onboardingValidationSchema = Yup.object().shape({
   center_name: Yup.string().required('Center name is required'),
@@ -40,7 +39,9 @@ export const categoryValidationSchema = Yup.object().shape({
 export const employeeValidationSchema = isEdit =>
   Yup.object().shape({
     full_name: Yup.string().required('Full name is required'),
-    email: Yup.string().email('Invalid email format').required('Email is required'),
+    email: Yup.string()
+      .email('Invalid email format')
+      .required('Email is required'),
     mobile: Yup.string().required('Mobile is required'),
     designation_id: isEdit
       ? Yup.string()
@@ -93,7 +94,7 @@ export const attendanceValidationSchema = Yup.object().shape({
 
         return value > check_in_time
       }
-    ),
+    )
 })
 
 export const branchValidationSchema = Yup.object().shape({
@@ -139,47 +140,45 @@ export const brandingValidationSchema = Yup.object({
   primary_color: Yup.string().required('Primary color is required'),
   secondary_color: Yup.string().required('Secondary color is required'),
   app_name: Yup.string().required('App name is required'),
- app_logo: Yup.mixed()
-  .nullable()
-  .required('Upload an image')
-  .test('file-or-url', 'Logo is required', function (value) {
-    if (!value) return false
-    // File object (new upload)
-    if (value instanceof File) return true
-    //  Existing URL (edit case)
-    if (typeof value === 'string') return true
-    return false
-  })
-  .test(
-    'fileSize',
-    'Image size must be less than 2MB',
-    value => {
-      // ✅ Skip size check for URL
+  app_logo: Yup.mixed()
+    .nullable()
+    .required('Upload an image')
+    //  File or URL check
+    .test('file-or-url', 'Logo is required', value => {
+      if (!value) return false
+      if (value instanceof File) return true
+      if (typeof value === 'string' && value.trim() !== '') return true
+      return false
+    })
+    //  File size validation
+    .test('fileSize', 'Image size must be less than 2MB', value => {
       if (typeof value === 'string') return true
-      // ✅ Validate file size
       if (value instanceof File) {
         return value.size <= 2 * 1024 * 1024
       }
       return true
-    }
-  )
+    })
 })
 
 export const galleryImageValidationSchema = Yup.object().shape({
   image_url: Yup.mixed()
     .nullable()
     .required('Upload an image')
-    .test(
-      'fileType',
-      'Only JPG, JPEG, PNG files are allowed',
-      value =>
-        !value || ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)
-    )
-    .test(
-      'fileSize',
-      'Image size must be less than 2MB',
-      value => !value || value.size <= 2 * 1024 * 1024
-    )
+    //  File or URL check
+    .test('file-or-url', 'Image is required', value => {
+      if (!value) return false
+      if (value instanceof File) return true
+      if (typeof value === 'string' && value.trim() !== '') return true
+      return false
+    })
+    //  File size validation
+    .test('fileSize', 'Image size must be less than 2MB', value => {
+      if (typeof value === 'string') return true
+      if (value instanceof File) {
+        return value.size <= 2 * 1024 * 1024
+      }
+      return true
+    })
 })
 
 export const imageValidation = Yup.mixed()
@@ -277,7 +276,7 @@ export const purchaseValidationSchema = Yup.object({
     .required('Quantity is required'),
   supplier_name: Yup.string().trim().required('Supplier name is required'),
   invoice_number: Yup.string().trim().required('Invoice number is required'),
-  invoice_date: Yup.string().required('Enter  date'),
+  invoice_date: Yup.string().required('Enter  date')
 })
 
 export const addChargeSchema = Yup.object({
@@ -315,7 +314,7 @@ export const centerTimingValidationSchema = Yup.object().shape({
 
         return value > opening_time
       }
-    ),
+    )
   // inventory_profit: Yup.number()
   //   .typeError('Inventory profit must be a number')
   //   .required('Inventory profit is required')
@@ -360,16 +359,12 @@ export const profileValidationSchema = Yup.object().shape({
 })
 
 export const taxValidationSchema = Yup.object({
-  name: Yup.string()
-    .trim()
-    .required('Tax name is required'),
+  name: Yup.string().trim().required('Tax name is required'),
   tax_percentage: Yup.number()
     .typeError('Tax rate must be a number')
     .required('Tax rate is required')
     .min(0, 'Tax rate cannot be negative')
     .max(100, 'Tax rate cannot exceed 100'),
-  tax_type: Yup.string()
-    .required('Tax type is required'),
-  tax_scope: Yup.string()
-    .required('Tax scope is required')
+  tax_type: Yup.string().required('Tax type is required'),
+  tax_scope: Yup.string().required('Tax scope is required')
 })

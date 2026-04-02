@@ -22,7 +22,7 @@ const NetworkEarningReport = ({ tableParams, setTableParams }) => {
     { accessorKey: 'total_charge', header: 'Total' },
     {
       accessorKey: 'status',
-      header: 'Transaction Type',
+      header: 'Status',
       cell: ({ row }) => (
         <Badge
           label={row.original.status?.replace('_', ' ').toUpperCase()}

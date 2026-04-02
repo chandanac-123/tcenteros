@@ -83,7 +83,7 @@ const Network = () => {
     <ContentLayout>
       <div className='flex justify-between items-center mb-6'>
         <div className='flex flex-col'>
-          <span>Network</span>
+          <span className='text-xl font-semibold text-textblack'>Network</span>
         </div>
         <div className='flex-1 flex justify-end items-center gap-2'></div>
       </div>
