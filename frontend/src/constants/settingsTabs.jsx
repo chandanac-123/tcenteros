@@ -3,7 +3,6 @@ import CenterHolidays from '@pages/settings/CenterHolidays'
 import CenterOperations from '@pages/settings/CenterOperation'
 import GalleryUpload from '@pages/settings/GalleryUpload'
 import ProductCategory from '@pages/settings/ProductCategory'
-import RoleAndPermission from '@pages/settings/Role&PPermission'
 import TaxCategorySettings from '@pages/settings/TaxCategorySettings'
 
 export const setting_tabs = [
@@ -44,10 +43,4 @@ export const setting_tabs = [
     heading: '',
     component_view: <ProductCategory/>
   },
-  // {
-  //   id: 7,
-  //   name: 'Role & Permission',
-  //   heading: '',
-  //   component_view: <RoleAndPermission />
-  // }
 ]
