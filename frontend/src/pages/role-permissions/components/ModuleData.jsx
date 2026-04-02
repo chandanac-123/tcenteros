@@ -68,5 +68,14 @@ export const modulesData = [
   {
     id: 'role',
     name: 'Role and Permission'
+  },
+  {
+    id: 'notification',
+    name: 'Notification'
+  },
+  {
+    id: 'profile',
+    name: 'Profile',
+    submodules: ['Edit'],
   }
 ]

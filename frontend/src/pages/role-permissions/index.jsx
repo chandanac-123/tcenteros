@@ -10,22 +10,22 @@ const RoleAndPermission = () => {
   const [permissions, setPermissions] = useState({})
   const [selectedRole, setSelectedRole] = useState('Admin')
 
-  const toggleModule = (moduleId) => {
-    setPermissions((prev) => {
-      const current = prev[selectedRole]?.[moduleId]?.enabled
+const toggleModule = (moduleId) => {
+  setPermissions((prev) => {
+    const current = prev[selectedRole]?.[moduleId]?.enabled
 
-      return {
-        ...prev,
-        [selectedRole]: {
-          ...prev[selectedRole],
-          [moduleId]: {
-            enabled: !current,
-            submodules: prev[selectedRole]?.[moduleId]?.submodules || {}
-          }
+    return {
+      ...prev,
+      [selectedRole]: {
+        ...prev[selectedRole],
+        [moduleId]: {
+          enabled: !current,
+          submodules: prev[selectedRole]?.[moduleId]?.submodules || {}
         }
       }
-    })
-  }
+    }
+  })
+}
 
   const toggleSubmodule = (moduleId, sub) => {
     setPermissions((prev) => {
@@ -120,7 +120,7 @@ const RoleAndPermission = () => {
                 </label>
 
                 {/* SUBMODULES */}
-                {moduleState.enabled && module.submodules.length > 0 && (
+                {moduleState.enabled && module.submodules?.length > 0 && (
                   <div className="ml-6 mt-3 space-y-2">
                     {module.submodules.map((sub) => {
                       const subState =
