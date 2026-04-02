@@ -15,13 +15,3 @@ class NetworkingAccessRequest(BaseModel):
 
 
 
-class InventoryProfitCreateUpdate(BaseModel):
-    inventory_profit: condecimal(max_digits=10, decimal_places=2)
-
-
-class InventoryProfitOut(BaseModel):
-    center_id: UUID
-    inventory_profit: float
-
-    class Config:
-        orm_mode = True

@@ -43,6 +43,7 @@ class OrderType(enum.Enum):
     add_on = "add_on"
     refund = "refund"
     other_charges = "other_charges"
+    wallet = "wallet"
 
 class ReferenceSchema(enum.Enum):
     center = "center"

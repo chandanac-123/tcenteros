@@ -1367,7 +1367,14 @@ async def create_or_topup_center_wallet(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
+    from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
+    from app.accounts.wallet_helper import post_wallet_transaction_journal
+    from decimal import Decimal
+
     center_id = current_admin["center_id"]
+
+    # ❌ REMOVE async with session.begin()
+
     center = await session.get(Center, center_id)
     if not center:
         raise HTTPException(404, "Center not found")
@@ -1377,10 +1384,11 @@ async def create_or_topup_center_wallet(
     )
     wallet = wallet_result.scalar_one_or_none()
 
+    # CREATE
     if not wallet:
-        # Wallet creation: require minimum deposit of 20000
         if deposit < 20000:
-            raise HTTPException(400, "Minimum deposit to create wallet is ₹20,000")
+            raise HTTPException(400, "Minimum deposit ₹20,000 required")
+
         wallet = CenterWallet(
             id=uuid4(),
             center_id=center_id,
@@ -1394,33 +1402,67 @@ async def create_or_topup_center_wallet(
             updated_at=datetime.utcnow(),
         )
         session.add(wallet)
-        await session.commit()
-        await session.refresh(wallet)
-        return {
-            "center_id": str(center_id),
-            "wallet_id": str(wallet.id),
-            "balance": float(wallet.balance),
-            "deposit": float(wallet.deposit),
-            "min_balance": float(wallet.min_balance),
-            "message": "Wallet created successfully"
-        }
+        await session.flush()
+
+        transaction_type = "create"
+
+    # TOPUP
     else:
-        # Wallet exists: allow top-up with any positive deposit
         if deposit <= 0:
-            raise HTTPException(400, "Deposit amount must be positive")
+            raise HTTPException(400, "Deposit must be positive")
+
         wallet.balance += Decimal(str(deposit))
         wallet.last_updated = datetime.utcnow()
         wallet.updated_by = current_admin["user_id"]
-        await session.commit()
-        await session.refresh(wallet)
-        return {
-            "center_id": str(center_id),
-            "wallet_id": str(wallet.id),
-            "balance": float(wallet.balance),
-            "deposit": float(wallet.deposit),
-            "min_balance": float(wallet.min_balance),
-            "message": "Wallet topped up successfully"
-        }
+
+        await session.flush()
+
+        transaction_type = "topup"
+
+    # PAYMENT ORDER
+    payment_order = PaymentOrder(
+        payment_order_id=uuid4(),
+        payer_user_id=current_admin["user_id"],
+        payer_type="center_admin",
+        payee_type="platform",
+        center_id=center_id,
+        order_type="wallet",
+        reference_schema="wallet",
+        reference_id=wallet.id,
+        subtotal_amount=deposit,
+        tax_amount=0,
+        total_amount=deposit,
+        currency="INR",
+        status=PaymentOrderStatus.paid,
+        payment_method=PaymentMethod.cash,
+        created_by=current_admin["user_id"],
+        updated_by=current_admin["user_id"],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+
+    session.add(payment_order)
+    await session.flush()
+
+    # ACCOUNTING
+    await post_wallet_transaction_journal(
+        session=session,
+        center_id=center_id,
+        amount=Decimal(str(deposit)),
+        payment_order_id=payment_order.payment_order_id,
+        created_by=current_admin["user_id"],
+        transaction_type=transaction_type
+    )
+
+    # ✅ COMMIT MANUALLY
+    await session.commit()
+
+    return {
+        "center_id": str(center_id),
+        "wallet_id": str(wallet.id),
+        "balance": float(wallet.balance),
+        "message": f"Wallet {transaction_type} successful"
+    }
     
 
 #Get Center Wallet
