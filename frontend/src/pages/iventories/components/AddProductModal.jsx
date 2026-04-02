@@ -102,7 +102,7 @@ const AddProductModal = ({ open, setOpen }) => {
           <div className='flex items-center gap-2'>
             <div className='flex-1'>
               {isCategoryEmpty ? (
-                <p className='flex text-red_text items-baseline '>
+                <p className='flex text-red_text text-sm items-baseline '>
                   Create a category first.
                 </p>
               ) : (

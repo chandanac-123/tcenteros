@@ -26,23 +26,23 @@ export const useOnboardingStore = create(
 
       //  OTHER ONBOARDING STATE
 
-      attendanceType: null,
-      setAttendanceType: type => set({ attendanceType: type }),
+      // attendanceType: null,
+      // setAttendanceType: type => set({ attendanceType: type }),
 
-      sellableItem: 'merchandise',
-      setSellableItem: type => set({ sellableItem: type }),
+      // sellableItem: 'merchandise',
+      // setSellableItem: type => set({ sellableItem: type }),
 
-      slotControl: null,
-      setSlotControl: value => set({ slotControl: value }),
+      // slotControl: null,
+      // setSlotControl: value => set({ slotControl: value }),
 
-      payment_Billing: null,
-      setPaymentBilling: value => set({ payment_Billing: value }),
+      // payment_Billing: null,
+      // setPaymentBilling: value => set({ payment_Billing: value }),
 
-      reportAndInsight: 'basic-report',
-      setReportAndInsight: value => set({ reportAndInsight: value }),
+      // reportAndInsight: 'basic-report',
+      // setReportAndInsight: value => set({ reportAndInsight: value }),
 
-      trainerAndStaff: null,
-      setTrainerAndStaff: value => set({ trainerAndStaff: value }),
+      // trainerAndStaff: null,
+      // setTrainerAndStaff: value => set({ trainerAndStaff: value }),
 
       typeSelectionId: '',
       typeSelectionName: '',
