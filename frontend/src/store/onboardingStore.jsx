@@ -26,11 +26,11 @@ export const useOnboardingStore = create(
 
       //  OTHER ONBOARDING STATE
 
-      // attendanceType: null,
-      // setAttendanceType: type => set({ attendanceType: type }),
+      attendanceType: null,
+      setAttendanceType: type => set({ attendanceType: type }),
 
-      // sellableItem: 'merchandise',
-      // setSellableItem: type => set({ sellableItem: type }),
+      sellableItem: 'merchandise',
+      setSellableItem: type => set({ sellableItem: type }),
 
       // slotControl: null,
       // setSlotControl: value => set({ slotControl: value }),
