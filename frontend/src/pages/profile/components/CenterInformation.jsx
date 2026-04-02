@@ -7,8 +7,9 @@ import view from '@assets/form-icons/view.svg'
 import ViewCenterInfo from './ViewCenterInfo'
 import UpdateProfile from './UpdateProfile'
 import { Camera } from 'lucide-react'
+import defalutUser from '@assets/header-icons/user.svg'
 
-const CenterInformation = ({data}) => {
+const CenterInformation = ({ data }) => {
   const [editId, setEditId] = useState(false)
   const [open, setOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -51,7 +52,7 @@ const CenterInformation = ({data}) => {
         <div className='relative self-center'>
           {/* Profile Image */}
           <img
-            src={center.center_image_url}
+            src={center.center_image_url || defalutUser}
             alt='User'
             className='w-20 h-20 rounded-md object-cover'
           />
