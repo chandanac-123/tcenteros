@@ -681,8 +681,8 @@ async def approve_networking_access(
         balance=home_wallet.balance,
         type="debit",
         status="completed",
-        reference_id=membership.id,
-        reference_type="networking",
+        # reference_id=membership.id,
+        # reference_type="networking",
         created_at=now
     ))
 
@@ -697,8 +697,8 @@ async def approve_networking_access(
         balance=network_wallet.balance,
         type="credit",
         status="completed",
-        reference_id=membership.id,
-        reference_type="networking",
+        # reference_id=membership.id,
+        # reference_type="networking",
         created_at=now
     ))
 
@@ -713,8 +713,8 @@ async def approve_networking_access(
         balance=platform_wallet.balance,
         type="credit",
         status="completed",
-        reference_id=membership.id,
-        reference_type="networking",
+        # reference_id=membership.id,
+        # reference_type="networking",
         created_at=now
     ))
 
@@ -727,7 +727,9 @@ async def approve_networking_access(
         center_id=member.home_center_id,
         order_type=OrderType.network_out,
         reference_id=membership.id,
+        reference_schema=ReferenceSchema.networking_access_request,
         total_amount=total_amount,
+        subtotal_amount=total_amount,
         currency=Currency.INR,
         status=PaymentOrderStatus.paid,
         payment_method=PaymentMethod.other,
@@ -742,7 +744,9 @@ async def approve_networking_access(
         center_id=network_center.id,
         order_type=OrderType.network_in,
         reference_id=membership.id,
+        reference_schema=ReferenceSchema.networking_access_request,
         total_amount=center_share,
+        subtotal_amount=center_share,
         currency=Currency.INR,
         status=PaymentOrderStatus.paid,
         payment_method=PaymentMethod.other,
