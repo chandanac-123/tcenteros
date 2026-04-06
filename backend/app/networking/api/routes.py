@@ -635,6 +635,7 @@ async def approve_networking_access(
     platform_share = (total_amount * Decimal("0.15")).quantize(Decimal("0.01"))
     center_share = (total_amount - platform_share).quantize(Decimal("0.01"))
 
+
     # 4. Wallets
     home_wallet = (await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == member.home_center_id)
@@ -678,11 +679,9 @@ async def approve_networking_access(
         amount=total_amount,
         transaction_type="network-out",
         description="Total networking payment",
-        balance=home_wallet.balance,
+        balance=home_wallet.balance - total_amount,
         type="debit",
         status="completed",
-        # reference_id=membership.id,
-        # reference_type="networking",
         created_at=now
     ))
 
@@ -694,11 +693,9 @@ async def approve_networking_access(
         amount=center_share,
         transaction_type="network-in",
         description="Networking income",
-        balance=network_wallet.balance,
+        balance=network_wallet.balance + center_share,
         type="credit",
         status="completed",
-        # reference_id=membership.id,
-        # reference_type="networking",
         created_at=now
     ))
 
@@ -710,7 +707,7 @@ async def approve_networking_access(
         amount=platform_share,
         transaction_type="platform_commission",
         description="Platform commission",
-        balance=platform_wallet.balance,
+        balance=platform_wallet.balance + platform_share,
         type="credit",
         status="completed",
         # reference_id=membership.id,
