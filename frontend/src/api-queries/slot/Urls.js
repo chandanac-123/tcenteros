@@ -2,7 +2,7 @@ import {
   deleteSlotApiCall,
   createSlotApiCall,
   getSlotApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllSlot = async () => {
   try {

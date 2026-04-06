@@ -6,7 +6,7 @@ import {
     getNetworkToggleStatusApiCall,
     getUserNetworkListApiCall,
     networkToggleButtonApiCall
-} from "../../api";
+} from "./index";
 
 export const addNetworkAmount = async (data) => {
     try {

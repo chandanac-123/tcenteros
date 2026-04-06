@@ -7,7 +7,7 @@ import {
   getCenterProfileInfoApiCall,
   fetchCenterLocationApiCall,
   getAllCenterApiCall
-} from '../../api/index'
+} from './index'
 
 export const getProfile = async () => {
   try {
