@@ -1508,7 +1508,7 @@ async def list_my_wallet_transactions(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    from sqlalchemy import select, func
+    from sqlalchemy import select
 
     center_id = current_admin["center_id"]
 
@@ -1520,55 +1520,37 @@ async def list_my_wallet_transactions(
     if not wallet:
         raise HTTPException(404, "Wallet not found")
 
-    # 🔥 STEP 1: Get txn_ids related to this wallet
-    txn_ids_query = select(WalletTransaction.txn_id).where(
-        (WalletTransaction.to_wallet_id == wallet.id) |
-        (WalletTransaction.from_wallet_id == wallet.id)
-    ).distinct()
-
-    txn_ids = [row[0] for row in (await session.execute(txn_ids_query)).all()]
+    # 🔥 STEP 1: txn_ids
+    txn_ids = [row[0] for row in (await session.execute(
+        select(WalletTransaction.txn_id).where(
+            (WalletTransaction.to_wallet_id == wallet.id) |
+            (WalletTransaction.from_wallet_id == wallet.id)
+        ).distinct()
+    )).all()]
 
     if not txn_ids:
-        return {
-            "total": 0,
-            "page": page,
-            "page_size": page_size,
-            "transactions": []
-        }
+        return {"total": 0, "page": page, "page_size": page_size, "transactions": []}
 
-    # 🔥 STEP 2: Pagination on txn_ids
     total = len(txn_ids)
-    paginated_txn_ids = txn_ids[(page - 1) * page_size : page * page_size]
+    paginated_txn_ids = txn_ids[(page - 1) * page_size: page * page_size]
 
-    # 🔥 STEP 3: Fetch ALL transactions (including platform)
+    # 🔥 STEP 2: fetch all txs
     txs = (await session.execute(
         select(WalletTransaction)
         .where(WalletTransaction.txn_id.in_(paginated_txn_ids))
         .order_by(WalletTransaction.created_at.desc())
     )).scalars().all()
 
-    # 🔥 STEP 4: GROUP BY txn_id
+    # 🔥 STEP 3: group
     txn_map = {}
-
     for tx in txs:
         key = str(tx.txn_id)
-
-        if key not in txn_map:
-            txn_map[key] = {
-                "txn_id": key,
-                "date": tx.created_at.strftime("%Y-%m-%d"),
-                "transactions": [],
-                "balance_after": float(tx.balance),
-                "status": tx.status
-            }
-
-        txn_map[key]["transactions"].append(tx)
+        txn_map.setdefault(key, []).append(tx)
 
     final_list = []
 
-    # 🔥 STEP 5: CALCULATE VALUES (CORRECT LOGIC)
-    for txn_id, data in txn_map.items():
-        txs = data["transactions"]
+    # 🔥 STEP 4: process each txn
+    for txn_id, tx_list in txn_map.items():
 
         total_amount = 0
         credit = 0
@@ -1576,34 +1558,54 @@ async def list_my_wallet_transactions(
         platform_fee = 0
         category = "-"
         transaction_center_name = "-"
+        balance_after = 0
 
-        for tx in txs:
+        for tx in tx_list:
 
-            # 🔻 MONEY GOING OUT (HOME CENTER)
+            # 🔻 DEBIT (HOME CENTER)
             if tx.from_wallet_id == wallet.id:
                 debit = float(tx.amount)
                 total_amount = float(tx.amount)
                 category = "network-out"
 
-            # 🔺 MONEY COMING IN (NETWORK CENTER)
+                # ✅ CORRECT BALANCE (THIS CENTER ONLY)
+                balance_after = float(tx.balance)
+
+                # ✅ Get other center name
+                if tx.to_wallet_id:
+                    to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
+                    if to_wallet:
+                        center = await session.get(Center, to_wallet.center_id)
+                        transaction_center_name = center.center_name
+
+            # 🔺 CREDIT (NETWORK CENTER)
             elif tx.to_wallet_id == wallet.id:
                 credit = float(tx.amount)
                 category = "network-in"
 
-            # 💰 PLATFORM FEE (shared)
+                # ✅ CORRECT BALANCE (THIS CENTER ONLY)
+                balance_after = float(tx.balance)
+
+                # ✅ Get other center name
+                if tx.from_wallet_id:
+                    from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
+                    if from_wallet:
+                        center = await session.get(Center, from_wallet.center_id)
+                        transaction_center_name = center.center_name
+
+            # 💰 PLATFORM FEE
             if tx.transaction_type == "platform_commission":
                 platform_fee = float(tx.amount)
 
-        # 🔥 FIX TOTAL (for network center)
+        # 🔥 TOTAL FIX (network center case)
         if total_amount == 0:
             total_amount = credit + platform_fee
 
-        # 🔥 TYPE FIX
         tx_type = "Debit" if debit > 0 else "Credit"
 
         final_list.append({
             "txn_id": txn_id,
-            "date": data["date"],
+            "date": tx_list[0].created_at.strftime("%Y-%m-%d"),
             "type": tx_type,
             "category": category,
             "transaction_center_name": transaction_center_name,
@@ -1611,8 +1613,11 @@ async def list_my_wallet_transactions(
             "credit": credit,
             "debit": debit,
             "platform_fee": platform_fee,
-            "balance_after": data["balance_after"],
-            "status": data["status"].capitalize() if data["status"] else "Completed"
+
+            # ✅ FINAL FIXED BALANCE
+            "balance_after": balance_after,
+
+            "status": tx_list[0].status.capitalize() if tx_list[0].status else "Completed"
         })
 
     return {
@@ -1623,199 +1628,75 @@ async def list_my_wallet_transactions(
     }
 
 
-
-# @router.get("/center/wallet/transactions")
-# async def list_my_wallet_transactions(
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(10, ge=1, le=100),
-#     type: Optional[str] = Query(None),
-#     transaction_type: Optional[str] = Query(None),
-#     status: Optional[str] = Query(None),
-#     start_date: Optional[str] = Query(None),
-#     end_date: Optional[str] = Query(None),
-#     session: AsyncSession = Depends(get_async_session),
-#     current_admin=Depends(centeradmin_required)
-# ):
-#     from datetime import datetime
-#     from sqlalchemy import func
-
-#     center_id = current_admin["center_id"]
-
-#     # 🔹 Get wallet
-#     wallet = (await session.execute(
-#         select(CenterWallet).where(CenterWallet.center_id == center_id)
-#     )).scalar_one_or_none()
-
-#     if not wallet:
-#         raise HTTPException(404, "Wallet not found")
-
-#     filters = []
-
-#     # 🔹 Credit / Debit filter
-#     if type == "credit":
-#         filters.append(WalletTransaction.to_wallet_id == wallet.id)
-#         filters.append(WalletTransaction.type == "credit")
-#     elif type == "debit":
-#         filters.append(WalletTransaction.from_wallet_id == wallet.id)
-#         filters.append(WalletTransaction.type == "debit")
-#     else:
-#         filters.append(
-#             ((WalletTransaction.to_wallet_id == wallet.id) & (WalletTransaction.type == "credit")) |
-#             ((WalletTransaction.from_wallet_id == wallet.id) & (WalletTransaction.type == "debit"))
-#         )
-
-#     if transaction_type:
-#         filters.append(WalletTransaction.transaction_type == transaction_type)
-
-#     if status:
-#         filters.append(WalletTransaction.status == status)
-
-#     # 🔹 Date filter
-#     if start_date:
-#         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-#         filters.append(WalletTransaction.created_at >= start_dt)
-
-#     if end_date:
-#         end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-#         end_dt = end_dt.replace(hour=23, minute=59, second=59)
-#         filters.append(WalletTransaction.created_at <= end_dt)
-
-#     stmt = select(WalletTransaction).where(*filters).order_by(WalletTransaction.created_at.desc())
-
-#     # 🔹 Pagination
-#     total = (await session.execute(stmt.with_only_columns(func.count()).order_by(None))).scalar_one()
-
-#     stmt = stmt.offset((page - 1) * page_size).limit(page_size)
-#     txs = (await session.execute(stmt)).scalars().all()
-
-#     tx_list = []
-
-#     for tx in txs:
-
-#         is_credit = tx.to_wallet_id == wallet.id and tx.type == "credit"
-#         is_debit = tx.from_wallet_id == wallet.id and tx.type == "debit"
-
-#         credit = float(tx.amount) if is_credit else 0
-#         debit = float(tx.amount) if is_debit else 0
-
-#         # 🔥 DEFAULT VALUES
-#         total_amount = float(tx.amount)
-#         platform_fee = 0.0
-
-#         # 🔥 HANDLE NETWORK CASE
-#         if tx.transaction_type == "network-in":
-#             # Find matching platform fee using same txn_id
-#             platform_tx = await session.execute(
-#                 select(WalletTransaction).where(
-#                     WalletTransaction.txn_id == tx.txn_id,
-#                     WalletTransaction.transaction_type == "platform_commission"
-#                 )
-#             )
-#             platform_tx = platform_tx.scalar_one_or_none()
-
-#             if platform_tx:
-#                 platform_fee = float(platform_tx.amount)
-#                 total_amount = float(tx.amount + platform_tx.amount)
-
-#         elif tx.transaction_type == "network-out":
-#             # Find platform fee
-#             platform_tx = await session.execute(
-#                 select(WalletTransaction).where(
-#                     WalletTransaction.txn_id == tx.txn_id,
-#                     WalletTransaction.transaction_type == "platform_commission"
-#                 )
-#             )
-#             platform_tx = platform_tx.scalar_one_or_none()
-
-#             if platform_tx:
-#                 platform_fee = float(platform_tx.amount)
-
-#         # 🔹 Get center name
-#         transaction_center_name = "-"
-
-#         if is_credit and tx.from_wallet_id:
-#             from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
-#             if from_wallet:
-#                 center = await session.get(Center, from_wallet.center_id)
-#                 transaction_center_name = center.center_name if center else "-"
-
-#         elif is_debit and tx.to_wallet_id:
-#             to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
-#             if to_wallet:
-#                 center = await session.get(Center, to_wallet.center_id)
-#                 transaction_center_name = center.center_name if center else "-"
-
-#         tx_list.append({
-#             "txn_id": str(tx.txn_id),
-#             "date": tx.created_at.strftime("%Y-%m-%d"),
-#             "type": "Credit" if is_credit else "Debit",
-#             "category": tx.transaction_type,
-#             "transaction_center_name": transaction_center_name,
-
-#             # 🔥 NEW FIELDS
-#             "total_amount": total_amount,
-#             "credit": credit if credit else 0,
-#             "debit": debit if debit else 0,
-#             "platform_fee": platform_fee,
-
-#             "balance_after": float(tx.balance),
-#             "status": tx.status.capitalize() if tx.status else "Completed",
-#         })
-
-#     return {
-#         "total": total,
-#         "page": page,
-#         "page_size": page_size,
-#         "transactions": tx_list
-#     }
-
-
-
 #wallet card api
 @router.get("/center/wallet/summary")
 async def get_wallet_summary(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
+    from datetime import datetime
+    from sqlalchemy import select, func
+
     center_id = current_admin["center_id"]
-    wallet_result = await session.execute(
+
+    wallet = (await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == center_id)
-    )
-    wallet = wallet_result.scalar_one_or_none()
+    )).scalar_one_or_none()
+
     if not wallet:
         raise HTTPException(404, "Wallet not found")
 
-    # Get current month range
+    # 🔹 Month range
     now = datetime.utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     month_end = now
 
-    # Total credit (network-in) for this month
-    credit_stmt = select(sa.func.sum(WalletTransaction.amount)).where(
+    # 🔺 CREDIT (network-in)
+    credit_stmt = select(func.sum(WalletTransaction.amount)).where(
         WalletTransaction.to_wallet_id == wallet.id,
         WalletTransaction.transaction_type == "network-in",
         WalletTransaction.created_at >= month_start,
         WalletTransaction.created_at <= month_end
     )
-    credit_result = await session.execute(credit_stmt)
-    month_credit = credit_result.scalar() or 0
+    month_credit = (await session.execute(credit_stmt)).scalar() or 0
 
-    # Total debit (network-out) for this month
-    debit_stmt = select(sa.func.sum(WalletTransaction.amount)).where(
+    # 🔻 DEBIT (network-out)
+    debit_stmt = select(func.sum(WalletTransaction.amount)).where(
         WalletTransaction.from_wallet_id == wallet.id,
         WalletTransaction.transaction_type == "network-out",
         WalletTransaction.created_at >= month_start,
         WalletTransaction.created_at <= month_end
     )
-    debit_result = await session.execute(debit_stmt)
-    month_debit = debit_result.scalar() or 0
+    month_debit = (await session.execute(debit_stmt)).scalar() or 0
+
+    # 💰 PLATFORM FEE (NEW)
+    platform_stmt = select(func.sum(WalletTransaction.amount)).where(
+        WalletTransaction.transaction_type == "platform_commission",
+        WalletTransaction.created_at >= month_start,
+        WalletTransaction.created_at <= month_end,
+        WalletTransaction.txn_id.in_(
+            select(WalletTransaction.txn_id).where(
+                (WalletTransaction.to_wallet_id == wallet.id) |
+                (WalletTransaction.from_wallet_id == wallet.id)
+            )
+        )
+    )
+    platform_fee = (await session.execute(platform_stmt)).scalar() or 0
 
     return {
         "center_id": str(center_id),
         "available_balance": float(wallet.balance),
+
+        # 🔥 UPDATED FIELDS
         "month_credit": float(month_credit),
-        "month_debit": float(month_debit)
+        "month_debit": float(month_debit),
+        "platform_fee": float(platform_fee),
+
+        # 🔥 OPTIONAL (VERY USEFUL)
+        "net_income": float(month_credit - platform_fee),
+        "net_outflow": float(month_debit)
     }
+
 
 #get center details (centeradmin only)
 @router.get("/center/me")

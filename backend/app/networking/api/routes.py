@@ -680,7 +680,7 @@ async def approve_networking_access(
         amount=total_amount,
         transaction_type="network-out",
         description="Total networking payment",
-        balance=home_wallet.balance - total_amount,
+        balance=home_wallet.balance,
         type="debit",
         status="completed",
         created_at=now
@@ -694,7 +694,7 @@ async def approve_networking_access(
         amount=center_share,
         transaction_type="network-in",
         description="Networking income",
-        balance=network_wallet.balance + center_share,
+        balance=network_wallet.balance,
         type="credit",
         status="completed",
         created_at=now
@@ -708,7 +708,7 @@ async def approve_networking_access(
         amount=platform_share,
         transaction_type="platform_commission",
         description="Platform commission",
-        balance=platform_wallet.balance + platform_share,
+        balance=platform_wallet.balance ,
         type="credit",
         status="completed",
         # reference_id=membership.id,
