@@ -17,6 +17,7 @@ import { useState } from 'react'
 const InvoiceSummary = () => {
   const navigate = useNavigate()
   const store = useOnboardingStore()
+  const resetStore = useOnboardingStore(state => state.resetStore)
   const [success, setSuccess] = useState(false)
   const { data, isFetching } = useCalculateGstQuery(store?.onboardId)
   const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
@@ -37,6 +38,7 @@ const InvoiceSummary = () => {
       try {
         const response = await finalize(values)
         setSuccess(true)
+        resetStore()
         setTimeout(() => {
           navigate('/primary-login')
         }, 1500)
