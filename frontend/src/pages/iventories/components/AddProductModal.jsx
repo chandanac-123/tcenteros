@@ -11,9 +11,10 @@ import { productValidationSchema } from '@utils/validations'
 import CustomeSelect from '@common/components/CustomeSelect'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import AddProductCategory from '@pages/settings/components/AddProductCategory'
+import AddInventoryProfit from './AddInventoryProfit'
 
 const unitTypes = [
   { id: 'Kilogram', name: 'Kilogram' },
@@ -27,13 +28,11 @@ const unitTypes = [
 ]
 
 const AddProductModal = ({ open, setOpen }) => {
-  const { setSelectedTab } = useSettingsTabStore()
   const [categoryOpen, setCategoryOpen] = useState(false)
+  const [inventoryProfitOpen, setInventoryProfitOpen] = useState(false)
   const { mutateAsync: createProduct, isLoading } = useCreateProductMutation()
   const { data: inventoryProfitData, isFetching: isFetchingInventoryProfit } =
     useInventoryProfitQuery()
-  console.log('inventoryProfitData: ', inventoryProfitData?.inventory_profit)
-
   const { data: skus } = useAllSKUsQuery()
   const navigate = useNavigate()
 
@@ -46,6 +45,11 @@ const AddProductModal = ({ open, setOpen }) => {
     selling_price: '',
     reorder_level: ''
   }
+  useEffect(() => {
+    if (isCategoryEmpty) {
+      setCategoryOpen(true)
+    }
+  }, [open])
 
   const formik = useFormik({
     initialValues,
@@ -75,10 +79,11 @@ const AddProductModal = ({ open, setOpen }) => {
   useEffect(() => {
     const base = Number(formik.values.base_price)
     const percent = Number(inventoryProfitData?.inventory_profit || 0)
-
-    if (base) {
+    if (formik.values.base_price !== '') {
       const sellingPrice = base + (base * percent) / 100
       formik.setFieldValue('selling_price', sellingPrice)
+    } else {
+      formik.setFieldValue('selling_price', '')
     }
   }, [formik.values.base_price, inventoryProfitData])
 
@@ -86,7 +91,7 @@ const AddProductModal = ({ open, setOpen }) => {
     <CustomeModal open={open} onOpenChange={setOpen} header='Add Product'>
       <form
         onSubmit={formik.handleSubmit}
-        className='w-full max-w-2xl space-y-5 '
+        className='w-full max-w-2xl space-y-2 '
       >
         {/* Grid Fields */}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 '>
@@ -180,6 +185,25 @@ const AddProductModal = ({ open, setOpen }) => {
 
           {/* <Input label='Expire Date' placeholder='Select Expire Date' /> */}
         </div>
+
+        {inventoryProfitData?.inventory_profit == 0 && (
+          <div className='flex items-baseline gap-4'>
+            <span className='flex text-grey'>
+              Add Inventory Profit, If you need.
+            </span>
+            <button
+              type='button'
+              className='h-9 w-9 flex items-center justify-center rounded-md border border-input mt-6'
+              onClick={() => setInventoryProfitOpen(true)}
+            >
+              <Plus className='h-4 w-4 text-primary' />
+            </button>
+            <AddInventoryProfit
+              open={inventoryProfitOpen}
+              setOpen={setInventoryProfitOpen}
+            />
+          </div>
+        )}
 
         {/* Buttons */}
         <div className='flex justify-end gap-3 pt-4'>
