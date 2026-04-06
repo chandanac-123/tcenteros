@@ -1536,21 +1536,18 @@ async def list_my_wallet_transactions(
             "transactions": []
         }
 
-    # 🔥 STEP 2: Fetch ALL transactions with those txn_ids (INCLUDING PLATFORM)
-    stmt = select(WalletTransaction).where(
-        WalletTransaction.txn_id.in_(txn_ids)
-    ).order_by(WalletTransaction.created_at.desc())
-
+    # 🔥 STEP 2: Pagination on txn_ids
     total = len(txn_ids)
-
-    # Pagination on txn_ids
     paginated_txn_ids = txn_ids[(page - 1) * page_size : page * page_size]
 
-    stmt = stmt.where(WalletTransaction.txn_id.in_(paginated_txn_ids))
+    # 🔥 STEP 3: Fetch ALL transactions (including platform)
+    txs = (await session.execute(
+        select(WalletTransaction)
+        .where(WalletTransaction.txn_id.in_(paginated_txn_ids))
+        .order_by(WalletTransaction.created_at.desc())
+    )).scalars().all()
 
-    txs = (await session.execute(stmt)).scalars().all()
-
-    # 🔥 STEP 3: GROUP BY txn_id
+    # 🔥 STEP 4: GROUP BY txn_id
     txn_map = {}
 
     for tx in txs:
@@ -1569,7 +1566,7 @@ async def list_my_wallet_transactions(
 
     final_list = []
 
-    # 🔥 STEP 4: CALCULATE VALUES
+    # 🔥 STEP 5: CALCULATE VALUES (CORRECT LOGIC)
     for txn_id, data in txn_map.items():
         txs = data["transactions"]
 
@@ -1578,26 +1575,31 @@ async def list_my_wallet_transactions(
         debit = 0
         platform_fee = 0
         category = "-"
-        tx_type = "Credit"
         transaction_center_name = "-"
 
         for tx in txs:
-            if tx.transaction_type == "network-out":
+
+            # 🔻 MONEY GOING OUT (HOME CENTER)
+            if tx.from_wallet_id == wallet.id:
                 debit = float(tx.amount)
                 total_amount = float(tx.amount)
                 category = "network-out"
-                tx_type = "Debit"
 
-            elif tx.transaction_type == "network-in":
+            # 🔺 MONEY COMING IN (NETWORK CENTER)
+            elif tx.to_wallet_id == wallet.id:
                 credit = float(tx.amount)
                 category = "network-in"
 
-            elif tx.transaction_type == "platform_commission":
+            # 💰 PLATFORM FEE (shared)
+            if tx.transaction_type == "platform_commission":
                 platform_fee = float(tx.amount)
 
-        # 🔥 FINAL TOTAL FIX
+        # 🔥 FIX TOTAL (for network center)
         if total_amount == 0:
             total_amount = credit + platform_fee
+
+        # 🔥 TYPE FIX
+        tx_type = "Debit" if debit > 0 else "Credit"
 
         final_list.append({
             "txn_id": txn_id,

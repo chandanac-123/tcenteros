@@ -9,9 +9,9 @@ from datetime import datetime
 from decimal import Decimal
 
 
-# ✅ FIXED: prevent autoflush issue
+# ✅ FIXED: no async here
 async def get_account_by_code(session: AsyncSession, code: str, center_id):
-    async with session.no_autoflush:
+    with session.no_autoflush:   # ✅ FIX
         result = await session.execute(
             select(ChartOfAccounts).where(
                 ChartOfAccounts.code == code,
@@ -38,13 +38,13 @@ async def post_networking_access_journal(
     try:
         now = datetime.utcnow()
 
-        # ✅ FIX 1: Correct calculation
+        # ✅ correct split
         center_share = (amount - platform_share).quantize(Decimal("0.01"))
 
-        # =====================================================
-        # 🔹 HOST CENTER (NETWORK CENTER → INCOME)
-        # =====================================================
-        async with session.no_autoflush:
+        # =========================
+        # HOST CENTER (INCOME)
+        # =========================
+        with session.no_autoflush:   # ✅ FIX
             host_cash_acct = await get_account_by_code(session, "1100", network_center_id)
             host_income_acct = await get_account_by_code(session, "4200", network_center_id)
 
@@ -73,63 +73,46 @@ async def post_networking_access_journal(
         await session.flush()
 
         host_lines = [
-            {
-                "account": host_cash_acct,
-                "debit": center_share,
-                "credit": Decimal("0.00"),
-                "description": "Network payment received (after commission)"
-            },
-            {
-                "account": host_income_acct,
-                "debit": Decimal("0.00"),
-                "credit": center_share,
-                "description": "Network income"
-            }
+            {"account": host_cash_acct, "debit": center_share, "credit": Decimal("0.00")},
+            {"account": host_income_acct, "debit": Decimal("0.00"), "credit": center_share},
         ]
 
         for line in host_lines:
             line_id = uuid4()
 
-            jl = JournalEntryLine(
+            session.add(JournalEntryLine(
                 id=line_id,
                 journal_entry_id=entry_id_host,
                 account_id=line["account"].id,
                 entry_date=now,
-                description=line["description"],
+                description="Network income",
                 debit=line["debit"],
                 credit=line["credit"],
                 created_at=now,
                 created_by=approved_by,
-            )
-            session.add(jl)
+            ))
 
-            # ✅ FIX 2: basic balance (can improve later)
-            balance = line["debit"] - line["credit"]
-
-            gl = GeneralLedger(
+            session.add(GeneralLedger(
                 id=uuid4(),
                 account_id=line["account"].id,
                 journal_entry_id=entry_id_host,
                 journal_entry_line_id=line_id,
                 transaction_date=now,
-                description=line["description"],
+                description="Network income",
                 debit=line["debit"],
                 credit=line["credit"],
-                balance=balance,
+                balance=line["debit"] - line["credit"],
                 center_id=network_center_id,
                 source=TransactionSource.NETWORK_IN.value,
                 source_id=str(membership_id),
                 created_at=now,
                 created_by=approved_by,
-            )
-            session.add(gl)
+            ))
 
-        await session.flush()
-
-        # =====================================================
-        # 🔹 GUEST CENTER (HOME CENTER → EXPENSE)
-        # =====================================================
-        async with session.no_autoflush:
+        # =========================
+        # HOME CENTER (EXPENSE)
+        # =========================
+        with session.no_autoflush:   # ✅ FIX
             guest_cash_acct = await get_account_by_code(session, "1100", home_center_id)
             guest_expense_acct = await get_account_by_code(session, "5800", home_center_id)
 
@@ -139,7 +122,7 @@ async def post_networking_access_journal(
             id=entry_id_guest,
             entry_number=f"NETOUT-{uuid4().hex[:8].upper()}",
             entry_date=now,
-            description="Networking Expense - Member Visit",
+            description="Networking Expense",
             source=TransactionSource.NETWORK_OUT.value,
             source_id=str(membership_id),
             center_id=home_center_id,
@@ -158,57 +141,41 @@ async def post_networking_access_journal(
         await session.flush()
 
         guest_lines = [
-            {
-                "account": guest_expense_acct,
-                "debit": amount,
-                "credit": Decimal("0.00"),
-                "description": "Networking expense"
-            },
-            {
-                "account": guest_cash_acct,
-                "debit": Decimal("0.00"),
-                "credit": amount,
-                "description": "Payment made"
-            }
+            {"account": guest_expense_acct, "debit": amount, "credit": Decimal("0.00")},
+            {"account": guest_cash_acct, "debit": Decimal("0.00"), "credit": amount},
         ]
 
         for line in guest_lines:
             line_id = uuid4()
 
-            jl = JournalEntryLine(
+            session.add(JournalEntryLine(
                 id=line_id,
                 journal_entry_id=entry_id_guest,
                 account_id=line["account"].id,
                 entry_date=now,
-                description=line["description"],
+                description="Networking expense",
                 debit=line["debit"],
                 credit=line["credit"],
                 created_at=now,
                 created_by=approved_by,
-            )
-            session.add(jl)
+            ))
 
-            balance = line["debit"] - line["credit"]
-
-            gl = GeneralLedger(
+            session.add(GeneralLedger(
                 id=uuid4(),
                 account_id=line["account"].id,
                 journal_entry_id=entry_id_guest,
                 journal_entry_line_id=line_id,
                 transaction_date=now,
-                description=line["description"],
+                description="Networking expense",
                 debit=line["debit"],
                 credit=line["credit"],
-                balance=balance,
+                balance=line["debit"] - line["credit"],
                 center_id=home_center_id,
                 source=TransactionSource.NETWORK_OUT.value,
                 source_id=str(membership_id),
                 created_at=now,
                 created_by=approved_by,
-            )
-            session.add(gl)
-
-        await session.flush()
+            ))
 
         return {
             "host_entry_id": entry_id_host,

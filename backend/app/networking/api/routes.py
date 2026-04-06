@@ -670,11 +670,12 @@ async def approve_networking_access(
     platform_wallet.balance += platform_share
 
     # 7. Wallet Transactions
+    common_txn_id = uuid4()
 
     # 🔻 Home (500)
     session.add(WalletTransaction(
         id=uuid4(),
-        txn_id=uuid4(),
+        txn_id=common_txn_id,
         from_wallet_id=home_wallet.id,
         amount=total_amount,
         transaction_type="network-out",
@@ -688,7 +689,7 @@ async def approve_networking_access(
     # 🔺 Network (425)
     session.add(WalletTransaction(
         id=uuid4(),
-        txn_id=uuid4(),
+        txn_id=common_txn_id,
         to_wallet_id=network_wallet.id,
         amount=center_share,
         transaction_type="network-in",
@@ -702,7 +703,7 @@ async def approve_networking_access(
     # 💰 Platform (75)
     session.add(WalletTransaction(
         id=uuid4(),
-        txn_id=uuid4(),
+        txn_id=common_txn_id,
         platform_wallet_id=platform_wallet.id,
         amount=platform_share,
         transaction_type="platform_commission",

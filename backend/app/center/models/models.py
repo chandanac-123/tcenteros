@@ -199,7 +199,7 @@ class WalletTransaction(Base, AuditMixin):
     __table_args__ = {"schema": "center"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    txn_id = Column(UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4)
+    txn_id = Column(UUID(as_uuid=True), index=True, nullable=False, default=uuid.uuid4)
     from_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
     to_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
     platform_wallet_id = Column(UUID(as_uuid=True), ForeignKey("platform.platform_wallet.id"), nullable=True)
