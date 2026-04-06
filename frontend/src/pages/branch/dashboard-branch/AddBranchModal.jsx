@@ -14,7 +14,6 @@ const AddBranchModal = ({ open, onOpenChange }) => {
   const { setSelectedTab } = useSettingsTabStore()
   const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
-  console.log('addCount: ', addCount)
   const { data, isLoading ,refetch} = useGetBranchPricesAndTaxQuery()
   const [openSuccess, setOpenSuccess] = useState(false)
   const [openFailed, setOpenFailed] = useState(false)
