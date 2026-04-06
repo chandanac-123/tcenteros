@@ -2,39 +2,73 @@ export const modulesData = [
   {
     id: 'dashboard',
     name: 'Dashboard',
-    submodules: ['Overview', 'Add branch', 'Create Branch']
+    submodules: [
+      { id: 'overview', label: 'Overview' },
+      { id: 'add_branch', label: 'Add branch' },
+      { id: 'create_branch', label: 'Create Branch' }
+    ]
   },
   {
     id: 'employee_management',
     name: 'Employee Management',
-    submodules: ['Employee', 'Salary Structure', 'Payroll'],
+    submodules: [
+      { id: 'employee', label: 'Employee' },
+      { id: 'salary_structure', label: 'Salary Structure' },
+      { id: 'payroll', label: 'Payroll' }
+    ],
     sub_submodules: {
-      Employee: ['List', 'Add', 'Edit', 'Delete', 'Enable/Disable']
+      employee: [
+        { id: 'list', label: 'List' },
+        { id: 'add', label: 'Add' },
+        { id: 'edit', label: 'Edit' },
+        { id: 'delete', label: 'Delete' },
+        { id: 'enable_disable', label: 'Enable/Disable' }
+      ]
     }
   },
   {
     id: 'membership_plan',
     name: 'Membership Plan',
-    submodules: ['List', 'Add', 'Edit', 'Delete', 'Enable/Disable']
+    submodules: [
+      { id: 'list', label: 'List' },
+      { id: 'add', label: 'Add' },
+      { id: 'edit', label: 'Edit' },
+      { id: 'delete', label: 'Delete' },
+      { id: 'enable_disable', label: 'Enable/Disable' }
+    ]
   },
   {
     id: 'crm',
     name: 'CRM',
-    submodules: ['Member', 'Leads', 'Guest', 'Visitor'],
+    submodules: [
+      { id: 'member', label: 'Member' },
+      { id: 'leads', label: 'Leads' },
+      { id: 'guest', label: 'Guest' },
+      { id: 'visitor', label: 'Visitor' }
+    ],
     sub_submodules: {
-      Member: ['List', 'Add', 'Edit', 'Delete', 'Enable/Disable'],
-      Visitor: ['Add', 'Convert to Member'],
-      Guest: ['Convert to Member']
+      member: [
+        { id: 'list', label: 'List' },
+        { id: 'add', label: 'Add' },
+        { id: 'edit', label: 'Edit' },
+        { id: 'delete', label: 'Delete' },
+        { id: 'enable_disable', label: 'Enable/Disable' }
+      ],
+      visitor: [
+        { id: 'add', label: 'Add' },
+        { id: 'convert_to_member', label: 'Convert to Member' }
+      ],
+      guest: [{ id: 'convert_to_member', label: 'Convert to Member' }]
     }
   },
   {
     id: 'network',
     name: 'Network',
     submodules: [
-      'List',
-      'Network Request Approve',
-      'Add network amount',
-      'Enable/Disable network'
+      { id: 'list', label: 'List' },
+      { id: 'netwrok_request_approve', label: 'Network Request Approve' },
+      { id: 'add_network_amount', label: 'Add network amount' },
+      { id: 'enable_disable', label: 'Enable/Disable network' }
     ]
   },
   {
@@ -44,7 +78,7 @@ export const modulesData = [
   {
     id: 'wallet',
     name: 'Wallet',
-    submodules: ['Add TopUP']
+    submodules: [{ id: 'add_topup', label: 'Add TopUP' }]
   },
   {
     id: 'inventory',
@@ -77,6 +111,6 @@ export const modulesData = [
   {
     id: 'profile',
     name: 'Profile',
-    submodules: ['Edit']
+    submodules: [{ id: 'edit_profile', label: 'Edit Profile' }]
   }
 ]

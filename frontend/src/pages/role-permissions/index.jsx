@@ -15,18 +15,64 @@ const RoleAndPermission = () => {
   const [permissions, setPermissions] = useState({})
   const [selectedRole, setSelectedRole] = useState('Admin')
 
-  const formik = useFormik({
-    initialValues: {
-      role: ''
-    },
-    onSubmit: async values => {
-      try {
-        console.log(values)
-      } catch (error) {
-        console.error('Error submitting form:', error)
-      }
+ const formik = useFormik({
+  initialValues: {
+    role: ''
+  },
+  onSubmit: async () => {
+    try {
+      const roleData = permissions[selectedRole] || {}
+
+      const payload = {}
+
+      modulesData.forEach(module => {
+        const moduleState = roleData[module.id]
+
+        if (!moduleState?.enabled) return
+
+        const modulePayload = {
+          enabled: true,
+          submodules: {}
+        }
+
+        module.submodules?.forEach(sub => {
+          const subKey = sub.id
+          const subState = moduleState?.submodules?.[subKey]
+
+          if (!subState?.enabled) return
+
+          // If has actions
+          if (module.sub_submodules?.[subKey]) {
+            const actionsPayload = {}
+
+            module.sub_submodules[subKey].forEach(action => {
+              const actionKey = action.id
+
+              if (subState?.actions?.[actionKey]) {
+                actionsPayload[actionKey] = true
+              }
+            })
+
+            // only add if actions selected
+            if (Object.keys(actionsPayload).length > 0) {
+              modulePayload.submodules[subKey] = actionsPayload
+            }
+          } else {
+            // no actions → simple true
+            modulePayload.submodules[subKey] = true
+          }
+        })
+
+        payload[module.id] = modulePayload
+      })
+
+      console.log('FINAL CLEAN PAYLOAD 👉', payload)
+
+    } catch (error) {
+      console.error(error)
     }
-  })
+  }
+})
 
   const toggleModule = moduleId => {
     setPermissions(prev => {
@@ -128,7 +174,11 @@ const RoleAndPermission = () => {
             + Add Role
           </Button>
         </div>
-        <form onSubmit={formik.handleSubmit} className='flex-1 overflow-hidden'>
+        <form
+          onSubmit={formik.handleSubmit}
+          id='role-permissions-form'
+          className='flex-1 overflow-hidden'
+        >
           <div className='flex flex-col md:flex-row flex-1 gap-4 w-full h-full overflow-hidden'>
             {/* LEFT SIDE - ROLES */}
             <div className='w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto'>
@@ -181,46 +231,58 @@ const RoleAndPermission = () => {
                     {moduleState.enabled && module.submodules?.length > 0 && (
                       <div className='ml-6 mt-3 space-y-2'>
                         {module.submodules.map(sub => {
-                          const subState = moduleState.submodules?.[sub] || {}
+                          const subKey = sub.id
+                          const subLabel = sub.label
+
+                          const subState =
+                            moduleState.submodules?.[subKey] || {}
 
                           return (
-                            <div key={sub}>
+                            <div key={subKey}>
                               <label className='flex items-center gap-2 text-sm'>
                                 <input
                                   type='checkbox'
                                   checked={subState.enabled || false}
                                   onChange={() =>
-                                    toggleSubmodule(module.id, sub)
+                                    toggleSubmodule(module.id, subKey)
                                   }
                                 />
-                                {sub}
+                                {subLabel}
                               </label>
 
                               {/* ACTIONS */}
                               {subState.enabled &&
-                                module.sub_submodules?.[sub] && (
+                                module.sub_submodules?.[subKey] && (
                                   <div className='ml-6 mt-1 flex flex-wrap gap-2'>
-                                    {module.sub_submodules[sub].map(action => (
-                                      <label
-                                        key={action}
-                                        className='flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded'
-                                      >
-                                        <input
-                                          type='checkbox'
-                                          checked={
-                                            subState.actions?.[action] || false
-                                          }
-                                          onChange={() =>
-                                            toggleSubSubmodule(
-                                              module.id,
-                                              sub,
-                                              action
-                                            )
-                                          }
-                                        />
-                                        {action}
-                                      </label>
-                                    ))}
+                                    {module.sub_submodules[subKey].map(
+                                      action => {
+                                        const actionKey = action.id
+                                        const actionLabel = action.label
+
+                                        return (
+                                          <label
+                                            key={actionKey}
+                                            className='flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded'
+                                          >
+                                            <input
+                                              type='checkbox'
+                                              checked={
+                                                subState.actions?.[actionKey] ||
+                                                false
+                                              }
+                                              onChange={() =>
+                                                toggleSubSubmodule(
+                                                  module.id,
+                                                  subKey,
+                                                  actionKey
+                                                )
+                                              }
+                                            />
+                                            {actionLabel}
+                                          </label>
+                                        )
+                                      }
+                                    )}
                                   </div>
                                 )}
                             </div>
@@ -235,7 +297,12 @@ const RoleAndPermission = () => {
           </div>
         </form>
         <div className='flex justify-end mt-4 '>
-          <Button size='addbutton' variant='default' type='submit'>
+          <Button
+            form='role-permissions-form'
+            size='addbutton'
+            variant='default'
+            type='submit'
+          >
             Submit
           </Button>
         </div>

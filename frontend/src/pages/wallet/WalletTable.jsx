@@ -29,6 +29,10 @@ const WalletTable = ({ data, tableParams, setTableParams, pagination }) => {
       header: 'Transaction Center'
     },
     {
+      accessorKey: 'total_amount',
+      header: 'Total Amount'
+    },
+    {
       accessorKey: 'credit',
       header: 'Credit'
     },
