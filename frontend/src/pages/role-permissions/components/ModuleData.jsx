@@ -24,7 +24,7 @@ export const modulesData = [
     sub_submodules: {
       Member: ['List', 'Add', 'Edit', 'Delete', 'Enable/Disable'],
       Visitor: ['Add', 'Convert to Member'],
-      Guest: ['Add', 'Convert to Member']
+      Guest: ['Convert to Member']
     }
   },
   {

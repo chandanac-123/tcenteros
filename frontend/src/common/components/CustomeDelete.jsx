@@ -5,7 +5,7 @@ const DeleteModal = ({ header, open, setOpen, description, onConfirm }) => {
   return (
     <CustomeModal open={open} onOpenChange={setOpen} header={header}>
       <form className='space-y-4 w-96 max-w-md sm:max-w-lg md:max-w-xl px-2 sm:px-4'>
-        <span className='text-pricing_text text-sm '>{description}</span>
+        <span className='text-grey text-sm '>{description}</span>
         <div className='flex justify-end gap-2'>
           <Button
             size='addbutton'
