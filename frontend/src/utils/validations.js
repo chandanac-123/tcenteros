@@ -5,7 +5,7 @@ export const onboardingValidationSchema = Yup.object().shape({
   center_name: Yup.string().required('Center name is required'),
   contact_person: Yup.string().required('Contact person name is required'),
   center_email: Yup.string()
-    .email('Invalid email')
+    .email('Invalid email format')
     .required('Contact email is required'),
   center_phone: Yup.string()
     .matches(/^[0-9]{10,12}$/, 'Invalid phone number')
