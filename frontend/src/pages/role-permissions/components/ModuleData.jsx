@@ -2,14 +2,14 @@ export const modulesData = [
   {
     id: 'dashboard',
     name: 'Dashboard',
-    submodules: ['Add branch', 'Create Branch']
+    submodules: ['Overview', 'Add branch', 'Create Branch']
   },
   {
     id: 'employee_management',
     name: 'Employee Management',
     submodules: ['Employee', 'Salary Structure', 'Payroll'],
     sub_submodules: {
-      Employee: ['List', 'Add', 'Edit', 'Delete']
+      Employee: ['List', 'Add', 'Edit', 'Delete', 'Enable/Disable']
     }
   },
   {
@@ -30,15 +30,16 @@ export const modulesData = [
   {
     id: 'network',
     name: 'Network',
-    submodules: ['Member', 'Visitor'],
-    sub_submodules: {
-      Member: ['List', 'Add', 'Edit', 'Delete'],
-      Visitor: ['Add', 'Edit']
-    }
+    submodules: [
+      'List',
+      'Network Request Approve',
+      'Add network amount',
+      'Enable/Disable network'
+    ]
   },
   {
     id: 'attendance',
-    name: 'Attendance',
+    name: 'Attendance'
   },
   {
     id: 'wallet',
@@ -76,6 +77,6 @@ export const modulesData = [
   {
     id: 'profile',
     name: 'Profile',
-    submodules: ['Edit'],
+    submodules: ['Edit']
   }
 ]
