@@ -2,7 +2,11 @@ import asyncio
 import uuid
 from sqlalchemy import select
 
-# 🔥 IMPORTANT: LOAD ALL MODELS FIRST
+# 🔥 IMPORTANT: load all models (to avoid relationship errors)
+import app.auth.models.models
+import app.center.models.models
+import app.permissions.models.models
+import app.accounts.models.models  # if you have this (for ChartOfAccounts issue)
 
 from app.core.database import AsyncSessionLocal
 from app.permissions.models.models import Module, SubModule, Action
@@ -59,29 +63,28 @@ async def get_or_create_action(db, name):
 
 
 # =========================
-# MAIN
+# MAIN SEED FUNCTION
 # =========================
 
 async def seed_master_data():
-    async with AsyncSessionLocal() as db:  # ✅ FIXED
+    async with AsyncSessionLocal() as db:
         try:
-            for module_name, submodules in PERMISSION_DATA.items():
+            for module_data in PERMISSION_DATA:
 
+                module_name = module_data["id"]
                 module = await get_or_create_module(db, module_name)
 
-                if isinstance(submodules, list):
-                    for sub_name in submodules:
-                        await get_or_create_submodule(db, module.id, sub_name)
+                submodules = module_data.get("submodules", [])
+                actions_map = module_data.get("actions", {})
 
-                elif isinstance(submodules, dict):
-                    for sub_name, actions in submodules.items():
+                # 🔹 Create submodules
+                for sub_name in submodules:
+                    await get_or_create_submodule(db, module.id, sub_name)
 
-                        submodule = await get_or_create_submodule(
-                            db, module.id, sub_name
-                        )
-
-                        for action_name in actions:
-                            await get_or_create_action(db, action_name)
+                # 🔹 Create actions (GLOBAL)
+                for sub_name, actions in actions_map.items():
+                    for action_name in actions:
+                        await get_or_create_action(db, action_name)
 
             await db.commit()
             print("✅ Modules, SubModules, Actions inserted successfully!")
