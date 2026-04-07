@@ -317,6 +317,7 @@ const RoleAndPermission = () => {
                       <div className='flex items-center gap-2 p-3'>
                         <input
                           type='checkbox'
+                          className="accent-primary"
                           checked={moduleState.enabled || false}
                           onChange={() => toggleModule(module.id)}
                         />
@@ -333,6 +334,7 @@ const RoleAndPermission = () => {
                           <div className='flex items-center gap-2'>
                             <input
                               type='checkbox'
+                              className="accent-primary"
                               checked={moduleState.enabled || false}
                               ref={el => {
                                 if (el) {
@@ -362,6 +364,7 @@ const RoleAndPermission = () => {
                                   <label className='flex items-center gap-2'>
                                     <input
                                       type='checkbox'
+                                      className="accent-primary"
                                       checked={subState.enabled || false}
                                       onChange={() =>
                                         toggleSubmodule(module.id, sub.id)
@@ -381,6 +384,7 @@ const RoleAndPermission = () => {
                                             >
                                               <input
                                                 type='checkbox'
+                                                className="accent-primary"
                                                 checked={
                                                   subState.actions?.[a.id] ||
                                                   false
