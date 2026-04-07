@@ -9,9 +9,6 @@ import {
   useCreatePermissionMutation,
   usePermissionQuery
 } from '@api-queries/role-permissions/Query'
-import { useCategoriesQuery } from '@api-queries/employee-management/Query'
-
-const roles = ['Admin', 'Branch Manager', 'Trainer', 'Staff']
 
 const RoleAndPermission = () => {
   const [open, setOpen] = useState(false)
@@ -19,9 +16,8 @@ const RoleAndPermission = () => {
   const [permissions, setPermissions] = useState({})
   const [selectedRole, setSelectedRole] = useState(null)
   const [openModules, setOpenModules] = useState({})
-  const { data: designation, isFetching: isDesignation } = useCategoriesQuery()
-  console.log('designation: ', designation)
   const { data, isFetching } = usePermissionQuery()
+  console.log('data: ', data)
   const { mutateAsync: create_permission } = useCreatePermissionMutation()
 
   const toggleCollapse = moduleId => {
@@ -34,38 +30,104 @@ const RoleAndPermission = () => {
   const formik = useFormik({
     initialValues: { role: '' },
     onSubmit: async () => {
-      const roleData = permissions[selectedRole] || {}
-      const payload = {}
+      try {
+        const roleData = permissions[selectedRole] || {}
+        const cleanedPermissions = {}
+        modulesData.forEach(module => {
+          const moduleState = roleData[module.id]
+          if (!moduleState?.enabled) return
 
-      modulesData.forEach(module => {
-        const moduleState = roleData[module.id]
-        if (!moduleState?.enabled) return
+          const modulePayload = {
+            enabled: true,
+            submodules: {}
+          }
 
-        const modulePayload = { enabled: true, submodules: {} }
+          module.submodules?.forEach(sub => {
+            const subState = moduleState?.submodules?.[sub.id]
+            if (!subState?.enabled) return
 
-        module.submodules?.forEach(sub => {
-          const subState = moduleState?.submodules?.[sub.id]
-          if (!subState?.enabled) return
+            // ✅ HAS ACTIONS
+            if (module.sub_submodules?.[sub.id]) {
+              const actions = {}
 
-          if (module.sub_submodules?.[sub.id]) {
-            const actions = {}
-            module.sub_submodules[sub.id].forEach(a => {
-              if (subState.actions?.[a.id]) actions[a.id] = true
-            })
-            if (Object.keys(actions).length > 0) {
-              modulePayload.submodules[sub.id] = actions
+              module.sub_submodules[sub.id].forEach(a => {
+                if (subState.actions?.[a.id]) {
+                  actions[a.id] = true
+                }
+              })
+
+              if (Object.keys(actions).length > 0) {
+                modulePayload.submodules[sub.id] = actions
+              }
             }
-          } else {
-            modulePayload.submodules[sub.id] = true
+            // ✅ NO ACTIONS
+            else {
+              modulePayload.submodules[sub.id] = true
+            }
+          })
+
+          if (Object.keys(modulePayload.submodules).length > 0) {
+            cleanedPermissions[module.id] = modulePayload
           }
         })
 
-        payload[module.id] = modulePayload
-      })
+        // 🚨 Prevent empty submission
+        if (!Object.keys(cleanedPermissions).length) {
+          console.warn('No permissions selected')
+          return
+        }
 
-      console.log('FINAL CLEAN PAYLOAD 👉', payload)
+        const finalPayload = {
+          designation_id: selectedRole,
+          permissions: cleanedPermissions
+        }
+
+        console.log('FINAL API PAYLOAD 👉', finalPayload)
+
+        // ✅ API CALL
+        await create_permission(finalPayload)
+
+        // ✅ Optional success feedback
+        console.log('Permissions saved successfully')
+      } catch (error) {
+        console.error('Error saving permissions ❌', error)
+
+        // ✅ Optional UI feedback
+        // toast.error(error?.response?.data?.message || 'Something went wrong')
+      }
     }
   })
+
+  const transformPermissions = apiPermissions => {
+    const result = {}
+
+    Object.entries(apiPermissions || {}).forEach(([moduleId, module]) => {
+      const submodules = {}
+
+      Object.entries(module.submodules || {}).forEach(([subId, value]) => {
+        // ✅ if submodule has actions
+        if (typeof value === 'object') {
+          submodules[subId] = {
+            enabled: true,
+            actions: value
+          }
+        }
+        // ✅ simple true/false
+        else {
+          submodules[subId] = {
+            enabled: value
+          }
+        }
+      })
+
+      result[moduleId] = {
+        enabled: module.enabled,
+        submodules
+      }
+    })
+
+    return result
+  }
 
   const toggleModule = moduleId => {
     setPermissions(prev => {
@@ -172,10 +234,18 @@ const RoleAndPermission = () => {
   const rolePermissions = permissions[selectedRole] || {}
 
   useEffect(() => {
-    if (designation?.length && !selectedRole) {
-      setSelectedRole(designation[0].id)
+    if (data?.data?.length) {
+      const firstRole = data.data[0]
+      setSelectedRole(prev => prev || firstRole.designation_id)
+      const formattedPermissions = {}
+      data.data.forEach(role => {
+        formattedPermissions[role.designation_id] = transformPermissions(
+          role.permissions
+        )
+      })
+      setPermissions(formattedPermissions)
     }
-  }, [designation])
+  }, [data])
 
   const isIndeterminate = module => {
     const moduleState = rolePermissions[module.id]
@@ -200,22 +270,26 @@ const RoleAndPermission = () => {
           </Button>
         </div>
 
-        <form onSubmit={formik.handleSubmit} className='flex-1 overflow-hidden'>
+        <form
+          onSubmit={formik.handleSubmit}
+          id='role-permissions-form'
+          className='flex-1 overflow-hidden'
+        >
           <div className='flex flex-col md:flex-row flex-1 gap-4 w-full h-full overflow-hidden'>
             {/* LEFT */}
             <div className='w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto'>
-              {designation?.map(role => (
+              {data?.data?.map(role => (
                 <button
-                  key={role?.id}
+                  key={role?.designation_id}
                   type='button'
-                  onClick={() => setSelectedRole(role.id)}
+                  onClick={() => setSelectedRole(role.designation_id)}
                   className={`block w-full text-left p-2 mb-2 ${
-                    selectedRole === role.id
+                    selectedRole === role.designation_id
                       ? 'bg-primary text-white rounded-md'
                       : ''
                   }`}
                 >
-                  {role?.name}
+                  {role?.designation_name}
                 </button>
               ))}
             </div>

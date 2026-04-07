@@ -4,7 +4,7 @@ import { showError, showSuccess } from '@utils/toast'
 
 export const usePermissionQuery = () => {
   return useQuery({
-    queryKey: ['tax'],
+    queryKey: ['permission'],
     queryFn: getAllPermission,
     refetchOnWindowFocus: true,
     refetchOnMount: true
@@ -15,7 +15,7 @@ export const useCreatePermissionMutation = () => {
   return useMutation({
     mutationFn: data => createPermission(data),
     onSuccess: async data => {
-      query.invalidateQueries('tax')
+      query.invalidateQueries('permission')
       showSuccess('Permission set successfully')
     },
     onError: err => {
