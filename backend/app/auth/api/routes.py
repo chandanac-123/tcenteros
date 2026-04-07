@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query , Request, UploadFile, File, HTTPException,
 from app.s3.service import upload_file, get_file_url, delete_file
 import urllib.parse
 from app.core.database import get_async_session
-from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, EmployeeDeleteRequest
+from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, EmployeeDeleteRequest, LoginResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.auth.models.models import User
@@ -21,8 +21,15 @@ from app.core.models.models import StatusEnum, SuperadminInfo
 from app.core.dependencies import member_required, get_current_user, centeradmin_required
 from passlib.context import CryptContext
 from app.settings.models.models import Designation
+
+from app.auth.models.models import User, CenterAdmin, Employee
+from app.permissions.models.models import (
+    DesignationPermission, Permission,
+    Module, SubModule, Action
+)
 import uuid
 from fastapi.concurrency import run_in_threadpool
+from app.core.security import get_password_hash
 from datetime import datetime, date
 from typing import Optional, List, Dict
 from pydantic import EmailStr
@@ -40,69 +47,182 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-# @router.post("/login")
-# async def login():
-#     return {"message": "login ok"}
 
 
+# @router.post("/centeradmin/login", response_model=CenterAdminLoginResponse)
+# async def centeradmin_login(
+#     payload: CenterAdminLoginRequest,
+#     db: AsyncSession = Depends(get_async_session)
+# ):
+#     stmt = select(User).where(User.email == payload.email, User.role == "centeradmin")
+#     result = await db.execute(stmt)
+#     user = result.scalar_one_or_none()
+#     if not user or not verify_password(payload.password, user.password_hash):
+#         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-# @router.post("/upload")
-# async def upload(file: UploadFile = File(...)):
-#     key = upload_file(file)
-#     # key = "uploads/uuid_filename with spaces.png"
+#     # Fetch CenterAdmin to get center_id
+#     from app.auth.models.models import CenterAdmin
+#     admin_result = await db.execute(select(CenterAdmin).where(CenterAdmin.id == user.id))
+#     center_admin = admin_result.scalar_one_or_none()
+#     center_id = str(center_admin.center_id) if center_admin and center_admin.center_id else None
 
-#     # remove "uploads/" prefix
-#     filename = key.replace("uploads/", "", 1)
-
-#     # URL-encode ONLY the filename
-#     encoded_filename = urllib.parse.quote(filename)
+#     access_token = create_access_token({"sub": str(user.id), "role": user.role})
+#     refresh_token = create_refresh_token({"sub": str(user.id), "role": user.role})
 
 #     return {
-#         "message": "Uploaded",
-#         "key": encoded_filename
+#         "id": str(user.id),
+#         "email": user.email,
+#         "role": user.role,
+#         "center_id": center_id,
+#         "access_token": access_token,
+#         "refresh_token": refresh_token,
+#         "token_type": "bearer"
 #     }
 
-# @router.get("/{key:path}")
-# def get_file(key: str):
-#     url = get_file_url(key)
-#     return {"url": url}
 
 
-# @router.delete("/{key}")
-# def delete(key: str):
-#     delete_file(key)
-#     return {"message": "Deleted"}
-
-
-@router.post("/centeradmin/login", response_model=CenterAdminLoginResponse)
+@router.post("/centeradmin/login", response_model=LoginResponse)
 async def centeradmin_login(
     payload: CenterAdminLoginRequest,
     db: AsyncSession = Depends(get_async_session)
 ):
-    stmt = select(User).where(User.email == payload.email, User.role == "centeradmin")
-    result = await db.execute(stmt)
+    # =========================
+    # 1. AUTHENTICATION
+    # =========================
+    result = await db.execute(
+        select(User).where(User.email == payload.email)
+    )
     user = result.scalar_one_or_none()
+
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # Fetch CenterAdmin to get center_id
-    from app.auth.models.models import CenterAdmin
-    admin_result = await db.execute(select(CenterAdmin).where(CenterAdmin.id == user.id))
-    center_admin = admin_result.scalar_one_or_none()
-    center_id = str(center_admin.center_id) if center_admin and center_admin.center_id else None
+    # =========================
+    # 2. GENERATE TOKENS
+    # =========================
+    access_token = create_access_token({
+        "sub": str(user.id),
+        "role": user.role
+    })
 
-    access_token = create_access_token({"sub": str(user.id), "role": user.role})
-    refresh_token = create_refresh_token({"sub": str(user.id), "role": user.role})
+    refresh_token = create_refresh_token({
+        "sub": str(user.id),
+        "role": user.role
+    })
 
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "role": user.role,
-        "center_id": center_id,
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    # =========================
+    # 3. CENTER ADMIN FLOW
+    # =========================
+    if user.role == "centeradmin":
+
+        result = await db.execute(
+            select(CenterAdmin).where(CenterAdmin.id == user.id)
+        )
+        center_admin = result.scalar_one_or_none()
+
+        center_id = str(center_admin.center_id) if center_admin else None
+
+        return {
+            "id": str(user.id),
+            "email": user.email,
+            "role": user.role,
+            "center_id": center_id,
+            "designation": None,
+            "permissions": None,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+
+    # =========================
+    # 4. EMPLOYEE FLOW
+    # =========================
+    elif user.role == "employee":
+
+        # 🔹 Get employee
+        result = await db.execute(
+            select(Employee).where(Employee.id == user.id)
+        )
+        employee = result.scalar_one_or_none()
+
+        if not employee:
+            raise HTTPException(404, "Employee not found")
+
+        # 🔹 Get designation
+        designation = None
+        if employee.designation_id:
+            result = await db.execute(
+                select(Designation).where(Designation.id == employee.designation_id)
+            )
+            designation = result.scalar_one_or_none()
+
+        # 🔹 Get permissions
+        permissions_dict = {}
+
+        if designation:
+            result = await db.execute(
+                select(Permission, Module, SubModule, Action)
+                .join(DesignationPermission, DesignationPermission.permission_id == Permission.id)
+                .join(Module, Module.id == Permission.module_id)
+                .outerjoin(SubModule, SubModule.id == Permission.submodule_id)
+                .outerjoin(Action, Action.id == Permission.action_id)
+                .where(DesignationPermission.designation_id == designation.id)
+            )
+
+            rows = result.all()
+
+            for perm, module, submodule, action in rows:
+
+                module_name = module.name
+
+                if module_name not in permissions_dict:
+                    permissions_dict[module_name] = {
+                        "enabled": True,
+                        "submodules": {}
+                    }
+
+                if not submodule:
+                    continue
+
+                sub_name = submodule.name
+
+                if sub_name not in permissions_dict[module_name]["submodules"]:
+                    permissions_dict[module_name]["submodules"][sub_name] = {}
+
+                # Boolean submodule
+                if not action:
+                    permissions_dict[module_name]["submodules"][sub_name] = True
+
+                # Action-based
+                else:
+                    if isinstance(permissions_dict[module_name]["submodules"][sub_name], bool):
+                        permissions_dict[module_name]["submodules"][sub_name] = {}
+
+                    permissions_dict[module_name]["submodules"][sub_name][action.name] = True
+
+        return {
+            "id": str(user.id),
+            "email": user.email,
+            "role": user.role,
+            "center_id": str(employee.center_id) if employee.center_id else None,
+            "designation": {
+                "id": str(designation.id) if designation else None,
+                "name": designation.name if designation else None
+            },
+            "permissions": permissions_dict,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+
+    # =========================
+    # 5. INVALID ROLE
+    # =========================
+    else:
+        raise HTTPException(status_code=403, detail="Invalid role")
+
+
+
 
 
 @router.post("/member/login/request-otp")
@@ -419,7 +539,7 @@ async def create_employee(
         mobile=mobile,
         qualification=qualification,
         experience_years=experience,
-        password_hash=password,  # Hash if needed
+        password_hash=get_password_hash(password),  # Hash if needed
         designation_id=designation_id,
         center_id=center_id,  # Use centeradmin's center_id
         joining_date=joining_date,

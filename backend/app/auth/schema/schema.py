@@ -1,14 +1,40 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, UUID4
 from pydantic import BaseModel, EmailStr
 from app.auth.models import MemberStatusEnum
 from datetime import date
 from pydantic import BaseModel, EmailStr, constr
 
+
+
 #center admin login request and response schemas
 class CenterAdminLoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+# =========================
+# RESPONSE (COMMON MODEL)
+# =========================
+class LoginResponse(BaseModel):
+    id: str
+    email: EmailStr
+    role: str
+
+    # Center Admin
+    center_id: Optional[str] = None
+
+    # Employee
+    designation: Optional[Dict[str, Any]] = None
+    permissions: Optional[Dict[str, Any]] = None
+
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+
+
+
 
 class CenterAdminLoginResponse(BaseModel):
     id: str
