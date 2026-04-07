@@ -14,96 +14,72 @@ const RoleAndPermission = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [permissions, setPermissions] = useState({})
   const [selectedRole, setSelectedRole] = useState('Admin')
+  const [openModules, setOpenModules] = useState({})
+
+  const toggleCollapse = moduleId => {
+    setOpenModules(prev => ({
+      ...prev,
+      [moduleId]: !prev[moduleId]
+    }))
+  }
 
   const formik = useFormik({
-    initialValues: {
-      role: ''
-    },
+    initialValues: { role: '' },
     onSubmit: async () => {
-      try {
-        const roleData = permissions[selectedRole] || {}
+      const roleData = permissions[selectedRole] || {}
+      const payload = {}
 
-        const payload = {}
+      modulesData.forEach(module => {
+        const moduleState = roleData[module.id]
+        if (!moduleState?.enabled) return
 
-        modulesData.forEach(module => {
-          const moduleState = roleData[module.id]
+        const modulePayload = { enabled: true, submodules: {} }
 
-          if (!moduleState?.enabled) return
+        module.submodules?.forEach(sub => {
+          const subState = moduleState?.submodules?.[sub.id]
+          if (!subState?.enabled) return
 
-          const modulePayload = {
-            enabled: true,
-            submodules: {}
-          }
-
-          module.submodules?.forEach(sub => {
-            const subKey = sub.id
-            const subState = moduleState?.submodules?.[subKey]
-
-            if (!subState?.enabled) return
-
-            // If has actions
-            if (module.sub_submodules?.[subKey]) {
-              const actionsPayload = {}
-
-              module.sub_submodules[subKey].forEach(action => {
-                const actionKey = action.id
-
-                if (subState?.actions?.[actionKey]) {
-                  actionsPayload[actionKey] = true
-                }
-              })
-
-              // only add if actions selected
-              if (Object.keys(actionsPayload).length > 0) {
-                modulePayload.submodules[subKey] = actionsPayload
-              }
-            } else {
-              // no actions → simple true
-              modulePayload.submodules[subKey] = true
+          if (module.sub_submodules?.[sub.id]) {
+            const actions = {}
+            module.sub_submodules[sub.id].forEach(a => {
+              if (subState.actions?.[a.id]) actions[a.id] = true
+            })
+            if (Object.keys(actions).length > 0) {
+              modulePayload.submodules[sub.id] = actions
             }
-          })
-
-          payload[module.id] = modulePayload
+          } else {
+            modulePayload.submodules[sub.id] = true
+          }
         })
 
-        console.log('FINAL CLEAN PAYLOAD 👉', payload)
-      } catch (error) {
-        console.error(error)
-      }
+        payload[module.id] = modulePayload
+      })
+
+      console.log('FINAL CLEAN PAYLOAD 👉', payload)
     }
   })
 
   const toggleModule = moduleId => {
     setPermissions(prev => {
       const currentEnabled = prev[selectedRole]?.[moduleId]?.enabled
-
       const module = modulesData.find(m => m.id === moduleId)
 
       let submodules = {}
 
-      // ✅ If turning ON → select everything
       if (!currentEnabled) {
         module?.submodules?.forEach(sub => {
           if (module.sub_submodules?.[sub.id]) {
             const actions = {}
-
             module.sub_submodules[sub.id].forEach(action => {
               actions[action.id] = true
             })
-
-            submodules[sub.id] = {
-              enabled: true,
-              actions
-            }
+            submodules[sub.id] = { enabled: true, actions }
           } else {
-            submodules[sub.id] = {
-              enabled: true
-            }
+            submodules[sub.id] = { enabled: true }
           }
         })
       }
 
-      //  If turning OFF → clear everything
       return {
         ...prev,
         [selectedRole]: {
@@ -132,7 +108,6 @@ const RoleAndPermission = () => {
         }
       }
 
-      // ✅ check if ANY submodule is still enabled
       const anyEnabled = Object.values(updatedSubmodules).some(
         sub => sub.enabled
       )
@@ -142,7 +117,7 @@ const RoleAndPermission = () => {
         [selectedRole]: {
           ...prev[selectedRole],
           [moduleId]: {
-            enabled: anyEnabled, // 🔥 auto toggle parent
+            enabled: anyEnabled,
             submodules: updatedSubmodules
           }
         }
@@ -161,18 +136,16 @@ const RoleAndPermission = () => {
         [actionId]: !subState.actions?.[actionId]
       }
 
-      // ✅ check if ANY action is enabled
       const anyActionEnabled = Object.values(updatedActions).some(v => v)
 
       const updatedSubmodules = {
         ...submodules,
         [subId]: {
-          enabled: anyActionEnabled, // 🔥 auto toggle submodule
+          enabled: anyActionEnabled,
           actions: updatedActions
         }
       }
 
-      // ✅ check if ANY submodule is enabled
       const anySubEnabled = Object.values(updatedSubmodules).some(
         sub => sub.enabled
       )
@@ -182,7 +155,7 @@ const RoleAndPermission = () => {
         [selectedRole]: {
           ...prev[selectedRole],
           [moduleId]: {
-            enabled: anySubEnabled, // 🔥 auto toggle module
+            enabled: anySubEnabled,
             submodules: updatedSubmodules
           }
         }
@@ -190,42 +163,18 @@ const RoleAndPermission = () => {
     })
   }
 
-  const handleDeleteRole = roleToDelete => {
-    // prevent deleting selected role (optional)
-    if (roleToDelete === selectedRole) {
-      setSelectedRole('')
-    }
-
-    // remove from roles list
-    const updatedRoles = roles.filter(r => r !== roleToDelete)
-
-    // if roles is state → use setRoles(updatedRoles)
-    console.log(updatedRoles)
-
-    // also remove permissions
-    setPermissions(prev => {
-      const updated = { ...prev }
-      delete updated[roleToDelete]
-      return updated
-    })
-  }
+  const rolePermissions = permissions[selectedRole] || {}
 
   const isIndeterminate = module => {
     const moduleState = rolePermissions[module.id]
-
     if (!moduleState?.submodules) return false
 
     const subs = Object.values(moduleState.submodules)
-
-    if (subs.length === 0) return false
-
     const someChecked = subs.some(s => s.enabled)
     const allChecked = subs.every(s => s.enabled)
 
     return someChecked && !allChecked
   }
-
-  const rolePermissions = permissions[selectedRole] || {}
 
   return (
     <ContentLayout>
@@ -238,126 +187,123 @@ const RoleAndPermission = () => {
             + Add Role
           </Button>
         </div>
-        <form
-          onSubmit={formik.handleSubmit}
-          id='role-permissions-form'
-          className='flex-1 overflow-hidden'
-        >
-          <div className='flex flex-col md:flex-row flex-1 gap-4 w-full h-full overflow-hidden'>
-            {/* LEFT SIDE - ROLES */}
-            <div className='w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto'>
-              {roles.map(role => (
-                <div
-                  key={role}
-                  className='flex items-center justify-between p-2 rounded-md border'
-                >
-                  {/* Role Select */}
-                  <button
-                    type='button'
-                    onClick={() => setSelectedRole(role)}
-                    className={`flex-1 text-left p-1 rounded ${
-                      selectedRole === role ? 'bg-primary text-white' : ''
-                    }`}
-                  >
-                    {role}
-                  </button>
 
-                  {/* Delete Button */}
-                  <button
-                    type='button'
-                    onClick={() => setDeleteOpen(true)}
-                    className='text-red-500 text-sm ml-2'
-                  >
-                    <img src={deleteicon} alt='delete' className='w-6 h-6' />
-                  </button>
-                </div>
+        <form onSubmit={formik.handleSubmit} className='flex-1'>
+          <div className='flex gap-4 h-full'>
+            {/* LEFT */}
+            <div className='w-60 border p-3'>
+              {roles.map(role => (
+                <button
+                  key={role}
+                  type='button'
+                  onClick={() => setSelectedRole(role)}
+                  className={`block w-full text-left p-2 mb-2 ${
+                    selectedRole === role ? 'bg-primary text-white' : ''
+                  }`}
+                >
+                  {role}
+                </button>
               ))}
             </div>
 
-            {/* RIGHT SIDE - PERMISSIONS */}
-            <div className='flex-1 border p-4 rounded-lg space-y-4 overflow-y-auto'>
+            {/* RIGHT */}
+            <div className='flex-1 space-y-3 overflow-y-auto'>
               {modulesData.map(module => {
                 const moduleState = rolePermissions[module.id] || {}
+                const isOpen = openModules[module.id]
 
                 return (
-                  <div key={module.id} className='border rounded-lg p-3'>
-                    {/* MODULE */}
-                    <label className='flex items-center gap-2 font-semibold'>
-                      <input
-                        type='checkbox'
-                        checked={moduleState.enabled || false}
-                        ref={el => {
-                          if (el) {
-                            el.indeterminate = isIndeterminate(module)
-                          }
-                        }}
-                        onChange={() => toggleModule(module.id)}
-                      />
-                      {module.name}
-                    </label>
-
-                    {/* SUBMODULES */}
-                    {moduleState.enabled && module.submodules?.length > 0 && (
-                      <div className='ml-6 mt-3 space-y-2'>
-                        {module.submodules.map(sub => {
-                          const subKey = sub.id
-                          const subLabel = sub.label
-
-                          const subState =
-                            moduleState.submodules?.[subKey] || {}
-
-                          return (
-                            <div key={subKey}>
-                              <label className='flex items-center gap-2 text-sm'>
-                                <input
-                                  type='checkbox'
-                                  checked={subState.enabled || false}
-                                  onChange={() =>
-                                    toggleSubmodule(module.id, subKey)
-                                  }
-                                />
-                                {subLabel}
-                              </label>
-
-                              {/* ACTIONS */}
-                              {subState.enabled &&
-                                module.sub_submodules?.[subKey] && (
-                                  <div className='ml-6 mt-1 flex flex-wrap gap-2'>
-                                    {module.sub_submodules[subKey].map(
-                                      action => {
-                                        const actionKey = action.id
-                                        const actionLabel = action.label
-
-                                        return (
-                                          <label
-                                            key={actionKey}
-                                            className='flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded'
-                                          >
-                                            <input
-                                              type='checkbox'
-                                              checked={
-                                                subState.actions?.[actionKey] ||
-                                                false
-                                              }
-                                              onChange={() =>
-                                                toggleSubSubmodule(
-                                                  module.id,
-                                                  subKey,
-                                                  actionKey
-                                                )
-                                              }
-                                            />
-                                            {actionLabel}
-                                          </label>
-                                        )
-                                      }
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          )
-                        })}
+                  <div key={module.id} className='border rounded'>
+                    {!module.submodules?.length ? (
+                      // ✅ NO SUBMODULE → SIMPLE ROW
+                      <div className='flex items-center gap-2 p-3'>
+                        <input
+                          type='checkbox'
+                          checked={moduleState.enabled || false}
+                          onChange={() => toggleModule(module.id)}
+                        />
+                        <span className='font-semibold'>{module.name}</span>
                       </div>
+                    ) : (
+                      // ✅ HAS SUBMODULE → COLLAPSE UI
+                      <>
+                        {/* HEADER */}
+                        <div
+                          className='flex items-center justify-between p-3 cursor-pointer bg-gray-100'
+                          onClick={() => toggleCollapse(module.id)}
+                        >
+                          <div className='flex items-center gap-2'>
+                            <input
+                              type='checkbox'
+                              checked={moduleState.enabled || false}
+                              ref={el => {
+                                if (el) {
+                                  el.indeterminate = isIndeterminate(module)
+                                }
+                              }}
+                              onChange={e => {
+                                e.stopPropagation()
+                                toggleModule(module.id)
+                              }}
+                            />
+                            <span className='font-semibold'>{module.name}</span>
+                          </div>
+
+                          <span>{isOpen ? '−' : '+'}</span>
+                        </div>
+
+                        {/* BODY */}
+                        {isOpen && (
+                          <div className='p-3'>
+                            {module.submodules.map(sub => {
+                              const subState =
+                                moduleState.submodules?.[sub.id] || {}
+
+                              return (
+                                <div key={sub.id} className='ml-4 mb-2'>
+                                  <label className='flex items-center gap-2'>
+                                    <input
+                                      type='checkbox'
+                                      checked={subState.enabled || false}
+                                      onChange={() =>
+                                        toggleSubmodule(module.id, sub.id)
+                                      }
+                                    />
+                                    {sub.label}
+                                  </label>
+
+                                  {subState.enabled &&
+                                    module.sub_submodules?.[sub.id] && (
+                                      <div className='ml-6 mt-1 flex flex-wrap gap-2'>
+                                        {module.sub_submodules[sub.id].map(
+                                          a => (
+                                            <label key={a.id}>
+                                              <input
+                                                type='checkbox'
+                                                checked={
+                                                  subState.actions?.[a.id] ||
+                                                  false
+                                                }
+                                                onChange={() =>
+                                                  toggleSubSubmodule(
+                                                    module.id,
+                                                    sub.id,
+                                                    a.id
+                                                  )
+                                                }
+                                              />
+                                              {a.label}
+                                            </label>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )
@@ -365,25 +311,13 @@ const RoleAndPermission = () => {
             </div>
           </div>
         </form>
-        <div className='flex justify-end mt-4 '>
-          <Button
-            form='role-permissions-form'
-            size='addbutton'
-            variant='default'
-            type='submit'
-          >
-            Submit
-          </Button>
+
+        <div className='text-right mt-4'>
+          <Button type='submit'>Submit</Button>
         </div>
 
         <AddRole open={open} setOpen={setOpen} />
-        <DeleteModal
-          open={deleteOpen}
-          setOpen={setDeleteOpen}
-          header='Delete Role'
-          description='Are you sure you want to delete this role? This action cannot be undone.'
-          // onConfirm={handleDelete}
-        />
+        <DeleteModal open={deleteOpen} setOpen={setDeleteOpen} />
       </div>
     </ContentLayout>
   )
