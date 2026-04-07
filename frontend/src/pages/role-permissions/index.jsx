@@ -15,130 +15,179 @@ const RoleAndPermission = () => {
   const [permissions, setPermissions] = useState({})
   const [selectedRole, setSelectedRole] = useState('Admin')
 
- const formik = useFormik({
-  initialValues: {
-    role: ''
-  },
-  onSubmit: async () => {
-    try {
-      const roleData = permissions[selectedRole] || {}
+  const formik = useFormik({
+    initialValues: {
+      role: ''
+    },
+    onSubmit: async () => {
+      try {
+        const roleData = permissions[selectedRole] || {}
 
-      const payload = {}
+        const payload = {}
 
-      modulesData.forEach(module => {
-        const moduleState = roleData[module.id]
+        modulesData.forEach(module => {
+          const moduleState = roleData[module.id]
 
-        if (!moduleState?.enabled) return
+          if (!moduleState?.enabled) return
 
-        const modulePayload = {
-          enabled: true,
-          submodules: {}
-        }
-
-        module.submodules?.forEach(sub => {
-          const subKey = sub.id
-          const subState = moduleState?.submodules?.[subKey]
-
-          if (!subState?.enabled) return
-
-          // If has actions
-          if (module.sub_submodules?.[subKey]) {
-            const actionsPayload = {}
-
-            module.sub_submodules[subKey].forEach(action => {
-              const actionKey = action.id
-
-              if (subState?.actions?.[actionKey]) {
-                actionsPayload[actionKey] = true
-              }
-            })
-
-            // only add if actions selected
-            if (Object.keys(actionsPayload).length > 0) {
-              modulePayload.submodules[subKey] = actionsPayload
-            }
-          } else {
-            // no actions → simple true
-            modulePayload.submodules[subKey] = true
+          const modulePayload = {
+            enabled: true,
+            submodules: {}
           }
+
+          module.submodules?.forEach(sub => {
+            const subKey = sub.id
+            const subState = moduleState?.submodules?.[subKey]
+
+            if (!subState?.enabled) return
+
+            // If has actions
+            if (module.sub_submodules?.[subKey]) {
+              const actionsPayload = {}
+
+              module.sub_submodules[subKey].forEach(action => {
+                const actionKey = action.id
+
+                if (subState?.actions?.[actionKey]) {
+                  actionsPayload[actionKey] = true
+                }
+              })
+
+              // only add if actions selected
+              if (Object.keys(actionsPayload).length > 0) {
+                modulePayload.submodules[subKey] = actionsPayload
+              }
+            } else {
+              // no actions → simple true
+              modulePayload.submodules[subKey] = true
+            }
+          })
+
+          payload[module.id] = modulePayload
         })
 
-        payload[module.id] = modulePayload
-      })
-
-      console.log('FINAL CLEAN PAYLOAD 👉', payload)
-
-    } catch (error) {
-      console.error(error)
+        console.log('FINAL CLEAN PAYLOAD 👉', payload)
+      } catch (error) {
+        console.error(error)
+      }
     }
-  }
-})
+  })
 
   const toggleModule = moduleId => {
     setPermissions(prev => {
-      const current = prev[selectedRole]?.[moduleId]?.enabled
+      const currentEnabled = prev[selectedRole]?.[moduleId]?.enabled
 
-      return {
-        ...prev,
-        [selectedRole]: {
-          ...prev[selectedRole],
-          [moduleId]: {
-            enabled: !current,
-            submodules: prev[selectedRole]?.[moduleId]?.submodules || {}
-          }
-        }
-      }
-    })
-  }
+      const module = modulesData.find(m => m.id === moduleId)
 
-  const toggleSubmodule = (moduleId, sub) => {
-    setPermissions(prev => {
-      const current = prev[selectedRole]?.[moduleId]?.submodules?.[sub]?.enabled
+      let submodules = {}
 
-      return {
-        ...prev,
-        [selectedRole]: {
-          ...prev[selectedRole],
-          [moduleId]: {
-            enabled: true,
-            submodules: {
-              ...prev[selectedRole]?.[moduleId]?.submodules,
-              [sub]: {
-                enabled: !current,
-                actions:
-                  prev[selectedRole]?.[moduleId]?.submodules?.[sub]?.actions ||
-                  {}
-              }
-            }
-          }
-        }
-      }
-    })
-  }
+      // ✅ If turning ON → select everything
+      if (!currentEnabled) {
+        module?.submodules?.forEach(sub => {
+          if (module.sub_submodules?.[sub.id]) {
+            const actions = {}
 
-  const toggleSubSubmodule = (moduleId, sub, action) => {
-    setPermissions(prev => ({
-      ...prev,
-      [selectedRole]: {
-        ...prev[selectedRole],
-        [moduleId]: {
-          enabled: true,
-          submodules: {
-            ...prev[selectedRole]?.[moduleId]?.submodules,
-            [sub]: {
+            module.sub_submodules[sub.id].forEach(action => {
+              actions[action.id] = true
+            })
+
+            submodules[sub.id] = {
               enabled: true,
-              actions: {
-                ...prev[selectedRole]?.[moduleId]?.submodules?.[sub]?.actions,
-                [action]:
-                  !prev[selectedRole]?.[moduleId]?.submodules?.[sub]?.actions?.[
-                    action
-                  ]
-              }
+              actions
             }
+          } else {
+            submodules[sub.id] = {
+              enabled: true
+            }
+          }
+        })
+      }
+
+      //  If turning OFF → clear everything
+      return {
+        ...prev,
+        [selectedRole]: {
+          ...prev[selectedRole],
+          [moduleId]: {
+            enabled: !currentEnabled,
+            submodules: !currentEnabled ? submodules : {}
           }
         }
       }
-    }))
+    })
+  }
+
+  const toggleSubmodule = (moduleId, subId) => {
+    setPermissions(prev => {
+      const moduleState = prev[selectedRole]?.[moduleId] || {}
+      const submodules = moduleState.submodules || {}
+
+      const current = submodules?.[subId]?.enabled
+
+      const updatedSubmodules = {
+        ...submodules,
+        [subId]: {
+          enabled: !current,
+          actions: submodules?.[subId]?.actions || {}
+        }
+      }
+
+      // ✅ check if ANY submodule is still enabled
+      const anyEnabled = Object.values(updatedSubmodules).some(
+        sub => sub.enabled
+      )
+
+      return {
+        ...prev,
+        [selectedRole]: {
+          ...prev[selectedRole],
+          [moduleId]: {
+            enabled: anyEnabled, // 🔥 auto toggle parent
+            submodules: updatedSubmodules
+          }
+        }
+      }
+    })
+  }
+
+  const toggleSubSubmodule = (moduleId, subId, actionId) => {
+    setPermissions(prev => {
+      const moduleState = prev[selectedRole]?.[moduleId] || {}
+      const submodules = moduleState.submodules || {}
+      const subState = submodules?.[subId] || {}
+
+      const updatedActions = {
+        ...subState.actions,
+        [actionId]: !subState.actions?.[actionId]
+      }
+
+      // ✅ check if ANY action is enabled
+      const anyActionEnabled = Object.values(updatedActions).some(v => v)
+
+      const updatedSubmodules = {
+        ...submodules,
+        [subId]: {
+          enabled: anyActionEnabled, // 🔥 auto toggle submodule
+          actions: updatedActions
+        }
+      }
+
+      // ✅ check if ANY submodule is enabled
+      const anySubEnabled = Object.values(updatedSubmodules).some(
+        sub => sub.enabled
+      )
+
+      return {
+        ...prev,
+        [selectedRole]: {
+          ...prev[selectedRole],
+          [moduleId]: {
+            enabled: anySubEnabled, // 🔥 auto toggle module
+            submodules: updatedSubmodules
+          }
+        }
+      }
+    })
   }
 
   const handleDeleteRole = roleToDelete => {
@@ -159,6 +208,21 @@ const RoleAndPermission = () => {
       delete updated[roleToDelete]
       return updated
     })
+  }
+
+  const isIndeterminate = module => {
+    const moduleState = rolePermissions[module.id]
+
+    if (!moduleState?.submodules) return false
+
+    const subs = Object.values(moduleState.submodules)
+
+    if (subs.length === 0) return false
+
+    const someChecked = subs.some(s => s.enabled)
+    const allChecked = subs.every(s => s.enabled)
+
+    return someChecked && !allChecked
   }
 
   const rolePermissions = permissions[selectedRole] || {}
@@ -222,6 +286,11 @@ const RoleAndPermission = () => {
                       <input
                         type='checkbox'
                         checked={moduleState.enabled || false}
+                        ref={el => {
+                          if (el) {
+                            el.indeterminate = isIndeterminate(module)
+                          }
+                        }}
                         onChange={() => toggleModule(module.id)}
                       />
                       {module.name}
