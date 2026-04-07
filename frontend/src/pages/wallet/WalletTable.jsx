@@ -3,7 +3,7 @@ import { DataTable } from '@common/components/DataTable'
 import ViewWallet from './ViewWallet'
 import DeleteWallet from './DeleteWallet'
 
-const WalletTable = ({ data, tableParams, setTableParams, pagination }) => {
+const WalletTable = ({ data, tableParams, setTableParams, pagination ,loading}) => {
   const [viewOpen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -72,6 +72,7 @@ const WalletTable = ({ data, tableParams, setTableParams, pagination }) => {
       <DataTable
         columns={columns}
         data={data}
+        loading={loading}
         setTableParams={setTableParams}
         tableParams={tableParams}
         pagination={pagination}

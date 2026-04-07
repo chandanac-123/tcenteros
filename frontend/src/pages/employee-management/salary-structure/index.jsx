@@ -13,6 +13,7 @@ const SalaryStructure = () => {
       <SalaryStructureTable
         data={salaryData?.employees || []}
         tableParams={tableParams}
+        isLoading={isLoading}
         setTableParams={setTableParams}
         pagination={salaryData?.total}
       />

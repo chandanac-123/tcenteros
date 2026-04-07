@@ -9,6 +9,7 @@ import { useDeleteSalaryMutation } from '@api-queries/employee-salary/Query'
 const SalaryStructureTable = ({
   pagination,
   data,
+  isLoading,
   setTableParams,
   tableParams
 }) => {
@@ -62,6 +63,7 @@ const SalaryStructureTable = ({
       <DataTable
         columns={columns}
         data={data}
+        loading={isLoading}
         setTableParams={setTableParams}
         tableParams={tableParams}
         pagination={pagination}

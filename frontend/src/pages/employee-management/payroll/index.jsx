@@ -103,7 +103,7 @@ const Payroll = () => {
         tableParams={tableParams}
         pagination={payrollData?.total}
         paginationVisibile={true}
-        isLoading={isFetching}
+        loading={isFetching}
         search={false}
       />
     </div>

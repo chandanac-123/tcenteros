@@ -62,7 +62,7 @@ const Network = () => {
     // Completed Tab
     if (activeTab === 'completed') {
       return endDateTime !== null && endDateTime < now
-    }// Pending Settlement Tab
+    } // Pending Settlement Tab
     if (activeTab === 'pending_settlement') {
       return status === 'pending_settlement'
     }
@@ -165,20 +165,14 @@ const Network = () => {
       {/* <NetworkButtons/> */}
 
       <div className='p-5'>
-        {!data && isFetching ? (
-          <div className='flex justify-center py-10'>
-            <span className='loader'>Loading....</span>
-          </div>
-        ) : (
-          <NetworkTables
-            activeTab={activeTab}
-            data={filteredData}
-            tableParams={tableParams}
-            pagination={filteredData?.total}
-            loading={isFetching}
-            setTableParams={setTableParams}
-          />
-        )}
+        <NetworkTables
+          activeTab={activeTab}
+          data={filteredData}
+          tableParams={tableParams}
+          pagination={filteredData?.total}
+          loading={isFetching}
+          setTableParams={setTableParams}
+        />
       </div>
     </ContentLayout>
   )
