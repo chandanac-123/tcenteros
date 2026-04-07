@@ -6,6 +6,7 @@ import AddRole from './components/AddRole'
 import { useFormik } from 'formik'
 import deleteicon from '@assets/form-icons/delete.svg'
 import DeleteModal from '@common/components/CustomeDelete'
+import AddCategory from '@pages/employee-management/category/AddCategory'
 
 const roles = ['Admin', 'Branch Manager', 'Trainer', 'Staff']
 
@@ -184,7 +185,7 @@ const RoleAndPermission = () => {
             Role and Permissions
           </span>
           <Button size='addbutton' onClick={() => setOpen(true)}>
-            + Add Role
+            + Create new Designation
           </Button>
         </div>
 
@@ -316,7 +317,7 @@ const RoleAndPermission = () => {
           <Button type='submit'>Submit</Button>
         </div>
 
-        <AddRole open={open} setOpen={setOpen} />
+        <AddCategory categoryOpen={open} setCategoryOpen={setOpen} />
         <DeleteModal open={deleteOpen} setOpen={setDeleteOpen} />
       </div>
     </ContentLayout>
