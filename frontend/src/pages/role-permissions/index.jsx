@@ -1,12 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { modulesData } from './components/ModuleData'
 import { Button } from '@pages/components/ui/button'
-import AddRole from './components/AddRole'
 import { useFormik } from 'formik'
-import deleteicon from '@assets/form-icons/delete.svg'
 import DeleteModal from '@common/components/CustomeDelete'
 import AddCategory from '@pages/employee-management/category/AddCategory'
+import {
+  useCreatePermissionMutation,
+  usePermissionQuery
+} from '@api-queries/role-permissions/Query'
+import { useCategoriesQuery } from '@api-queries/employee-management/Query'
 
 const roles = ['Admin', 'Branch Manager', 'Trainer', 'Staff']
 
@@ -14,8 +17,12 @@ const RoleAndPermission = () => {
   const [open, setOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [permissions, setPermissions] = useState({})
-  const [selectedRole, setSelectedRole] = useState('Admin')
+  const [selectedRole, setSelectedRole] = useState(null)
   const [openModules, setOpenModules] = useState({})
+  const { data: designation, isFetching: isDesignation } = useCategoriesQuery()
+  console.log('designation: ', designation)
+  const { data, isFetching } = usePermissionQuery()
+  const { mutateAsync: create_permission } = useCreatePermissionMutation()
 
   const toggleCollapse = moduleId => {
     setOpenModules(prev => ({
@@ -108,11 +115,9 @@ const RoleAndPermission = () => {
           actions: submodules?.[subId]?.actions || {}
         }
       }
-
       const anyEnabled = Object.values(updatedSubmodules).some(
         sub => sub.enabled
       )
-
       return {
         ...prev,
         [selectedRole]: {
@@ -166,6 +171,12 @@ const RoleAndPermission = () => {
 
   const rolePermissions = permissions[selectedRole] || {}
 
+  useEffect(() => {
+    if (designation?.length && !selectedRole) {
+      setSelectedRole(designation[0].id)
+    }
+  }, [designation])
+
   const isIndeterminate = module => {
     const moduleState = rolePermissions[module.id]
     if (!moduleState?.submodules) return false
@@ -193,16 +204,18 @@ const RoleAndPermission = () => {
           <div className='flex flex-col md:flex-row flex-1 gap-4 w-full h-full overflow-hidden'>
             {/* LEFT */}
             <div className='w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto'>
-              {roles.map(role => (
+              {designation?.map(role => (
                 <button
-                  key={role}
+                  key={role?.id}
                   type='button'
-                  onClick={() => setSelectedRole(role)}
+                  onClick={() => setSelectedRole(role.id)}
                   className={`block w-full text-left p-2 mb-2 ${
-                    selectedRole === role ? 'bg-primary text-white' : ''
+                    selectedRole === role.id
+                      ? 'bg-primary text-white rounded-md'
+                      : ''
                   }`}
                 >
-                  {role}
+                  {role?.name}
                 </button>
               ))}
             </div>
