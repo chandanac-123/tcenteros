@@ -189,10 +189,10 @@ const RoleAndPermission = () => {
           </Button>
         </div>
 
-        <form onSubmit={formik.handleSubmit} className='flex-1'>
-          <div className='flex gap-4 h-full'>
+        <form onSubmit={formik.handleSubmit} className='flex-1 overflow-hidden'>
+          <div className='flex flex-col md:flex-row flex-1 gap-4 w-full h-full overflow-hidden'>
             {/* LEFT */}
-            <div className='w-60 border p-3'>
+            <div className='w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto'>
               {roles.map(role => (
                 <button
                   key={role}
@@ -275,10 +275,13 @@ const RoleAndPermission = () => {
 
                                   {subState.enabled &&
                                     module.sub_submodules?.[sub.id] && (
-                                      <div className='ml-6 mt-1 flex flex-wrap gap-2'>
+                                      <div className='ml-6 mt-1 flex flex-wrap gap-4'>
                                         {module.sub_submodules[sub.id].map(
                                           a => (
-                                            <label key={a.id}>
+                                            <label
+                                              key={a.id}
+                                              className='flex gap-1'
+                                            >
                                               <input
                                                 type='checkbox'
                                                 checked={
@@ -313,8 +316,17 @@ const RoleAndPermission = () => {
           </div>
         </form>
 
-        <div className='text-right mt-4'>
-          <Button type='submit'>Submit</Button>
+        <div className='flex justify-end mt-4 '>
+          {' '}
+          <Button
+            form='role-permissions-form'
+            size='addbutton'
+            variant='default'
+            type='submit'
+          >
+            {' '}
+            Submit{' '}
+          </Button>{' '}
         </div>
 
         <AddCategory categoryOpen={open} setCategoryOpen={setOpen} />
