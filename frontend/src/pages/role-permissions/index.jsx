@@ -28,85 +28,98 @@ const RoleAndPermission = () => {
   }
 
   const formik = useFormik({
-    initialValues: { role: '' },
-    onSubmit: async () => {
-      try {
-        const roleData = permissions[selectedRole] || {}
-        const cleanedPermissions = {}
-        modulesData.forEach(module => {
-          const moduleState = roleData[module.id]
-          if (!moduleState?.enabled) return
+  initialValues: { role: '' },
+  onSubmit: async () => {
+    try {
+      const roleData = permissions[selectedRole] || {}
+      const cleanedPermissions = {}
 
-          // ✅ CASE 1: NO SUBMODULES
-          if (!module.submodules || module.submodules.length === 0) {
-            cleanedPermissions[module.id] = {
-              enabled: true
-            }
-            return
+      modulesData.forEach(module => {
+        const moduleState = roleData[module.id]
+
+        // ✅ ALWAYS include dashboard
+        if (module.id !== 'dashboard' && !moduleState?.enabled) return
+
+        // ✅ CASE 1: NO SUBMODULES
+        if (!module.submodules || module.submodules.length === 0) {
+          cleanedPermissions[module.id] = {
+            enabled: true
           }
-
-          // ✅ CASE 2: HAS SUBMODULES
-          const modulePayload = {
-            enabled: true,
-            submodules: {}
-          }
-
-          module.submodules.forEach(sub => {
-            const subState = moduleState?.submodules?.[sub.id]
-            if (!subState?.enabled) return
-
-            // ✅ HAS ACTIONS
-            if (module.sub_submodules?.[sub.id]) {
-              const actions = {}
-
-              module.sub_submodules[sub.id].forEach(a => {
-                if (subState.actions?.[a.id]) {
-                  actions[a.id] = true
-                }
-              })
-
-              if (Object.keys(actions).length > 0) {
-                modulePayload.submodules[sub.id] = actions
-              }
-            }
-            // ✅ NO ACTIONS
-            else {
-              modulePayload.submodules[sub.id] = true
-            }
-          })
-
-          // ✅ only add if submodules exist
-          if (Object.keys(modulePayload.submodules).length > 0) {
-            cleanedPermissions[module.id] = modulePayload
-          }
-        })
-
-        // 🚨 Prevent empty submission
-        if (!Object.keys(cleanedPermissions).length) {
-          console.warn('No permissions selected')
           return
         }
 
-        const finalPayload = {
-          designation_id: selectedRole,
-          permissions: cleanedPermissions
+        // ✅ CASE 2: HAS SUBMODULES
+        const modulePayload = {
+          enabled: true,
+          submodules: {}
         }
 
-        console.log('FINAL API PAYLOAD 👉', finalPayload)
+        module.submodules.forEach(sub => {
+          // ✅ FORCE dashboard overview always
+          if (module.id === 'dashboard' && sub.id === 'overview') {
+            modulePayload.submodules['overview'] = true
+            return
+          }
 
-        // ✅ API CALL
-        await create_permission(finalPayload)
+          const subState = moduleState?.submodules?.[sub.id]
+          if (!subState?.enabled) return
 
-        // ✅ Optional success feedback
-        console.log('Permissions saved successfully')
-      } catch (error) {
-        console.error('Error saving permissions ❌', error)
+          // ✅ HAS ACTIONS
+          if (module.sub_submodules?.[sub.id]) {
+            const actions = {}
 
-        // ✅ Optional UI feedback
-        // toast.error(error?.response?.data?.message || 'Something went wrong')
+            module.sub_submodules[sub.id].forEach(a => {
+              if (subState.actions?.[a.id]) {
+                actions[a.id] = true
+              }
+            })
+
+            if (Object.keys(actions).length > 0) {
+              modulePayload.submodules[sub.id] = actions
+            }
+          }
+          // ✅ NO ACTIONS
+          else {
+            modulePayload.submodules[sub.id] = true
+          }
+        })
+
+        // ✅ Ensure dashboard always has overview
+        if (module.id === 'dashboard') {
+          modulePayload.submodules['overview'] = true
+        }
+
+        // ✅ Add only if has submodules OR dashboard
+        if (
+          Object.keys(modulePayload.submodules).length > 0 ||
+          module.id === 'dashboard'
+        ) {
+          cleanedPermissions[module.id] = modulePayload
+        }
+      })
+
+      // 🚨 Prevent empty submission (except dashboard)
+      if (!Object.keys(cleanedPermissions).length) {
+        console.warn('No permissions selected')
+        return
       }
+
+      const finalPayload = {
+        designation_id: selectedRole,
+        permissions: cleanedPermissions
+      }
+
+      console.log('FINAL API PAYLOAD 👉', finalPayload)
+
+      // ✅ API CALL
+      await create_permission(finalPayload)
+
+      console.log('Permissions saved successfully')
+    } catch (error) {
+      console.error('Error saving permissions ❌', error)
     }
-  })
+  }
+})
 
   const transformPermissions = apiPermissions => {
     const result = {}
@@ -148,6 +161,11 @@ const RoleAndPermission = () => {
 
       if (!currentEnabled) {
         module?.submodules?.forEach(sub => {
+          if (module.id === 'dashboard' && sub.id === 'overview') {
+            submodules[sub.id] = { enabled: true }
+            return
+          }
+
           if (module.sub_submodules?.[sub.id]) {
             const actions = {}
             module.sub_submodules[sub.id].forEach(action => {
