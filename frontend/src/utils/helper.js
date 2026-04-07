@@ -74,7 +74,7 @@ export const formatDate = date => {
   return format(new Date(date), 'yyyy-MM-dd')
 }
 
-export  const formatToDDMMYYYY = date => {
+export const formatToDDMMYYYY = date => {
   if (!date) return ''
   const parts = date.split('-')
   // If already in YYYY-MM-DD
@@ -84,4 +84,11 @@ export  const formatToDDMMYYYY = date => {
   }
 
   return date // already correct format
+}
+
+export const hasPermission = (permissions, key) => {
+  if (permissions === null) return true
+  if (!permissions || !key) return false
+
+  return key in permissions
 }
