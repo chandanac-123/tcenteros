@@ -37,12 +37,21 @@ const RoleAndPermission = () => {
           const moduleState = roleData[module.id]
           if (!moduleState?.enabled) return
 
+          // ✅ CASE 1: NO SUBMODULES
+          if (!module.submodules || module.submodules.length === 0) {
+            cleanedPermissions[module.id] = {
+              enabled: true
+            }
+            return
+          }
+
+          // ✅ CASE 2: HAS SUBMODULES
           const modulePayload = {
             enabled: true,
             submodules: {}
           }
 
-          module.submodules?.forEach(sub => {
+          module.submodules.forEach(sub => {
             const subState = moduleState?.submodules?.[sub.id]
             if (!subState?.enabled) return
 
@@ -66,6 +75,7 @@ const RoleAndPermission = () => {
             }
           })
 
+          // ✅ only add if submodules exist
           if (Object.keys(modulePayload.submodules).length > 0) {
             cleanedPermissions[module.id] = modulePayload
           }
