@@ -139,8 +139,8 @@ const Members = ({ onView, onEdit }) => {
       <DeleteModal
         open={deleteOpen}
         setOpen={setDeleteOpen}
-        header='Delete Employee'
-        description='Are you sure you want to delete this employee?'
+        header='Delete Member'
+        description='Are you sure you want to delete this member?'
         onConfirm={handleDelete}
       />
     </>

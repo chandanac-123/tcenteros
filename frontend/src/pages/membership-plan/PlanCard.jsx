@@ -122,8 +122,8 @@ const PlanCard = ({ data, colors }) => {
         setOpen={setDeleteOpen}
         onConfirm={handleDelete}
         loading={isPending}
-        header='Are you sure you want to delete this plan?'
-        description='This action cannot be undone.'
+        header='Plan Deletion'
+       description='This plan will be removed from your active offerings and new members won`t be able to purchase it. This action cannot be undone.'
       />
     </div>
   )
