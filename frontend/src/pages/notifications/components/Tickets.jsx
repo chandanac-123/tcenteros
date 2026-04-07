@@ -3,6 +3,7 @@ import Chat from './Chat'
 import { useState } from 'react'
 import { useAllTicketsQuery } from '@api-queries/notifictaions/Query'
 import CloseTicket from './TicketClose'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const Tickets = () => {
   const [openChat, setOpenChat] = useState(false)
@@ -10,10 +11,13 @@ const Tickets = () => {
   const [ticketClose, setTicketClose] = useState(false)
   const { data: tickets, isLoading } = useAllTicketsQuery()
 
-  if (isLoading) return <p>Loading...</p>
-
   return (
     <>
+      {isLoading && (
+        <div className='flex justify-center'>
+          <Spinner />
+        </div>
+      )}
       {!openChat &&
         tickets?.map(ticket => (
           <div
