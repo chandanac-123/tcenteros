@@ -46,7 +46,7 @@ const { isLoaded } = useJsApiLoader({
         <Route element={<MasterLayout />}>
           <Route path='*' element={<PageNotFound />} />
           {routes.map(item => {
-            if (item?.permission && item.privetRoute) {
+            if (item.privetRoute) {
               return (
                 <Route
                   key={uuidv4()}
