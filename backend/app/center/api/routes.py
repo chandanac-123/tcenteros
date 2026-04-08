@@ -161,8 +161,7 @@ async def get_center_dashboard(
             PaymentOrder.order_type.in_([
                 OrderType.membership,
                 OrderType.membership_renewal,
-                OrderType.membership_upgrade,
-                OrderType.network_in
+                OrderType.membership_upgrade
             ])
         )
     )).scalar() or Decimal("0")
@@ -198,7 +197,6 @@ async def get_center_dashboard(
             PaymentOrder.center_id == center_id,
             PaymentOrder.status == PaymentOrderStatus.paid,
             PaymentOrder.order_type.in_([
-                OrderType.network_out,
                 OrderType.branch_purchase
             ])
         )
@@ -243,8 +241,7 @@ async def get_center_dashboard(
             PaymentOrder.order_type.in_([
                 OrderType.membership,
                 OrderType.membership_renewal,
-                OrderType.membership_upgrade,
-                OrderType.network_in
+                OrderType.membership_upgrade
             ]),
             extract('year', PaymentOrder.created_at) == current_year
         ).group_by(month_expr_po)
@@ -292,7 +289,6 @@ async def get_center_dashboard(
         ).where(
             PaymentOrder.center_id == center_id,
             PaymentOrder.order_type.in_([
-                OrderType.network_out,
                 OrderType.branch_purchase
             ]),
             extract('year', PaymentOrder.created_at) == current_year

@@ -196,63 +196,57 @@ async def get_billing_dashboard(
     next_month = month_start.replace(day=28) + timedelta(days=4)
     month_end = next_month.replace(day=1) - timedelta(days=1)
 
-    # ✅ ALLOWED ORDER TYPES (IMPORTANT FIX)
-    allowed_order_types = [
+    # ✅ ONLY BUSINESS REVENUE TYPES (NETWORK REMOVED)
+    revenue_order_types = [
         OrderType.membership,
         OrderType.membership_renewal,
         OrderType.membership_upgrade,
         OrderType.inventory_sale,
-        OrderType.network_in,
-        OrderType.network_out,
     ]
 
-    # ===== 1. TOTAL REVENUE =====
+    # ===== 1. TOTAL REVENUE (EXCLUDING NETWORK) =====
     total_revenue_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
         PaymentOrder.status == PaymentOrderStatus.paid,
-        PaymentOrder.order_type.in_(allowed_order_types)  # ✅ FIX
+        PaymentOrder.order_type.in_(revenue_order_types)
     )
     total_revenue = float((await db.execute(total_revenue_query)).scalar() or 0)
 
-    # ===== 2. PENDING PAYMENTS =====
-    pending_query = select(
+    # ===== 2. NETWORK INCOMING =====
+    network_in_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_(allowed_order_types),  # ✅ FIX
-        PaymentOrder.status.in_([
-            PaymentOrderStatus.pending,
-            PaymentOrderStatus.unpaid,
-            PaymentOrderStatus.created
-        ])
-    )
-    pending_payments = float((await db.execute(pending_query)).scalar() or 0)
-
-    # ===== 3. NETWORK EARNINGS =====
-    network_query = select(
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_([OrderType.network_in, OrderType.network_out]),
+        PaymentOrder.order_type == OrderType.network_in,
         PaymentOrder.status == PaymentOrderStatus.paid
     )
-    network_earnings = float((await db.execute(network_query)).scalar() or 0)
+    network_incoming = float((await db.execute(network_in_query)).scalar() or 0)
 
-    # ===== 4. THIS MONTH TOTAL =====
+    # ===== 3. NETWORK OUTGOING =====
+    network_out_query = select(
+        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
+    ).where(
+        PaymentOrder.center_id == center_id,
+        PaymentOrder.order_type == OrderType.network_out,
+        PaymentOrder.status == PaymentOrderStatus.paid
+    )
+    network_outgoing = float((await db.execute(network_out_query)).scalar() or 0)
+
+    # ===== 4. THIS MONTH TOTAL (EXCLUDING NETWORK) =====
     this_month_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_(allowed_order_types),  # ✅ FIX
+        PaymentOrder.order_type.in_(revenue_order_types),
         PaymentOrder.status == PaymentOrderStatus.paid,
         PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
         PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time())
     )
     this_month_total = float((await db.execute(this_month_query)).scalar() or 0)
 
-    # ===== 5. REVENUE TREND =====
+    # ===== 5. REVENUE TREND (UNCHANGED LOGIC) =====
     month_names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
     # MEMBERSHIP
@@ -288,7 +282,7 @@ async def get_billing_dashboard(
         int(r.month): float(r.revenue) for r in (await db.execute(inventory_query))
     }
 
-    # NETWORKING
+    # NETWORKING (UNCHANGED FOR CHART)
     networking_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
         func.sum(PaymentOrder.total_amount).label('revenue')
@@ -320,8 +314,8 @@ async def get_billing_dashboard(
         "center_id": str(center_id),
         "generated_at": datetime.now().isoformat(),
         "total_revenue": round(total_revenue, 2),
-        "pending_payments": round(pending_payments, 2),
-        "network_earnings": round(network_earnings, 2),
+        "network_incoming": round(network_incoming, 2),
+        "network_outgoing": round(network_outgoing, 2),
         "this_month_total": round(this_month_total, 2),
         "revenue_trend_chart": revenue_trend_chart
     }

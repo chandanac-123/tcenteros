@@ -73,22 +73,27 @@ async def get_accounting_dashboard(
     center_id = current_admin["center_id"]
 
     # 1. Total Income, Expense, GST Payable, Payroll
+
+    # ✅ EXCLUDE NETWORK INCOME (4200)
     total_income = await session.execute(
         select(func.sum(GeneralLedger.credit))
         .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
         .where(
             GeneralLedger.center_id == center_id,
-            ChartOfAccounts.account_type == AccountType.REVENUE
+            ChartOfAccounts.account_type == AccountType.REVENUE,
+            ChartOfAccounts.code != "4200"
         )
     )
     total_income = float(total_income.scalar() or 0)
 
+    # ✅ EXCLUDE NETWORK EXPENSE (5800)  🔥 FIXED HERE
     total_expense = await session.execute(
         select(func.sum(GeneralLedger.debit))
         .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
         .where(
             GeneralLedger.center_id == center_id,
-            ChartOfAccounts.account_type == AccountType.EXPENSE
+            ChartOfAccounts.account_type == AccountType.EXPENSE,
+            ChartOfAccounts.code != "5800"
         )
     )
     total_expense = float(total_expense.scalar() or 0)
@@ -113,7 +118,7 @@ async def get_accounting_dashboard(
     )
     payroll_expense = float(payroll_expense.scalar() or 0)
 
-    # 2. Monthly Income & Expense Chart
+    # 2. Monthly Income & Expense Chart (UNCHANGED)
     year = start_year or datetime.utcnow().year
     monthly_income = []
     monthly_expense = []
@@ -142,7 +147,7 @@ async def get_accounting_dashboard(
         )
         monthly_expense.append(float(expense.scalar() or 0))
 
-    # 3. Income Breakdown
+    # 3. Income Breakdown (UNCHANGED)
     income_codes = {
         "membership": "4000",
         "network": "4200",
@@ -160,6 +165,7 @@ async def get_accounting_dashboard(
             )
         )
         income_breakdown[key] = float(value.scalar() or 0)
+
     total_income_for_breakdown = sum(income_breakdown.values())
     for key in income_breakdown:
         percent = (
@@ -171,14 +177,15 @@ async def get_accounting_dashboard(
             "percentage": round(percent, 2)
         }
 
-    # 4. Expense Breakdown
+    # 4. Expense Breakdown (UNCHANGED)
     expense_codes = {
-    "networking": "5500",
-    "salary": "5000",
-    "branching": ["5600", "5700"],  # Include both General Expense and Branch Purchase Expense
-    "inventory_purchase": "5400",
-    "other": "5100"
-}
+        "networking": "5500",   # (kept as-is per your request)
+        "salary": "5000",
+        "branching": ["5600", "5700"],
+        "inventory_purchase": "5400",
+        "other": "5100"
+    }
+
     expense_breakdown = {}
     for key, code in expense_codes.items():
         if isinstance(code, list):
@@ -200,6 +207,7 @@ async def get_accounting_dashboard(
                 )
             )
         expense_breakdown[key] = float(value.scalar() or 0)
+
     total_expense_for_breakdown = sum(expense_breakdown.values())
     for key in expense_breakdown:
         percent = (
