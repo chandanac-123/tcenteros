@@ -4,6 +4,7 @@ import management from '@assets/inventory-icons/lsicon_management-stockout-outli
 import rootStock from '@assets/inventory-icons/token_rootstock.svg'
 import saleTag from '@assets/inventory-icons/hugeicons_sale-tag-02.svg'
 import root_stocks from '@assets/inventory-icons/token_rootstocks.svg'
+import { formatIndianCurrency } from '@utils/helper'
 
 const StatusDisplaycard = ({ data }) => {
    const cards = [
@@ -23,7 +24,7 @@ const StatusDisplaycard = ({ data }) => {
     },
     {
       title: "Total Stock Value",
-      value: `₹ ${data?.total_stock_value || 0}`,
+      value: ` ₹ ${formatIndianCurrency(data?.total_stock_value) || 0}`,
       icon: saleTag,
       iconBg: "bg-lime-100",
       iconColor: "text-lime-600",
@@ -37,7 +38,7 @@ const StatusDisplaycard = ({ data }) => {
     },
     {
       title: "Today Sales",
-      value: `₹ ${data?.today_sales?.amount || 0}`,
+      value: `₹ ${formatIndianCurrency(data?.today_sales?.amount) || 0}`,
       icon: root_stocks,
       iconBg: "bg-cyan-100",
       iconColor: "text-cyan-600",
@@ -67,7 +68,7 @@ const StatusDisplaycard = ({ data }) => {
 
                         <div>
                             <p className="text-sm text-gray-500">{card.title}</p>
-                            <h2 className="text-xl font-semibold text-gray-800">
+                            <h2 className="text-xl font-semibold text-gray-800 whitespace-nowrap">
                                 {card.value}
                             </h2>
                         </div>

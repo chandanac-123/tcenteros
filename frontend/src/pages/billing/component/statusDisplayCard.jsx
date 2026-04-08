@@ -2,28 +2,28 @@ import revenueicon from '@assets/billing/revenue.svg'
 import payment from '@assets/billing/payment.svg'
 import networkicon from '@assets/billing/network.svg'
 import monthicon from '@assets/billing/month.svg'
+import { formatIndianCurrency } from '@utils/helper'
 
 const StatusDisplayCard = ({ data }) => {
-
-    const cardValue = [
+  const cardValue = [
     {
       title: 'Today Revenue',
-      value: data?.total_revenue,
+      value: formatIndianCurrency(data?.total_revenue),
       image: revenueicon
-    }, 
+    },
     {
       title: 'Network Incoming',
-      value: data?.network_incoming,
+      value: formatIndianCurrency(data?.network_incoming),
       image: networkicon
     },
     {
       title: 'Network Outgoing',
-      value: data?.network_outgoing,
+      value: formatIndianCurrency(data?.network_outgoing),
       image: payment
     },
     {
       title: 'This Month Total',
-      value: data?.this_month_total,
+      value: formatIndianCurrency(data?.this_month_total),
       image: monthicon
     }
   ]

@@ -2,9 +2,15 @@ import { useBrandingStore } from '@store/brandingStore'
 import { routes } from '../../routes/Routes'
 import MenuCard from './MenuCard'
 import logo from '@assets/header-icons/logo.svg'
+import { hasPermission } from '@utils/helper'
+import { useAuthStore } from '@store/authStore'
 
 const Sidebar = () => {
   const branding = useBrandingStore(state => state.branding)
+  const permissions = useAuthStore(state => state.auth?.permissions)
+  const hydrated = useAuthStore(state => state._hasHydrated)
+
+  if (!hydrated) return null
 
   return (
     <div className='flex flex-col gap-5 w-72 shrink-0 bg-secondary min-h-screen items-center '>
@@ -17,7 +23,9 @@ const Sidebar = () => {
       </div>
       <div className='flex flex-col gap-1 w-full my-3 px-2 overflow-auto'>
         {routes.map((item, index) => {
-          if (item?.menubar && item?.permission) {
+          const allowed = hasPermission(permissions, item.permissionKey)
+
+          if (item?.menubar && allowed) {
             return (
               <MenuCard
                 key={index}
