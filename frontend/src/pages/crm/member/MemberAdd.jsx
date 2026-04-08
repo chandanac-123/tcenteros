@@ -21,7 +21,7 @@ import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
 import { useEffect, useState } from 'react'
-import { formatToDDMMYYYY } from '@utils/helper'
+import { formatToDDMMYYYY, getChangedFields } from '@utils/helper'
 import CreateMembershipForm from '@pages/membership-plan/CreateForm'
 import TimeslotModal from '@pages/settings/components/TimeslotModal'
 
@@ -101,56 +101,74 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     initialValues,
     enableReinitialize: true,
     validationSchema: memberValidationSchema(isEdit),
-    onSubmit: async values => {
-      try {
-        let payload = { ...values }
+    onSubmit: async (values) => {
+  try {
+    let payload = { ...values };
 
-        const isVisitorOrGuest = selectedVisitorId || selectedGuestId
-        if (isVisitorOrGuest && !isEdit) {
-          payload = {
-            membership_id: values.membership_id,
-            time_slot_id: values.time_slot_id,
-            member_status: 'member',
-            payment_method: values.payment_method || 'cash',
-            payment_status: values.payment_status || 'unpaid',
-            password: values.password || ''
-          }
-        }
+    const isVisitorOrGuest = selectedVisitorId || selectedGuestId;
 
-        if (payload.date_of_birth) {
-          const [day, month, year] = payload.date_of_birth.split('-')
-          payload.date_of_birth = `${year}-${month}-${day}`
-        }
-        if (isEdit && sourceData?.payment_status != null) {
-          // Don't send membership_id during edit
-          delete payload.membership_id
-          delete payload.payment_method
-          delete payload.password
-          delete payload.payment_status
-        }
+    // 🔥 1. Visitor / Guest case
+    if (isVisitorOrGuest && !isEdit) {
+      payload = {
+        membership_id: values.membership_id,
+        time_slot_id: values.time_slot_id,
+        member_status: 'member',
+        payment_method: values.payment_method || 'cash',
+        payment_status: values.payment_status || 'unpaid',
+        password: values.password || ''
+      };
+    }
 
-        if (payload.payment_status === 'unpaid') {
-          delete payload.password
-          delete payload.payment_method
-        }
+    // 🔥 2. Edit case → ONLY changed fields
+    if (isEdit) {
+      payload = getChangedFields(initialValues, values);
 
-        if (isEdit || selectedVisitorId || selectedGuestId) {
-          await updateMember({
-            data: payload,
-            id: memberId || selectedVisitorId || selectedGuestId
-          })
-          clearSelectedIds()
-          goBack()
-        } else {
-          await createMember(payload)
-          clearSelectedIds()
-          formik.resetForm()
-          goBack()
-        }
-      } catch (error) {
-        console.error(error, '44444444')
+      // ❗ If nothing changed → stop API call
+      if (Object.keys(payload).length === 0) {
+        console.log('No changes detected');
+        return;
       }
     }
+
+    // 🔥 Date format (only if exists in payload)
+    if (payload.date_of_birth) {
+      const [day, month, year] = payload.date_of_birth.split('-');
+      payload.date_of_birth = `${year}-${month}-${day}`;
+    }
+
+    // 🔥 Edit cleanup rules
+    if (isEdit && sourceData?.payment_status != null) {
+      delete payload.membership_id;
+      delete payload.payment_method;
+      delete payload.password;
+      delete payload.payment_status;
+    }
+
+    // 🔥 Payment logic
+    if (payload.payment_status === 'unpaid') {
+      delete payload.password;
+      delete payload.payment_method;
+    }
+
+    // 🔥 API call
+    if (isEdit || isVisitorOrGuest) {
+      await updateMember({
+        data: payload,
+        id: memberId || selectedVisitorId || selectedGuestId
+      });
+      clearSelectedIds();
+      goBack();
+    } else {
+      await createMember(payload);
+      clearSelectedIds();
+      formik.resetForm();
+      goBack();
+    }
+
+  } catch (error) {
+    console.error(error);
+  }
+}
   })
 
   // if (isFormLoading) {

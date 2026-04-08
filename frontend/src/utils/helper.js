@@ -96,3 +96,15 @@ export const hasPermission = (permissions, key) => {
 export const formatIndianCurrency  = (value = 0) => {
   return new Intl.NumberFormat('en-IN').format(value);
 };
+
+export const getChangedFields = (initial, current) => {
+  const changed = {};
+
+  Object.keys(current).forEach((key) => {
+    if (current[key] !== initial[key]) {
+      changed[key] = current[key];
+    }
+  });
+
+  return changed;
+};
