@@ -92,3 +92,7 @@ export const hasPermission = (permissions, key) => {
 
   return key in permissions
 }
+
+export const formatIndianCurrency  = (value = 0) => {
+  return new Intl.NumberFormat('en-IN').format(value);
+};

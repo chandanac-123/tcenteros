@@ -7,6 +7,7 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import PieChart from '@common/charts/PieChart'
 import { useAccountsOverviewQuery } from '@api-queries/accounts/Query'
+import { formatIndianCurrency } from '@utils/helper'
 
 const Accounts = () => {
   const { data, isLoading, isError } = useAccountsOverviewQuery()
@@ -20,10 +21,10 @@ const Accounts = () => {
   const navigate = useNavigate()
 
   const summaryData = [
-    { title: 'Total Income', amount: data?.totals?.income },
-    { title: 'Total Expense', amount: data?.totals?.expense },
-    { title: 'GST Payable', amount: data?.totals?.gst_payable },
-    { title: 'Payroll', amount: data?.totals?.payroll_expense }
+    { title: 'Total Income', amount: formatIndianCurrency(data?.totals?.income) },
+    { title: 'Total Expense', amount:formatIndianCurrency(data?.totals?.expense) },
+    { title: 'GST Payable', amount:formatIndianCurrency(data?.totals?.gst_payable ) },
+    { title: 'Payroll', amount:formatIndianCurrency(data?.totals?.payroll_expense) }
   ]
   const colorPalette = [
     {
@@ -52,25 +53,25 @@ const Accounts = () => {
     {
       key: 'membership',
       label: 'Membership ',
-      value: data?.income_breakdown?.membership?.value,
+      value:formatIndianCurrency(data?.income_breakdown?.membership?.value) ,
       color: '#8A00FF'
     },
     {
       key: 'networking',
       label: 'Networking ',
-      value: data?.income_breakdown?.network?.value,
+      value:formatIndianCurrency(data?.income_breakdown?.network?.value) ,
       color: '#EB4824'
     },
     {
       key: 'inventory',
       label: 'Inventory Sales',
-      value: data?.income_breakdown?.inventory_sales?.value,
+      value: formatIndianCurrency(data?.income_breakdown?.inventory_sales?.value),
       color: '#FFCD0F'
     },
     {
       key: 'other',
       label: 'Other Income',
-      value: data?.income_breakdown?.other?.value,
+      value:formatIndianCurrency(data?.income_breakdown?.other?.value) ,
       color: '#A3AED0'
     }
   ]
@@ -79,31 +80,31 @@ const Accounts = () => {
     {
       key: 'networking',
       label: 'Networking ',
-      value: data?.expense_breakdown?.networking?.value,
+      value:formatIndianCurrency(data?.expense_breakdown?.networking?.value) ,
       color: '#3B82F6'
     },
     {
       key: 'branching',
       label: 'Branching',
-      value: data?.expense_breakdown?.branching?.value,
+      value:formatIndianCurrency(data?.expense_breakdown?.branching?.value) ,
       color: '#EF4444'
     },
     {
       key: 'salary',
       label: 'Salary ',
-      value: data?.expense_breakdown?.salary?.value,
+      value:formatIndianCurrency(data?.expense_breakdown?.salary?.value) ,
       color: '#F59E0B'
     },
     {
       key: 'inventory',
       label: 'Inventory Purchase',
-      value: data?.expense_breakdown?.inventory_purchase?.value,
+      value:formatIndianCurrency(data?.expense_breakdown?.inventory_purchase?.value) ,
       color: '#F59E0B'
     },
     {
       key: 'other',
       label: 'Other ',
-      value: data?.expense_breakdown?.other?.value,
+      value:formatIndianCurrency(data?.expense_breakdown?.other?.value),
       color: '#10B981'
     }
   ]

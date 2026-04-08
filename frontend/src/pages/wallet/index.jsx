@@ -12,6 +12,7 @@ import WalletFilter from "./component/WalletFilter"
 import CustomDatePicker from "@common/components/CustomeDatepicker"
 import { format } from "date-fns"
 import { useGetWalletAmountQuery } from "@api-queries/wallet/Query"
+import { formatIndianCurrency } from "@utils/helper"
 
 
 const Wallet = () => {
@@ -81,7 +82,7 @@ const Wallet = () => {
               Available Balance
             </span>
             <span className="text-black font-poppins text-[18px] font-semibold leading-[32px] tracking-[-0.36px]">
-              ₹ {data?.available_balance || "_ _ "}
+              ₹ {formatIndianCurrency(data?.available_balance) || "_ _ "}
             </span>
           </div>
 
@@ -99,7 +100,7 @@ const Wallet = () => {
               This month credit
             </span>
             <span className="text-black font-poppins text-[18px] font-semibold leading-[32px] tracking-[-0.36px]">
-              {`₹ ${data?.month_credit ?? "_ _"}`}
+              {`₹ ${formatIndianCurrency(data?.month_credit) ?? "_ _"}`}
             </span>
           </div>
 
@@ -108,7 +109,7 @@ const Wallet = () => {
               This Month Debit
             </span>
             <span className="text-black font-poppins text-[18px] font-semibold leading-[32px] tracking-[-0.36px]">
-              {`₹ ${data?.month_debit ?? "_ _"}`}
+              {`₹ ${formatIndianCurrency(data?.month_debit) ?? "_ _"}`}
             </span>
           </div>
 
