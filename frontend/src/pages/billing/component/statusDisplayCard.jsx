@@ -10,16 +10,16 @@ const StatusDisplayCard = ({ data }) => {
       title: 'Today Revenue',
       value: data?.total_revenue,
       image: revenueicon
-    },
-    {
-      title: 'Pending Payments',
-      value: data?.pending_payments,
-      image: payment
-    },
+    }, 
     {
       title: 'Network Earnings',
       value: data?.network_earnings,
       image: networkicon
+    },
+    {
+      title: 'Network Expense',
+      value: data?.network_expense,
+      image: payment
     },
     {
       title: 'This Month Total',

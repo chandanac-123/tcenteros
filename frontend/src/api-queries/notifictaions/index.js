@@ -12,7 +12,11 @@ export const closeMessageApiCall = (data, id) =>
   axiosInstance.post(`/support/ticket/${id}/close`, data)
 
 export const getPendingNetworkApiCall = () =>
-  axiosInstance.get('/networking/networking/requests?status=pending')
+  axiosInstance.get('/networking/networking/requests', {
+    params: {
+      status: ['pending', 'approve']
+    }
+  });
 
 
 export const getTimeSlotApiCall = () => axiosInstance.get('/membership/admin/time-slot-change-requests')

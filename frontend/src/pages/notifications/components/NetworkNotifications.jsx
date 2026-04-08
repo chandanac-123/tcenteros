@@ -45,13 +45,22 @@ const NetworkNotifications = () => {
               </span>
 
               <div className='flex gap-2'>
-                <Button
-                  size='notificationbutton'
-                  onClick={() => setOpen(true)}
-                  className='text-xs'
-                >
-                  Approve Now
-                </Button>
+                {request?.network_status == 'pending' && (
+                  <Button
+                    size='notificationbutton'
+                    onClick={() => setOpen(true)}
+                    className='text-xs bg-red_text hover:bg-red_text'
+                  >
+                    Approve Now
+                  </Button>
+                )}{request?.network_status == 'approved' && (
+                  <Button
+                    size='notificationbutton'
+                    className='text-xs cursor-none'
+                  >
+                    Approved
+                  </Button>
+                )}
               </div>
             </div>
           </div>
