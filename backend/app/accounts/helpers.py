@@ -257,3 +257,5 @@ async def auto_record_payroll_payment(
     await db.flush()
     print("[DEBUG] Finished auto_record_payroll_payment (no commit here).")
     return journal_entry
+
+

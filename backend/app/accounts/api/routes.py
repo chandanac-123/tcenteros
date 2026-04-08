@@ -18,6 +18,7 @@ from app.accounts.models.models import (
     GeneralLedger, TaxLedger, AccountType, TransactionSource
 )
 from app.payrole.models.models import PayrollRecord
+from app.auth.models.models import Employee
 
 
 
@@ -531,13 +532,8 @@ async def get_income_entries(
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    """
-    Get all income/revenue entries
-    Shows: Date, Income Type, Source, Amount, Tax, Total
-    """
     center_id = current_admin["center_id"]
     
-    # Query revenue accounts (4000-4999)
     query = select(
         GeneralLedger,
         ChartOfAccounts.code.label('account_code'),
@@ -550,31 +546,29 @@ async def get_income_entries(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
         GeneralLedger.center_id == UUID(center_id),
-        ChartOfAccounts.account_type == AccountType.REVENUE
+        ChartOfAccounts.account_type == AccountType.REVENUE,
+        ChartOfAccounts.code != "4200"   # 🔥 EXCLUDE NETWORK INCOME
     )
     
-    # Filter by income type
+    # Filter by income type (UNCHANGED LOGIC)
     if income_type == "membership":
         query = query.where(ChartOfAccounts.code == "4000")
     elif income_type == "inventory":
         query = query.where(ChartOfAccounts.code == "4100")
     elif income_type == "network":
-        query = query.where(ChartOfAccounts.code == "4200")
+        query = query.where(ChartOfAccounts.code == "4200")  # (kept as-is per your rule)
     elif income_type == "other":
         query = query.where(ChartOfAccounts.code == "4300")
     
-    # Date filters
     if start_date:
         query = query.where(func.date(GeneralLedger.transaction_date) >= start_date)
     if end_date:
         query = query.where(func.date(GeneralLedger.transaction_date) <= end_date)
     
-    # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
     
-    # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
     
@@ -583,7 +577,6 @@ async def get_income_entries(
     
     entries = []
     for row in rows:
-        # Get corresponding tax entry if exists
         tax_query = select(TaxLedger).where(
             TaxLedger.journal_entry_id == row.GeneralLedger.journal_entry_id
         )
@@ -597,7 +590,7 @@ async def get_income_entries(
             "income_type": row.account_name,
             "account_code": row.account_code,
             "description": row.je_description,
-            "amount": float(row.GeneralLedger.credit),  # Income is credit
+            "amount": float(row.GeneralLedger.credit),
             "tax_amount": float(tax_entry.tax_amount) if tax_entry else 0,
             "total_amount": float(row.GeneralLedger.credit) + (float(tax_entry.tax_amount) if tax_entry else 0),
             "source": row.GeneralLedger.source,
@@ -617,27 +610,21 @@ async def get_income_entries(
 
 
 # ============================================
-# 3. EXPENSE TAB - All Costs
+# EXPENSE TAB
 # ============================================
 
 @router.get("/expenses", summary="Get all expense entries")
 async def get_expense_entries(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    expense_type: Optional[str] = Query(None, description="salary, rent, marketing, utilities, cogs, platform_fee, general, inventory_purchase"),
+    expense_type: Optional[str] = Query(None),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    """
-    Get all expense entries, including inventory purchases.
-    EXCLUDES: inventory_sale (which is revenue-related)
-    Shows: Date, Expense Type, Description, Amount
-    """
     center_id = current_admin["center_id"]
 
-    # Expense account codes
     expense_codes = {
         "salary": "5000",
         "rent": "5100",
@@ -650,8 +637,6 @@ async def get_expense_entries(
 
     from sqlalchemy import or_, and_
 
-    # Base query: expenses from expense accounts or inventory_purchase source
-    # IMPORTANT: Exclude inventory_sale which is revenue, not expense
     query = select(
         GeneralLedger,
         ChartOfAccounts.code.label('account_code'),
@@ -666,9 +651,12 @@ async def get_expense_entries(
         GeneralLedger.center_id == center_id
     )
 
-    # Build filter: expense accounts OR inventory_purchase source
-    # EXCLUDE inventory_sale completely
-    expense_account_filter = ChartOfAccounts.account_type == AccountType.EXPENSE
+    # ✅ EXCLUDE NETWORK (5800) + PLATFORM FEE (5500)
+    expense_account_filter = and_(
+        ChartOfAccounts.account_type == AccountType.EXPENSE,
+        ChartOfAccounts.code.notin_(["5500", "5800"])   # 🔥 FIX
+    )
+
     inventory_purchase_filter = and_(
         GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value,
         GeneralLedger.source != TransactionSource.INVENTORY_SALE.value
@@ -681,11 +669,8 @@ async def get_expense_entries(
         elif expense_type == "inventory_purchase":
             query = query.where(GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value)
         else:
-            # For other expense types, filter by account type
             query = query.where(expense_account_filter)
     else:
-        # If no specific type, get all expenses and inventory purchases
-        # But EXCLUDE inventory_sale
         query = query.where(
             or_(
                 expense_account_filter,
@@ -694,18 +679,15 @@ async def get_expense_entries(
             GeneralLedger.source != TransactionSource.INVENTORY_SALE.value
         )
 
-    # Date filters
     if start_date:
         query = query.where(GeneralLedger.transaction_date >= start_date)
     if end_date:
         query = query.where(GeneralLedger.transaction_date <= end_date)
 
-    # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
-    # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
 
@@ -753,13 +735,9 @@ async def get_payroll_entries(
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    """
-    Get payroll accounting entries
-    Shows: Date, Employee, Gross Salary, Deductions, Net Salary, Status
-    """
     center_id = current_admin["center_id"]
 
-    # Query salary expense account (5000) and all possible payroll sources
+    # ✅ FIXED QUERY (NO UUID + STRICT FILTER)
     query = select(
         GeneralLedger,
         JournalEntry.entry_number.label('entry_number'),
@@ -769,13 +747,12 @@ async def get_payroll_entries(
     ).join(
         JournalEntry, GeneralLedger.journal_entry_id == JournalEntry.id
     ).where(
-        GeneralLedger.center_id == UUID(center_id),
-        or_(
-            GeneralLedger.source == "payroll",
-            ChartOfAccounts.code == "5000"
-        )
+        GeneralLedger.center_id == center_id,
+        GeneralLedger.source == "payroll",
+        ChartOfAccounts.code == "5000"
     )
 
+    # Filters
     if month:
         query = query.where(func.extract('month', GeneralLedger.transaction_date) == month)
     if year:
@@ -783,7 +760,7 @@ async def get_payroll_entries(
     if employee_id:
         query = query.where(GeneralLedger.source_id == employee_id)
 
-    # Total count for pagination
+    # Count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
@@ -791,41 +768,59 @@ async def get_payroll_entries(
     # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
+
     result = await db.execute(query)
     rows = result.all()
 
-    # Collect all payroll IDs to batch fetch PayrollRecords and Employees
+    # =========================
+    # ✅ FIX: NO selectinload (async safe)
+    # =========================
     payroll_ids = [str(row.GeneralLedger.source_id) for row in rows if row.GeneralLedger.source_id]
+
     payrolls = {}
-    employees = {}
+    employees_map = {}
 
     if payroll_ids:
+        # Fetch payroll records
         payroll_result = await db.execute(
-            select(PayrollRecord)
-            .options(selectinload(PayrollRecord.employee))
-            .where(PayrollRecord.id.in_(payroll_ids))
+            select(PayrollRecord).where(PayrollRecord.id.in_(payroll_ids))
         )
-        for pr in payroll_result.scalars().all():
-            payrolls[str(pr.id)] = pr
-            if pr.employee:
-                employees[str(pr.employee.id)] = pr.employee
+        payroll_list = payroll_result.scalars().all()
+        payrolls = {str(pr.id): pr for pr in payroll_list}
 
-    # Build entries while session is open!
+        # Fetch employees separately
+        employee_ids = [pr.employee_id for pr in payroll_list if pr.employee_id]
+
+        if employee_ids:
+            emp_result = await db.execute(
+                select(Employee).where(Employee.id.in_(employee_ids))
+            )
+            for emp in emp_result.scalars().all():
+                employees_map[str(emp.id)] = emp
+
+    # =========================
+    # Build response
+    # =========================
     entries = []
     for row in rows:
         payroll = payrolls.get(str(row.GeneralLedger.source_id))
+
         employee_name = "Unknown"
         status = "unknown"
-        gross_salary = float(row.GeneralLedger.debit) if row.GeneralLedger.debit else 0
+        gross_salary = float(row.GeneralLedger.debit or 0)
         deductions = 0
         net_salary = 0
+
         if payroll:
-            if payroll.employee:
-                employee_name = getattr(payroll.employee, "full_name", None) or getattr(payroll.employee, "name", None) or "Unknown"
+            employee = employees_map.get(str(payroll.employee_id))
+
+            if employee:
+                employee_name = getattr(employee, "full_name", None) or getattr(employee, "name", None) or "Unknown"
+
             status = payroll.status.value if hasattr(payroll.status, "value") else str(payroll.status)
-            gross_salary = float(payroll.gross_salary) if payroll.gross_salary else gross_salary
-            deductions = float(payroll.total_deductions) if payroll.total_deductions else 0
-            net_salary = float(payroll.net_salary) if payroll.net_salary else 0
+            gross_salary = float(payroll.gross_salary or gross_salary)
+            deductions = float(payroll.total_deductions or 0)
+            net_salary = float(payroll.net_salary or 0)
 
         entries.append({
             "id": str(row.GeneralLedger.id),

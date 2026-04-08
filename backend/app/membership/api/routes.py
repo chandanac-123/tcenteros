@@ -846,7 +846,7 @@ async def partial_update_member(
         )
         tax_category = tax_result.scalar_one_or_none()
         if tax_category:
-            applied_tax_rate = float(tax_category.tax_rate)
+            applied_tax_rate = float(tax_category.tax_percentage)
             tax_category_id = tax_category.id
             tax_amount = subtotal_amount * applied_tax_rate / 100.0
         total_amount = subtotal_amount + tax_amount
