@@ -654,7 +654,7 @@ async def get_expense_entries(
     # ✅ EXCLUDE NETWORK (5800) + PLATFORM FEE (5500)
     expense_account_filter = and_(
         ChartOfAccounts.account_type == AccountType.EXPENSE,
-        ChartOfAccounts.code.notin_(["5500", "5800"])   # 🔥 FIX
+        ChartOfAccounts.code.notin_(["5500", "5800"])
     )
 
     inventory_purchase_filter = and_(
@@ -694,17 +694,35 @@ async def get_expense_entries(
     result = await db.execute(query)
     rows = result.all()
 
+    # =========================
+    # ✅ ADD TAX + TOTAL
+    # =========================
+    from app.accounts.models.models import TaxLedger
+
     entries = []
     for row in rows:
         gl_entry, account_code, account_name, entry_number, je_description = row
+
+        # Fetch tax entry
+        tax_query = select(TaxLedger).where(
+            TaxLedger.journal_entry_id == gl_entry.journal_entry_id
+        )
+        tax_result = await db.execute(tax_query)
+        tax_entry = tax_result.scalar_one_or_none()
+
+        amount = float(gl_entry.debit or Decimal("0.00"))
+        tax_amount = float(tax_entry.tax_amount) if tax_entry else 0.0
+        total_amount = amount + tax_amount
+
         entries.append({
-            "transaction_date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
-            "account_code": account_code,
-            "account_name": account_name,
-            "description": gl_entry.description or je_description,
-            "amount": float(gl_entry.debit or Decimal("0.00")),
             "entry_number": entry_number,
-            "source": gl_entry.source
+            "expense_type": account_name,
+            "source": gl_entry.source,
+            "date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
+            "amount": amount,
+            "tax_amount": tax_amount,
+            "total_amount": total_amount,
+            "description": gl_entry.description or je_description
         })
 
     return {
@@ -713,7 +731,9 @@ async def get_expense_entries(
         "page_size": page_size,
         "entries": entries,
         "summary": {
-            "total_expenses": sum(e["amount"] for e in entries)
+            "total_expenses": sum(e["amount"] for e in entries),
+            "total_tax": sum(e["tax_amount"] for e in entries),
+            "total_with_tax": sum(e["total_amount"] for e in entries)
         }
     }
 
@@ -862,13 +882,8 @@ async def get_inventory_accounting(
     db: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    """
-    Get inventory accounting entries (purchases, sales, adjustments).
-    Shows: Date, Type, Account, Description, Debit, Credit
-    """
     center_id = current_admin["center_id"]
 
-    # Map transaction types to sources
     transaction_sources = {
         "purchase": TransactionSource.INVENTORY_PURCHASE.value,
         "sale": TransactionSource.INVENTORY_SALE.value,
@@ -894,47 +909,57 @@ async def get_inventory_accounting(
         )
     )
 
-    # Filter by transaction type
     if transaction_type and transaction_type in transaction_sources:
         query = query.where(
             GeneralLedger.source == transaction_sources[transaction_type]
         )
 
-    # Date filters
     if start_date:
         query = query.where(GeneralLedger.transaction_date >= start_date)
     if end_date:
         query = query.where(GeneralLedger.transaction_date <= end_date)
 
-    # Total count
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
-    # Pagination
     query = query.order_by(desc(GeneralLedger.transaction_date))
     query = query.offset((page - 1) * page_size).limit(page_size)
 
     result = await db.execute(query)
     rows = result.all()
 
+    # =========================
+    # ✅ ADD TAX + TOTAL
+    # =========================
+    from app.accounts.models.models import TaxLedger
+
     entries = []
     for row in rows:
         gl_entry, account_code, account_name, entry_number, je_description = row
+
+        # Fetch tax
+        tax_query = select(TaxLedger).where(
+            TaxLedger.journal_entry_id == gl_entry.journal_entry_id
+        )
+        tax_result = await db.execute(tax_query)
+        tax_entry = tax_result.scalar_one_or_none()
+
+        # Amount (either debit or credit)
+        amount = float(gl_entry.debit or gl_entry.credit or Decimal("0.00"))
+
+        tax_amount = float(tax_entry.tax_amount) if tax_entry else 0.0
+        total_amount = amount + tax_amount
+
         entries.append({
-            "transaction_date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
-            "account_code": account_code,
-            "account_name": account_name,
-            "description": gl_entry.description or je_description,
-            "debit": float(gl_entry.debit or Decimal("0.00")),
-            "credit": float(gl_entry.credit or Decimal("0.00")),
             "entry_number": entry_number,
             "source": gl_entry.source,
-            "source_id": gl_entry.source_id
+            "date": gl_entry.transaction_date.isoformat() if gl_entry.transaction_date else None,
+            "amount": amount,
+            "tax_amount": tax_amount,
+            "total_amount": total_amount,
+            "description": gl_entry.description or je_description
         })
-
-    total_inventory_debit = sum(e["debit"] for e in entries)
-    total_inventory_credit = sum(e["credit"] for e in entries)
 
     return {
         "total": total,
@@ -942,9 +967,9 @@ async def get_inventory_accounting(
         "page_size": page_size,
         "entries": entries,
         "summary": {
-            "total_debit": total_inventory_debit,
-            "total_credit": total_inventory_credit,
-            "total_amount": total_inventory_debit + total_inventory_credit
+            "total_amount": sum(e["amount"] for e in entries),
+            "total_tax": sum(e["tax_amount"] for e in entries),
+            "total_with_tax": sum(e["total_amount"] for e in entries)
         }
     }
 
