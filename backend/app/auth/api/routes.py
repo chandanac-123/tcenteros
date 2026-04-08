@@ -1105,27 +1105,19 @@ async def centeradmin_change_password(
     refresh_token = create_refresh_token({"sub": str(admin.id), "role": "centeradmin"})
 
     # =========================
-    # ✅ ADDITION: designation + permissions
+    # ✅ designation + permissions (NULL)
     # =========================
     designation = getattr(admin, "designation", None)
-
-    # Handle permissions safely
-    if hasattr(admin, "permissions") and admin.permissions:
-        permissions = admin.permissions
-    else:
-        # fallback default permissions (optional)
-        permissions = ["dashboard", "members", "billing", "reports"]
 
     return {
         "detail": "Password updated successfully",
         "center_id": str(admin.center_id) if admin.center_id else None,
         "designation": designation,
-        "permissions": permissions,
+        "permissions": None, 
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
-
 
 
 # @router.post("/centeradmin/change-password")
