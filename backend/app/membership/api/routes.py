@@ -768,6 +768,8 @@ async def partial_update_member(
     from app.membership.models.models import MemberMembership, Membership, MembershipActionTypeEnum
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
+    from app.billing.models.models import PaymentOrder, PaymentOrderStatus, PaymentMethod
+    from app.core.security import get_password_hash
 
     member = await db.get(Member, member_id)
     if not member:
@@ -776,7 +778,16 @@ async def partial_update_member(
     update_fields = payload.dict(exclude_unset=True)
     address_fields = ["address_line_1", "address_line_2", "city", "state", "country", "postal_code"]
 
-    # Update or create address if address fields are present
+    # =========================
+    # ✅ PASSWORD UPDATE (NEW)
+    # =========================
+    if "password" in update_fields and update_fields["password"]:
+        member.password_hash = get_password_hash(update_fields["password"])
+        update_fields.pop("password")
+
+    # =========================
+    # ADDRESS UPDATE (UNCHANGED)
+    # =========================
     if any(field in update_fields for field in address_fields):
         from app.settings.models.models import Address
         if member.address_id:
@@ -806,23 +817,55 @@ async def partial_update_member(
             await db.flush()
             member.address_id = address_obj.id
 
-    # Update member fields
+    # =========================
+    # MEMBER UPDATE (UNCHANGED)
+    # =========================
     for field, value in update_fields.items():
         if hasattr(member, field) and field not in address_fields:
             setattr(member, field, value)
+
     member.updated_at = datetime.utcnow()
     member.updated_by = current_user["user_id"]
 
-    # If membership_id is present, create a new MemberMembership record (plan change)
+    # =========================
+    # ✅ PAYMENT UPDATE (NEW)
+    # =========================
+    if "payment_status" in update_fields or "payment_method" in update_fields:
+        payment_result = await db.execute(
+            select(PaymentOrder)
+            .where(PaymentOrder.payer_user_id == member.id)
+            .order_by(PaymentOrder.created_at.desc())
+        )
+        payment_order = payment_result.scalars().first()
+
+        if payment_order:
+            if "payment_status" in update_fields:
+                try:
+                    payment_order.status = PaymentOrderStatus(update_fields["payment_status"])
+                except Exception:
+                    raise HTTPException(status_code=400, detail="Invalid payment_status")
+
+            if "payment_method" in update_fields:
+                try:
+                    payment_order.payment_method = PaymentMethod(update_fields["payment_method"])
+                except Exception:
+                    raise HTTPException(status_code=400, detail="Invalid payment_method")
+
+            payment_order.updated_at = datetime.utcnow()
+            payment_order.updated_by = current_user["user_id"]
+
+    # =========================
+    # MEMBERSHIP CHANGE (UNCHANGED)
+    # =========================
     if "membership_id" in update_fields and update_fields["membership_id"]:
         membership = await db.get(Membership, update_fields["membership_id"])
         if not membership:
             raise HTTPException(status_code=404, detail="Membership plan not found")
 
-        # Calculate start and end date for new membership
         now = datetime.utcnow()
         duration_unit = membership.duration_unit.value if hasattr(membership.duration_unit, "value") else membership.duration_unit
         duration_count = membership.duration_count
+
         if duration_unit == "day":
             end_date = now + relativedelta(days=duration_count)
         elif duration_unit == "month":
@@ -830,13 +873,13 @@ async def partial_update_member(
         elif duration_unit == "year":
             end_date = now + relativedelta(years=duration_count)
         else:
-            raise HTTPException(status_code=400, detail="Invalid duration unit in membership plan")
+            raise HTTPException(status_code=400, detail="Invalid duration unit")
 
-        # Tax calculation (optional, can be expanded as needed)
         subtotal_amount = float(membership.default_price)
         tax_amount = 0.0
         applied_tax_rate = 0.0
         tax_category_id = None
+
         from app.settings.models.models import TaxCategory, TaxScope
         tax_result = await db.execute(
             select(TaxCategory).where(
@@ -845,10 +888,12 @@ async def partial_update_member(
             ).limit(1)
         )
         tax_category = tax_result.scalar_one_or_none()
+
         if tax_category:
             applied_tax_rate = float(tax_category.tax_percentage)
             tax_category_id = tax_category.id
             tax_amount = subtotal_amount * applied_tax_rate / 100.0
+
         total_amount = subtotal_amount + tax_amount
 
         member_membership = MemberMembership(
@@ -866,29 +911,29 @@ async def partial_update_member(
             updated_by=current_user["user_id"],
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            action_type=MembershipActionTypeEnum.plan_change  # <-- Set action_type
+            action_type=MembershipActionTypeEnum.plan_change
         )
         db.add(member_membership)
 
     await db.commit()
     await db.refresh(member)
 
-    # Fetch updated address for response
+    # =========================
+    # RESPONSE (UNCHANGED)
+    # =========================
     address_obj = None
     if member.address_id:
         from app.settings.models.models import Address
         address_obj = await db.get(Address, member.address_id)
 
-    # Fetch latest MemberMembership for response
     result = await db.execute(
         select(MemberMembership)
         .where(MemberMembership.member_id == member.id)
         .order_by(MemberMembership.start_date.desc())
     )
     member_memberships = result.scalars().all()
-    membership_id = None
-    if member_memberships:
-        membership_id = str(member_memberships[0].membership_id)
+
+    membership_id = str(member_memberships[0].membership_id) if member_memberships else None
 
     return {
         "id": str(member.id),

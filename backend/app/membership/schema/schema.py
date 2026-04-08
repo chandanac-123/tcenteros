@@ -86,6 +86,9 @@ class MemberUpdate(BaseModel):
     time_slot_id: Optional[str] = None
     member_status: Optional[str] = None  # member, guest, visitor, etc.
     status: Optional[str] = None    
+    payment_status : Optional[str] = None  
+    payment_method : Optional[str] = None  
+    password : Optional[str] = None  
 
 
 #time slot change request schema
