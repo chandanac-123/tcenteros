@@ -148,7 +148,7 @@ async def get_consolidated_income(
             Center.center_name,
             MemberMembership.total_amount.label("amount"),
             MemberMembership.created_at.label("date"),
-            literal("membership").label("type")   # ✅ FIXED
+            literal("membership").label("type")
         ).join(
             Center, Center.id == MemberMembership.center_id
         ).where(
@@ -205,9 +205,9 @@ async def get_consolidated_income(
         for p in payment_data:
             order_type = p.order_type.value
 
-            if order_type == "network_in":
-                category = "networking_in"
-            elif order_type == "inventory_sale":
+            # ❌ REMOVED network_in
+
+            if order_type == "inventory_sale":
                 category = "inventory_sale"
             elif order_type == "other_charges":
                 category = "other_income"
@@ -242,7 +242,6 @@ async def get_consolidated_income(
         scenario_summary = {
             "membership": 0,
             "inventory_sale": 0,
-            "networking_in": 0,
             "other_income": 0
         }
 
@@ -279,7 +278,7 @@ from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-@router.get("/consolidated-expenses")
+@router.get("/consolidated-expense")
 async def get_consolidated_expense(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -302,17 +301,15 @@ async def get_consolidated_expense(
 
         offset = (page - 1) * page_size
 
-        combined = []
-
         # ==============================
-        # 1️⃣ PAYMENT ORDERS (EXPENSE)
+        # PAYMENT ORDER QUERY
         # ==============================
-        query = select(
+        payment_query = select(
             PaymentOrder.center_id,
             Center.center_name,
-            PaymentOrder.total_amount,
-            PaymentOrder.order_type,
-            PaymentOrder.created_at
+            PaymentOrder.total_amount.label("amount"),
+            PaymentOrder.created_at.label("date"),
+            PaymentOrder.order_type
         ).join(
             Center, Center.id == PaymentOrder.center_id
         ).where(
@@ -320,21 +317,51 @@ async def get_consolidated_expense(
         )
 
         if start_date:
-            query = query.where(PaymentOrder.created_at >= start_date)
+            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
         if end_date:
-            query = query.where(PaymentOrder.created_at <= end_date)
+            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
 
-        result = await db.execute(query)
-        payments = result.all()
+        payment_result = await db.execute(payment_query)
+        payments = payment_result.all()
 
+        # ==============================
+        # MISC TRANSACTIONS QUERY
+        # ==============================
+        misc_query = select(
+            MiscellaneousTransaction.center_id,
+            Center.center_name,
+            MiscellaneousTransaction.amount,
+            MiscellaneousTransaction.created_at.label("date"),
+            MiscellaneousTransaction.category
+        ).join(
+            Center, Center.id == MiscellaneousTransaction.center_id
+        ).where(
+            MiscellaneousTransaction.center_id.in_(center_ids)
+        )
+
+        if start_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
+        if end_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+
+        misc_result = await db.execute(misc_query)
+        misc_data = misc_result.all()
+
+        # ==============================
+        # MERGE DATA
+        # ==============================
+        combined = []
+
+        # Payment Orders
         for p in payments:
-            amount = float(p.total_amount or 0)
+            amount = float(p.amount or 0)
             order_type = p.order_type.value
 
             if order_type == "branch_purchase":
                 category = "branch_purchase"
-            elif order_type == "network_out":
-                category = "networking_out"
+
+            # ❌ REMOVED network_out
+
             else:
                 continue
 
@@ -343,77 +370,52 @@ async def get_consolidated_expense(
                 "amount": amount,
                 "center_id": str(p.center_id),
                 "center_name": p.center_name,
-                "date": p.created_at
+                "date": p.date
             })
 
-        # ==============================
-        # 2️⃣ MISC TRANSACTIONS (EXPENSE)
-        # ==============================
-        query = select(
-            MiscellaneousTransaction.center_id,
-            Center.center_name,
-            MiscellaneousTransaction.total_amount,
-            MiscellaneousTransaction.category,
-            MiscellaneousTransaction.transaction_date
-        ).join(
-            Center, Center.id == MiscellaneousTransaction.center_id
-        ).where(
-            MiscellaneousTransaction.center_id.in_(center_ids),
-            MiscellaneousTransaction.transaction_type == "expense"
-        )
-
-        if start_date:
-            query = query.where(MiscellaneousTransaction.transaction_date >= start_date)
-        if end_date:
-            query = query.where(MiscellaneousTransaction.transaction_date <= end_date)
-
-        result = await db.execute(query)
-        misc_data = result.all()
-
+        # Misc Transactions
         for m in misc_data:
-            amount = float(m.total_amount or 0)
+            amount = float(m.amount or 0)
             category = m.category
 
-            if category not in [
-                "inventory_purchase",
-                "salary_payroll",
-                "other_expense"
-            ]:
+            if category == "inventory_purchase":
+                type_ = "inventory_purchase"
+            elif category == "salary_payroll":
+                type_ = "salary"
+            elif category == "other_expense":
+                type_ = "other_expense"
+            else:
                 continue
 
             combined.append({
-                "type": category,
+                "type": type_,
                 "amount": amount,
                 "center_id": str(m.center_id),
                 "center_name": m.center_name,
-                "date": m.transaction_date
+                "date": m.date
             })
 
         # ==============================
-        # 🔹 SORT (latest first)
+        # SORT
         # ==============================
         combined.sort(key=lambda x: x["date"], reverse=True)
 
-        # ==============================
-        # 🔹 TOTAL COUNT
-        # ==============================
         total_count = len(combined)
 
         # ==============================
-        # 🔹 PAGINATION
+        # PAGINATION
         # ==============================
         paginated_data = combined[offset: offset + page_size]
 
         # ==============================
-        # 🔹 SUMMARY
+        # SUMMARY
         # ==============================
         total_expense = sum(item["amount"] for item in combined)
 
         scenario_summary = {
             "branch_purchase": 0,
-            "networking_out": 0,
             "inventory_purchase": 0,
-            "salary_payroll": 0,
+            "salary": 0,
             "other_expense": 0
         }
 
@@ -444,7 +446,7 @@ from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-@router.get("/consolidated-settlements")
+@router.get("/consolidated-settlement")
 async def get_consolidated_settlement(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -452,12 +454,12 @@ async def get_consolidated_settlement(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1),
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(centeradmin_required)
+    current_user=Depends(centeradmin_required)
 ):
     try:
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
-        
+
         center_id = current_user.get("center_id")
 
         if not center_id:
@@ -467,37 +469,61 @@ async def get_consolidated_settlement(
 
         offset = (page - 1) * page_size
 
-        total_incoming = 0
-        total_outgoing = 0
-
-        scenario_summary = {}
-        combined = []
-
         # ==============================
         # PAYMENT ORDERS
         # ==============================
-        query = select(
+        payment_query = select(
             PaymentOrder.center_id,
-            PaymentOrder.total_amount,
-            PaymentOrder.order_type,
-            PaymentOrder.created_at
+            PaymentOrder.total_amount.label("amount"),
+            PaymentOrder.created_at.label("date"),
+            PaymentOrder.order_type
         ).where(
             PaymentOrder.center_id.in_(center_ids)
         )
 
         if start_date:
-            query = query.where(PaymentOrder.created_at >= start_date)
+            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
         if end_date:
-            query = query.where(PaymentOrder.created_at <= end_date)
+            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
 
-        result = await db.execute(query)
-        payments = result.all()
+        payment_result = await db.execute(payment_query)
+        payments = payment_result.all()
 
+        # ==============================
+        # MISC TRANSACTIONS
+        # ==============================
+        misc_query = select(
+            MiscellaneousTransaction.center_id,
+            MiscellaneousTransaction.amount,
+            MiscellaneousTransaction.created_at.label("date"),
+            MiscellaneousTransaction.category
+        ).where(
+            MiscellaneousTransaction.center_id.in_(center_ids)
+        )
+
+        if start_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
+        if end_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+
+        misc_result = await db.execute(misc_query)
+        misc_data = misc_result.all()
+
+        # ==============================
+        # PROCESS DATA
+        # ==============================
+        combined = []
+        total_incoming = 0
+        total_outgoing = 0
+
+        scenario_summary = {}
+
+        # ---------------- PAYMENT ORDERS ----------------
         for p in payments:
-            amount = float(p.total_amount or 0)
+            amount = float(p.amount or 0)
             order_type = p.order_type.value
 
-            # ---------------- BRANCH PURCHASE ----------------
+            # 🔴 BRANCH PURCHASE
             if order_type == "branch_purchase":
                 total_outgoing += amount
 
@@ -505,14 +531,14 @@ async def get_consolidated_settlement(
                 scenario_summary["branch_purchase"]["outgoing"] += amount
 
                 combined.append({
-                    "scenario": "branch_purchase",
+                    "scenario": "Purchase branch from platform",
                     "type": "outgoing",
                     "amount": amount,
                     "center_id": str(p.center_id),
-                    "date": p.created_at
+                    "date": p.date
                 })
 
-            # ---------------- NETWORK IN ----------------
+            # 🟡 NETWORK IN
             elif order_type == "network_in":
                 total_incoming += amount
 
@@ -520,28 +546,27 @@ async def get_consolidated_settlement(
                 scenario_summary["networking_in"]["incoming"] += amount
 
                 combined.append({
-                    "scenario": "networking_in",
+                    "scenario": "Networking In (Receive from home center)",
                     "type": "incoming",
                     "amount": amount,
                     "center_id": str(p.center_id),
-                    "date": p.created_at
+                    "date": p.date
                 })
 
-                # platform share (example)
+                # 🔴 PLATFORM SHARE (10%)
                 platform_share = amount * 0.1
-
                 total_outgoing += platform_share
                 scenario_summary["networking_in"]["outgoing"] += platform_share
 
                 combined.append({
-                    "scenario": "networking_in_platform_share",
+                    "scenario": "Networking In - Platform Share",
                     "type": "outgoing",
                     "amount": platform_share,
                     "center_id": str(p.center_id),
-                    "date": p.created_at
+                    "date": p.date
                 })
 
-            # ---------------- NETWORK OUT ----------------
+            # 🔴 NETWORK OUT
             elif order_type == "network_out":
                 total_outgoing += amount
 
@@ -549,14 +574,14 @@ async def get_consolidated_settlement(
                 scenario_summary["networking_out"]["outgoing"] += amount
 
                 combined.append({
-                    "scenario": "networking_out",
+                    "scenario": "Networking Out (Pay networking center)",
                     "type": "outgoing",
                     "amount": amount,
                     "center_id": str(p.center_id),
-                    "date": p.created_at
+                    "date": p.date
                 })
 
-            # ---------------- OTHER EXPENSE ----------------
+            # 🔴 OTHER CHARGES
             elif order_type == "other_charges":
                 total_outgoing += amount
 
@@ -564,34 +589,57 @@ async def get_consolidated_settlement(
                 scenario_summary["other_charges"]["outgoing"] += amount
 
                 combined.append({
-                    "scenario": "other_charges",
+                    "scenario": "Other Charges (Pay vendors/services)",
                     "type": "outgoing",
                     "amount": amount,
                     "center_id": str(p.center_id),
-                    "date": p.created_at
+                    "date": p.date
+                })
+
+        # ---------------- MISC TRANSACTIONS ----------------
+        for m in misc_data:
+            amount = float(m.amount or 0)
+
+            if m.category == "inventory_purchase":
+                total_outgoing += amount
+
+                scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
+                scenario_summary["inventory_purchase"]["outgoing"] += amount
+
+                combined.append({
+                    "scenario": "Inventory Purchase (Pay supplier)",
+                    "type": "outgoing",
+                    "amount": amount,
+                    "center_id": str(m.center_id),
+                    "date": m.date
+                })
+
+            elif m.category == "salary_payroll":
+                total_outgoing += amount
+
+                scenario_summary.setdefault("salary_payroll", {"incoming": 0, "outgoing": 0})
+                scenario_summary["salary_payroll"]["outgoing"] += amount
+
+                combined.append({
+                    "scenario": "Salary Payroll (Pay employees)",
+                    "type": "outgoing",
+                    "amount": amount,
+                    "center_id": str(m.center_id),
+                    "date": m.date
                 })
 
         # ==============================
-        # SORT
+        # SORT + PAGINATION
         # ==============================
         combined.sort(key=lambda x: x["date"], reverse=True)
 
-        # ==============================
-        # TOTAL COUNT
-        # ==============================
         total_count = len(combined)
-
-        # ==============================
-        # PAGINATION
-        # ==============================
         paginated_data = combined[offset: offset + page_size]
 
         return {
-            "summary": {
-                "total_incoming": total_incoming,
-                "total_outgoing": total_outgoing,
-                "net_settlement": total_incoming - total_outgoing
-            },
+            "total_incoming": total_incoming,
+            "total_outgoing": total_outgoing,
+            "net_settlement": total_incoming - total_outgoing,
             "total_count": total_count,
             "page": page,
             "page_size": page_size,
