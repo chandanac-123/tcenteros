@@ -1104,13 +1104,68 @@ async def centeradmin_change_password(
     access_token = create_access_token({"sub": str(admin.id), "role": "centeradmin"})
     refresh_token = create_refresh_token({"sub": str(admin.id), "role": "centeradmin"})
 
+    # =========================
+    # ✅ ADDITION: designation + permissions
+    # =========================
+    designation = getattr(admin, "designation", None)
+
+    # Handle permissions safely
+    if hasattr(admin, "permissions") and admin.permissions:
+        permissions = admin.permissions
+    else:
+        # fallback default permissions (optional)
+        permissions = ["dashboard", "members", "billing", "reports"]
+
     return {
         "detail": "Password updated successfully",
         "center_id": str(admin.center_id) if admin.center_id else None,
+        "designation": designation,
+        "permissions": permissions,
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
+
+
+
+# @router.post("/centeradmin/change-password")
+# async def centeradmin_change_password(
+#     payload: CenterAdminChangePasswordIn,
+#     session: AsyncSession = Depends(get_async_session)
+# ):
+#     from app.auth.models.models import CenterAdmin
+#     from app.core.security import get_password_hash, create_access_token, create_refresh_token
+
+#     if payload.password != payload.confirm_password:
+#         raise HTTPException(status_code=400, detail="Passwords do not match")
+
+#     result = await session.execute(
+#         select(CenterAdmin).where(CenterAdmin.email == payload.email)
+#     )
+#     admin = result.scalar_one_or_none()
+#     if not admin:
+#         raise HTTPException(status_code=404, detail="Center admin not found")
+
+#     admin.password_hash = get_password_hash(payload.password)
+#     admin.updated_at = datetime.utcnow()
+#     await session.commit()
+
+#     # Generate new tokens
+#     access_token = create_access_token({"sub": str(admin.id), "role": "centeradmin"})
+#     refresh_token = create_refresh_token({"sub": str(admin.id), "role": "centeradmin"})
+
+#     return {
+#         "detail": "Password updated successfully",
+#         "center_id": str(admin.center_id) if admin.center_id else None,
+#         "access_token": access_token,
+#         "refresh_token": refresh_token,
+#         "token_type": "bearer"
+#     }
+
+
+
+
+
 
 
 #--------------------------------

@@ -278,7 +278,7 @@ from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-@router.get("/consolidated-expense")
+@router.get("/consolidated-expenses")
 async def get_consolidated_expense(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -446,7 +446,7 @@ from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-@router.get("/consolidated-settlement")
+@router.get("/consolidated-settlements")
 async def get_consolidated_settlement(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
