@@ -12,13 +12,13 @@ const StatusDisplayCard = ({ data }) => {
       image: revenueicon
     }, 
     {
-      title: 'Network Earnings',
-      value: data?.network_earnings,
+      title: 'Network Incoming',
+      value: data?.network_incoming,
       image: networkicon
     },
     {
-      title: 'Network Expense',
-      value: data?.network_expense,
+      title: 'Network Outgoing',
+      value: data?.network_outgoing,
       image: payment
     },
     {
