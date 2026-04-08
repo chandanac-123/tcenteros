@@ -33,8 +33,8 @@ const Sales = () => {
     { accessorKey: 'type', header: 'Type' },
     { accessorKey: 'date', header: ' Date' },
     { accessorKey: 'total_amount', header: 'Amount' },
-    { accessorKey: '', header: 'Tax Amount' },
-    { accessorKey: '', header: 'Total Amount' },
+    { accessorKey: 'tax_amount', header: 'Tax Amount' },
+    { accessorKey: 'total_amount', header: 'Total Amount' },
     { accessorKey: 'payment_method', header: 'Payment Method' },
     { accessorKey: 'payment_status', header: 'Status' },
     {

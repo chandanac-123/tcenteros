@@ -11,7 +11,7 @@ const Settlement = () => {
   const columns = [
     { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'source', header: 'Source' },
-    { accessorKey: 'date', header: 'Date' },
+    { accessorKey: 'entry_date', header: 'Date' },
     { accessorKey: 'total_credit', header: 'Total Credit' },
     { accessorKey: 'total_debit', header: 'Total Debit' },
     { accessorKey: 'description', header: 'Description' }

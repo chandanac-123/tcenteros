@@ -15,10 +15,8 @@ import {
 import { useFormik } from 'formik'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'
-import { useCrmStore, useSettingsTabStore } from '@store/tabStore'
-import { useNavigate } from 'react-router-dom'
+import { useCrmStore } from '@store/tabStore'
 import { memberValidationSchema } from '@utils/validations'
-import { Spinner } from '@pages/components/ui/spinner'
 import CitySelect from '@common/components/CitySelect'
 import StateSelect from '@common/components/StateSelect'
 import CountrySelect from '@common/components/CountrySelect'
@@ -45,13 +43,11 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const [planOpen, setPlanOpen] = useState(false)
   const [timeslotOpen, setTimeslotOpen] = useState(false)
   const { selectedVisitorId, selectedGuestId, clearSelectedIds } = useCrmStore()
-  const { setSelectedTab } = useSettingsTabStore()
   const { data: visitorData, isFetching: isVisitorFetching } =
     useVisitorById(selectedVisitorId)
   const { data: guestData, isFetching: isGuestFetching } =
     useGuestById(selectedGuestId)
   const state = useAuthStore()
-  const navigate = useNavigate()
   const { mutateAsync: createMember } = useCreateMemberMutation()
   const { mutateAsync: updateMember } = useUpdateMemberMutation()
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
@@ -107,12 +103,25 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     validationSchema: memberValidationSchema(isEdit),
     onSubmit: async values => {
       try {
-        const payload = { ...values }
+        let payload = { ...values }
+
+        const isVisitorOrGuest = selectedVisitorId || selectedGuestId
+        if (isVisitorOrGuest && !isEdit) {
+          payload = {
+            membership_id: values.membership_id,
+            time_slot_id: values.time_slot_id,
+            member_status: 'member',
+            payment_method: values.payment_method || 'cash',
+            payment_status: values.payment_status || 'unpaid',
+            password: values.password || ''
+          }
+        }
+
         if (payload.date_of_birth) {
           const [day, month, year] = payload.date_of_birth.split('-')
           payload.date_of_birth = `${year}-${month}-${day}`
         }
-        if (isEdit) {
+        if (isEdit && sourceData?.payment_status != null) {
           // Don't send membership_id during edit
           delete payload.membership_id
           delete payload.payment_method
@@ -155,7 +164,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   // console.log('formi: ', formik.values)
   const isBlocked = memberPlan?.length === 0 || memberTimeSlot?.length === 0
   return (
-    <div className='flex flex-col gap-2 pb-6'>
+    <div className='flex flex-col gap-8'>
       <CustomeBreadcrumb
         goBack={goBack}
         buttonName='Members Listing'
