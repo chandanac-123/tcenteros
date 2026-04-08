@@ -4,7 +4,7 @@ import {
   deleteCenterTimeApiCall,
   getCenterTimeApiCall,
   updateCenterTimeApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllCenterTime = async () => {
   try {

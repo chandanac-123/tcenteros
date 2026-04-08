@@ -2,7 +2,6 @@ import ContentLayout from '@common/MasterLayout/ContentLayout'
 import CustomeTab from '@common/components/CustomeTab'
 import { Button } from '@pages/components/ui/button'
 import { useState } from 'react'
-import DeleteModal from '@common/components/CustomeDelete'
 import CreateMembershipForm from './CreateForm'
 import PlanCard from './PlanCard'
 import { CarouselSize } from '@common/components/CustomeCarousel'
@@ -16,7 +15,6 @@ const MembershipPlan = () => {
   const queryParams = new URLSearchParams(location.search)
   const initialTab = queryParams.get('tab') || 'all'
   const [activeTab, setActiveTab] = useState(initialTab)
-  const [deleteOpen, setDeleteOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
 
@@ -76,12 +74,6 @@ const MembershipPlan = () => {
       )}
 
       <CreateMembershipForm open={open} setOpen={setOpen} />
-      <DeleteModal
-        open={deleteOpen}
-        setOpen={setDeleteOpen}
-        header='Are you sure you want to delete this plan?'
-        description='This plan will be removed from your active offerings and new members wont be able to purchase it. This action cannot be undone.'
-      />
     </ContentLayout>
   )
 }

@@ -4,7 +4,7 @@ import {
   updateTaxApiCall,
   deleteTaxApiCall,
   getTaxByIdApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllTax = async () => {
   try {

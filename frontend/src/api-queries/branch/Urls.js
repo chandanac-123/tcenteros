@@ -5,7 +5,7 @@ import {
   getBranchPricesAndTaxApiCall,
   getPurchasedBranchesApiCall,
   getBranchCountApiCall
-} from '../../api/index'
+} from './index'
 
 export const createBranchCount = async data => {
   try {

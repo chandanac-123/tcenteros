@@ -107,7 +107,7 @@ const ContactDetails = () => {
                   label='Center Name'
                   name='center_name'
                   placeholder='Center Name'
-                  icon={<img src={people_icon} className='w-6 h-6 mr-2' />}
+                  icon={<img src={people_icon} alt='' className='w-6 h-6 mr-2' />}
                   value={formik.values.center_name}
                   onChange={formik.handleChange}
                   error={

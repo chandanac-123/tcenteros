@@ -30,7 +30,7 @@ const Products = () => {
     },
     {
       accessorKey: 'sku_code',
-      header: 'SKU'
+      header: 'SKU Code'
     },
     {
       accessorKey: 'stock',
@@ -43,24 +43,6 @@ const Products = () => {
     {
       accessorKey: 'reorder_level',
       header: 'Reorder Level'
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.getValue('status')?.toLowerCase()
-        const styles = {
-          active: 'bg-[#DEF4E6] text-[#34C759]',
-          in_active: 'bg-[#FFE6E7] text-[#A30F0F]'
-        }
-        return (
-          <span
-            className={`inline-flex justify-center items-center min-w-[90px] px-3 py-1 rounded-[15px] text-[12px] font-poppins font-medium capitalize ${styles[status]}`}
-          >
-            {row.getValue('status')}
-          </span>
-        )
-      }
     },
     {
       header: 'Actions',

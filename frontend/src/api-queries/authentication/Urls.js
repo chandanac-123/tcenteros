@@ -4,7 +4,7 @@ import {
   requestOTPforgotPasswordApiCall,
   resetPasswordApiCall,
   verifyOTPforgotPasswordApiCall
-} from "../../api/index";
+} from "./index";
 
 export const login = async (details) => {
   try {

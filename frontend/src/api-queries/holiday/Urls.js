@@ -2,7 +2,7 @@ import {
   deleteHolidayApiCall,
   createHolidayApiCall,
   getHolidayApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllHoliday = async () => {
   try {

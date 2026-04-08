@@ -4,7 +4,7 @@ import {
   updateSalaryApiCall,
   getSalaryByIdApiCall,
   deleteSalaryApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllSalaries = async (data) => {
   try {

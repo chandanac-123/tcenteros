@@ -15,7 +15,13 @@ import {
 } from '@api-queries/employee-management/Query'
 import useTableSelection from '@common/components/UseTableSelection'
 
-const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
+const EmployeeTable = ({
+  data,
+  tableParams,
+  setTableParams,
+  pagination,
+  loading
+}) => {
   const { selectedIds, selectionColumn, setSelectedIds } =
     useTableSelection(data)
 
@@ -147,6 +153,7 @@ const EmployeeTable = ({ data, tableParams, setTableParams, pagination }) => {
       <DataTable
         columns={columns}
         data={data}
+        loading={loading}
         setTableParams={setTableParams}
         tableParams={tableParams}
         pagination={pagination}

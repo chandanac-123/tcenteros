@@ -22,24 +22,24 @@ const NetworkTables = ({
 
   const renderActions = data => {
     switch (activeTab) {
-      case 'Network':
+      case 'network':
         return (
           <span className='flex gap-3'>
             <button
               onClick={() =>
-                navigate(`/centerview/${data.network_membership_id}`)
+                navigate(`/network/${data.network_membership_id}`)
               }
             >
               <img src={view} alt='view' />
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 setSelectedRow(data)
                 setDeleteOpen(true)
               }}
             >
               <img src={deleteicon} alt='delete' />
-            </button>
+            </button> */}
           </span>
         )
       case 'pending_settlement':
@@ -60,25 +60,18 @@ const NetworkTables = ({
           </span>
         )
 
-      case 'Requests':
+      case 'requests':
         if (data.network_status?.toLowerCase() === 'pending') {
           return (
             <span className='flex items-center gap-2 w-full'>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
                 <img src={view} alt='view' />
               </button>
-
-              {/* <Button
-                size='addbutton'
-                variant='outline_secondary'
-                type='button'
-              > Deny</Button> */}
-
               <Button
                 onClick={() => {
                   setSelectedRow(data)
@@ -100,7 +93,7 @@ const NetworkTables = ({
             <span className='flex items-center gap-2 '>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
@@ -120,7 +113,7 @@ const NetworkTables = ({
             <span className='flex items-center gap-2 '>
               <button
                 onClick={() =>
-                  navigate(`/centerview/${data.network_membership_id}`)
+                  navigate(`/network/${data.network_membership_id}`)
                 }
                 className=''
               >
@@ -142,19 +135,19 @@ const NetworkTables = ({
           <span className='flex gap-3'>
             <button
               onClick={() =>
-                navigate(`/centerview/${data.network_membership_id}`)
+                navigate(`/network/${data.network_membership_id}`)
               }
             >
               <img src={view} alt='view' />
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 setSelectedRow(data)
                 setDeleteOpen(true)
               }}
             >
               <img src={deleteicon} alt='delete' />
-            </button>
+            </button> */}
           </span>
         )
     }

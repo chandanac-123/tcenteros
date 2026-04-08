@@ -57,7 +57,7 @@ const PlanCard = ({ data, colors }) => {
             ₹{data?.default_price} /
           </span>
           <span className='text-base font-semibold text-textblack'>
-            {data?.duration_unit}
+            {data?.duration_count} {data?.duration_unit}
           </span>
         </div>
 
@@ -122,8 +122,8 @@ const PlanCard = ({ data, colors }) => {
         setOpen={setDeleteOpen}
         onConfirm={handleDelete}
         loading={isPending}
-        header='Are you sure you want to delete this plan?'
-        description='This action cannot be undone.'
+        header='Plan Deletion'
+       description='This plan will be removed from your active offerings and new members won`t be able to purchase it. This action cannot be undone.'
       />
     </div>
   )

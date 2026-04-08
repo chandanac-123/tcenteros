@@ -6,6 +6,7 @@ import {
   useTimeSlotQuery
 } from '@api-queries/notifictaions/Query'
 import TimeslotChange from './TimeslotChange'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const statusVariantMap = {
   approved: 'active',
@@ -17,24 +18,25 @@ const statusVariantMap = {
 const CenterNotifications = () => {
   const [isTimeslotModalOpen, setIsTimeslotModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
-  console.log('selectedId: ', selectedId)
-
   const { data: timeSlotData, isLoading } = useTimeSlotQuery()
   const { mutateAsync: approveTimeSlot } = useApproveTimeSlotMutation()
 
   const handleApprove = async () => {
     try {
-      await approveTimeSlot({id:selectedId})
+      await approveTimeSlot({ id: selectedId })
       setIsTimeslotModalOpen(false)
     } catch (error) {
       console.error('Approve failed', error)
     }
   }
 
-  if (isLoading) return <p>Loading...</p>
-
   return (
     <div className='flex flex-col gap-3'>
+      {isLoading && (
+        <div className='flex justify-center'>
+          <Spinner />
+        </div>
+      )}
       {timeSlotData?.requests?.map(item => {
         const status = item?.status || 'pending'
 
@@ -66,17 +68,19 @@ const CenterNotifications = () => {
                 <span className='text-xs text-textgrey'>{subDescription}</span>
 
                 <div className='flex gap-2'>
-                 {item?.status=='pending' &&<Button
-                    size='notificationbutton'
-                    variant='outline_primary'
-                    className='text-xs'
-                    onClick={() => {
-                      setSelectedId(item.id)
-                      setIsTimeslotModalOpen(true)
-                    }}
-                  >
-                    Change time slot
-                  </Button>}
+                  {item?.status == 'pending' && (
+                    <Button
+                      size='notificationbutton'
+                      variant='outline_primary'
+                      className='text-xs'
+                      onClick={() => {
+                        setSelectedId(item.id)
+                        setIsTimeslotModalOpen(true)
+                      }}
+                    >
+                      Change time slot
+                    </Button>
+                  )}
 
                   <Badge variant={statusVariantMap[status]} label={status} />
                 </div>

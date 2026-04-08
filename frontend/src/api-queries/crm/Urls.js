@@ -13,7 +13,7 @@ import {
   getVisitorByIdApiCall,
   getGuestByIdApiCall,
   getActiveMemberPlanApiCall
-} from '../../api'
+} from './index'
 
 export const getAllMember = async data => {
   try {

@@ -26,27 +26,16 @@ export const useOnboardingStore = create(
 
       //  OTHER ONBOARDING STATE
 
-      // attendanceType: null,
-      // setAttendanceType: type => set({ attendanceType: type }),
+      attendanceType: null,
+      setAttendanceType: type => set({ attendanceType: type }),
 
-      // sellableItem: 'merchandise',
-      // setSellableItem: type => set({ sellableItem: type }),
-
-      // slotControl: null,
-      // setSlotControl: value => set({ slotControl: value }),
-
-      // payment_Billing: null,
-      // setPaymentBilling: value => set({ payment_Billing: value }),
-
-      // reportAndInsight: 'basic-report',
-      // setReportAndInsight: value => set({ reportAndInsight: value }),
-
-      // trainerAndStaff: null,
-      // setTrainerAndStaff: value => set({ trainerAndStaff: value }),
+      sellableItem: 'merchandise',
+      setSellableItem: type => set({ sellableItem: type }),
 
       typeSelectionId: '',
       typeSelectionName: '',
-      setTypeSelection: (id, name) => set({ typeSelectionId: id, typeSelectionName: name }),
+      setTypeSelection: (id, name) =>
+        set({ typeSelectionId: id, typeSelectionName: name }),
 
       classMode: 'in-person',
       setClassMode: value => set({ classMode: value }),
@@ -61,7 +50,23 @@ export const useOnboardingStore = create(
       setDigitalToolsSelected: value => set({ digitalToolsSelected: value }),
 
       marketingSupportType: [],
-      setMarketingSupportType: value => set({ marketingSupportType: value })
+      setMarketingSupportType: value => set({ marketingSupportType: value }),
+
+      resetStore: () =>
+        set({
+          featureIdMap: {},
+          centerTools: {},
+          onboardId: null,
+          attendanceType: null,
+          sellableItem: 'merchandise',
+          typeSelectionId: '',
+          typeSelectionName: '',
+          classMode: 'in-person',
+          memberCount: '50-150',
+          trainerCount: '3-5',
+          digitalToolsSelected: ['website'],
+          marketingSupportType: []
+        })
     }),
     {
       name: 'onboarding-storage'

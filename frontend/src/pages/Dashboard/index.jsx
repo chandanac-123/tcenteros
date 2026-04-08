@@ -10,19 +10,24 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import { useGetBranchCountQuery } from '@api-queries/branch/Query'
+import InstructionPage from './components/InstructionPage'
 
 const Dashboard = () => {
   const [greeting, setGreeting] = useState('')
+  const [instructionOpen, setInstructionOpen] = useState(false)
   const navigate = useNavigate()
+  const firstLogin = useAuthStore(state => state.firstLogin)
   const setFirstLogin = useAuthStore(state => state.setFirstLogin)
   const { data: branchCountData } = useGetBranchCountQuery()
-  console.log('branchCountData: ', branchCountData)
 
   const isLimitReached =
     branchCountData &&
     branchCountData.created_subcenters === branchCountData.branches_purchased
 
   useEffect(() => {
+    if (firstLogin) {
+      setInstructionOpen(true)
+    }
     setFirstLogin(false)
   }, [])
 
@@ -36,7 +41,7 @@ const Dashboard = () => {
     {
       label: 'Total Members',
       value: data?.total_members || 0,
-      onClick: () => navigate('/crm')
+      onClick: () => navigate('/crm/members')
     },
     {
       label: 'Active Memberships',
@@ -235,6 +240,7 @@ const Dashboard = () => {
         </div>
         {/* <DashboardTable /> */}
       </div>
+      <InstructionPage open={instructionOpen} setOpen={setInstructionOpen} />
     </ContentLayout>
   )
 }

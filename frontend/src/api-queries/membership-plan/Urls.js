@@ -5,7 +5,7 @@ import {
   updateMembershipPlanApiCall,
   getMembershipPlanByIdApiCall,
   updateMembershipStatusApiCall
-} from '../../api'
+} from './index'
 
 export const getAllPlans = async (status) => {
   try {

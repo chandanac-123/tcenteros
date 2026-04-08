@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-catch */
 import {
   classTypeApiCall,
   platformApiCall,
@@ -7,7 +6,7 @@ import {
   gsteApiCall,
   onboardFinalizeApiCall,
   getPlatformApiCall
-} from '../../api/index'
+} from './index'
 
 export const getAllClassTypes = async () => {
   try {

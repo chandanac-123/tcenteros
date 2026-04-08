@@ -4,7 +4,7 @@ import {
   getBrandingApiCall,
   getTermsandPrivacyApiCall,
   getUpdatedTermsandPrivacyApiCall
-} from '../../api/index'
+} from './index'
 
 export const getBrand = async () => {
   try {

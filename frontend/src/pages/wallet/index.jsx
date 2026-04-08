@@ -152,7 +152,7 @@ const Wallet = () => {
                 <img
                   src={filters}
                   alt="filter"
-                  className="border-2 h-9 w-12 p-1 border-primary  rounded-[9px]"
+                  className="border h-9 w-12 p-1 border-gray-300  rounded-[9px]"
                 />
               </button>
             </div>

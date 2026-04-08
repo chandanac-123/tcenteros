@@ -46,10 +46,17 @@ import {
   ShapesIcon,
   Tickets,
   UserCog,
+  UserRoundPen,
   WalletIcon
 } from 'lucide-react'
 import Reports from '@pages/reports'
 import Notifications from '@pages/notifications'
+import RoleAndPermission from '@pages/role-permissions/index'
+import { hasPermission } from '@utils/helper'
+import { useAuthStore } from '@store/authStore'
+
+ const state = useAuthStore.getState()
+ const auth_Permission=state?.auth?.permissions
 
 export const routes = [
   { key: 1, path: '/', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permission: true },
@@ -73,21 +80,22 @@ export const routes = [
   { key: 24, path: '/reset-password', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permission: true },
   { key: 25, path: '/reset-success', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permission: true },
 
-  { key: 26, path: '/dashboard', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permission: true },
-  { key: 27, path: '/employee-management', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Employee Management', component: EmployeeManagement, icon: <UserCog />, menubar: true, permission: true },
-  { key: 28, path: '/membership-plan', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Membership Plans', component: MembershipPlan, icon: <NotebookText />, menubar: true, permission: true },
-  { key: 29, path: '/crm', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'CRM', component: CRM, icon: <FileUserIcon />, menubar: true, permission: true },
-  { key: 30, path: '/network', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Network', component: Network, icon: <NetworkIcon />, menubar: true, permission: true },
-  { key: 31, path: '/centerview/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'CenterView', component: CenterView, icon: <NetworkIcon />, menubar: false, permission: true },
-  { key: 32, path: '/attendance', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Attendance', component: Attendance, icon: <ListChecks />, menubar: true, permission: true },
-  { key: 33, path: '/wallet', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Wallet', component: Wallet, icon: <WalletIcon />, menubar: true, permission: true },
-  { key: 34, path: '/inventories', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Inventories', component: Inventories, icon: <ShapesIcon />, menubar: true, permission: true },
-  { key: 35, path: '/billing', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Billing', component: Billing, icon: <Receipt />, menubar: true, permission: true },
-  { key: 36, path: '/accounts', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Account', component: Accounts, icon: <Tickets />, menubar: true, permission: true },
+  { key: 26, path: '/dashboard', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permission: hasPermission(auth_Permission, 'dashboard') },
+  { key: 27, path: '/employee-management', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Employee Management', component: EmployeeManagement, icon: <UserCog />, menubar: true, permission: hasPermission(auth_Permission, 'employee_management') },
+  { key: 28, path: '/membership-plan', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Membership Plans', component: MembershipPlan, icon: <NotebookText />, menubar: true, permission: hasPermission(auth_Permission, 'membership_plan') },
+  { key: 29, path: '/crm', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'CRM', component: CRM, icon: <FileUserIcon />, menubar: true, permission: hasPermission(auth_Permission, 'crm') },
+  { key: 30, path: '/network', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Network', component: Network, icon: <NetworkIcon />, menubar: true, permission: hasPermission(auth_Permission, 'employee_management') },
+  { key: 31, path: '/network/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'CenterView', component: CenterView, icon: <NetworkIcon />, menubar: false, permission: true },
+  { key: 32, path: '/attendance', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Attendance', component: Attendance, icon: <ListChecks />, menubar: true, permission: hasPermission(auth_Permission, 'attendance') },
+  { key: 33, path: '/wallet', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Wallet', component: Wallet, icon: <WalletIcon />, menubar: true, permission: hasPermission(auth_Permission, 'wallet') },
+  { key: 34, path: '/inventories', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Inventories', component: Inventories, icon: <ShapesIcon />, menubar: true, permission: hasPermission(auth_Permission, 'inventory') },
+  { key: 35, path: '/billing', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Billing', component: Billing, icon: <Receipt />, menubar: true, permission: hasPermission(auth_Permission, 'billing') },
+  { key: 36, path: '/accounts', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Account', component: Accounts, icon: <Tickets />, menubar: true, permission: hasPermission(auth_Permission, 'account') },
   { key: 37, path: '/accounts/sub-modules/:module', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Account', component: AccountsSubModules, icon: <Tickets />, menubar: false, permission: true },
-  { key: 38, path: '/branding', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Branding', component: Branding, icon: <CrownIcon />, menubar: true, permission: true },
-  { key: 39, path: '/reports', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Reports', component: Reports, icon: <ProportionsIcon />, menubar: true, permission: true },
+  { key: 38, path: '/branding', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Branding', component: Branding, icon: <CrownIcon />, menubar: true, permission: hasPermission(auth_Permission, 'branding') },
+  { key: 39, path: '/reports', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Reports', component: Reports, icon: <ProportionsIcon />, menubar: true, permission: hasPermission(auth_Permission, 'report')  },
   { key: 40, path: '/settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Settings', component: Settings, menubar: false, permission: true },
   { key: 41, path: '/profile', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Profile', component: ProfilePage, menubar: false, permission: true },
   { key: 42, path: '/notifications', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Notifications', component: Notifications, menubar: false, permission: true },
+  { key: 43, path: '/role', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role and Permission', component: RoleAndPermission,icon:<UserRoundPen />, menubar: true, permission: hasPermission(auth_Permission, 'employee_management') },
 ]

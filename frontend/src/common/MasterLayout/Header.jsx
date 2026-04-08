@@ -39,7 +39,7 @@ const Header = () => {
         <div className='flex w-full justify-end gap-2 items-center'>
           <button onClick={() => setLocationOpen(true)}>
             <span className='flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md'>
-              <img src={map} className='w-5 h-5 mr-2' />
+              <img src={map} alt='' className='w-5 h-5 mr-2' />
               Fitness center
             </span>
           </button>

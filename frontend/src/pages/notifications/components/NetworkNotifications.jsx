@@ -2,6 +2,7 @@ import { Button } from '@pages/components/ui/button'
 import React, { useState } from 'react'
 import { useAllPendingNetworkQuery } from '@api-queries/notifictaions/Query'
 import ApproveModal from '@pages/network/ApproveModal'
+import { Spinner } from '@pages/components/ui/spinner'
 
 const NetworkNotifications = () => {
   const { data, isFetching } = useAllPendingNetworkQuery()
@@ -9,6 +10,11 @@ const NetworkNotifications = () => {
 
   return (
     <div className='flex flex-col gap-3'>
+      {isFetching && (
+        <div className='flex justify-center'>
+          <Spinner />
+        </div>
+      )}
       {data?.requests?.map(request => (
         <div
           key={request.network_membership_id}
@@ -39,13 +45,22 @@ const NetworkNotifications = () => {
               </span>
 
               <div className='flex gap-2'>
-                <Button
-                  size='notificationbutton'
-                  onClick={() => setOpen(true)}
-                  className='text-xs'
-                >
-                  Approve Now
-                </Button>
+                {request?.network_status == 'pending' && (
+                  <Button
+                    size='notificationbutton'
+                    onClick={() => setOpen(true)}
+                    className='text-xs bg-red_text hover:bg-red_text'
+                  >
+                    Approve Now
+                  </Button>
+                )}{request?.network_status == 'approved' && (
+                  <Button
+                    size='notificationbutton'
+                    className='text-xs cursor-none'
+                  >
+                    Approved
+                  </Button>
+                )}
               </div>
             </div>
           </div>

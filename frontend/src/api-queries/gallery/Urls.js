@@ -2,7 +2,7 @@ import {
   getGalleryApiCall,
   createGalleryApiCall,
   deleteGalleryApiCall
-} from '../../api'
+} from './index'
 
 export const getAllGallery = async id => {
   try {
