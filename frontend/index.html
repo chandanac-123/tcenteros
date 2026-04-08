@@ -1,45 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Basic -->
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <!-- Title -->
     <title>TCenterOS | Gym & Training Center Management Software India</title>
 
-    <meta name="description" content="TCenterOS helps gyms, academies and training institutes manage memberships, renewals, billing and analytics with one powerful SaaS platform." />
+    <!-- SEO Meta -->
+    <meta
+      name="description"
+      content="TCenterOS helps gyms, academies and training institutes manage memberships, renewals, billing and analytics with one powerful SaaS platform."
+    />
+    <meta
+      name="keywords"
+      content="gym management software India, fitness CRM, academy management SaaS, membership tracking software, training center software"
+    />
+    <meta name="robots" content="index, follow" />
 
-    <meta name="keywords" content="gym management software India, training center software, academy management SaaS, fitness management system, TCenterOS">
-
-    <meta name="robots" content="index, follow">
-
+    <!-- Canonical -->
     <link rel="canonical" href="https://tcenteros.com/" />
 
-    <meta property="og:title" content="TCenterOS - Smart Gym & Training Management Software">
-    <meta property="og:description" content="Manage memberships, subscriptions and revenue using one powerful SaaS platform.">
-    <meta property="og:image" content="https://tcenteros-s3-bucket.s3.amazonaws.com/center_categories/2b7d1f9-a400-441b-806c-b1f26266430a_Rectangle%203464139.png">
-    <meta property="og:url" content="https://tcenteros.com/">
-    <meta property="og:type" content="website">
+    <!-- Open Graph (Facebook / WhatsApp) -->
+    <meta property="og:title" content="TCenterOS - Smart Gym & Training Management Software" />
+    <meta
+      property="og:description"
+      content="Manage memberships, subscriptions and revenue using one powerful SaaS platform."
+    />
+    <meta
+      property="og:image"
+      content="https://tcenteros.com/assets/preview.jpg"
+    />
+    <meta property="og:url" content="https://tcenteros.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TCenterOS" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="TCenterOS - Training & Fitness SaaS Platform">
-    <meta name="twitter:description" content="Manage your training center memberships and revenue with TCenterOS.">
-    <meta name="twitter:image" content="https://tcenteros.com/assets/preview.jpg">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TCenterOS - Training & Fitness SaaS Platform" />
+    <meta
+      name="twitter:description"
+      content="Manage your training center memberships and revenue with TCenterOS."
+    />
+    <meta
+      name="twitter:image"
+      content="https://tcenteros.com/assets/preview.jpg"
+    />
 
-    <!-- IMPORTANT for WhatsApp -->
-    <meta property="og:site_name" content="TCenterOS">
-    <meta property="og:locale" content="en_US">
-    <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <!-- Performance (fonts optimization example) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-</head>
+    <!-- Structured Data (SEO Boost) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "TCenterOS",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Gym and training center management software",
+        "url": "https://tcenteros.com",
+        "image": "https://tcenteros.com/assets/preview.jpg",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
+        }
+      }
+    </script>
+  </head>
 
   <body class="font-roboto">
-    <!-- React mounts here -->
+    <!-- React Mount -->
     <div id="root"></div>
-    <!-- Vite entry point -->
+
+    <!-- Vite Entry -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
