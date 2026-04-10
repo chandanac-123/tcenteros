@@ -440,6 +440,8 @@ from sqlalchemy import select
 from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.payrole.models.models import *
+from app.inventory.models.models import *
 
 
 @router.get("/consolidated-settlements")
