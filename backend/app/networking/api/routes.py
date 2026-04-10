@@ -626,7 +626,11 @@ async def approve_networking_access(
     member = await session.get(Member, membership.user_id)
 
     # 3. Calculate
-    per_day = Decimal(str(network_center.networking_amount or 0))
+    # ✅ ADD THIS VALIDATION (ONLY FIX)
+    if not network_center.networking_amount:
+        raise HTTPException(400, "Networking amount not set for this center")
+
+    per_day = Decimal(str(network_center.networking_amount))
     total_days = (membership.end_date - membership.start_date).days + 1
 
     total_amount = per_day * total_days
