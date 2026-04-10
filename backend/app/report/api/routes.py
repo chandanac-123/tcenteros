@@ -17,6 +17,7 @@ from app.accounts.models.models import JournalEntry
 from fastapi.responses import StreamingResponse
 import io
 from app.report.utils.reports import ConsolidatedReportGenerator 
+from app.payrole.models.models import *
 
 router = APIRouter()
 
@@ -164,16 +165,20 @@ async def get_consolidated_income(
         membership_data = membership_result.all()
 
         # ==============================
-        # PAYMENT ORDER QUERY
+        # PAYMENT ORDER QUERY (JOIN FIX)
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
             Center.center_name,
             PaymentOrder.total_amount.label("amount"),
             PaymentOrder.created_at.label("date"),
-            PaymentOrder.order_type
+            PaymentOrder.order_type,
+            MiscellaneousTransaction.transaction_type   # ✅ added
         ).join(
             Center, Center.id == PaymentOrder.center_id
+        ).outerjoin(
+            MiscellaneousTransaction,
+            MiscellaneousTransaction.payment_order_id == PaymentOrder.payment_order_id
         ).where(
             PaymentOrder.center_id.in_(center_ids)
         )
@@ -191,7 +196,6 @@ async def get_consolidated_income(
         # ==============================
         combined = []
 
-        # Membership
         for m in membership_data:
             combined.append({
                 "type": m.type,
@@ -201,16 +205,18 @@ async def get_consolidated_income(
                 "date": m.date
             })
 
-        # Payment Orders
         for p in payment_data:
             order_type = p.order_type.value
 
-            # ❌ REMOVED network_in
-
             if order_type == "inventory_sale":
                 category = "inventory_sale"
-            elif order_type == "other_charges":
+
+            elif (
+                order_type == "other_charges"
+                and p.transaction_type == "income"   # ✅ FIX
+            ):
                 category = "other_income"
+
             else:
                 continue
 
@@ -222,21 +228,11 @@ async def get_consolidated_income(
                 "date": p.date
             })
 
-        # ==============================
-        # SORT
-        # ==============================
         combined.sort(key=lambda x: x["date"], reverse=True)
 
         total_count = len(combined)
-
-        # ==============================
-        # PAGINATION
-        # ==============================
         paginated_data = combined[offset: offset + page_size]
 
-        # ==============================
-        # SUMMARY
-        # ==============================
         total_income = sum(item["amount"] for item in combined)
 
         scenario_summary = {
@@ -302,16 +298,20 @@ async def get_consolidated_expense(
         offset = (page - 1) * page_size
 
         # ==============================
-        # PAYMENT ORDER QUERY
+        # PAYMENT ORDER QUERY (JOIN FIX)
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
             Center.center_name,
             PaymentOrder.total_amount.label("amount"),
             PaymentOrder.created_at.label("date"),
-            PaymentOrder.order_type
+            PaymentOrder.order_type,
+            MiscellaneousTransaction.transaction_type   # ✅ added
         ).join(
             Center, Center.id == PaymentOrder.center_id
+        ).outerjoin(
+            MiscellaneousTransaction,
+            MiscellaneousTransaction.payment_order_id == PaymentOrder.payment_order_id
         ).where(
             PaymentOrder.center_id.in_(center_ids)
         )
@@ -325,7 +325,7 @@ async def get_consolidated_expense(
         payments = payment_result.all()
 
         # ==============================
-        # MISC TRANSACTIONS QUERY
+        # MISC QUERY
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
@@ -347,9 +347,6 @@ async def get_consolidated_expense(
         misc_result = await db.execute(misc_query)
         misc_data = misc_result.all()
 
-        # ==============================
-        # MERGE DATA
-        # ==============================
         combined = []
 
         # Payment Orders
@@ -360,7 +357,11 @@ async def get_consolidated_expense(
             if order_type == "branch_purchase":
                 category = "branch_purchase"
 
-            # ❌ REMOVED network_out
+            elif (
+                order_type == "other_charges"
+                and p.transaction_type == "expense"   # ✅ FIX
+            ):
+                category = "other_expense"
 
             else:
                 continue
@@ -373,7 +374,7 @@ async def get_consolidated_expense(
                 "date": p.date
             })
 
-        # Misc Transactions
+        # Misc
         for m in misc_data:
             amount = float(m.amount or 0)
             category = m.category
@@ -396,20 +397,41 @@ async def get_consolidated_expense(
             })
 
         # ==============================
-        # SORT
+        # PAYROLL (ADDED)
         # ==============================
+        payroll_query = select(
+            PayrollRecord.center_id,
+            Center.center_name,
+            PayrollRecord.net_salary.label("amount"),
+            PayrollRecord.paid_date.label("date")
+        ).join(
+            Center, Center.id == PayrollRecord.center_id
+        ).where(
+            PayrollRecord.center_id.in_(center_ids),
+            PayrollRecord.status == PayrollStatus.paid
+        )
+
+        if start_date:
+            payroll_query = payroll_query.where(PayrollRecord.paid_date >= start_date)
+        if end_date:
+            payroll_query = payroll_query.where(PayrollRecord.paid_date <= end_date)
+
+        payroll_result = await db.execute(payroll_query)
+
+        for p in payroll_result:
+            combined.append({
+                "type": "salary",
+                "amount": float(p.amount or 0),
+                "center_id": str(p.center_id),
+                "center_name": p.center_name,
+                "date": p.date
+            })
+
         combined.sort(key=lambda x: x["date"], reverse=True)
 
         total_count = len(combined)
-
-        # ==============================
-        # PAGINATION
-        # ==============================
         paginated_data = combined[offset: offset + page_size]
 
-        # ==============================
-        # SUMMARY
-        # ==============================
         total_expense = sum(item["amount"] for item in combined)
 
         scenario_summary = {
