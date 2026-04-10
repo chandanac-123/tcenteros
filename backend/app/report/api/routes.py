@@ -545,10 +545,8 @@ async def get_consolidated_settlement(
             amount = float(p.amount or 0)
             order_type = p.order_type.value
 
-            # 🔴 BRANCH PURCHASE
             if order_type == "branch_purchase":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("branch_purchase", {"incoming": 0, "outgoing": 0})
                 scenario_summary["branch_purchase"]["outgoing"] += amount
 
@@ -560,10 +558,8 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-            # 🟡 NETWORK IN
             elif order_type == "network_in":
                 total_incoming += amount
-
                 scenario_summary.setdefault("networking_in", {"incoming": 0, "outgoing": 0})
                 scenario_summary["networking_in"]["incoming"] += amount
 
@@ -575,7 +571,6 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-                # 🔴 PLATFORM SHARE (10%)
                 platform_share = amount * 0.1
                 total_outgoing += platform_share
                 scenario_summary["networking_in"]["outgoing"] += platform_share
@@ -588,10 +583,8 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-            # 🔴 NETWORK OUT
             elif order_type == "network_out":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("networking_out", {"incoming": 0, "outgoing": 0})
                 scenario_summary["networking_out"]["outgoing"] += amount
 
@@ -603,10 +596,8 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-            # 🔴 OTHER CHARGES
             elif order_type == "other_charges":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("other_charges", {"incoming": 0, "outgoing": 0})
                 scenario_summary["other_charges"]["outgoing"] += amount
 
@@ -624,7 +615,6 @@ async def get_consolidated_settlement(
 
             if m.category == "inventory_purchase":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
                 scenario_summary["inventory_purchase"]["outgoing"] += amount
 
@@ -638,7 +628,6 @@ async def get_consolidated_settlement(
 
             elif m.category == "salary_payroll":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("salary_payroll", {"incoming": 0, "outgoing": 0})
                 scenario_summary["salary_payroll"]["outgoing"] += amount
 
@@ -649,6 +638,38 @@ async def get_consolidated_settlement(
                     "center_id": str(m.center_id),
                     "date": m.date
                 })
+
+        # ---------------- PAYROLL RECORDS (ADDED FIX) ----------------
+        payroll_query = select(
+            PayrollRecord.center_id,
+            PayrollRecord.net_salary.label("amount"),
+            PayrollRecord.paid_date.label("date")
+        ).where(
+            PayrollRecord.center_id.in_(center_ids),
+            PayrollRecord.status == PayrollStatus.paid
+        )
+
+        if start_date:
+            payroll_query = payroll_query.where(PayrollRecord.paid_date >= start_date)
+        if end_date:
+            payroll_query = payroll_query.where(PayrollRecord.paid_date <= end_date)
+
+        payroll_result = await db.execute(payroll_query)
+
+        for p in payroll_result:
+            amount = float(p.amount or 0)
+
+            total_outgoing += amount
+            scenario_summary.setdefault("salary_payroll", {"incoming": 0, "outgoing": 0})
+            scenario_summary["salary_payroll"]["outgoing"] += amount
+
+            combined.append({
+                "scenario": "Salary Payroll (Pay employees)",
+                "type": "outgoing",
+                "amount": amount,
+                "center_id": str(p.center_id),
+                "date": p.date
+            })
 
         # ==============================
         # SORT + PAGINATION
