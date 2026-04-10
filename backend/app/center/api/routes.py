@@ -1560,14 +1560,12 @@ async def list_my_wallet_transactions(
 
             # 🔻 DEBIT (HOME CENTER)
             if tx.from_wallet_id == wallet.id:
-                debit = float(tx.amount)
-                total_amount = float(tx.amount)
+                debit += float(tx.amount)  # ✅ FIXED
+                total_amount += float(tx.amount)  # ✅ FIXED
                 category = "network-out"
 
-                # ✅ CORRECT BALANCE (THIS CENTER ONLY)
                 balance_after = float(tx.balance)
 
-                # ✅ Get other center name
                 if tx.to_wallet_id:
                     to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
                     if to_wallet:
@@ -1576,13 +1574,11 @@ async def list_my_wallet_transactions(
 
             # 🔺 CREDIT (NETWORK CENTER)
             elif tx.to_wallet_id == wallet.id:
-                credit = float(tx.amount)
+                credit += float(tx.amount)  # ✅ FIXED
                 category = "network-in"
 
-                # ✅ CORRECT BALANCE (THIS CENTER ONLY)
                 balance_after = float(tx.balance)
 
-                # ✅ Get other center name
                 if tx.from_wallet_id:
                     from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
                     if from_wallet:
@@ -1591,11 +1587,11 @@ async def list_my_wallet_transactions(
 
             # 💰 PLATFORM FEE
             if tx.transaction_type == "platform_commission":
-                platform_fee = float(tx.amount)
+                platform_fee += float(tx.amount)  # ✅ FIXED
 
-        # 🔥 TOTAL FIX (network center case)
+        # 🔥 TOTAL FIX
         if total_amount == 0:
-            total_amount = credit + platform_fee
+            total_amount = credit  # ✅ FIXED (removed + platform_fee)
 
         tx_type = "Debit" if debit > 0 else "Credit"
 
@@ -1609,10 +1605,7 @@ async def list_my_wallet_transactions(
             "credit": credit,
             "debit": debit,
             "platform_fee": platform_fee,
-
-            # ✅ FINAL FIXED BALANCE
             "balance_after": balance_after,
-
             "status": tx_list[0].status.capitalize() if tx_list[0].status else "Completed"
         })
 
