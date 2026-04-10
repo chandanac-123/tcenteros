@@ -17,7 +17,6 @@ from app.accounts.models.models import JournalEntry
 from fastapi.responses import StreamingResponse
 import io
 from app.report.utils.reports import ConsolidatedReportGenerator 
-from app.payrole.models.models import *
 
 router = APIRouter()
 
@@ -298,20 +297,16 @@ async def get_consolidated_expense(
         offset = (page - 1) * page_size
 
         # ==============================
-        # PAYMENT ORDER QUERY (JOIN FIX)
+        # PAYMENT ORDER QUERY
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
             Center.center_name,
             PaymentOrder.total_amount.label("amount"),
             PaymentOrder.created_at.label("date"),
-            PaymentOrder.order_type,
-            MiscellaneousTransaction.transaction_type   # ✅ added
+            PaymentOrder.order_type
         ).join(
             Center, Center.id == PaymentOrder.center_id
-        ).outerjoin(
-            MiscellaneousTransaction,
-            MiscellaneousTransaction.payment_order_id == PaymentOrder.payment_order_id
         ).where(
             PaymentOrder.center_id.in_(center_ids)
         )
@@ -325,7 +320,7 @@ async def get_consolidated_expense(
         payments = payment_result.all()
 
         # ==============================
-        # MISC QUERY
+        # MISC TRANSACTIONS QUERY
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
@@ -347,6 +342,9 @@ async def get_consolidated_expense(
         misc_result = await db.execute(misc_query)
         misc_data = misc_result.all()
 
+        # ==============================
+        # MERGE DATA
+        # ==============================
         combined = []
 
         # Payment Orders
@@ -357,11 +355,7 @@ async def get_consolidated_expense(
             if order_type == "branch_purchase":
                 category = "branch_purchase"
 
-            elif (
-                order_type == "other_charges"
-                and p.transaction_type == "expense"   # ✅ FIX
-            ):
-                category = "other_expense"
+            # ❌ REMOVED network_out
 
             else:
                 continue
@@ -374,7 +368,7 @@ async def get_consolidated_expense(
                 "date": p.date
             })
 
-        # Misc
+        # Misc Transactions
         for m in misc_data:
             amount = float(m.amount or 0)
             category = m.category
@@ -397,41 +391,20 @@ async def get_consolidated_expense(
             })
 
         # ==============================
-        # PAYROLL (ADDED)
+        # SORT
         # ==============================
-        payroll_query = select(
-            PayrollRecord.center_id,
-            Center.center_name,
-            PayrollRecord.net_salary.label("amount"),
-            PayrollRecord.paid_date.label("date")
-        ).join(
-            Center, Center.id == PayrollRecord.center_id
-        ).where(
-            PayrollRecord.center_id.in_(center_ids),
-            PayrollRecord.status == PayrollStatus.paid
-        )
-
-        if start_date:
-            payroll_query = payroll_query.where(PayrollRecord.paid_date >= start_date)
-        if end_date:
-            payroll_query = payroll_query.where(PayrollRecord.paid_date <= end_date)
-
-        payroll_result = await db.execute(payroll_query)
-
-        for p in payroll_result:
-            combined.append({
-                "type": "salary",
-                "amount": float(p.amount or 0),
-                "center_id": str(p.center_id),
-                "center_name": p.center_name,
-                "date": p.date
-            })
-
         combined.sort(key=lambda x: x["date"], reverse=True)
 
         total_count = len(combined)
+
+        # ==============================
+        # PAGINATION
+        # ==============================
         paginated_data = combined[offset: offset + page_size]
 
+        # ==============================
+        # SUMMARY
+        # ==============================
         total_expense = sum(item["amount"] for item in combined)
 
         scenario_summary = {
@@ -467,7 +440,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.inventory.models.models import StockTransaction
+
 
 @router.get("/consolidated-settlements")
 async def get_consolidated_settlement(
@@ -480,8 +453,20 @@ async def get_consolidated_settlement(
     current_user=Depends(centeradmin_required)
 ):
     try:
+        from datetime import datetime, time, date
+
+        # ✅ SAFE DATE HANDLING (CRITICAL FIX)
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
+
+        if not end_date:
+            end_date = date.today()
+
+        if not start_date:
+            start_date = end_date - timedelta(days=30)
+
+        start_dt = datetime.combine(start_date, time.min)
+        end_dt = datetime.combine(end_date, time.max)
 
         center_id = current_user.get("center_id")
 
@@ -501,19 +486,15 @@ async def get_consolidated_settlement(
             PaymentOrder.created_at.label("date"),
             PaymentOrder.order_type
         ).where(
-            PaymentOrder.center_id.in_(center_ids)
+            PaymentOrder.center_id.in_(center_ids),
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.created_at.between(start_dt, end_dt)
         )
 
-        if start_date:
-            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
-        if end_date:
-            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
-
-        payment_result = await db.execute(payment_query)
-        payments = payment_result.all()
+        payments = (await db.execute(payment_query)).all()
 
         # ==============================
-        # INVENTORY PURCHASE (FIXED)
+        # INVENTORY PURCHASE
         # ==============================
         stock_query = select(
             StockTransaction.product_id,
@@ -521,43 +502,29 @@ async def get_consolidated_settlement(
             StockTransaction.created_at.label("date")
         ).where(
             StockTransaction.transaction_type == "purchase",
-            StockTransaction.created_at.between(start_date, end_date)
+            StockTransaction.created_at.between(start_dt, end_dt)
         )
 
-        stock_result = await db.execute(stock_query)
-        stock_data = stock_result.all()
+        stock_data = (await db.execute(stock_query)).all()
 
         # ==============================
-        # MISC TRANSACTIONS
+        # MISC
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
-            MiscellaneousTransaction.amount,
-            MiscellaneousTransaction.created_at.label("date"),
+            MiscellaneousTransaction.total_amount.label("amount"),
+            MiscellaneousTransaction.transaction_date.label("date"),
             MiscellaneousTransaction.category
         ).where(
-            MiscellaneousTransaction.center_id.in_(center_ids)
+            MiscellaneousTransaction.center_id.in_(center_ids),
+            MiscellaneousTransaction.transaction_date >= start_date,
+            MiscellaneousTransaction.transaction_date <= end_date
         )
 
-        if start_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
-        if end_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
-
-        misc_result = await db.execute(misc_query)
-        misc_data = misc_result.all()
+        misc_data = (await db.execute(misc_query)).all()
 
         # ==============================
-        # PROCESS DATA
-        # ==============================
-        combined = []
-        total_incoming = 0
-        total_outgoing = 0
-
-        scenario_summary = {}
-
-        # ==============================
-        # PAYROLL (ONLY SOURCE)
+        # PAYROLL
         # ==============================
         payroll_query = select(
             PayrollRecord.center_id,
@@ -571,26 +538,23 @@ async def get_consolidated_settlement(
             PayrollRecord.paid_date <= end_date
         )
 
-        payroll_result = await db.execute(payroll_query)
-        payroll_data = payroll_result.all()
+        payroll_data = (await db.execute(payroll_query)).all()
 
         # ==============================
-        # PROCESS DATA
+        # PROCESS DATA (UNCHANGED)
         # ==============================
         combined = []
         total_incoming = 0
         total_outgoing = 0
         scenario_summary = {}
 
-        # ---------------- PAYMENT ORDERS ----------------
+        # -------- PAYMENT ORDERS --------
         for p in payments:
             amount = float(p.amount or 0)
             order_type = p.order_type.value
 
-            # 🔴 BRANCH PURCHASE
             if order_type == "branch_purchase":
                 total_outgoing += amount
-
                 scenario_summary.setdefault("branch_purchase", {"incoming": 0, "outgoing": 0})
                 scenario_summary["branch_purchase"]["outgoing"] += amount
 
@@ -602,10 +566,8 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-            # 🟡 NETWORK IN
             elif order_type == "network_in":
                 total_incoming += amount
-
                 scenario_summary.setdefault("networking_in", {"incoming": 0, "outgoing": 0})
                 scenario_summary["networking_in"]["incoming"] += amount
 
@@ -617,65 +579,21 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-                # 🔴 PLATFORM SHARE (10%)
-                platform_share = amount * 0.1
-                total_outgoing += platform_share
-                scenario_summary["networking_in"]["outgoing"] += platform_share
+        # -------- INVENTORY --------
+        for s in stock_data:
+            amount = float(s.amount or 0)
 
-                combined.append({
-                    "scenario": "Networking In - Platform Share",
-                    "type": "outgoing",
-                    "amount": platform_share,
-                    "center_id": str(p.center_id),
-                    "date": p.date
-                })
+            total_outgoing += amount
+            scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
+            scenario_summary["inventory_purchase"]["outgoing"] += amount
 
-            # 🔴 NETWORK OUT
-            elif order_type == "network_out":
-                total_outgoing += amount
-
-                scenario_summary.setdefault("networking_out", {"incoming": 0, "outgoing": 0})
-                scenario_summary["networking_out"]["outgoing"] += amount
-
-                combined.append({
-                    "scenario": "Networking Out (Pay networking center)",
-                    "type": "outgoing",
-                    "amount": amount,
-                    "center_id": str(p.center_id),
-                    "date": p.date
-                })
-
-            # 🔴 OTHER CHARGES
-            elif order_type == "other_charges":
-                total_outgoing += amount
-
-                scenario_summary.setdefault("other_charges", {"incoming": 0, "outgoing": 0})
-                scenario_summary["other_charges"]["outgoing"] += amount
-
-                combined.append({
-                    "scenario": "Other Charges (Pay vendors/services)",
-                    "type": "outgoing",
-                    "amount": amount,
-                    "center_id": str(p.center_id),
-                    "date": p.date
-                })
-
-        # -------- MISC --------
-        for m in misc_data:
-            amount = float(m.amount or 0)
-
-            if m.category == "inventory_purchase":
-                total_outgoing += amount
-                scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
-                scenario_summary["inventory_purchase"]["outgoing"] += amount
-
-                combined.append({
-                    "scenario": "Inventory Purchase (Pay supplier)",
-                    "type": "outgoing",
-                    "amount": amount,
-                    "center_id": str(m.center_id),
-                    "date": m.date
-                })
+            combined.append({
+                "scenario": "Inventory Purchase (Pay supplier)",
+                "type": "outgoing",
+                "amount": amount,
+                "center_id": None,
+                "date": s.date
+            })
 
         # -------- PAYROLL --------
         for p in payroll_data:
@@ -716,6 +634,212 @@ async def get_consolidated_settlement(
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+# @router.get("/consolidated-settlements")
+# async def get_consolidated_settlement(
+#     start_date: Optional[str] = Query(None),
+#     end_date: Optional[str] = Query(None),
+#     include_sub_branches: bool = Query(True),
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(10, ge=1),
+#     db: AsyncSession = Depends(get_async_session),
+#     current_user=Depends(centeradmin_required)
+# ):
+#     try:
+#         start_date = await normalize_date(start_date)
+#         end_date = await normalize_date(end_date)
+
+#         center_id = current_user.get("center_id")
+
+#         if not center_id:
+#             raise HTTPException(status_code=400, detail="Center ID missing")
+
+#         center_ids = await get_all_center_ids_async(center_id, db) if include_sub_branches else [center_id]
+
+#         offset = (page - 1) * page_size
+
+#         # ==============================
+#         # PAYMENT ORDERS
+#         # ==============================
+#         payment_query = select(
+#             PaymentOrder.center_id,
+#             PaymentOrder.total_amount.label("amount"),
+#             PaymentOrder.created_at.label("date"),
+#             PaymentOrder.order_type
+#         ).where(
+#             PaymentOrder.center_id.in_(center_ids)
+#         )
+
+#         if start_date:
+#             payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
+#         if end_date:
+#             payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
+
+#         payment_result = await db.execute(payment_query)
+#         payments = payment_result.all()
+
+#         # ==============================
+#         # MISC TRANSACTIONS
+#         # ==============================
+#         misc_query = select(
+#             MiscellaneousTransaction.center_id,
+#             MiscellaneousTransaction.amount,
+#             MiscellaneousTransaction.created_at.label("date"),
+#             MiscellaneousTransaction.category
+#         ).where(
+#             MiscellaneousTransaction.center_id.in_(center_ids)
+#         )
+
+#         if start_date:
+#             misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
+#         if end_date:
+#             misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+
+#         misc_result = await db.execute(misc_query)
+#         misc_data = misc_result.all()
+
+#         # ==============================
+#         # PROCESS DATA
+#         # ==============================
+#         combined = []
+#         total_incoming = 0
+#         total_outgoing = 0
+
+#         scenario_summary = {}
+
+#         # ---------------- PAYMENT ORDERS ----------------
+#         for p in payments:
+#             amount = float(p.amount or 0)
+#             order_type = p.order_type.value
+
+#             # 🔴 BRANCH PURCHASE
+#             if order_type == "branch_purchase":
+#                 total_outgoing += amount
+
+#                 scenario_summary.setdefault("branch_purchase", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["branch_purchase"]["outgoing"] += amount
+
+#                 combined.append({
+#                     "scenario": "Purchase branch from platform",
+#                     "type": "outgoing",
+#                     "amount": amount,
+#                     "center_id": str(p.center_id),
+#                     "date": p.date
+#                 })
+
+#             # 🟡 NETWORK IN
+#             elif order_type == "network_in":
+#                 total_incoming += amount
+
+#                 scenario_summary.setdefault("networking_in", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["networking_in"]["incoming"] += amount
+
+#                 combined.append({
+#                     "scenario": "Networking In (Receive from home center)",
+#                     "type": "incoming",
+#                     "amount": amount,
+#                     "center_id": str(p.center_id),
+#                     "date": p.date
+#                 })
+
+#                 # 🔴 PLATFORM SHARE (10%)
+#                 platform_share = amount * 0.1
+#                 total_outgoing += platform_share
+#                 scenario_summary["networking_in"]["outgoing"] += platform_share
+
+#                 combined.append({
+#                     "scenario": "Networking In - Platform Share",
+#                     "type": "outgoing",
+#                     "amount": platform_share,
+#                     "center_id": str(p.center_id),
+#                     "date": p.date
+#                 })
+
+#             # 🔴 NETWORK OUT
+#             elif order_type == "network_out":
+#                 total_outgoing += amount
+
+#                 scenario_summary.setdefault("networking_out", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["networking_out"]["outgoing"] += amount
+
+#                 combined.append({
+#                     "scenario": "Networking Out (Pay networking center)",
+#                     "type": "outgoing",
+#                     "amount": amount,
+#                     "center_id": str(p.center_id),
+#                     "date": p.date
+#                 })
+
+#             # 🔴 OTHER CHARGES
+#             elif order_type == "other_charges":
+#                 total_outgoing += amount
+
+#                 scenario_summary.setdefault("other_charges", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["other_charges"]["outgoing"] += amount
+
+#                 combined.append({
+#                     "scenario": "Other Charges (Pay vendors/services)",
+#                     "type": "outgoing",
+#                     "amount": amount,
+#                     "center_id": str(p.center_id),
+#                     "date": p.date
+#                 })
+
+#         # ---------------- MISC TRANSACTIONS ----------------
+#         for m in misc_data:
+#             amount = float(m.amount or 0)
+
+#             if m.category == "inventory_purchase":
+#                 total_outgoing += amount
+
+#                 scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["inventory_purchase"]["outgoing"] += amount
+
+#                 combined.append({
+#                     "scenario": "Inventory Purchase (Pay supplier)",
+#                     "type": "outgoing",
+#                     "amount": amount,
+#                     "center_id": str(m.center_id),
+#                     "date": m.date
+#                 })
+
+#             elif m.category == "salary_payroll":
+#                 total_outgoing += amount
+
+#                 scenario_summary.setdefault("salary_payroll", {"incoming": 0, "outgoing": 0})
+#                 scenario_summary["salary_payroll"]["outgoing"] += amount
+
+#                 combined.append({
+#                     "scenario": "Salary Payroll (Pay employees)",
+#                     "type": "outgoing",
+#                     "amount": amount,
+#                     "center_id": str(m.center_id),
+#                     "date": m.date
+#                 })
+
+#         # ==============================
+#         # SORT + PAGINATION
+#         # ==============================
+#         combined.sort(key=lambda x: x["date"], reverse=True)
+
+#         total_count = len(combined)
+#         paginated_data = combined[offset: offset + page_size]
+
+#         return {
+#             "total_incoming": total_incoming,
+#             "total_outgoing": total_outgoing,
+#             "net_settlement": total_incoming - total_outgoing,
+#             "total_count": total_count,
+#             "page": page,
+#             "page_size": page_size,
+#             "scenario_summary": scenario_summary,
+#             "data": paginated_data
+#         }
+
+#     except Exception as e:
+#         import traceback
+#         print(traceback.format_exc())
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 
