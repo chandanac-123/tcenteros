@@ -284,8 +284,20 @@ async def get_consolidated_expense(
     current_user = Depends(centeradmin_required)
 ):
     try:
+        from datetime import datetime, time, date, timedelta
+
+        # ✅ SAFE DATE FIX
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
+
+        if not end_date:
+            end_date = date.today()
+
+        if not start_date:
+            start_date = end_date - timedelta(days=30)
+
+        start_dt = datetime.combine(start_date, time.min)
+        end_dt = datetime.combine(end_date, time.max)
 
         center_id = current_user.get("center_id")
 
@@ -297,7 +309,7 @@ async def get_consolidated_expense(
         offset = (page - 1) * page_size
 
         # ==============================
-        # PAYMENT ORDER QUERY
+        # PAYMENT ORDERS (FIXED)
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
@@ -308,39 +320,68 @@ async def get_consolidated_expense(
         ).join(
             Center, Center.id == PaymentOrder.center_id
         ).where(
-            PaymentOrder.center_id.in_(center_ids)
+            PaymentOrder.center_id.in_(center_ids),
+            PaymentOrder.status == PaymentOrderStatus.paid,   # ✅ FIX
+            PaymentOrder.created_at >= start_dt,
+            PaymentOrder.created_at <= end_dt
         )
 
-        if start_date:
-            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
-        if end_date:
-            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
-
-        payment_result = await db.execute(payment_query)
-        payments = payment_result.all()
+        payments = (await db.execute(payment_query)).all()
 
         # ==============================
-        # MISC TRANSACTIONS QUERY
+        # STOCK (REAL INVENTORY)
+        # ==============================
+        stock_query = select(
+            StockTransaction.product_id,
+            StockTransaction.subtotal.label("amount"),
+            StockTransaction.created_at.label("date")
+        ).where(
+            StockTransaction.transaction_type == "purchase",
+            StockTransaction.created_at >= start_dt,
+            StockTransaction.created_at <= end_dt
+        )
+
+        stock_data = (await db.execute(stock_query)).all()
+
+        # ==============================
+        # MISC (ONLY EXPENSE)
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
             Center.center_name,
-            MiscellaneousTransaction.amount,
-            MiscellaneousTransaction.created_at.label("date"),
-            MiscellaneousTransaction.category
+            MiscellaneousTransaction.total_amount.label("amount"),
+            MiscellaneousTransaction.transaction_date.label("date"),
+            MiscellaneousTransaction.category,
+            MiscellaneousTransaction.transaction_type
         ).join(
             Center, Center.id == MiscellaneousTransaction.center_id
         ).where(
-            MiscellaneousTransaction.center_id.in_(center_ids)
+            MiscellaneousTransaction.center_id.in_(center_ids),
+            MiscellaneousTransaction.transaction_type == "expense",  # ✅ FIX
+            MiscellaneousTransaction.transaction_date >= start_date,
+            MiscellaneousTransaction.transaction_date <= end_date
         )
 
-        if start_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
-        if end_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+        misc_data = (await db.execute(misc_query)).all()
 
-        misc_result = await db.execute(misc_query)
-        misc_data = misc_result.all()
+        # ==============================
+        # PAYROLL (ADDED)
+        # ==============================
+        payroll_query = select(
+            PayrollRecord.center_id,
+            Center.center_name,
+            PayrollRecord.net_salary.label("amount"),
+            PayrollRecord.paid_date.label("date")
+        ).join(
+            Center, Center.id == PayrollRecord.center_id
+        ).where(
+            PayrollRecord.center_id.in_(center_ids),
+            PayrollRecord.status == PayrollStatus.paid,
+            PayrollRecord.paid_date >= start_date,
+            PayrollRecord.paid_date <= end_date
+        )
+
+        payroll_data = (await db.execute(payroll_query)).all()
 
         # ==============================
         # MERGE DATA
@@ -349,45 +390,52 @@ async def get_consolidated_expense(
 
         # Payment Orders
         for p in payments:
-            amount = float(p.amount or 0)
             order_type = p.order_type.value
 
             if order_type == "branch_purchase":
-                category = "branch_purchase"
+                combined.append({
+                    "type": "branch_purchase",
+                    "amount": float(p.amount),
+                    "center_id": str(p.center_id),
+                    "center_name": p.center_name,
+                    "date": p.date
+                })
 
-            # ❌ REMOVED network_out
-
-            else:
-                continue
-
+        # Inventory (FIXED)
+        for s in stock_data:
             combined.append({
-                "type": category,
-                "amount": amount,
-                "center_id": str(p.center_id),
-                "center_name": p.center_name,
-                "date": p.date
+                "type": "inventory_purchase",
+                "amount": float(s.amount),
+                "center_id": None,
+                "center_name": None,
+                "date": s.date
             })
 
-        # Misc Transactions
+        # Misc
         for m in misc_data:
-            amount = float(m.amount or 0)
-            category = m.category
-
-            if category == "inventory_purchase":
-                type_ = "inventory_purchase"
-            elif category == "salary_payroll":
-                type_ = "salary"
-            elif category == "other_expense":
+            if m.category == "other_expense":
                 type_ = "other_expense"
+            elif m.category == "inventory_purchase":
+                type_ = "inventory_purchase"
             else:
                 continue
 
             combined.append({
                 "type": type_,
-                "amount": amount,
+                "amount": float(m.amount),
                 "center_id": str(m.center_id),
                 "center_name": m.center_name,
                 "date": m.date
+            })
+
+        # Payroll (FIXED)
+        for p in payroll_data:
+            combined.append({
+                "type": "salary",
+                "amount": float(p.amount),
+                "center_id": str(p.center_id),
+                "center_name": p.center_name,
+                "date": p.date
             })
 
         # ==============================
@@ -396,15 +444,8 @@ async def get_consolidated_expense(
         combined.sort(key=lambda x: x["date"], reverse=True)
 
         total_count = len(combined)
-
-        # ==============================
-        # PAGINATION
-        # ==============================
         paginated_data = combined[offset: offset + page_size]
 
-        # ==============================
-        # SUMMARY
-        # ==============================
         total_expense = sum(item["amount"] for item in combined)
 
         scenario_summary = {
