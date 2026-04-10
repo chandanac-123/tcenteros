@@ -18,6 +18,7 @@ from uuid import uuid4
 from calendar import monthrange
 from fastapi.responses import StreamingResponse
 from app.billing.utils.reports import BillingReportGenerator
+from app.payrole.models.models import PayrollStatus
 import io
 import csv
 from openpyxl import Workbook
@@ -2334,12 +2335,14 @@ async def list_settlements(
     # -------------------------------
     # 3. PAYROLL
     # -------------------------------
+    # -------------------------------
+
     payrolls = await db.execute(
         select(PayrollRecord).where(
             PayrollRecord.center_id == center_id,
-            PayrollRecord.status == "paid",
-            PayrollRecord.period_start >= start_date,
-            PayrollRecord.period_end <= end_date,
+            PayrollRecord.status == PayrollStatus.paid,   # ✅ FIXED ENUM
+            PayrollRecord.paid_date >= start_date,        # ✅ FIXED FILTER
+            PayrollRecord.paid_date <= end_date,
         )
     )
 
