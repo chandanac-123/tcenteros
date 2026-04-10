@@ -614,8 +614,6 @@ async def approve_networking_access(
     membership = await session.get(UserCenterMembership, network_membership_id)
     if not membership or str(membership.center_id) != str(current_admin["center_id"]):
         raise HTTPException(404, "Invalid request")
-    
-    
 
     if membership.network_status not in [
         NetworkingStatusEnum.pending,
@@ -635,17 +633,24 @@ async def approve_networking_access(
     platform_share = (total_amount * Decimal("0.15")).quantize(Decimal("0.01"))
     center_share = (total_amount - platform_share).quantize(Decimal("0.01"))
 
-
-    # 4. Wallets
+    # 4. Wallets (✅ FIXED HERE)
     home_wallet = (await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == member.home_center_id)
-    )).scalar_one()
+    )).scalar_one_or_none()
+
+    if not home_wallet:
+        raise HTTPException(400, "Home center wallet not found")
 
     network_wallet = (await session.execute(
         select(CenterWallet).where(CenterWallet.center_id == network_center.id)
-    )).scalar_one()
+    )).scalar_one_or_none()
 
-    platform_wallet = (await session.execute(select(PlatformWallet))).scalar_one_or_none()
+    if not network_wallet:
+        raise HTTPException(400, "Network center wallet not found")
+
+    platform_wallet = (await session.execute(
+        select(PlatformWallet)
+    )).scalar_one_or_none()
 
     if not platform_wallet:
         platform_wallet = PlatformWallet(
@@ -658,13 +663,13 @@ async def approve_networking_access(
         session.add(platform_wallet)
         await session.flush()
 
-    # 5. Validate balance (FULL amount)
+    # 5. Validate balance
     if home_wallet.balance < total_amount:
         membership.network_status = NetworkingStatusEnum.pending_settlement
         await session.commit()
         raise HTTPException(400, "Insufficient balance")
 
-    # 6. Update balances (FIXED)
+    # 6. Update balances
     home_wallet.balance -= total_amount
     network_wallet.balance += center_share
     platform_wallet.balance += platform_share
@@ -672,7 +677,6 @@ async def approve_networking_access(
     # 7. Wallet Transactions
     common_txn_id = uuid4()
 
-    # 🔻 Home (500)
     session.add(WalletTransaction(
         id=uuid4(),
         txn_id=common_txn_id,
@@ -686,7 +690,6 @@ async def approve_networking_access(
         created_at=now
     ))
 
-    # 🔺 Network (425)
     session.add(WalletTransaction(
         id=uuid4(),
         txn_id=common_txn_id,
@@ -700,7 +703,6 @@ async def approve_networking_access(
         created_at=now
     ))
 
-    # 💰 Platform (75)
     session.add(WalletTransaction(
         id=uuid4(),
         txn_id=common_txn_id,
@@ -708,11 +710,9 @@ async def approve_networking_access(
         amount=platform_share,
         transaction_type="platform_commission",
         description="Platform commission",
-        balance=platform_wallet.balance ,
+        balance=platform_wallet.balance,
         type="credit",
         status="completed",
-        # reference_id=membership.id,
-        # reference_type="networking",
         created_at=now
     ))
 
@@ -751,12 +751,12 @@ async def approve_networking_access(
         created_by=current_admin["user_id"]
     ))
 
-    # 9. Accounting (FIXED)
+    # 9. Accounting
     await post_networking_access_journal(
         session,
         home_center_id=member.home_center_id,
         network_center_id=network_center.id,
-        amount=total_amount,  # ✅ FIXED (was center_share)
+        amount=total_amount,
         platform_share=platform_share,
         member_id=member.id,
         membership_id=membership.id,
@@ -769,19 +769,14 @@ async def approve_networking_access(
     await session.commit()
 
     return {
-    "detail": "Request approved and networking payment processed",
-    "network_membership_id": str(membership.id),
-    "network_status": "approved",
-
-    # 🔹 Financial Breakdown
-    "total_paid_by_home_center": float(total_amount),          # 500
-    "transferred_to_network_center": float(center_share),      # 425
-    "platform_commission": float(platform_share),              # 75
-
-    # 🔹 Optional (keep for backward compatibility)
-    "amount": float(total_amount),
-    "platform_income": float(platform_share),
-
+        "detail": "Request approved and networking payment processed",
+        "network_membership_id": str(membership.id),
+        "network_status": "approved",
+        "total_paid_by_home_center": float(total_amount),
+        "transferred_to_network_center": float(center_share),
+        "platform_commission": float(platform_share),
+        "amount": float(total_amount),
+        "platform_income": float(platform_share),
     }
 
 
