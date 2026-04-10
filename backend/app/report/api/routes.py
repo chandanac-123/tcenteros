@@ -479,8 +479,14 @@ async def get_consolidated_settlement(
     current_user=Depends(centeradmin_required)
 ):
     try:
+        from datetime import datetime, time
+
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
+
+        # ✅ FIX: convert to datetime for created_at filters
+        start_dt = datetime.combine(start_date, time.min) if start_date else None
+        end_dt = datetime.combine(end_date, time.max) if end_date else None
 
         center_id = current_user.get("center_id")
 
@@ -503,10 +509,10 @@ async def get_consolidated_settlement(
             PaymentOrder.center_id.in_(center_ids)
         )
 
-        if start_date:
-            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
-        if end_date:
-            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
+        if start_dt:
+            payment_query = payment_query.where(PaymentOrder.created_at >= start_dt)
+        if end_dt:
+            payment_query = payment_query.where(PaymentOrder.created_at <= end_dt)
 
         payment_result = await db.execute(payment_query)
         payments = payment_result.all()
@@ -523,10 +529,10 @@ async def get_consolidated_settlement(
             MiscellaneousTransaction.center_id.in_(center_ids)
         )
 
-        if start_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
-        if end_date:
-            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+        if start_dt:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_dt)
+        if end_dt:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_dt)
 
         misc_result = await db.execute(misc_query)
         misc_data = misc_result.all()
@@ -639,14 +645,15 @@ async def get_consolidated_settlement(
                     "date": m.date
                 })
 
-        # ---------------- PAYROLL RECORDS (ADDED FIX) ----------------
+        # ---------------- PAYROLL RECORDS (FIXED) ----------------
         payroll_query = select(
             PayrollRecord.center_id,
             PayrollRecord.net_salary.label("amount"),
             PayrollRecord.paid_date.label("date")
         ).where(
             PayrollRecord.center_id.in_(center_ids),
-            PayrollRecord.status == PayrollStatus.paid
+            PayrollRecord.status == PayrollStatus.paid,
+            PayrollRecord.paid_date.isnot(None)   # ✅ FIX
         )
 
         if start_date:
