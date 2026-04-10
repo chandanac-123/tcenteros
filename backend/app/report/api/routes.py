@@ -273,6 +273,7 @@ from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
 @router.get("/consolidated-expenses")
 async def get_consolidated_expense(
     start_date: Optional[str] = Query(None),
@@ -285,8 +286,11 @@ async def get_consolidated_expense(
 ):
     try:
         from datetime import datetime, time, date, timedelta
+        from sqlalchemy import cast, Date  # ✅ IMPORTANT
 
-        # ✅ SAFE DATE FIX
+        # -------------------------------
+        # SAFE DATE HANDLING
+        # -------------------------------
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
 
@@ -309,19 +313,16 @@ async def get_consolidated_expense(
         offset = (page - 1) * page_size
 
         # ==============================
-        # PAYMENT ORDERS (FIXED)
+        # PAYMENT ORDERS (DATETIME SAFE)
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
-            Center.center_name,
             PaymentOrder.total_amount.label("amount"),
             PaymentOrder.created_at.label("date"),
             PaymentOrder.order_type
-        ).join(
-            Center, Center.id == PaymentOrder.center_id
         ).where(
             PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.status == PaymentOrderStatus.paid,   # ✅ FIX
+            PaymentOrder.status == PaymentOrderStatus.paid,
             PaymentOrder.created_at >= start_dt,
             PaymentOrder.created_at <= end_dt
         )
@@ -329,7 +330,7 @@ async def get_consolidated_expense(
         payments = (await db.execute(payment_query)).all()
 
         # ==============================
-        # STOCK (REAL INVENTORY)
+        # STOCK (DATETIME SAFE)
         # ==============================
         stock_query = select(
             StockTransaction.product_id,
@@ -344,133 +345,243 @@ async def get_consolidated_expense(
         stock_data = (await db.execute(stock_query)).all()
 
         # ==============================
-        # MISC (ONLY EXPENSE)
+        # MISC (DATE SAFE - FIXED)
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
-            Center.center_name,
             MiscellaneousTransaction.total_amount.label("amount"),
             MiscellaneousTransaction.transaction_date.label("date"),
-            MiscellaneousTransaction.category,
-            MiscellaneousTransaction.transaction_type
-        ).join(
-            Center, Center.id == MiscellaneousTransaction.center_id
+            MiscellaneousTransaction.category
         ).where(
             MiscellaneousTransaction.center_id.in_(center_ids),
-            MiscellaneousTransaction.transaction_type == "expense",  # ✅ FIX
-            MiscellaneousTransaction.transaction_date >= start_date,
-            MiscellaneousTransaction.transaction_date <= end_date
+            cast(MiscellaneousTransaction.transaction_date, Date) >= start_date,
+            cast(MiscellaneousTransaction.transaction_date, Date) <= end_date
         )
 
         misc_data = (await db.execute(misc_query)).all()
 
         # ==============================
-        # PAYROLL (ADDED)
+        # PAYROLL (DATE SAFE - FIXED)
         # ==============================
         payroll_query = select(
             PayrollRecord.center_id,
-            Center.center_name,
             PayrollRecord.net_salary.label("amount"),
             PayrollRecord.paid_date.label("date")
-        ).join(
-            Center, Center.id == PayrollRecord.center_id
         ).where(
             PayrollRecord.center_id.in_(center_ids),
             PayrollRecord.status == PayrollStatus.paid,
-            PayrollRecord.paid_date >= start_date,
-            PayrollRecord.paid_date <= end_date
+            PayrollRecord.paid_date.isnot(None),
+            cast(PayrollRecord.paid_date, Date) >= start_date,
+            cast(PayrollRecord.paid_date, Date) <= end_date
         )
 
         payroll_data = (await db.execute(payroll_query)).all()
 
         # ==============================
-        # MERGE DATA
+        # PROCESS (UNCHANGED)
         # ==============================
         combined = []
 
-        # Payment Orders
         for p in payments:
-            order_type = p.order_type.value
-
-            if order_type == "branch_purchase":
+            if p.order_type.value == "branch_purchase":
                 combined.append({
                     "type": "branch_purchase",
                     "amount": float(p.amount),
                     "center_id": str(p.center_id),
-                    "center_name": p.center_name,
                     "date": p.date
                 })
 
-        # Inventory (FIXED)
         for s in stock_data:
             combined.append({
                 "type": "inventory_purchase",
                 "amount": float(s.amount),
                 "center_id": None,
-                "center_name": None,
                 "date": s.date
             })
 
-        # Misc
         for m in misc_data:
-            if m.category == "other_expense":
-                type_ = "other_expense"
-            elif m.category == "inventory_purchase":
-                type_ = "inventory_purchase"
-            else:
-                continue
-
             combined.append({
-                "type": type_,
+                "type": "other_expense",
                 "amount": float(m.amount),
                 "center_id": str(m.center_id),
-                "center_name": m.center_name,
                 "date": m.date
             })
 
-        # Payroll (FIXED)
         for p in payroll_data:
             combined.append({
                 "type": "salary",
                 "amount": float(p.amount),
                 "center_id": str(p.center_id),
-                "center_name": p.center_name,
                 "date": p.date
             })
 
-        # ==============================
-        # SORT
-        # ==============================
         combined.sort(key=lambda x: x["date"], reverse=True)
 
-        total_count = len(combined)
-        paginated_data = combined[offset: offset + page_size]
-
-        total_expense = sum(item["amount"] for item in combined)
-
-        scenario_summary = {
-            "branch_purchase": 0,
-            "inventory_purchase": 0,
-            "salary": 0,
-            "other_expense": 0
-        }
-
-        for item in combined:
-            scenario_summary[item["type"]] += item["amount"]
-
-        return {
-            "total_expense": total_expense,
-            "total_count": total_count,
-            "page": page,
-            "page_size": page_size,
-            "scenario_summary": scenario_summary,
-            "data": paginated_data
-        }
+        return combined
 
     except Exception as e:
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# @router.get("/consolidated-expenses")
+# async def get_consolidated_expense(
+#     start_date: Optional[str] = Query(None),
+#     end_date: Optional[str] = Query(None),
+#     include_sub_branches: bool = Query(True),
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(10, ge=1),
+#     db: AsyncSession = Depends(get_async_session),
+#     current_user = Depends(centeradmin_required)
+# ):
+#     try:
+#         start_date = await normalize_date(start_date)
+#         end_date = await normalize_date(end_date)
+
+#         center_id = current_user.get("center_id")
+
+#         if not center_id:
+#             raise HTTPException(status_code=400, detail="Center ID missing")
+
+#         center_ids = await get_all_center_ids_async(center_id, db) if include_sub_branches else [center_id]
+
+#         offset = (page - 1) * page_size
+
+#         # ==============================
+#         # PAYMENT ORDER QUERY
+#         # ==============================
+#         payment_query = select(
+#             PaymentOrder.center_id,
+#             Center.center_name,
+#             PaymentOrder.total_amount.label("amount"),
+#             PaymentOrder.created_at.label("date"),
+#             PaymentOrder.order_type
+#         ).join(
+#             Center, Center.id == PaymentOrder.center_id
+#         ).where(
+#             PaymentOrder.center_id.in_(center_ids)
+#         )
+
+#         if start_date:
+#             payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
+#         if end_date:
+#             payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
+
+#         payment_result = await db.execute(payment_query)
+#         payments = payment_result.all()
+
+#         # ==============================
+#         # MISC TRANSACTIONS QUERY
+#         # ==============================
+#         misc_query = select(
+#             MiscellaneousTransaction.center_id,
+#             Center.center_name,
+#             MiscellaneousTransaction.amount,
+#             MiscellaneousTransaction.created_at.label("date"),
+#             MiscellaneousTransaction.category
+#         ).join(
+#             Center, Center.id == MiscellaneousTransaction.center_id
+#         ).where(
+#             MiscellaneousTransaction.center_id.in_(center_ids)
+#         )
+
+#         if start_date:
+#             misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
+#         if end_date:
+#             misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
+
+#         misc_result = await db.execute(misc_query)
+#         misc_data = misc_result.all()
+
+#         # ==============================
+#         # MERGE DATA
+#         # ==============================
+#         combined = []
+
+#         # Payment Orders
+#         for p in payments:
+#             amount = float(p.amount or 0)
+#             order_type = p.order_type.value
+
+#             if order_type == "branch_purchase":
+#                 category = "branch_purchase"
+
+#             # ❌ REMOVED network_out
+
+#             else:
+#                 continue
+
+#             combined.append({
+#                 "type": category,
+#                 "amount": amount,
+#                 "center_id": str(p.center_id),
+#                 "center_name": p.center_name,
+#                 "date": p.date
+#             })
+
+#         # Misc Transactions
+#         for m in misc_data:
+#             amount = float(m.amount or 0)
+#             category = m.category
+
+#             if category == "inventory_purchase":
+#                 type_ = "inventory_purchase"
+#             elif category == "salary_payroll":
+#                 type_ = "salary"
+#             elif category == "other_expense":
+#                 type_ = "other_expense"
+#             else:
+#                 continue
+
+#             combined.append({
+#                 "type": type_,
+#                 "amount": amount,
+#                 "center_id": str(m.center_id),
+#                 "center_name": m.center_name,
+#                 "date": m.date
+#             })
+
+#         # ==============================
+#         # SORT
+#         # ==============================
+#         combined.sort(key=lambda x: x["date"], reverse=True)
+
+#         total_count = len(combined)
+
+#         # ==============================
+#         # PAGINATION
+#         # ==============================
+#         paginated_data = combined[offset: offset + page_size]
+
+#         # ==============================
+#         # SUMMARY
+#         # ==============================
+#         total_expense = sum(item["amount"] for item in combined)
+
+#         scenario_summary = {
+#             "branch_purchase": 0,
+#             "inventory_purchase": 0,
+#             "salary": 0,
+#             "other_expense": 0
+#         }
+
+#         for item in combined:
+#             scenario_summary[item["type"]] += item["amount"]
+
+#         return {
+#             "total_expense": total_expense,
+#             "total_count": total_count,
+#             "page": page,
+#             "page_size": page_size,
+#             "scenario_summary": scenario_summary,
+#             "data": paginated_data
+#         }
+
+#     except Exception as e:
+#         import traceback
+#         print(traceback.format_exc())
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
