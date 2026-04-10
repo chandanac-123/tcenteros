@@ -1559,27 +1559,27 @@ async def list_my_wallet_transactions(
         for tx in tx_list:
 
             # 🔻 DEBIT (HOME CENTER)
-            if tx.from_wallet_id == wallet.id:
+            if str(tx.from_wallet_id) == str(wallet.id):
                 debit += float(tx.amount)  # ✅ FIXED
                 total_amount += float(tx.amount)  # ✅ FIXED
                 category = "network-out"
 
                 balance_after = float(tx.balance)
 
-                if tx.to_wallet_id:
+                if tx.to_wallet_id is not None:
                     to_wallet = await session.get(CenterWallet, tx.to_wallet_id)
                     if to_wallet:
                         center = await session.get(Center, to_wallet.center_id)
                         transaction_center_name = center.center_name
 
             # 🔺 CREDIT (NETWORK CENTER)
-            elif tx.to_wallet_id == wallet.id:
+            elif str(tx.to_wallet_id) == str(wallet.id):
                 credit += float(tx.amount)  # ✅ FIXED
                 category = "network-in"
 
                 balance_after = float(tx.balance)
 
-                if tx.from_wallet_id:
+                if tx.from_wallet_id is not None:
                     from_wallet = await session.get(CenterWallet, tx.from_wallet_id)
                     if from_wallet:
                         center = await session.get(Center, from_wallet.center_id)
@@ -1591,7 +1591,7 @@ async def list_my_wallet_transactions(
 
         # 🔥 TOTAL FIX
         if total_amount == 0:
-            total_amount = credit  # ✅ FIXED (removed + platform_fee)
+            total_amount = credit  # ✅ FIXED
 
         tx_type = "Debit" if debit > 0 else "Credit"
 
