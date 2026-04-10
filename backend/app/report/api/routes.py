@@ -458,9 +458,17 @@ async def get_consolidated_settlement(
     try:
         from datetime import datetime, time, date, timedelta
 
-        # ✅ SAFE DATE HANDLING
+        # -------------------------------
+        # ✅ NORMALIZE + FORCE DATE TYPE
+        # -------------------------------
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
+
+        if isinstance(start_date, datetime):
+            start_date = start_date.date()
+
+        if isinstance(end_date, datetime):
+            end_date = end_date.date()
 
         if not end_date:
             end_date = date.today()
@@ -468,7 +476,9 @@ async def get_consolidated_settlement(
         if not start_date:
             start_date = end_date - timedelta(days=30)
 
-        # ✅ Convert ONLY for datetime fields
+        # -------------------------------
+        # ✅ CREATE DATETIME RANGE
+        # -------------------------------
         start_dt = datetime.combine(start_date, time.min)
         end_dt = datetime.combine(end_date, time.max)
 
@@ -481,9 +491,9 @@ async def get_consolidated_settlement(
 
         offset = (page - 1) * page_size
 
-        # ==============================
+        # -------------------------------
         # PAYMENT ORDERS (datetime)
-        # ==============================
+        # -------------------------------
         payment_query = select(
             PaymentOrder.center_id,
             PaymentOrder.total_amount.label("amount"),
@@ -498,9 +508,9 @@ async def get_consolidated_settlement(
 
         payments = (await db.execute(payment_query)).all()
 
-        # ==============================
-        # INVENTORY PURCHASE (datetime)
-        # ==============================
+        # -------------------------------
+        # INVENTORY (datetime)
+        # -------------------------------
         stock_query = select(
             StockTransaction.product_id,
             StockTransaction.subtotal.label("amount"),
@@ -513,9 +523,9 @@ async def get_consolidated_settlement(
 
         stock_data = (await db.execute(stock_query)).all()
 
-        # ==============================
-        # MISC (date)
-        # ==============================
+        # -------------------------------
+        # MISC (STRICT DATE FIX)
+        # -------------------------------
         misc_query = select(
             MiscellaneousTransaction.center_id,
             MiscellaneousTransaction.total_amount.label("amount"),
@@ -529,9 +539,9 @@ async def get_consolidated_settlement(
 
         misc_data = (await db.execute(misc_query)).all()
 
-        # ==============================
-        # PAYROLL (date)
-        # ==============================
+        # -------------------------------
+        # PAYROLL (STRICT DATE FIX)
+        # -------------------------------
         payroll_query = select(
             PayrollRecord.center_id,
             PayrollRecord.net_salary.label("amount"),
@@ -546,9 +556,9 @@ async def get_consolidated_settlement(
 
         payroll_data = (await db.execute(payroll_query)).all()
 
-        # ==============================
-        # PROCESS DATA (UNCHANGED)
-        # ==============================
+        # -------------------------------
+        # PROCESS (UNCHANGED)
+        # -------------------------------
         combined = []
         total_incoming = 0
         total_outgoing = 0
@@ -577,7 +587,7 @@ async def get_consolidated_settlement(
                 scenario_summary["networking_in"]["incoming"] += amount
 
                 combined.append({
-                    "scenario": "Networking In (Receive from home center)",
+                    "scenario": "Networking In",
                     "type": "incoming",
                     "amount": amount,
                     "center_id": str(p.center_id),
@@ -592,7 +602,7 @@ async def get_consolidated_settlement(
             scenario_summary["inventory_purchase"]["outgoing"] += amount
 
             combined.append({
-                "scenario": "Inventory Purchase (Pay supplier)",
+                "scenario": "Inventory Purchase",
                 "type": "outgoing",
                 "amount": amount,
                 "center_id": None,
@@ -607,7 +617,7 @@ async def get_consolidated_settlement(
             scenario_summary["salary_payroll"]["outgoing"] += amount
 
             combined.append({
-                "scenario": "Salary Payroll (Pay employees)",
+                "scenario": "Salary Payroll",
                 "type": "outgoing",
                 "amount": amount,
                 "center_id": str(p.center_id),
