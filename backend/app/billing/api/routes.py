@@ -186,7 +186,7 @@ async def get_billing_dashboard(
     db: AsyncSession = Depends(get_async_session),
     current_admin: dict = Depends(centeradmin_required),
 ):
-    from sqlalchemy import extract
+    from sqlalchemy import extract, and_, or_
 
     center_id = current_admin["center_id"]
     today = date.today()
@@ -196,7 +196,7 @@ async def get_billing_dashboard(
     next_month = month_start.replace(day=28) + timedelta(days=4)
     month_end = next_month.replace(day=1) - timedelta(days=1)
 
-    # ✅ ONLY BUSINESS REVENUE TYPES (NETWORK REMOVED)
+    # ✅ REVENUE TYPES (INCLUDING ONLY INCOME PART OF other_charges)
     revenue_order_types = [
         OrderType.membership,
         OrderType.membership_renewal,
@@ -204,14 +204,21 @@ async def get_billing_dashboard(
         OrderType.inventory_sale,
     ]
 
-    # ===== 1. TOTAL REVENUE (EXCLUDING NETWORK) =====
+    # ===== 1. TOTAL REVENUE =====
     total_revenue_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
         PaymentOrder.status == PaymentOrderStatus.paid,
-        PaymentOrder.order_type.in_(revenue_order_types)
+        or_(
+            PaymentOrder.order_type.in_(revenue_order_types),
+            and_(
+                PaymentOrder.order_type == OrderType.other_charges,
+                PaymentOrder.total_amount > 0   # ✅ ONLY INCOME
+            )
+        )
     )
+
     total_revenue = float((await db.execute(total_revenue_query)).scalar() or 0)
 
     # ===== 2. NETWORK INCOMING =====
@@ -234,22 +241,28 @@ async def get_billing_dashboard(
     )
     network_outgoing = float((await db.execute(network_out_query)).scalar() or 0)
 
-    # ===== 4. THIS MONTH TOTAL (EXCLUDING NETWORK) =====
+    # ===== 4. THIS MONTH TOTAL =====
     this_month_query = select(
         func.coalesce(func.sum(PaymentOrder.total_amount), 0)
     ).where(
         PaymentOrder.center_id == center_id,
-        PaymentOrder.order_type.in_(revenue_order_types),
         PaymentOrder.status == PaymentOrderStatus.paid,
         PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
-        PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time())
+        PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time()),
+        or_(
+            PaymentOrder.order_type.in_(revenue_order_types),
+            and_(
+                PaymentOrder.order_type == OrderType.other_charges,
+                PaymentOrder.total_amount > 0   # ✅ ONLY INCOME
+            )
+        )
     )
+
     this_month_total = float((await db.execute(this_month_query)).scalar() or 0)
 
-    # ===== 5. REVENUE TREND (UNCHANGED LOGIC) =====
+    # ===== 5. REVENUE TREND (UNCHANGED) =====
     month_names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
-    # MEMBERSHIP
     membership_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
         func.sum(PaymentOrder.total_amount).label('revenue')
@@ -268,7 +281,6 @@ async def get_billing_dashboard(
         int(r.month): float(r.revenue) for r in (await db.execute(membership_query))
     }
 
-    # INVENTORY (from Sale)
     inventory_query = select(
         extract('month', Sale.created_at).label('month'),
         func.sum(Sale.total_amount).label('revenue')
@@ -282,7 +294,6 @@ async def get_billing_dashboard(
         int(r.month): float(r.revenue) for r in (await db.execute(inventory_query))
     }
 
-    # NETWORKING (UNCHANGED FOR CHART)
     networking_query = select(
         extract('month', PaymentOrder.created_at).label('month'),
         func.sum(PaymentOrder.total_amount).label('revenue')
@@ -300,7 +311,6 @@ async def get_billing_dashboard(
         int(r.month): float(r.revenue) for r in (await db.execute(networking_query))
     }
 
-    # FINAL CHART
     revenue_trend_chart = []
     for m in range(1, 13):
         revenue_trend_chart.append({
