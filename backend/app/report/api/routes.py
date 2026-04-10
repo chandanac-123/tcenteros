@@ -467,6 +467,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.inventory.models.models import StockTransaction
 
 @router.get("/consolidated-settlements")
 async def get_consolidated_settlement(
@@ -479,8 +480,6 @@ async def get_consolidated_settlement(
     current_user=Depends(centeradmin_required)
 ):
     try:
-        from datetime import datetime, time
-
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
 
@@ -493,10 +492,6 @@ async def get_consolidated_settlement(
 
         offset = (page - 1) * page_size
 
-        # ✅ datetime conversion
-        start_dt = datetime.combine(start_date, time.min)
-        end_dt = datetime.combine(end_date, time.max)
-
         # ==============================
         # PAYMENT ORDERS
         # ==============================
@@ -506,10 +501,13 @@ async def get_consolidated_settlement(
             PaymentOrder.created_at.label("date"),
             PaymentOrder.order_type
         ).where(
-            PaymentOrder.center_id.in_(center_ids),
-            PaymentOrder.status == PaymentOrderStatus.paid,
-            PaymentOrder.created_at.between(start_dt, end_dt)
+            PaymentOrder.center_id.in_(center_ids)
         )
+
+        if start_date:
+            payment_query = payment_query.where(PaymentOrder.created_at >= start_date)
+        if end_date:
+            payment_query = payment_query.where(PaymentOrder.created_at <= end_date)
 
         payment_result = await db.execute(payment_query)
         payments = payment_result.all()
@@ -523,28 +521,40 @@ async def get_consolidated_settlement(
             StockTransaction.created_at.label("date")
         ).where(
             StockTransaction.transaction_type == "purchase",
-            StockTransaction.created_at.between(start_dt, end_dt)
+            StockTransaction.created_at.between(start_date, end_date)
         )
 
         stock_result = await db.execute(stock_query)
         stock_data = stock_result.all()
 
         # ==============================
-        # MISC (NON-PAYROLL ONLY)
+        # MISC TRANSACTIONS
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
-            MiscellaneousTransaction.total_amount.label("amount"),
-            MiscellaneousTransaction.transaction_date.label("date"),
+            MiscellaneousTransaction.amount,
+            MiscellaneousTransaction.created_at.label("date"),
             MiscellaneousTransaction.category
         ).where(
-            MiscellaneousTransaction.center_id.in_(center_ids),
-            MiscellaneousTransaction.transaction_date >= start_date,
-            MiscellaneousTransaction.transaction_date <= end_date
+            MiscellaneousTransaction.center_id.in_(center_ids)
         )
+
+        if start_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at >= start_date)
+        if end_date:
+            misc_query = misc_query.where(MiscellaneousTransaction.created_at <= end_date)
 
         misc_result = await db.execute(misc_query)
         misc_data = misc_result.all()
+
+        # ==============================
+        # PROCESS DATA
+        # ==============================
+        combined = []
+        total_incoming = 0
+        total_outgoing = 0
+
+        scenario_summary = {}
 
         # ==============================
         # PAYROLL (ONLY SOURCE)
@@ -572,13 +582,15 @@ async def get_consolidated_settlement(
         total_outgoing = 0
         scenario_summary = {}
 
-        # -------- PAYMENT ORDERS --------
+        # ---------------- PAYMENT ORDERS ----------------
         for p in payments:
             amount = float(p.amount or 0)
             order_type = p.order_type.value
 
+            # 🔴 BRANCH PURCHASE
             if order_type == "branch_purchase":
                 total_outgoing += amount
+
                 scenario_summary.setdefault("branch_purchase", {"incoming": 0, "outgoing": 0})
                 scenario_summary["branch_purchase"]["outgoing"] += amount
 
@@ -590,8 +602,10 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
+            # 🟡 NETWORK IN
             elif order_type == "network_in":
                 total_incoming += amount
+
                 scenario_summary.setdefault("networking_in", {"incoming": 0, "outgoing": 0})
                 scenario_summary["networking_in"]["incoming"] += amount
 
@@ -603,6 +617,7 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
+                # 🔴 PLATFORM SHARE (10%)
                 platform_share = amount * 0.1
                 total_outgoing += platform_share
                 scenario_summary["networking_in"]["outgoing"] += platform_share
@@ -615,8 +630,10 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
+            # 🔴 NETWORK OUT
             elif order_type == "network_out":
                 total_outgoing += amount
+
                 scenario_summary.setdefault("networking_out", {"incoming": 0, "outgoing": 0})
                 scenario_summary["networking_out"]["outgoing"] += amount
 
@@ -628,8 +645,10 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
+            # 🔴 OTHER CHARGES
             elif order_type == "other_charges":
                 total_outgoing += amount
+
                 scenario_summary.setdefault("other_charges", {"incoming": 0, "outgoing": 0})
                 scenario_summary["other_charges"]["outgoing"] += amount
 
@@ -640,22 +659,6 @@ async def get_consolidated_settlement(
                     "center_id": str(p.center_id),
                     "date": p.date
                 })
-
-        # -------- INVENTORY --------
-        for s in stock_data:
-            amount = float(s.amount or 0)
-
-            total_outgoing += amount
-            scenario_summary.setdefault("inventory_purchase", {"incoming": 0, "outgoing": 0})
-            scenario_summary["inventory_purchase"]["outgoing"] += amount
-
-            combined.append({
-                "scenario": "Inventory Purchase (Pay supplier)",
-                "type": "outgoing",
-                "amount": amount,
-                "center_id": None,   # ✅ FIX (no center_id in model)
-                "date": s.date
-            })
 
         # -------- MISC --------
         for m in misc_data:
