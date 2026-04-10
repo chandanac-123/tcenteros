@@ -456,9 +456,9 @@ async def get_consolidated_settlement(
     current_user=Depends(centeradmin_required)
 ):
     try:
-        from datetime import datetime, time, date
+        from datetime import datetime, time, date, timedelta
 
-        # ✅ SAFE DATE HANDLING (CRITICAL FIX)
+        # ✅ SAFE DATE HANDLING
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
 
@@ -468,6 +468,7 @@ async def get_consolidated_settlement(
         if not start_date:
             start_date = end_date - timedelta(days=30)
 
+        # ✅ Convert ONLY for datetime fields
         start_dt = datetime.combine(start_date, time.min)
         end_dt = datetime.combine(end_date, time.max)
 
@@ -481,7 +482,7 @@ async def get_consolidated_settlement(
         offset = (page - 1) * page_size
 
         # ==============================
-        # PAYMENT ORDERS
+        # PAYMENT ORDERS (datetime)
         # ==============================
         payment_query = select(
             PaymentOrder.center_id,
@@ -491,13 +492,14 @@ async def get_consolidated_settlement(
         ).where(
             PaymentOrder.center_id.in_(center_ids),
             PaymentOrder.status == PaymentOrderStatus.paid,
-            PaymentOrder.created_at.between(start_dt, end_dt)
+            PaymentOrder.created_at >= start_dt,
+            PaymentOrder.created_at <= end_dt
         )
 
         payments = (await db.execute(payment_query)).all()
 
         # ==============================
-        # INVENTORY PURCHASE
+        # INVENTORY PURCHASE (datetime)
         # ==============================
         stock_query = select(
             StockTransaction.product_id,
@@ -505,13 +507,14 @@ async def get_consolidated_settlement(
             StockTransaction.created_at.label("date")
         ).where(
             StockTransaction.transaction_type == "purchase",
-            StockTransaction.created_at.between(start_dt, end_dt)
+            StockTransaction.created_at >= start_dt,
+            StockTransaction.created_at <= end_dt
         )
 
         stock_data = (await db.execute(stock_query)).all()
 
         # ==============================
-        # MISC
+        # MISC (date)
         # ==============================
         misc_query = select(
             MiscellaneousTransaction.center_id,
@@ -527,7 +530,7 @@ async def get_consolidated_settlement(
         misc_data = (await db.execute(misc_query)).all()
 
         # ==============================
-        # PAYROLL
+        # PAYROLL (date)
         # ==============================
         payroll_query = select(
             PayrollRecord.center_id,
@@ -551,7 +554,6 @@ async def get_consolidated_settlement(
         total_outgoing = 0
         scenario_summary = {}
 
-        # -------- PAYMENT ORDERS --------
         for p in payments:
             amount = float(p.amount or 0)
             order_type = p.order_type.value
@@ -582,7 +584,6 @@ async def get_consolidated_settlement(
                     "date": p.date
                 })
 
-        # -------- INVENTORY --------
         for s in stock_data:
             amount = float(s.amount or 0)
 
@@ -598,7 +599,6 @@ async def get_consolidated_settlement(
                 "date": s.date
             })
 
-        # -------- PAYROLL --------
         for p in payroll_data:
             amount = float(p.amount or 0)
 
@@ -614,9 +614,6 @@ async def get_consolidated_settlement(
                 "date": p.date
             })
 
-        # ==============================
-        # SORT + PAGINATION
-        # ==============================
         combined.sort(key=lambda x: x["date"], reverse=True)
 
         total_count = len(combined)
