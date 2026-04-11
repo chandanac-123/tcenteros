@@ -104,11 +104,29 @@ async def get_center_dashboard(
     # ========================
     # GET CENTER
     # ========================
-    center_admin = await db.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
 
-    center_id = center_admin.center_id
+    role = current_user.get("role")
+    user_id = current_user.get("user_id")
+
+    if role == "centeradmin":
+
+        center_admin = await db.get(CenterAdmin, user_id)
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Centeradmin not found")
+
+        center_id = center_admin.center_id
+
+    elif role == "employee":
+
+        employee = await db.get(Employee, user_id)
+        if not employee:
+            raise HTTPException(status_code=403, detail="Employee not found")
+
+        center_id = employee.center_id
+
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     today = date_type.today()
     current_year = today.year
 
