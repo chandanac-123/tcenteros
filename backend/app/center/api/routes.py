@@ -100,7 +100,6 @@ async def get_center_dashboard(
     from calendar import monthrange
     from decimal import Decimal
     from datetime import datetime
-    from app.core.models.models import SKU
 
     # ========================
     # GET CENTER
@@ -186,9 +185,6 @@ async def get_center_dashboard(
     # ========================
     # TOTAL EXPENSES
     # ========================
-
-    from app.core.models.models import SKU  # ✅ ADDED
-
     payroll = (await db.execute(
         select(func.coalesce(func.sum(PayrollRecord.net_salary), 0)).where(
             PayrollRecord.center_id == center_id,
@@ -206,17 +202,15 @@ async def get_center_dashboard(
         )
     )).scalar() or 0
 
-
-    # ✅ FIXED INVENTORY EXPENSE
+    # ✅ INVENTORY EXPENSE FIXED
     inventory_expense = (await db.execute(
-    select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
-    .join(StockTransaction.product)
-    .where(
-        Product.center_id == center_id,
-        StockTransaction.transaction_type == "IN"   # ✅ FIXED
-    )
+        select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
+        .join(StockTransaction.product)
+        .where(
+            Product.center_id == center_id,
+            StockTransaction.transaction_type == "IN"
+        )
     )).scalar() or 0
-
 
     other_expense = (await db.execute(
         select(func.coalesce(func.sum(MiscellaneousTransaction.total_amount), 0)).where(
@@ -229,37 +223,29 @@ async def get_center_dashboard(
 
     net_profit = total_revenue - total_expenses
 
-
     # ========================
     # REVENUE TREND CHART
     # ========================
-
     monthly_income = {}
     monthly_expense = {}
 
     month_expr_po = extract('month', PaymentOrder.created_at)
 
-    # ------------------------
-    # Expenses (PaymentOrder)
-    # ------------------------
+    # PaymentOrder Expense
     res = await db.execute(
         select(
             extract('month', PaymentOrder.created_at),
             func.sum(PaymentOrder.total_amount)
         ).where(
             PaymentOrder.center_id == center_id,
-            PaymentOrder.order_type.in_([
-                OrderType.branch_purchase
-            ]),
+            PaymentOrder.order_type.in_([OrderType.branch_purchase]),
             extract('year', PaymentOrder.created_at) == current_year
         ).group_by(month_expr_po)
     )
     for m, v in res:
         monthly_expense[int(m)] = float(v)
 
-    # ------------------------
     # Payroll
-    # ------------------------
     payroll_month_expr = extract('month', PayrollRecord.created_at)
     res = await db.execute(
         select(
@@ -274,11 +260,8 @@ async def get_center_dashboard(
     for m, v in res:
         monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
 
-    # ------------------------
-    # ✅ FIXED Inventory purchase (MONTHLY)
-    # ------------------------
+    # ✅ INVENTORY MONTHLY FIXED
     month_expr_stock = extract('month', StockTransaction.created_at)
-
     res = await db.execute(
         select(
             extract('month', StockTransaction.created_at),
@@ -287,77 +270,28 @@ async def get_center_dashboard(
         .join(StockTransaction.product)
         .where(
             Product.center_id == center_id,
-            StockTransaction.transaction_type == "IN",   # ✅ FIXED
+            StockTransaction.transaction_type == "IN",
             extract('year', StockTransaction.created_at) == current_year
         )
         .group_by(month_expr_stock)
     )
-
     for m, v in res:
         monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
 
-        # Expenses (PaymentOrder)
-        res = await db.execute(
-            select(
-                extract('month', PaymentOrder.created_at),
-                func.sum(PaymentOrder.total_amount)
-            ).where(
-                PaymentOrder.center_id == center_id,
-                PaymentOrder.order_type.in_([
-                    OrderType.branch_purchase
-                ]),
-                extract('year', PaymentOrder.created_at) == current_year
-            ).group_by(month_expr_po)
-        )
-        for m, v in res:
-            monthly_expense[int(m)] = float(v)
-
-        # Payroll
-        payroll_month_expr = extract('month', PayrollRecord.created_at)
-        res = await db.execute(
-            select(
-                extract('month', PayrollRecord.created_at),
-                func.sum(PayrollRecord.net_salary)
-            ).where(
-                PayrollRecord.center_id == center_id,
-                PayrollRecord.status == "paid",
-                extract('year', PayrollRecord.created_at) == current_year
-            ).group_by(payroll_month_expr)
-        )
-        for m, v in res:
-            monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
-
-        # Inventory purchase
-        month_expr_stock = extract('month', StockTransaction.created_at)
-        res = await db.execute(
-            select(
-                extract('month', StockTransaction.created_at),
-                func.sum(StockTransaction.subtotal)
-            ).join(Product)
-            .join(SKU, SKU.id == Product.id)
-            .where(
-                SKU.center_id == center_id,
-                StockTransaction.transaction_type == "purchase",
-                extract('year', StockTransaction.created_at) == current_year
-            ).group_by(month_expr_stock)
-        )
-        for m, v in res:
-            monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
-
-        # Other expense
-        month_expr_misc_expense = extract('month', MiscellaneousTransaction.transaction_date)
-        res = await db.execute(
-            select(
-                extract('month', MiscellaneousTransaction.transaction_date),
-                func.sum(MiscellaneousTransaction.total_amount)
-            ).where(
-                MiscellaneousTransaction.center_id == center_id,
-                MiscellaneousTransaction.transaction_type == "expense",
-                extract('year', MiscellaneousTransaction.transaction_date) == current_year
-            ).group_by(month_expr_misc_expense)
-        )
-        for m, v in res:
-            monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
+    # Other expense
+    month_expr_misc_expense = extract('month', MiscellaneousTransaction.transaction_date)
+    res = await db.execute(
+        select(
+            extract('month', MiscellaneousTransaction.transaction_date),
+            func.sum(MiscellaneousTransaction.total_amount)
+        ).where(
+            MiscellaneousTransaction.center_id == center_id,
+            MiscellaneousTransaction.transaction_type == "expense",
+            extract('year', MiscellaneousTransaction.transaction_date) == current_year
+        ).group_by(month_expr_misc_expense)
+    )
+    for m, v in res:
+        monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
 
     # Final chart
     month_names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -374,7 +308,6 @@ async def get_center_dashboard(
     # ATTENDANCE CHART
     # ========================
     total_users = total_employees + total_members
-
     attendance_chart = []
 
     for month_num in range(1, 13):
@@ -389,15 +322,11 @@ async def get_center_dashboard(
             )
         )).scalar() or 0
 
-        if month_num == today.month:
-            working_days = today.day
-        elif month_num > today.month:
-            working_days = 0
-        else:
-            working_days = days_in_month
+        working_days = today.day if month_num == today.month else (
+            0 if month_num > today.month else days_in_month
+        )
 
         expected = total_users * working_days
-
         percentage = (present_count / expected * 100) if expected > 0 else 0
 
         attendance_chart.append({
