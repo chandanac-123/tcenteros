@@ -9,9 +9,37 @@ import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
 import { useAllCentersQuery } from '@api-queries/center-profile/Query'
 import Payroll from './payroll'
+import { usePermission } from '@hooks/index'
 
 const EmployeeManagement = () => {
-  const [activeTab, setActiveTab] = useState('employee')
+  const { hasPermission } = usePermission()
+  const canAddEmployee = hasPermission(
+    'employee_management.submodules.employee.add'
+  )
+
+  const tabConfig = [
+    {
+      id: 'employee',
+      name: 'Employee',
+      permission: 'employee_management.submodules.employee.list'
+    },
+    {
+      id: 'salary_structure',
+      name: 'Salary Structure',
+      permission: 'employee_management.submodules.salary_structure'
+    },
+    {
+      id: 'payroll',
+      name: 'Payroll',
+      permission: 'employee_management.submodules.payroll'
+    }
+  ]
+
+  const employeeOrCenter = tabConfig.filter(tab =>
+    hasPermission(tab.permission)
+  )
+  const defaultTab = employeeOrCenter[0]?.id || null
+  const [activeTab, setActiveTab] = useState(() => defaultTab)
   const [open, setOpen] = useState(false)
   const [structureOpen, setStructureOpen] = useState(false)
   const { data: centersData, isFetching: isCentersFetching } =
@@ -25,11 +53,6 @@ const EmployeeManagement = () => {
   const handleOpen = () => {
     setOpen(true)
   }
-  const employeeOrCenter = [
-    { id: 'employee', name: 'Employee' },
-    { id: 'salary_structure', name: 'Salary Structure' },
-    { id: 'payroll', name: 'Payroll' }
-  ]
 
   return (
     <ContentLayout>
@@ -47,7 +70,7 @@ const EmployeeManagement = () => {
               setTableParams(prev => ({ ...prev, payment_status: value }))
             }
           />
-          {activeTab === 'employee' && (
+          {activeTab === 'employee' && canAddEmployee && (
             <Button onClick={handleOpen} size='addbutton'>
               + Add Employee
             </Button>
@@ -62,7 +85,7 @@ const EmployeeManagement = () => {
       <div className=' gap-4 mt-4 flex flex-col'>
         <CustomeTab
           tabList={employeeOrCenter}
-          defaultVal='employee'
+          defaultVal={employeeOrCenter[0]?.id}
           tabsListClass=' w-[400px] p-[1px]'
           onChange={value => setActiveTab(value)}
         />

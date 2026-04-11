@@ -86,11 +86,32 @@ export const formatToDDMMYYYY = date => {
   return date // already correct format
 }
 
-export const hasPermission = (permissions, key) => {
+export const sidebarPermission = (permissions, key) => {
   if (permissions === null) return true
   if (!permissions || !key) return false
 
   return key in permissions
+}
+
+export const checkPermission = (permissions, path) => {
+  if (!permissions) return false
+  if (permissions === null) return true
+
+  const keys = path?.split('.')
+  let current = permissions
+
+  for (let key of keys) {
+    if (!current[key]) return false
+    current = current[key]
+  }
+
+  if (typeof current === 'boolean') return current
+
+  if (typeof current === 'object') {
+    if ('enabled' in current) return current.enabled
+  }
+
+  return false
 }
 
 export const formatIndianCurrency  = (value = 0) => {

@@ -137,7 +137,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
 
                   <label
                     onClick={() => setCategoryOpen(true)}
-                    className='flex  items-center border rounded-lg p-2 w-full cursor-pointer justify-center border-secondary'
+                    className='flex  items-center border rounded-lg p-2 w-full  whitespace-nowrap cursor-pointer justify-center border-secondary'
                   >
                     <Plus className='w-6 h-6 text-primary' />
                     <span className='flex-1 text-sm text-primary'>
