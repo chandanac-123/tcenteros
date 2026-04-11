@@ -1147,10 +1147,27 @@ async def create_center_time_slot(
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    center_admin = await db.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-    center_id = center_admin.center_id
+    # ========================
+    # GET CENTER (FIXED)
+    # ========================
+    if current_user["role"] == "centeradmin":
+
+        center_admin = await db.get(CenterAdmin, current_user["user_id"])
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+
+        center_id = center_admin.center_id
+
+    elif current_user["role"] == "employee":
+
+        employee = await db.get(Employee, current_user["user_id"])
+        if not employee:
+            raise HTTPException(status_code=403, detail="Employee not found")
+
+        center_id = employee.center_id
+
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     slot = CenterTimeSlot(
         center_id=center_id,
