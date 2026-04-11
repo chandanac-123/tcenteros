@@ -3,22 +3,28 @@ import { useState } from 'react'
 import { useGuestQuery } from '@api-queries/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
+import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
 
 const Guest = () => {
+  const { hydrated, canConvertGuest } = useCrmPermissions()
+  if (!hydrated) return null
   const [tableParams, setTableParams] = useState({
     page: 1
   })
   const { data, isLoading, error } = useGuestQuery(tableParams)
-  const { setSelectedTab, setMemberView ,setSelectedGuestId} = useCrmStore()
+  const { setSelectedTab, setMemberView, setSelectedGuestId } = useCrmStore()
 
   const columns = [
     { accessorKey: 'full_name', header: 'Name' },
-    {  accessorKey: 'email',   header: 'Email'},
-    {   accessorKey: 'mobile',   header: 'Phone Number'},
-    {  header: 'Action',  accessorKey: '',
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'mobile', header: 'Phone Number' },
+    {
+      header: 'Action',
+      accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
+            disabled={!canConvertGuest}
             size='notificationbutton'
             onClick={() => {
               setSelectedGuestId(row.original.id)

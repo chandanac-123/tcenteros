@@ -94,8 +94,11 @@ export const sidebarPermission = (permissions, key) => {
 }
 
 export const checkPermission = (permissions, path) => {
-  if (!permissions) return false
+  // allow all if null (super admin)
   if (permissions === null) return true
+
+  // only block if undefined
+  if (permissions === undefined) return false
 
   const keys = path?.split('.')
   let current = permissions
@@ -107,8 +110,8 @@ export const checkPermission = (permissions, path) => {
 
   if (typeof current === 'boolean') return current
 
-  if (typeof current === 'object') {
-    if ('enabled' in current) return current.enabled
+  if (typeof current === 'object' && 'enabled' in current) {
+    return current.enabled
   }
 
   return false

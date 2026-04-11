@@ -17,9 +17,11 @@ import { useCrmStore } from '@store/tabStore'
 import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
 import GoogleMapComponent from '../components/GoogleMapComponent'
 import defalutUser from '@assets/header-icons/user.svg'
-
+import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
 
 const Header = () => {
+  const { hydrated, canAddMember } = useCrmPermissions()
+  if (!hydrated) return null
   const { setSelectedTab, setMemberView } = useCrmStore()
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
@@ -49,6 +51,7 @@ const Header = () => {
           />
           <AddBranchButton />
           <Button
+            disabled={!canAddMember}
             size='addbutton'
             onClick={() => {
               setSelectedTab(1)

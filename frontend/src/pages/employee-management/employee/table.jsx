@@ -14,6 +14,7 @@ import {
   useDeleteMultipleEmployeeMutation
 } from '@api-queries/employee-management/Query'
 import useTableSelection from '@common/components/UseTableSelection'
+import { useEmployeePermissions } from '@hooks/permissions/UseEmployeePermission'
 
 const EmployeeTable = ({
   data,
@@ -24,6 +25,15 @@ const EmployeeTable = ({
 }) => {
   const { selectedIds, selectionColumn, setSelectedIds } =
     useTableSelection(data)
+
+  const {
+    hydrated,
+    canViewEmployee,
+    canEditEmployee,
+    canDeleteEmployee,
+    canEnableEmployee
+  } = useEmployeePermissions()
+  if (!hydrated) return null
 
   const [viewopen, setViewOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -103,6 +113,7 @@ const EmployeeTable = ({
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <button
+            disabled={!canViewEmployee}
             onClick={() => {
               setViewId(row.original.id)
               setViewOpen(true)
@@ -111,6 +122,7 @@ const EmployeeTable = ({
             <img src={view} alt='view' className='w-6 h-6' />
           </button>
           <button
+            disabled={!canEditEmployee}
             onClick={() => {
               setEditId(row.original.id)
               setEditOpen(true)
@@ -119,6 +131,7 @@ const EmployeeTable = ({
             <img src={edit} alt='edit' className='w-6 h-6' />
           </button>
           <button
+            disabled={!canDeleteEmployee}
             onClick={() => {
               setDeleteId(row.original.id)
               setDeleteOpen(true)
@@ -128,7 +141,7 @@ const EmployeeTable = ({
           </button>
           <Switch
             checked={row.original.status === 'active'}
-            disabled={isStatusUpdating}
+            disabled={isStatusUpdating || !canEnableEmployee}
             onCheckedChange={value =>
               handleStatusChange(value, row.original.id)
             }

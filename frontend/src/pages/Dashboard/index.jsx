@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@store/authStore'
 import { useGetBranchCountQuery } from '@api-queries/branch/Query'
 import InstructionPage from './components/InstructionPage'
-import { usePermission } from '@hooks/index'
+import { useDashboardPermissions } from '@hooks/permissions/DashboardPermission'
 
 const Dashboard = () => {
   const [greeting, setGreeting] = useState('')
@@ -20,11 +20,8 @@ const Dashboard = () => {
   const firstLogin = useAuthStore(state => state.firstLogin)
   const setFirstLogin = useAuthStore(state => state.setFirstLogin)
   const { data: branchCountData } = useGetBranchCountQuery()
-  const { hasPermission } = usePermission()
-  const createbranchpermission = hasPermission(
-    'dashboard.submodules.create_branch'
-  )
-  
+  const { hydrated, canCreateBranch } = useDashboardPermissions()
+  if (!hydrated) return null
 
   const isLimitReached =
     branchCountData &&
@@ -124,7 +121,7 @@ const Dashboard = () => {
           </div>
           <div>
             {' '}
-            {createbranchpermission && (
+            {canCreateBranch && (
               <BranchDetailsButton isLimitReached={isLimitReached} />
             )}
           </div>

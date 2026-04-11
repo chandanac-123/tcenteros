@@ -7,6 +7,7 @@ import DeleteModal from '@common/components/CustomeDelete'
 import { useDeletePlanMutation } from '@api-queries/membership-plan/Query'
 import CreateMembershipForm from './CreateForm'
 import { useUpdatePlanStatusMutation } from '@api-queries/membership-plan/Query'
+import { useMembershipPermissions } from '@hooks/permissions/UseMembershipPermission'
 
 const PlanCard = ({ data, colors }) => {
   const [open, setOpen] = useState(false)
@@ -18,6 +19,13 @@ const PlanCard = ({ data, colors }) => {
   const { mutateAsync: delete_plan, isPending } = useDeletePlanMutation(
     data?.membership_id
   )
+  const {
+    hydrated,
+    canEditMembership,
+    canDeleteMembership,
+    canEnableMembership
+  } = useMembershipPermissions()
+  if (!hydrated) return null
 
   useEffect(() => {
     setIsActive(data?.status === 'active')
@@ -93,12 +101,13 @@ const PlanCard = ({ data, colors }) => {
               <span className='text-primary font-medium'>Activate</span>
               <Switch
                 checked={isActive}
-                disabled={isStatusUpdating}
+                disabled={isStatusUpdating || !canEnableMembership}
                 onCheckedChange={handleStatusChange}
               />
             </div>
             <div className='flex items-center gap-2'>
               <button
+                disabled={!canEditMembership}
                 onClick={() => {
                   setEditId(data?.membership_id)
                   setOpen(true)
@@ -106,7 +115,10 @@ const PlanCard = ({ data, colors }) => {
               >
                 <img src={edit} alt='edit' />
               </button>
-              <button onClick={() => setDeleteOpen(true)}>
+              <button
+                disabled={!canDeleteMembership}
+                onClick={() => setDeleteOpen(true)}
+              >
                 <img src={deleteicon} alt='delete' />
               </button>
             </div>
@@ -123,7 +135,7 @@ const PlanCard = ({ data, colors }) => {
         onConfirm={handleDelete}
         loading={isPending}
         header='Plan Deletion'
-       description='This plan will be removed from your active offerings and new members won`t be able to purchase it. This action cannot be undone.'
+        description='This plan will be removed from your active offerings and new members won`t be able to purchase it. This action cannot be undone.'
       />
     </div>
   )

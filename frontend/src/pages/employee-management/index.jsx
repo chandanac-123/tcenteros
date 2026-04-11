@@ -9,42 +9,38 @@ import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
 import { useAllCentersQuery } from '@api-queries/center-profile/Query'
 import Payroll from './payroll'
-import { usePermission } from '@hooks/index'
+import { useEmployeePermissions } from '@hooks/permissions/UseEmployeePermission'
 
 const EmployeeManagement = () => {
-  const { hasPermission } = usePermission()
-  const canAddEmployee = hasPermission(
-    'employee_management.submodules.employee.add'
-  )
+  const { hydrated, canEmployee, canSalary, canPayroll, canAddEmployee } =
+    useEmployeePermissions()
+  if (!hydrated) return null
 
   const tabConfig = [
     {
       id: 'employee',
       name: 'Employee',
-      permission: 'employee_management.submodules.employee.list'
+      visible: canEmployee
     },
     {
       id: 'salary_structure',
       name: 'Salary Structure',
-      permission: 'employee_management.submodules.salary_structure'
+      visible: canSalary
     },
     {
       id: 'payroll',
       name: 'Payroll',
-      permission: 'employee_management.submodules.payroll'
+      visible: canPayroll
     }
   ]
 
-  const employeeOrCenter = tabConfig.filter(tab =>
-    hasPermission(tab.permission)
-  )
+  const employeeOrCenter = tabConfig.filter(tab => tab.visible)
   const defaultTab = employeeOrCenter[0]?.id || null
   const [activeTab, setActiveTab] = useState(() => defaultTab)
   const [open, setOpen] = useState(false)
   const [structureOpen, setStructureOpen] = useState(false)
   const { data: centersData, isFetching: isCentersFetching } =
     useAllCentersQuery()
-  console.log('centersData: ', centersData)
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
