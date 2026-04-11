@@ -69,102 +69,97 @@ def superadmin_required(user=Depends(get_current_user)):
         )
     return user
 
-async def centeradmin_required(
-    user=Depends(get_current_user),
-    session: AsyncSession = Depends(get_async_session)
-):
-    if not user or user.get("role") != "centeradmin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Centeradmin privileges required"
-        )
-    # Fetch CenterAdmin from DB to get center_id
-    result = await session.execute(
-        select(CenterAdmin).where(CenterAdmin.id == user["user_id"])
-    )
-    center_admin = result.scalar_one_or_none()
-    if not center_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Centeradmin not found"
-        )
-    return {
-        "user_id": user["user_id"],
-        "role": user["role"],
-        "center_id": str(center_admin.center_id)
-    }
-
-
-
-
-
 # async def centeradmin_required(
 #     user=Depends(get_current_user),
 #     session: AsyncSession = Depends(get_async_session)
 # ):
-#     if not user:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Unauthorized"
-#         )
-
-#     role = user.get("role")
-#     user_id = user.get("user_id")
-
-#     # =========================
-#     # CENTER ADMIN
-#     # =========================
-#     if role == "centeradmin":
-
-#         result = await session.execute(
-#             select(CenterAdmin).where(CenterAdmin.id == user_id)
-#         )
-#         center_admin = result.scalar_one_or_none()
-
-#         if not center_admin:
-#             raise HTTPException(
-#                 status_code=status.HTTP_403_FORBIDDEN,
-#                 detail="Centeradmin not found"
-#             )
-
-#         return {
-#             "user_id": user_id,
-#             "role": role,
-#             "center_id": str(center_admin.center_id),
-#             "designation_id": None
-#         }
-
-#     # =========================
-#     # EMPLOYEE
-#     # =========================
-#     elif role == "employee":
-
-#         result = await session.execute(
-#             select(Employee).where(Employee.id == user_id)
-#         )
-#         employee = result.scalar_one_or_none()
-
-#         if not employee:
-#             raise HTTPException(
-#                 status_code=status.HTTP_403_FORBIDDEN,
-#                 detail="Employee not found"
-#             )
-
-#         return {
-#             "user_id": user_id,
-#             "role": role,
-#             "center_id": str(employee.center_id),
-#             "designation_id": str(employee.designation_id) if employee.designation_id else None
-#         }
-
-#     # =========================
-#     # INVALID ROLE
-#     # =========================
-#     else:
+#     if not user or user.get("role") != "centeradmin":
 #         raise HTTPException(
 #             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Access denied"
+#             detail="Centeradmin privileges required"
 #         )
+#     # Fetch CenterAdmin from DB to get center_id
+#     result = await session.execute(
+#         select(CenterAdmin).where(CenterAdmin.id == user["user_id"])
+#     )
+#     center_admin = result.scalar_one_or_none()
+#     if not center_admin:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Centeradmin not found"
+#         )
+#     return {
+#         "user_id": user["user_id"],
+#         "role": user["role"],
+#         "center_id": str(center_admin.center_id)
+#     }
+
+
+async def centeradmin_required(
+    user=Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized"
+        )
+
+    role = user.get("role")
+    user_id = user.get("user_id")
+
+    # =========================
+    # CENTER ADMIN
+    # =========================
+    if role == "centeradmin":
+
+        result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.id == user_id)
+        )
+        center_admin = result.scalar_one_or_none()
+
+        if not center_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Centeradmin not found"
+            )
+
+        return {
+            "user_id": user_id,
+            "role": role,
+            "center_id": str(center_admin.center_id)
+        }
+
+    # =========================
+    # EMPLOYEE (✅ ADDED)
+    # =========================
+    elif role == "employee":
+
+        result = await session.execute(
+            select(Employee).where(Employee.id == user_id)
+        )
+        employee = result.scalar_one_or_none()
+
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Employee not found"
+            )
+
+        return {
+            "user_id": user_id,
+            "role": role,
+            "center_id": str(employee.center_id)
+        }
+
+    # =========================
+    # INVALID ROLE
+    # =========================
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
 
 
 def member_required(user=Depends(get_current_user)):
