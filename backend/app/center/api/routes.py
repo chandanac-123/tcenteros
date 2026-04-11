@@ -210,9 +210,9 @@ async def get_center_dashboard(
     # ✅ FIXED INVENTORY EXPENSE
     inventory_expense = (await db.execute(
     select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
-    .join(Product, Product.id == StockTransaction.product_id)
+    .join(StockTransaction.product)  # ✅ CORRECT WAY (NO DUPLICATE JOIN)
     .where(
-        Product.center_id == center_id,  # ✅ FIX (NO SKU JOIN)
+        Product.center_id == center_id,
         StockTransaction.transaction_type == "purchase"
     )
     )).scalar() or 0
@@ -284,32 +284,13 @@ async def get_center_dashboard(
             extract('month', StockTransaction.created_at),
             func.sum(StockTransaction.subtotal)
         )
-        .join(Product, Product.id == StockTransaction.product_id)
+        .join(StockTransaction.product)  # ✅ FIX
         .where(
-            Product.center_id == center_id,  # ✅ FIX
+            Product.center_id == center_id,
             StockTransaction.transaction_type == "purchase",
             extract('year', StockTransaction.created_at) == current_year
         )
         .group_by(month_expr_stock)
-    )
-
-    for m, v in res:
-        monthly_expense[int(m)] = monthly_expense.get(int(m), 0) + float(v)
-
-    # ------------------------
-    # Other expense
-    # ------------------------
-    month_expr_misc_expense = extract('month', MiscellaneousTransaction.transaction_date)
-
-    res = await db.execute(
-        select(
-            extract('month', MiscellaneousTransaction.transaction_date),
-            func.sum(MiscellaneousTransaction.total_amount)
-        ).where(
-            MiscellaneousTransaction.center_id == center_id,
-            MiscellaneousTransaction.transaction_type == "expense",
-            extract('year', MiscellaneousTransaction.transaction_date) == current_year
-        ).group_by(month_expr_misc_expense)
     )
 
     for m, v in res:
