@@ -2254,13 +2254,14 @@ async def list_settlements(
     db: AsyncSession = Depends(get_async_session),
 ):
     from app.billing.models.models import (
-    PaymentOrder,
-    OrderType,
-    PaymentOrderStatus,
-    MiscellaneousTransaction,
-)
-    from app.inventory.models.models import StockTransaction
-    from app.payrole.models.models import PayrollRecord
+        PaymentOrder,
+        OrderType,
+        PaymentOrderStatus,
+        MiscellaneousTransaction,
+    )
+    from app.inventory.models.models import StockTransaction, Product
+    from app.payrole.models.models import PayrollRecord, PayrollStatus
+
     # -------------------------------
     # ✅ Default last 30 days
     # -------------------------------
@@ -2270,7 +2271,7 @@ async def list_settlements(
     if not start_date:
         start_date = end_date - timedelta(days=30)
 
-    # ✅ Convert to datetime (for datetime columns)
+    # ✅ Convert to datetime
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
 
@@ -2279,7 +2280,7 @@ async def list_settlements(
     settlements = []
 
     # -------------------------------
-    # 1. PAYMENT ORDERS
+    # 1. PAYMENT ORDERS (UNCHANGED)
     # -------------------------------
     payment_orders = await db.execute(
         select(PaymentOrder).where(
@@ -2315,33 +2316,34 @@ async def list_settlements(
             })
 
     # -------------------------------
-    # 2. INVENTORY PURCHASE
+    # 2. INVENTORY PURCHASE (FIXED ✅)
     # -------------------------------
     stock_txns = await db.execute(
-        select(StockTransaction).where(
+        select(StockTransaction)
+        .join(Product, Product.id == StockTransaction.product_id)
+        .where(
+            Product.center_id == center_id,   # ✅ FIX
+            StockTransaction.transaction_type == "IN",  # ✅ FIX
             StockTransaction.created_at.between(start_dt, end_dt)
         )
     )
 
     for txn in stock_txns.scalars():
-        if txn.transaction_type == "purchase":
-            settlements.append({
-                "settlement_type": "inventory_purchase",
-                "money_flow": "out",
-                "amount": float(txn.subtotal),
-                "settlement_date": normalize_date(txn.created_at),
-            })
+        settlements.append({
+            "settlement_type": "inventory_purchase",
+            "money_flow": "out",
+            "amount": float(txn.subtotal),
+            "settlement_date": normalize_date(txn.created_at),
+        })
 
     # -------------------------------
-    # 3. PAYROLL
+    # 3. PAYROLL (UNCHANGED)
     # -------------------------------
-    # -------------------------------
-
     payrolls = await db.execute(
         select(PayrollRecord).where(
             PayrollRecord.center_id == center_id,
-            PayrollRecord.status == PayrollStatus.paid,   # ✅ FIXED ENUM
-            PayrollRecord.paid_date >= start_date,        # ✅ FIXED FILTER
+            PayrollRecord.status == PayrollStatus.paid,
+            PayrollRecord.paid_date >= start_date,
             PayrollRecord.paid_date <= end_date,
         )
     )
@@ -2357,12 +2359,11 @@ async def list_settlements(
         })
 
     # -------------------------------
-    # ✅ 4. MISCELLANEOUS (FIXED)
+    # 4. MISCELLANEOUS (UNCHANGED)
     # -------------------------------
     misc_txns = await db.execute(
         select(MiscellaneousTransaction).where(
             MiscellaneousTransaction.center_id == center_id,
-            # ✅ FIX: use DATE range directly (no datetime)
             MiscellaneousTransaction.transaction_date >= start_date,
             MiscellaneousTransaction.transaction_date <= end_date,
         )
@@ -2379,7 +2380,7 @@ async def list_settlements(
         })
 
     # -------------------------------
-    # ✅ SAFE SORT
+    # SORT (UNCHANGED)
     # -------------------------------
     settlements.sort(
         key=lambda x: x["settlement_date"],
@@ -2387,7 +2388,7 @@ async def list_settlements(
     )
 
     # -------------------------------
-    # ✅ Convert to ISO
+    # ISO FORMAT (UNCHANGED)
     # -------------------------------
     for s in settlements:
         s["settlement_date"] = s["settlement_date"].isoformat()
