@@ -88,15 +88,25 @@ async def get_accounting_dashboard(
     total_income = float(total_income.scalar() or 0)
 
     # ✅ EXCLUDE NETWORK EXPENSE (5800)  🔥 FIXED HERE
+    from sqlalchemy import or_
+
     total_expense = await session.execute(
         select(func.sum(GeneralLedger.debit))
         .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
         .where(
             GeneralLedger.center_id == center_id,
-            ChartOfAccounts.account_type == AccountType.EXPENSE,
-            ChartOfAccounts.code != "5800"
+            or_(
+                # Existing expense accounts
+                and_(
+                    ChartOfAccounts.account_type == AccountType.EXPENSE,
+                    ChartOfAccounts.code != "5800"
+                ),
+                # ✅ ADD THIS (CRITICAL FIX)
+                GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value
+            )
         )
     )
+
     total_expense = float(total_expense.scalar() or 0)
 
     gst_payable = await session.execute(
