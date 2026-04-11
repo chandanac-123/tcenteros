@@ -209,13 +209,12 @@ async def get_center_dashboard(
 
     # ✅ FIXED INVENTORY EXPENSE
     inventory_expense = (await db.execute(
-        select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
-        .join(Product, Product.id == StockTransaction.product_id)
-        .join(SKU, SKU.id == Product.id)  # ✅ FIX
-        .where(
-            SKU.center_id == center_id,   # ✅ FIX
-            StockTransaction.transaction_type == "purchase"
-        )
+    select(func.coalesce(func.sum(StockTransaction.subtotal), 0))
+    .join(Product, Product.id == StockTransaction.product_id)
+    .where(
+        Product.center_id == center_id,  # ✅ FIX (NO SKU JOIN)
+        StockTransaction.transaction_type == "purchase"
+    )
     )).scalar() or 0
 
 
@@ -286,9 +285,8 @@ async def get_center_dashboard(
             func.sum(StockTransaction.subtotal)
         )
         .join(Product, Product.id == StockTransaction.product_id)
-        .join(SKU, SKU.id == Product.id)  # ✅ FIX
         .where(
-            SKU.center_id == center_id,   # ✅ FIX
+            Product.center_id == center_id,  # ✅ FIX
             StockTransaction.transaction_type == "purchase",
             extract('year', StockTransaction.created_at) == current_year
         )
