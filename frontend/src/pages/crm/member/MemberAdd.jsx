@@ -107,7 +107,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
     const isVisitorOrGuest = selectedVisitorId || selectedGuestId;
 
-    // 🔥 1. Visitor / Guest case
+    //  1. Visitor / Guest case
     if (isVisitorOrGuest && !isEdit) {
       payload = {
         membership_id: values.membership_id,
@@ -119,7 +119,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       };
     }
 
-    // 🔥 2. Edit case → ONLY changed fields
+    //  2. Edit case → ONLY changed fields
     if (isEdit) {
       payload = getChangedFields(initialValues, values);
 
@@ -130,13 +130,13 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       }
     }
 
-    // 🔥 Date format (only if exists in payload)
+    //  Date format (only if exists in payload)
     if (payload.date_of_birth) {
       const [day, month, year] = payload.date_of_birth.split('-');
       payload.date_of_birth = `${year}-${month}-${day}`;
     }
 
-    // 🔥 Edit cleanup rules
+    //  Edit cleanup rules
     if (isEdit && sourceData?.payment_status != null) {
       delete payload.membership_id;
       delete payload.payment_method;
@@ -144,13 +144,13 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
       delete payload.payment_status;
     }
 
-    // 🔥 Payment logic
+    //  Payment logic
     if (payload.payment_status === 'unpaid') {
       delete payload.password;
       delete payload.payment_method;
     }
 
-    // 🔥 API call
+    //  API call
     if (isEdit || isVisitorOrGuest) {
       await updateMember({
         data: payload,
