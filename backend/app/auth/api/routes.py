@@ -801,6 +801,125 @@ async def update_employee(
 #     return {"detail": "Employee deleted"}
 
 
+# @router.get("/employee")
+# async def list_employees(
+#     page: int = Query(1, ge=1),
+#     page_size: int = Query(10, ge=1, le=100),
+#     full_name: Optional[str] = Query(None),
+#     email: Optional[str] = Query(None),
+#     mobile: Optional[str] = Query(None),
+#     designation_name: Optional[str] = Query(None),
+#     session: AsyncSession = Depends(get_async_session),
+#     current_user = Depends(centeradmin_required)
+# ):
+#     # Determine center_id from user context
+#     center_id = None
+#     if current_user.get("role") == "centeradmin":
+#         center_id = current_user.get("center_id")
+#         if not center_id:
+#             # Fallback: fetch from DB
+#             from app.auth.models.models import CenterAdmin
+#             result = await session.execute(
+#                 select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
+#             )
+#             center_admin = result.scalar_one_or_none()
+#             if center_admin and center_admin.center_id:
+#                 center_id = str(center_admin.center_id)
+#     elif current_user.get("role") == "member":
+#         from app.auth.models.models import Member
+#         member = await session.get(Member, current_user["user_id"])
+#         center_id = str(member.home_center_id) if member and member.home_center_id else None
+
+#     if not center_id:
+#         raise HTTPException(403, "No center assigned to this user.")
+
+#     filters = [Employee.center_id == center_id]
+#     if full_name:
+#         filters.append(Employee.full_name.ilike(f"%{full_name}%"))
+#     if email:
+#         filters.append(Employee.email.ilike(f"%{email}%"))
+#     if mobile:
+#         filters.append(Employee.mobile.ilike(f"%{mobile}%"))
+
+#     query = select(Employee)
+#     if designation_name:
+#         from sqlalchemy.orm import aliased
+#         DesignationAlias = aliased(Designation)
+#         query = query.join(DesignationAlias, Employee.designation_id == DesignationAlias.id)
+#         filters.append(DesignationAlias.name.ilike(f"%{designation_name}%"))
+
+#     if filters:
+#         query = query.where(and_(*filters))
+
+#     # Get total count
+#     count_query = query.with_only_columns(Employee.id).order_by(None)
+#     total_count_result = await session.execute(count_query)
+#     total_count = len(total_count_result.scalars().all())
+
+#     # Pagination
+#     query = query.offset((page - 1) * page_size).limit(page_size)
+#     result = await session.execute(query)
+#     employees = result.scalars().all()
+
+#     employee_list = []
+#     for emp in employees:
+#         designation_name_val = None
+#         if emp.designation_id:
+#             desig = await session.get(Designation, emp.designation_id)
+#             designation_name_val = desig.name if desig else None
+#         center_name = None
+#         if emp.center_id:
+#             center = await session.get(Center, emp.center_id)
+#             center_name = center.center_name if center else None
+#         address_dict = None
+#         if emp.address_id:
+#             address = await session.get(Address, emp.address_id)
+#             if address:
+#                 address_dict = {
+#                     "address": address.address_line_1,
+#                     "city": address.city,
+#                     "state": address.state,
+#                     "country": address.country,
+#                     "pin": address.postal_code,
+#                 }
+#         employee_list.append(EmployeeOut(
+#             id=emp.id,
+#             full_name=emp.full_name,
+#             email=emp.email,
+#             mobile=emp.mobile,
+#             qualification=emp.qualification,
+#             experience=emp.experience_years,
+#             designation_id=emp.designation_id,
+#             designation_name=designation_name_val,
+#             address_id=emp.address_id,
+#             address=address_dict,
+#             center_id=emp.center_id,
+#             center_name=center_name,
+#             joining_date=emp.joining_date,
+#             status=emp.status.value if hasattr(emp, "status") else None,
+#             profile_photo=emp.profile_photo,
+#         ))
+
+#     # --- Employee-wise count by designation ---
+#     from sqlalchemy import func
+#     count_stmt = (
+#         select(Designation.name, func.count(Employee.id))
+#         .join(Employee, Employee.designation_id == Designation.id)
+#         .where(Employee.center_id == center_id)
+#         .group_by(Designation.name)
+#     )
+#     count_result = await session.execute(count_stmt)
+#     employee_counts = {row[0]: row[1] for row in count_result.all()}
+
+#     return {
+#         "page": page,
+#         "page_size": page_size,
+#         "total_count": total_count,
+#         "employees": employee_list,
+#         "employee_counts": employee_counts
+#     }
+
+
 @router.get("/employee")
 async def list_employees(
     page: int = Query(1, ge=1),
@@ -810,30 +929,21 @@ async def list_employees(
     mobile: Optional[str] = Query(None),
     designation_name: Optional[str] = Query(None),
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_user=Depends(centeradmin_required)  # ✅ FIXED
 ):
-    # Determine center_id from user context
-    center_id = None
-    if current_user.get("role") == "centeradmin":
-        center_id = current_user.get("center_id")
-        if not center_id:
-            # Fallback: fetch from DB
-            from app.auth.models.models import CenterAdmin
-            result = await session.execute(
-                select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
-            )
-            center_admin = result.scalar_one_or_none()
-            if center_admin and center_admin.center_id:
-                center_id = str(center_admin.center_id)
-    elif current_user.get("role") == "member":
-        from app.auth.models.models import Member
-        member = await session.get(Member, current_user["user_id"])
-        center_id = str(member.home_center_id) if member and member.home_center_id else None
+    # =========================
+    # GET CENTER ID (CLEAN)
+    # =========================
+    center_id = current_user.get("center_id")
 
     if not center_id:
         raise HTTPException(403, "No center assigned to this user.")
 
+    # =========================
+    # FILTERS (UNCHANGED)
+    # =========================
     filters = [Employee.center_id == center_id]
+
     if full_name:
         filters.append(Employee.full_name.ilike(f"%{full_name}%"))
     if email:
@@ -842,6 +952,7 @@ async def list_employees(
         filters.append(Employee.mobile.ilike(f"%{mobile}%"))
 
     query = select(Employee)
+
     if designation_name:
         from sqlalchemy.orm import aliased
         DesignationAlias = aliased(Designation)
@@ -851,26 +962,33 @@ async def list_employees(
     if filters:
         query = query.where(and_(*filters))
 
-    # Get total count
+    # =========================
+    # COUNT (UNCHANGED)
+    # =========================
     count_query = query.with_only_columns(Employee.id).order_by(None)
     total_count_result = await session.execute(count_query)
     total_count = len(total_count_result.scalars().all())
 
-    # Pagination
+    # =========================
+    # PAGINATION
+    # =========================
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await session.execute(query)
     employees = result.scalars().all()
 
     employee_list = []
+
     for emp in employees:
         designation_name_val = None
         if emp.designation_id:
             desig = await session.get(Designation, emp.designation_id)
             designation_name_val = desig.name if desig else None
+
         center_name = None
         if emp.center_id:
             center = await session.get(Center, emp.center_id)
             center_name = center.center_name if center else None
+
         address_dict = None
         if emp.address_id:
             address = await session.get(Address, emp.address_id)
@@ -882,6 +1000,7 @@ async def list_employees(
                     "country": address.country,
                     "pin": address.postal_code,
                 }
+
         employee_list.append(EmployeeOut(
             id=emp.id,
             full_name=emp.full_name,
@@ -900,14 +1019,18 @@ async def list_employees(
             profile_photo=emp.profile_photo,
         ))
 
-    # --- Employee-wise count by designation ---
+    # =========================
+    # DESIGNATION COUNT (UNCHANGED)
+    # =========================
     from sqlalchemy import func
+
     count_stmt = (
         select(Designation.name, func.count(Employee.id))
         .join(Employee, Employee.designation_id == Designation.id)
         .where(Employee.center_id == center_id)
         .group_by(Designation.name)
     )
+
     count_result = await session.execute(count_stmt)
     employee_counts = {row[0]: row[1] for row in count_result.all()}
 
