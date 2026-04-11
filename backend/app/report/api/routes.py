@@ -274,156 +274,6 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-# @router.get("/consolidated-expenses")
-# async def get_consolidated_expense(
-#     start_date: Optional[str] = Query(None),
-#     end_date: Optional[str] = Query(None),
-#     include_sub_branches: bool = Query(True),
-#     page: int = Query(1, ge=1),
-#     page_size: int = Query(10, ge=1),
-#     db: AsyncSession = Depends(get_async_session),
-#     current_user = Depends(centeradmin_required)
-# ):
-#     try:
-#         from datetime import datetime, time, date, timedelta
-#         from sqlalchemy import cast, Date  # ✅ IMPORTANT
-
-#         # -------------------------------
-#         # SAFE DATE HANDLING
-#         # -------------------------------
-#         start_date = await normalize_date(start_date)
-#         end_date = await normalize_date(end_date)
-
-#         if not end_date:
-#             end_date = date.today()
-
-#         if not start_date:
-#             start_date = end_date - timedelta(days=30)
-
-#         start_dt = datetime.combine(start_date, time.min)
-#         end_dt = datetime.combine(end_date, time.max)
-
-#         center_id = current_user.get("center_id")
-
-#         if not center_id:
-#             raise HTTPException(status_code=400, detail="Center ID missing")
-
-#         center_ids = await get_all_center_ids_async(center_id, db) if include_sub_branches else [center_id]
-
-#         offset = (page - 1) * page_size
-
-#         # ==============================
-#         # PAYMENT ORDERS (DATETIME SAFE)
-#         # ==============================
-#         payment_query = select(
-#             PaymentOrder.center_id,
-#             PaymentOrder.total_amount.label("amount"),
-#             PaymentOrder.created_at.label("date"),
-#             PaymentOrder.order_type
-#         ).where(
-#             PaymentOrder.center_id.in_(center_ids),
-#             PaymentOrder.status == PaymentOrderStatus.paid,
-#             PaymentOrder.created_at >= start_dt,
-#             PaymentOrder.created_at <= end_dt
-#         )
-
-#         payments = (await db.execute(payment_query)).all()
-
-#         # ==============================
-#         # STOCK (DATETIME SAFE)
-#         # ==============================
-#         stock_query = select(
-#             StockTransaction.product_id,
-#             StockTransaction.subtotal.label("amount"),
-#             StockTransaction.created_at.label("date")
-#         ).where(
-#             StockTransaction.transaction_type == "purchase",
-#             StockTransaction.created_at >= start_dt,
-#             StockTransaction.created_at <= end_dt
-#         )
-
-#         stock_data = (await db.execute(stock_query)).all()
-
-#         # ==============================
-#         # MISC (DATE SAFE - FIXED)
-#         # ==============================
-#         misc_query = select(
-#             MiscellaneousTransaction.center_id,
-#             MiscellaneousTransaction.total_amount.label("amount"),
-#             MiscellaneousTransaction.transaction_date.label("date"),
-#             MiscellaneousTransaction.category
-#         ).where(
-#             MiscellaneousTransaction.center_id.in_(center_ids),
-#             cast(MiscellaneousTransaction.transaction_date, Date) >= start_date,
-#             cast(MiscellaneousTransaction.transaction_date, Date) <= end_date
-#         )
-
-#         misc_data = (await db.execute(misc_query)).all()
-
-#         # ==============================
-#         # PAYROLL (DATE SAFE - FIXED)
-#         # ==============================
-#         payroll_query = select(
-#             PayrollRecord.center_id,
-#             PayrollRecord.net_salary.label("amount"),
-#             PayrollRecord.paid_date.label("date")
-#         ).where(
-#             PayrollRecord.center_id.in_(center_ids),
-#             PayrollRecord.status == PayrollStatus.paid,
-#             PayrollRecord.paid_date.isnot(None),
-#             cast(PayrollRecord.paid_date, Date) >= start_date,
-#             cast(PayrollRecord.paid_date, Date) <= end_date
-#         )
-
-#         payroll_data = (await db.execute(payroll_query)).all()
-
-#         # ==============================
-#         # PROCESS (UNCHANGED)
-#         # ==============================
-#         combined = []
-
-#         for p in payments:
-#             if p.order_type.value == "branch_purchase":
-#                 combined.append({
-#                     "type": "branch_purchase",
-#                     "amount": float(p.amount),
-#                     "center_id": str(p.center_id),
-#                     "date": p.date
-#                 })
-
-#         for s in stock_data:
-#             combined.append({
-#                 "type": "inventory_purchase",
-#                 "amount": float(s.amount),
-#                 "center_id": None,
-#                 "date": s.date
-#             })
-
-#         for m in misc_data:
-#             combined.append({
-#                 "type": "other_expense",
-#                 "amount": float(m.amount),
-#                 "center_id": str(m.center_id),
-#                 "date": m.date
-#             })
-
-#         for p in payroll_data:
-#             combined.append({
-#                 "type": "salary",
-#                 "amount": float(p.amount),
-#                 "center_id": str(p.center_id),
-#                 "date": p.date
-#             })
-
-#         combined.sort(key=lambda x: x["date"], reverse=True)
-
-#         return combined
-
-#     except Exception as e:
-#         import traceback
-#         print(traceback.format_exc())
-#         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/consolidated-expenses")
 async def get_consolidated_expense(
@@ -665,9 +515,6 @@ async def get_consolidated_settlement(
     try:
         from datetime import datetime, time, date, timedelta
 
-        # -------------------------------
-        # ✅ NORMALIZE + FORCE DATE TYPE
-        # -------------------------------
         start_date = await normalize_date(start_date)
         end_date = await normalize_date(end_date)
 
@@ -683,9 +530,6 @@ async def get_consolidated_settlement(
         if not start_date:
             start_date = end_date - timedelta(days=30)
 
-        # -------------------------------
-        # ✅ CREATE DATETIME RANGE
-        # -------------------------------
         start_dt = datetime.combine(start_date, time.min)
         end_dt = datetime.combine(end_date, time.max)
 
@@ -699,7 +543,7 @@ async def get_consolidated_settlement(
         offset = (page - 1) * page_size
 
         # -------------------------------
-        # PAYMENT ORDERS (datetime)
+        # PAYMENT ORDERS (UNCHANGED)
         # -------------------------------
         payment_query = select(
             PaymentOrder.center_id,
@@ -716,14 +560,17 @@ async def get_consolidated_settlement(
         payments = (await db.execute(payment_query)).all()
 
         # -------------------------------
-        # INVENTORY (datetime)
+        # INVENTORY (FIXED ✅)
         # -------------------------------
         stock_query = select(
-            StockTransaction.product_id,
+            Product.center_id,
             StockTransaction.subtotal.label("amount"),
             StockTransaction.created_at.label("date")
+        ).join(
+            Product, Product.id == StockTransaction.product_id
         ).where(
-            StockTransaction.transaction_type == "purchase",
+            Product.center_id.in_(center_ids),
+            StockTransaction.transaction_type == "IN",
             StockTransaction.created_at >= start_dt,
             StockTransaction.created_at <= end_dt
         )
@@ -731,7 +578,7 @@ async def get_consolidated_settlement(
         stock_data = (await db.execute(stock_query)).all()
 
         # -------------------------------
-        # MISC (STRICT DATE FIX)
+        # MISC (UNCHANGED)
         # -------------------------------
         misc_query = select(
             MiscellaneousTransaction.center_id,
@@ -747,7 +594,7 @@ async def get_consolidated_settlement(
         misc_data = (await db.execute(misc_query)).all()
 
         # -------------------------------
-        # PAYROLL (STRICT DATE FIX)
+        # PAYROLL (UNCHANGED)
         # -------------------------------
         payroll_query = select(
             PayrollRecord.center_id,
@@ -812,7 +659,7 @@ async def get_consolidated_settlement(
                 "scenario": "Inventory Purchase",
                 "type": "outgoing",
                 "amount": amount,
-                "center_id": None,
+                "center_id": str(s.center_id),  # ✅ FIXED
                 "date": s.date
             })
 
@@ -851,6 +698,7 @@ async def get_consolidated_settlement(
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # @router.get("/consolidated-settlements")
 # async def get_consolidated_settlement(
