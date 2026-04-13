@@ -1969,36 +1969,67 @@ async def update_center_image(
     }
 
 
-@router.put("/centeradmin/profile-photo")
+@@router.put("/centeradmin/profile-photo")
 async def update_centeradmin_profile_photo(
     profile_photo: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
     center_id = current_admin["center_id"]
-    admin_result = await session.execute(
-        select(CenterAdmin).where(CenterAdmin.center_id == center_id)
-    )
-    admin = admin_result.scalar_one_or_none()
+    role = current_admin["role"]
+    user_id = current_admin["user_id"]
+
+    # =========================
+    # GET CENTER ADMIN
+    # =========================
+    if role == "centeradmin":
+        admin_result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.id == user_id)
+        )
+        admin = admin_result.scalar_one_or_none()
+
+    elif role == "employee":
+        # Employee should map to same center's admin
+        admin_result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.center_id == center_id)
+        )
+        admin = admin_result.scalar_one_or_none()
+
+    else:
+        admin = None
+
     if not admin:
         raise HTTPException(404, "CenterAdmin not found")
-    user = await session.get(User, admin.id)  # Use admin.id, not admin.user_id
+
+    # =========================
+    # USER (UNCHANGED)
+    # =========================
+    user = await session.get(User, admin.id)  # keep same logic
     if not user:
         raise HTTPException(404, "User not found")
+
     center = await session.get(Center, center_id)
     if not center:
         raise HTTPException(404, "Center not found")
 
+    # =========================
+    # FILE UPLOAD (UNCHANGED)
+    # =========================
     file_bytes = await profile_photo.read()
     file_ext = profile_photo.filename.split('.')[-1]
     key = f"profile_photos/{user.id}.{file_ext}"
+
     from app.s3.service import upload_file, get_file_url
     from fastapi.concurrency import run_in_threadpool
+
     await run_in_threadpool(upload_file, file_bytes, key, profile_photo.content_type)
-    user.profile_photo = key  # <-- Save the S3 key, not the URL
+
+    user.profile_photo = key  # store S3 key
 
     await session.commit()
+
     profile_photo_url = await run_in_threadpool(get_file_url, key)
+
     return {
         "detail": "Profile photo updated successfully",
         "profile_photo_url": profile_photo_url,
