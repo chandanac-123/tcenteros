@@ -14,10 +14,19 @@ import {
   useDeleteMemberMutation,
   useUpdateMemberStatusMutation
 } from '@api-queries/crm/Query'
+import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
 const statusVariantMap = { active: 'active', inactive: 'inactive' }
 const paymentVariantMap = { paid: 'future_lead', null: 'inactive' }
 
 const Members = ({ onView, onEdit }) => {
+  const {
+    hydrated,
+    canViewMember,
+    canEditMember,
+    canDeleteMember,
+    canEnableMember
+  } = useCrmPermissions()
+  if (!hydrated) return null
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
@@ -86,13 +95,20 @@ const Members = ({ onView, onEdit }) => {
       accessorKey: '',
       cell: ({ row }) => (
         <span className='flex gap-3'>
-          <button onClick={() => onView(row.original.id)}>
+          <button
+            disabled={!canViewMember}
+            onClick={() => onView(row.original.id)}
+          >
             <img src={view} alt='view' />
           </button>
-          <button onClick={() => onEdit(row.original.id)}>
+          <button
+            disabled={!canEditMember}
+            onClick={() => onEdit(row.original.id)}
+          >
             <img src={edit} alt='edit' />
           </button>
           <button
+            disabled={!canDeleteMember}
             onClick={() => {
               setDeleteId(row.original.id)
               setDeleteOpen(true)
@@ -101,6 +117,7 @@ const Members = ({ onView, onEdit }) => {
             <img src={deleteicon} alt='delete' />
           </button>
           <Switch
+            disabled={!canEnableMember}
             checked={row.original.status === 'active'}
             onCheckedChange={checked => {
               handleStatusUpdate(

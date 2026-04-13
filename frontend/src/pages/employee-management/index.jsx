@@ -9,14 +9,38 @@ import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
 import { useAllCentersQuery } from '@api-queries/center-profile/Query'
 import Payroll from './payroll'
+import { useEmployeePermissions } from '@hooks/permissions/UseEmployeePermission'
 
 const EmployeeManagement = () => {
-  const [activeTab, setActiveTab] = useState('employee')
+  const { hydrated, canEmployee, canSalary, canPayroll, canAddEmployee } =
+    useEmployeePermissions()
+  if (!hydrated) return null
+
+  const tabConfig = [
+    {
+      id: 'employee',
+      name: 'Employee',
+      visible: canEmployee
+    },
+    {
+      id: 'salary_structure',
+      name: 'Salary Structure',
+      visible: canSalary
+    },
+    {
+      id: 'payroll',
+      name: 'Payroll',
+      visible: canPayroll
+    }
+  ]
+
+  const employeeOrCenter = tabConfig.filter(tab => tab.visible)
+  const defaultTab = employeeOrCenter[0]?.id || null
+  const [activeTab, setActiveTab] = useState(() => defaultTab)
   const [open, setOpen] = useState(false)
   const [structureOpen, setStructureOpen] = useState(false)
   const { data: centersData, isFetching: isCentersFetching } =
     useAllCentersQuery()
-  console.log('centersData: ', centersData)
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
@@ -25,11 +49,6 @@ const EmployeeManagement = () => {
   const handleOpen = () => {
     setOpen(true)
   }
-  const employeeOrCenter = [
-    { id: 'employee', name: 'Employee' },
-    { id: 'salary_structure', name: 'Salary Structure' },
-    { id: 'payroll', name: 'Payroll' }
-  ]
 
   return (
     <ContentLayout>
@@ -47,7 +66,7 @@ const EmployeeManagement = () => {
               setTableParams(prev => ({ ...prev, payment_status: value }))
             }
           />
-          {activeTab === 'employee' && (
+          {activeTab === 'employee' && canAddEmployee && (
             <Button onClick={handleOpen} size='addbutton'>
               + Add Employee
             </Button>
@@ -62,7 +81,7 @@ const EmployeeManagement = () => {
       <div className=' gap-4 mt-4 flex flex-col'>
         <CustomeTab
           tabList={employeeOrCenter}
-          defaultVal='employee'
+          defaultVal={employeeOrCenter[0]?.id}
           tabsListClass=' w-[400px] p-[1px]'
           onChange={value => setActiveTab(value)}
         />

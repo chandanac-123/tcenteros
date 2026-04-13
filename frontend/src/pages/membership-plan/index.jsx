@@ -9,6 +9,7 @@ import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useLocation } from 'react-router-dom'
+import { useMembershipPermissions } from '@hooks/permissions/UseMembershipPermission'
 
 const MembershipPlan = () => {
   const location = useLocation()
@@ -17,6 +18,8 @@ const MembershipPlan = () => {
   const [activeTab, setActiveTab] = useState(initialTab)
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
+  const { hydrated, canAddMembership } = useMembershipPermissions()
+  if (!hydrated) return null
 
   const Status = [
     { id: 'all', name: 'All' },
@@ -39,10 +42,12 @@ const MembershipPlan = () => {
             onChange={value => setActiveTab(value)}
           />
         </div>
-        <Button size='addbutton' onClick={() => setOpen(true)}>
-          {' '}
-          + Create New Plan
-        </Button>
+        {canAddMembership && (
+          <Button size='addbutton' onClick={() => setOpen(true)}>
+            {' '}
+            + Create New Plan
+          </Button>
+        )}
       </div>
       {data?.length === 0 && (
         <p className='flex justify-center items-center font-semibold font-poppins'>

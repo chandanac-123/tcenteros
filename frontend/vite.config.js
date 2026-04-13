@@ -16,6 +16,7 @@ export default defineConfig({
       '@common': path.resolve(__dirname, 'src/common'),
       '@api-queries': path.resolve(__dirname, 'src/api-queries'),
       '@api': path.resolve(__dirname, 'src/api'),
+      '@hooks': path.resolve(__dirname, 'src/hooks'),
     },
   },
 });

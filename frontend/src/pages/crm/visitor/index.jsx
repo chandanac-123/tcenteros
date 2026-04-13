@@ -3,8 +3,11 @@ import { useState } from 'react'
 import { useVisitorQuery } from '@api-queries/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
+import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
 
 const Visitors = () => {
+  const { hydrated, canConvertVisitor } = useCrmPermissions()
+  if (!hydrated) return null
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
@@ -23,6 +26,7 @@ const Visitors = () => {
       cell: ({ row }) => (
         <span className='flex gap-3'>
           <Button
+            disabled={!canConvertVisitor}
             size='notificationbutton'
             onClick={() => {
               setSelectedTab(1)

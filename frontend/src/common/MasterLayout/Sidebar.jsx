@@ -2,7 +2,7 @@ import { useBrandingStore } from '@store/brandingStore'
 import { routes } from '../../routes/Routes'
 import MenuCard from './MenuCard'
 import logo from '@assets/header-icons/logo.svg'
-import { hasPermission } from '@utils/helper'
+import { sidebarPermission } from '@utils/helper'
 import { useAuthStore } from '@store/authStore'
 
 const Sidebar = () => {
@@ -23,7 +23,7 @@ const Sidebar = () => {
       </div>
       <div className='flex flex-col gap-1 w-full my-3 px-2 overflow-auto'>
         {routes.map((item, index) => {
-          const allowed = hasPermission(permissions, item.permissionKey)
+          const allowed = sidebarPermission(permissions, item.permissionKey)
 
           if (item?.menubar && allowed) {
             return (

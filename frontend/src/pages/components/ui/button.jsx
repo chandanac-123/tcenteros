@@ -53,6 +53,7 @@ const Button = React.forwardRef(
       rightIcon,
       children,
       onClick,
+      disabled,
       ...props
     },
     ref
@@ -60,6 +61,7 @@ const Button = React.forwardRef(
     return (
       <button
         ref={ref}
+        disabled={disabled}
         className={cn(buttonVariants({ variant, size, className }))}
         onClick={onClick}
         {...props}

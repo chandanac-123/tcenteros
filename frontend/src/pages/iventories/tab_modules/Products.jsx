@@ -80,7 +80,7 @@ const Products = () => {
         <h1 className='text-lg font-semibold'>Products List</h1>
         <div className='flex gap-2'>
           <Button size='addbutton' type='submit' onClick={() => setInventoryOpen(true)}>
-            + Inventory Profit
+            + Add Inventory Profit
           </Button>
           <Button size='addbutton' type='submit' onClick={() => setOpen(true)}>
             + Add Product

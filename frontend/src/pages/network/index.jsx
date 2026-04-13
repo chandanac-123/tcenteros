@@ -12,8 +12,11 @@ import {
 import { useNetworkTabStore } from '@store/networkTabstore'
 import { format } from 'date-fns'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
+import { useNetworkPermissions } from '@hooks/permissions/UseNetworkPermission'
 
 const Network = () => {
+  const { hydrated, canEnableNetwork, canAddAmount } = useNetworkPermissions()
+  if (!hydrated) return null
   const { activeTab, setActiveTab } = useNetworkTabStore()
   const [open, setOpen] = useState(false)
   const { mutateAsync: enabled, isPending } = useNetworkToggleButtonMutation()
@@ -103,6 +106,7 @@ const Network = () => {
         {/* :::: Amount Button ::::: */}
 
         <button
+          disabled={!canAddAmount}
           onClick={() => setOpen(true)}
           className='px-4 py-2 rounded-[12px] border-2 border-primary text-primary font-medium hover:bg-primary hover:text-white transition'
         >
@@ -116,7 +120,7 @@ const Network = () => {
           <Switch
             checked={networkActive}
             onCheckedChange={handleToggle}
-            disabled={isPending || isNetworkToggleFetching}
+            disabled={isPending || isNetworkToggleFetching || !canEnableNetwork}
           />
         </div>
       </div>
