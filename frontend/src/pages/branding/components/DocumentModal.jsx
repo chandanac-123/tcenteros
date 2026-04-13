@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import CustomeModal from '@common/components/CustomeModal';
-import { Button } from '@pages/components/ui/button';
-import { Textarea } from '@pages/components/ui/textarea';
-import { Input } from '@pages/components/ui/input';  // Use Input for title
+import { useState, useEffect } from "react";
+import CustomeModal from "@common/components/CustomeModal";
+import { Button } from "@pages/components/ui/button";
+import { Textarea } from "@pages/components/ui/textarea";
+import { Input } from "@pages/components/ui/input"; // Use Input for title
 
 const DocumentModal = ({
   open,
   onClose,
   title,
   initialContent,
-  mode = 'view',
+  mode = "view",
   onSave,
 }) => {
   const [content, setContent] = useState(initialContent);
@@ -21,13 +21,17 @@ const DocumentModal = ({
   }, [initialContent, title]);
 
   return (
-    <CustomeModal open={open} onOpenChange={onClose} className="w-full max-w-2xl">
-      {mode === 'view' ? (
-        <div className="max-h-[70vh] overflow-y-auto text-sm leading-6 space-y-4">
+    <CustomeModal
+      open={open}
+      onOpenChange={onClose}
+      className="w-full max-w-2xl"
+    >
+      {mode === "view" ? (
+        <div className="max-h-[70vh]  text-sm leading-6 space-y-4">
           <span className="font-semibold text-lg justify-center flex">
             {title}
           </span>
-          {content?.split('\n').map((para, index) => (
+          {content?.split("\n").map((para, index) => (
             <p key={index}>{para}</p>
           ))}
         </div>
@@ -49,13 +53,15 @@ const DocumentModal = ({
           />
         </>
       )}
-
-      <div className="flex justify-end gap-3 mt-4">
-        <Button variant="outline_secondary" size="addbutton" onClick={onClose}>
-          Close
-        </Button>
-
-        {mode === 'edit' && (
+      {mode === "edit" && (
+        <div className="flex justify-end gap-3 mt-4">
+          <Button
+            variant="outline_secondary"
+            size="addbutton"
+            onClick={onClose}
+          >
+            Close
+          </Button>
           <Button
             size="addbutton"
             onClick={() => {
@@ -65,8 +71,8 @@ const DocumentModal = ({
           >
             Save Changes
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </CustomeModal>
   );
 };
