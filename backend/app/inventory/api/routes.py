@@ -879,22 +879,35 @@ async def list_all_stock_history(
 
     # Filter SKUs by center using a subquery (avoid duplicate joins)
     sku_ids_sel = select(SKU.id).where(SKU.center_id == center_id)
-    where_clauses = [StockTransaction.product_id.in_(sku_ids_sel)]
+
+    # ✅ FIX: Default filter → only purchase (IN)
+    where_clauses = [
+        StockTransaction.product_id.in_(sku_ids_sel),
+        StockTransaction.transaction_type == "IN"
+    ]
 
     if product_id:
         where_clauses.append(StockTransaction.product_id == product_id)
+
+    # ✅ OPTIONAL: override default if explicitly passed
     if transaction_type:
-        where_clauses.append(StockTransaction.transaction_type == transaction_type.upper())
+        where_clauses[-1] = StockTransaction.transaction_type == transaction_type.upper()
 
     created_at_attr = getattr(StockTransaction, "created_at", None)
+
     if date_from:
         if created_at_attr is not None:
-            where_clauses.append(StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time()))
+            where_clauses.append(
+                StockTransaction.created_at >= datetime.combine(date_from, datetime.min.time())
+            )
         else:
             where_clauses.append(StockTransaction.invoice_date >= date_from)
+
     if date_to:
         if created_at_attr is not None:
-            where_clauses.append(StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time()))
+            where_clauses.append(
+                StockTransaction.created_at <= datetime.combine(date_to, datetime.max.time())
+            )
         else:
             where_clauses.append(StockTransaction.invoice_date <= date_to)
 
@@ -903,7 +916,7 @@ async def list_all_stock_history(
     total_result = await db.execute(count_stmt)
     total = total_result.scalar_one() or 0
 
-    # Main query: StockTransaction join Product, left join Stock (to get available quantity)
+    # Main query
     stmt = (
         select(StockTransaction, Product, Stock)
         .join(Product, Product.id == StockTransaction.product_id)
@@ -913,6 +926,7 @@ async def list_all_stock_history(
 
     # Order by created_at (if present) else by invoice_date
     order_col = created_at_attr if created_at_attr is not None else StockTransaction.invoice_date
+
     stmt = stmt.order_by(desc(order_col)).offset((page - 1) * page_size).limit(page_size)
 
     res = await db.execute(stmt)
