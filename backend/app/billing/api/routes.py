@@ -220,7 +220,7 @@ async def get_billing_dashboard(
                 PaymentOrder.order_type.in_(revenue_order_types),
                 and_(
                     PaymentOrder.order_type == OrderType.other_charges,
-                    MiscellaneousTransaction.transaction_type == "INCOME"   # ✅ FIX
+                    MiscellaneousTransaction.transaction_type == "Income"   # ✅ FIX
                 )
             )
         )
@@ -265,7 +265,7 @@ async def get_billing_dashboard(
                 PaymentOrder.order_type.in_(revenue_order_types),
                 and_(
                     PaymentOrder.order_type == OrderType.other_charges,
-                    MiscellaneousTransaction.transaction_type == "INCOME"   # ✅ FIX
+                    MiscellaneousTransaction.transaction_type == "Income"   # ✅ FIX
                 )
             )
         )
