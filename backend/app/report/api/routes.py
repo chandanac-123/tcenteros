@@ -439,7 +439,7 @@ async def get_consolidated_expense(
         # Other Expense
         # --------------------------
         for m in misc_data:
-            if m.category == "other_expense":
+            if m.transaction_type == "expense":   # ✅ FIX - filter only expenses
                 combined.append({
                     "type": "other_expense",
                     "amount": float(m.amount or 0),
