@@ -87,17 +87,21 @@ async def get_accounting_dashboard(
     )
     total_income = float(total_income.scalar() or 0)
 
-    # ✅ EXCLUDE NETWORK EXPENSE (5800)  🔥 FIXED HERE
-    from sqlalchemy import or_
-
+    # ✅ FIXED: include inventory WITHOUT double count
     total_expense = await session.execute(
         select(func.sum(GeneralLedger.debit))
         .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
         .where(
             GeneralLedger.center_id == center_id,
-            and_(
-                ChartOfAccounts.account_type == AccountType.EXPENSE,
-                ChartOfAccounts.code != "5800"
+            or_(
+                # Normal expense accounts (excluding inventory + network)
+                and_(
+                    ChartOfAccounts.account_type == AccountType.EXPENSE,
+                    ChartOfAccounts.code != "5800",
+                    ChartOfAccounts.code != "5400"
+                ),
+                # Inventory purchase
+                GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value
             )
         )
     )
@@ -185,7 +189,7 @@ async def get_accounting_dashboard(
 
     # 4. Expense Breakdown (UNCHANGED)
     expense_codes = {
-        "networking": "5500",   # (kept as-is per your request)
+        "networking": "5500",
         "salary": "5000",
         "branching": ["5600", "5700"],
         "inventory_purchase": "5400",
@@ -239,7 +243,6 @@ async def get_accounting_dashboard(
         "income_breakdown": income_breakdown,
         "expense_breakdown": expense_breakdown
     }
-
 
 
 
