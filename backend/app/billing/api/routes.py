@@ -197,7 +197,7 @@ async def get_billing_dashboard(
     next_month = month_start.replace(day=28) + timedelta(days=4)
     month_end = next_month.replace(day=1) - timedelta(days=1)
 
-    # ✅ REVENUE TYPES (INCLUDING ONLY INCOME PART OF other_charges)
+    # ✅ REVENUE TYPES
     revenue_order_types = [
         OrderType.membership,
         OrderType.membership_renewal,
@@ -206,18 +206,22 @@ async def get_billing_dashboard(
     ]
 
     # ===== 1. TOTAL REVENUE =====
-    total_revenue_query = select(
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.status == PaymentOrderStatus.paid,
-        or_(
-            PaymentOrder.order_type.in_(revenue_order_types),
-            and_(
-                PaymentOrder.order_type == OrderType.other_charges,
-                PaymentOrder.total_amount > 0,   # ✅ ONLY INCOME
-                MiscellaneousTransaction.transaction_type == "Income"
-                
+    total_revenue_query = (
+        select(func.coalesce(func.sum(PaymentOrder.total_amount), 0))
+        .select_from(PaymentOrder)
+        .outerjoin(
+            MiscellaneousTransaction,
+            MiscellaneousTransaction.payment_order_id == PaymentOrder.payment_order_id
+        )
+        .where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            or_(
+                PaymentOrder.order_type.in_(revenue_order_types),
+                and_(
+                    PaymentOrder.order_type == OrderType.other_charges,
+                    MiscellaneousTransaction.transaction_type == "INCOME"   # ✅ FIX
+                )
             )
         )
     )
@@ -245,18 +249,24 @@ async def get_billing_dashboard(
     network_outgoing = float((await db.execute(network_out_query)).scalar() or 0)
 
     # ===== 4. THIS MONTH TOTAL =====
-    this_month_query = select(
-        func.coalesce(func.sum(PaymentOrder.total_amount), 0)
-    ).where(
-        PaymentOrder.center_id == center_id,
-        PaymentOrder.status == PaymentOrderStatus.paid,
-        PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
-        PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time()),
-        or_(
-            PaymentOrder.order_type.in_(revenue_order_types),
-            and_(
-                PaymentOrder.order_type == OrderType.other_charges,
-                PaymentOrder.total_amount > 0   # ✅ ONLY INCOME
+    this_month_query = (
+        select(func.coalesce(func.sum(PaymentOrder.total_amount), 0))
+        .select_from(PaymentOrder)
+        .outerjoin(
+            MiscellaneousTransaction,
+            MiscellaneousTransaction.payment_order_id == PaymentOrder.payment_order_id
+        )
+        .where(
+            PaymentOrder.center_id == center_id,
+            PaymentOrder.status == PaymentOrderStatus.paid,
+            PaymentOrder.created_at >= datetime.combine(month_start, datetime.min.time()),
+            PaymentOrder.created_at <= datetime.combine(month_end, datetime.max.time()),
+            or_(
+                PaymentOrder.order_type.in_(revenue_order_types),
+                and_(
+                    PaymentOrder.order_type == OrderType.other_charges,
+                    MiscellaneousTransaction.transaction_type == "INCOME"   # ✅ FIX
+                )
             )
         )
     )
