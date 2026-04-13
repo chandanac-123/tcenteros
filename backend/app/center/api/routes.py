@@ -1969,7 +1969,7 @@ async def update_center_image(
     }
 
 
-@@router.put("/centeradmin/profile-photo")
+@router.put("/centeradmin/profile-photo")
 async def update_centeradmin_profile_photo(
     profile_photo: UploadFile = File(...),
     session: AsyncSession = Depends(get_async_session),
