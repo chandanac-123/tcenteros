@@ -1070,6 +1070,7 @@ async def list_center_employees_mini(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user),
 ):
+    from app.auth.models.models import Employee
     # Permission check: allow centeradmin + employee
     if current_user.get("role") not in ["centeradmin", "employee"]:
         raise HTTPException(
