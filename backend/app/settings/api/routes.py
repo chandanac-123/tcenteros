@@ -318,25 +318,37 @@ async def delete_center_operational_setting(
 @router.post("/designation", response_model=DesignationOut)
 async def create_designation(
     name: str = Form(...),
-    image: UploadFile = File(None),  # <-- Now optional
+    image: UploadFile = File(None),
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    center_admin = await session.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-    center_id = center_admin.center_id
+    role = current_user["role"]
+    user_id = current_user["user_id"]
+    center_id = current_user["center_id"]
 
-    # Check for duplicate name in this center
+    # Handle both roles
+    if role == "centeradmin":
+        center_admin = await session.get(CenterAdmin, user_id)
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+        center_id = center_admin.center_id
+
+    elif role == "employee":
+        employee = await session.get(Employee, user_id)
+        if not employee:
+            raise HTTPException(status_code=403, detail="Employee not found")
+        center_id = employee.center_id
+
+    # Check duplicate
     result_name = await session.execute(
         select(Designation).where(Designation.name == name, Designation.center_id == center_id)
     )
     if result_name.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="There cannot be more than one designation with the same name in your center.")
 
-    # Auto-generate code
     import random, re, uuid
     name_part = ''.join(re.findall(r'[A-Za-z]', name))[:3].upper().ljust(3, 'X')
+
     while True:
         rand_part = f"{random.randint(0, 999):03d}"
         code = f"{name_part}{rand_part}"
@@ -361,7 +373,9 @@ async def create_designation(
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+
     session.add(designation)
+
     try:
         await session.commit()
         await session.refresh(designation)
@@ -387,18 +401,32 @@ async def update_designation(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    center_admin = await session.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-    center_id = center_admin.center_id
+    role = current_user["role"]
+    user_id = current_user["user_id"]
+    center_id = current_user["center_id"]
+
+    if role == "centeradmin":
+        center_admin = await session.get(CenterAdmin, user_id)
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+        center_id = center_admin.center_id
+
+    elif role == "employee":
+        employee = await session.get(Employee, user_id)
+        if not employee:
+            raise HTTPException(status_code=403, detail="Employee not found")
+        center_id = employee.center_id
 
     designation = await session.get(Designation, designation_id)
     if not designation or designation.center_id != center_id:
         raise HTTPException(status_code=404, detail="Designation not found in your center")
 
-    # Check for duplicate name in this center
     result_name = await session.execute(
-        select(Designation).where(Designation.name == name, Designation.id != designation_id, Designation.center_id == center_id)
+        select(Designation).where(
+            Designation.name == name,
+            Designation.id != designation_id,
+            Designation.center_id == center_id
+        )
     )
     if result_name.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Designation name already exists")
@@ -413,10 +441,12 @@ async def update_designation(
 
     await session.commit()
     await session.refresh(designation)
+
     return {
         **designation.__dict__,
         "image_url": get_file_url(designation.image_url) if designation.image_url else None
     }
+
 
 # Delete Designation (centeradmin only, in own center)
 @router.delete("/designation/{designation_id}")
@@ -425,36 +455,44 @@ async def delete_designation(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(centeradmin_required)
 ):
-    center_admin = await session.get(CenterAdmin, current_user["user_id"])
-    if not center_admin:
-        raise HTTPException(status_code=403, detail="Not a center admin")
-    center_id = center_admin.center_id
+    role = current_user["role"]
+    user_id = current_user["user_id"]
+    center_id = current_user["center_id"]
+
+    if role == "centeradmin":
+        center_admin = await session.get(CenterAdmin, user_id)
+        if not center_admin:
+            raise HTTPException(status_code=403, detail="Not a center admin")
+        center_id = center_admin.center_id
+
+    elif role == "employee":
+        employee = await session.get(Employee, user_id)
+        if not employee:
+            raise HTTPException(status_code=403, detail="Employee not found")
+        center_id = employee.center_id
 
     designation = await session.get(Designation, designation_id)
     if not designation or designation.center_id != center_id:
         raise HTTPException(status_code=404, detail="Designation not found in your center")
+
     await session.delete(designation)
     await session.commit()
+
     return {"detail": "Designation deleted"}
 
 # List Designations (centeradmin/member, in own center)
 @router.get("/designation", response_model=list[DesignationOut])
 async def list_designations(
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_user=Depends(centeradmin_required)
 ):
-    center_id = None
-    if current_user["role"] == "centeradmin":
-        center_admin = await session.get(CenterAdmin, current_user["user_id"])
-        center_id = center_admin.center_id
-    elif current_user["role"] == "member":
-        member = await session.get(Member, current_user["user_id"])
-        center_id = member.home_center_id
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    center_id = current_user["center_id"]
 
-    result = await session.execute(select(Designation).where(Designation.center_id == center_id))
+    result = await session.execute(
+        select(Designation).where(Designation.center_id == center_id)
+    )
     designations = result.scalars().all()
+
     return [
         {
             **designation.__dict__,
@@ -468,21 +506,14 @@ async def list_designations(
 async def get_designation(
     designation_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
-    current_user=Depends(get_current_user)
+    current_user=Depends(centeradmin_required)
 ):
-    center_id = None
-    if current_user["role"] == "centeradmin":
-        center_admin = await session.get(CenterAdmin, current_user["user_id"])
-        center_id = center_admin.center_id
-    elif current_user["role"] == "member":
-        member = await session.get(Member, current_user["user_id"])
-        center_id = member.home_center_id
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    center_id = current_user["center_id"]
 
     designation = await session.get(Designation, designation_id)
     if not designation or designation.center_id != center_id:
         raise HTTPException(status_code=404, detail="Designation not found in your center")
+
     return {
         **designation.__dict__,
         "image_url": get_file_url(designation.image_url) if designation.image_url else None
