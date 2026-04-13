@@ -215,7 +215,9 @@ async def get_billing_dashboard(
             PaymentOrder.order_type.in_(revenue_order_types),
             and_(
                 PaymentOrder.order_type == OrderType.other_charges,
-                PaymentOrder.total_amount > 0   # ✅ ONLY INCOME
+                PaymentOrder.total_amount > 0,   # ✅ ONLY INCOME
+                MiscellaneousTransaction.transaction_type == "Income"
+                
             )
         )
     )
