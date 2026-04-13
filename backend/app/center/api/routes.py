@@ -2047,23 +2047,40 @@ async def get_centeradmin_profile(
     session: AsyncSession = Depends(get_async_session),
     current_admin=Depends(centeradmin_required)
 ):
-    # Get the logged-in centeradmin's user ID
     admin_id = current_admin["user_id"]
+    role = current_admin["role"]
+    center_id = current_admin["center_id"]
 
-    # Fetch CenterAdmin record
-    center_admin = await session.get(CenterAdmin, admin_id)
+    # =========================
+    # FETCH CENTER ADMIN
+    # =========================
+    if role == "centeradmin":
+        center_admin = await session.get(CenterAdmin, admin_id)
+
+    elif role == "employee":
+        result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.center_id == center_id)
+        )
+        center_admin = result.scalar_one_or_none()
+
+    else:
+        center_admin = None
+
     if not center_admin:
         raise HTTPException(404, "CenterAdmin not found")
 
-    # Fetch User record (for profile_photo and role)
-    user = await session.get(User, admin_id)
+    # =========================
+    # FETCH USER (UNCHANGED)
+    # =========================
+    user = await session.get(User, center_admin.id)
     if not user:
         raise HTTPException(404, "User not found")
 
-    # Get the public S3 URL for the profile photo if present
+    # =========================
+    # PROFILE PHOTO (UNCHANGED)
+    # =========================
     profile_photo_url = None
     if user.profile_photo:
-        # user.profile_photo should be the S3 key
         from app.s3.service import get_file_url
         from fastapi.concurrency import run_in_threadpool
         profile_photo_url = await run_in_threadpool(get_file_url, user.profile_photo)
@@ -2074,7 +2091,6 @@ async def get_centeradmin_profile(
         "profile_photo": profile_photo_url,
         "full_name": center_admin.full_name
     }
-
 
 @router.get("/center/{center_id}/profile", response_model=CenterOperationalInfoOut)
 async def get_center_operational_info(center_id: str, session: AsyncSession = Depends(get_async_session)):
