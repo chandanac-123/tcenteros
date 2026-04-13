@@ -95,14 +95,9 @@ async def get_accounting_dashboard(
         .join(ChartOfAccounts, GeneralLedger.account_id == ChartOfAccounts.id)
         .where(
             GeneralLedger.center_id == center_id,
-            or_(
-                # Existing expense accounts
-                and_(
-                    ChartOfAccounts.account_type == AccountType.EXPENSE,
-                    ChartOfAccounts.code != "5800"
-                ),
-                # ✅ ADD THIS (CRITICAL FIX)
-                GeneralLedger.source == TransactionSource.INVENTORY_PURCHASE.value
+            and_(
+                ChartOfAccounts.account_type == AccountType.EXPENSE,
+                ChartOfAccounts.code != "5800"
             )
         )
     )
