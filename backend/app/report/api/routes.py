@@ -377,7 +377,8 @@ async def get_consolidated_expense(
             Center.center_name,
             MiscellaneousTransaction.amount,
             MiscellaneousTransaction.created_at.label("date"),
-            MiscellaneousTransaction.category
+            MiscellaneousTransaction.category,
+            MiscellaneousTransaction.transaction_type
         ).join(
             Center, Center.id == MiscellaneousTransaction.center_id
         ).where(
