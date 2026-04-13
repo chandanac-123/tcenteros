@@ -1070,30 +1070,44 @@ async def list_center_employees_mini(
     session: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user),
 ):
-    # Permission check: must be centeradmin
-    if current_user.get("role") != "centeradmin":
+    # Permission check: allow centeradmin + employee
+    if current_user.get("role") not in ["centeradmin", "employee"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only centeradmin users can access this resource.",
+            detail="Only centeradmin or employee users can access this resource.",
         )
 
-    # Ensure center_id exists on the centeradmin user
+    role = current_user.get("role")
     center_id = current_user.get("center_id")
+
+    # Ensure center_id exists
     if not center_id:
-        # Optionally fallback to DB lookup if your token doesn't include center_id
-        from app.auth.models.models import CenterAdmin
-        result = await session.execute(select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"]))
-        center_admin = result.scalar_one_or_none()
-        if center_admin and center_admin.center_id:
-            center_id = str(center_admin.center_id)
+        # Fallback based on role
+        if role == "centeradmin":
+            from app.auth.models.models import CenterAdmin
+            result = await session.execute(
+                select(CenterAdmin).where(CenterAdmin.id == current_user["user_id"])
+            )
+            center_admin = result.scalar_one_or_none()
+            if center_admin and center_admin.center_id:
+                center_id = str(center_admin.center_id)
+
+        elif role == "employee":
+            from app.auth.models.models import Employee
+            result = await session.execute(
+                select(Employee).where(Employee.id == current_user["user_id"])
+            )
+            employee = result.scalar_one_or_none()
+            if employee and employee.center_id:
+                center_id = str(employee.center_id)
 
     if not center_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="CenterAdmin has no associated center.",
+            detail="User has no associated center.",
         )
 
-    # Query Employee rows for this center (async)
+    # Query Employee rows for this center (UNCHANGED)
     stmt = select(Employee).where(Employee.center_id == center_id)
     result = await session.execute(stmt)
     employees = result.scalars().all()
