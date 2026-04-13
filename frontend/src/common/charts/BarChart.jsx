@@ -24,16 +24,18 @@ const BarChart = ({
       return acc
     }, {})
   )
-
+      
   const toggleDataset = index => {
     setVisible(prev => ({
       ...prev,
       [index]: !prev[index]
     }))
   }
-  const hasData = datasets.some(
-    (ds, index) => visible[index] && ds.data?.some(val => val > 0)
-  )
+  // const hasData = datasets.some(
+  //   (ds, index) => visible[index] && ds.data?.some(val => val > 0)
+  // )
+  const hasData = datasets.some(ds => ds.data?.some(val => val > 0))
+
   const data = {
     labels: hasData ? labels : ['No Data'],
     datasets: hasData

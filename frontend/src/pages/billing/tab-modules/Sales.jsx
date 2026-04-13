@@ -4,7 +4,8 @@ import view from '@assets/form-icons/view.svg'
 import { useGetAllSalesQuery } from '@api-queries/billing/Query'
 import SaleViewPage from '../component/SaleView'
 import { useState } from 'react'
-
+import { Badge } from '@pages/components/ui/badge'
+const paymentVariantMap = { paid: 'active', null: 'inactive' }
 const transactionTypes = [
   { value: 'membership', label: 'Membership' },
   { value: 'product', label: 'Product' },
@@ -32,11 +33,20 @@ const Sales = () => {
     { accessorKey: 'invoice_number', header: 'Invoice' },
     { accessorKey: 'type', header: 'Type' },
     { accessorKey: 'date', header: ' Date' },
-    { accessorKey: 'total_amount', header: 'Amount' },
+    { accessorKey: 'subtotal_amount', header: 'Amount' },
     { accessorKey: 'tax_amount', header: 'Tax Amount' },
     { accessorKey: 'total_amount', header: 'Total Amount' },
     { accessorKey: 'payment_method', header: 'Payment Method' },
-    { accessorKey: 'payment_status', header: 'Status' },
+    { accessorKey: 'payment_status', header: 'Status' ,
+       cell: ({ row }) => (
+        <span className='flex gap-3'>
+          <Badge
+            label={row.original.payment_status.replace('_', ' ').toUpperCase()}
+            variant={paymentVariantMap[row.original.payment_status] || 'inactive'}
+          />
+        </span>
+      )
+    },
     {
       header: 'Actions',
       cell: ({ row }) => (

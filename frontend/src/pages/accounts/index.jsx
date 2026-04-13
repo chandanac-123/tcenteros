@@ -72,7 +72,7 @@ const Accounts = () => {
       key: 'other',
       label: 'Other Income',
       value:formatIndianCurrency(data?.income_breakdown?.other?.value) ,
-      color: '#A3AED0'
+      color: '#10B981'
     }
   ]
 
@@ -93,7 +93,7 @@ const Accounts = () => {
       key: 'salary',
       label: 'Salary ',
       value:formatIndianCurrency(data?.expense_breakdown?.salary?.value) ,
-      color: '#F59E0B'
+      color: '#8A00FF'
     },
     {
       key: 'inventory',

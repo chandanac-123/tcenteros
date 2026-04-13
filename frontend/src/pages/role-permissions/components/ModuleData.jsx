@@ -21,6 +21,7 @@ export const modulesData = [
         { id: 'list', label: 'List' },
         { id: 'add', label: 'Add' },
         { id: 'edit', label: 'Edit' },
+        { id: 'view', label: 'View' },
         { id: 'delete', label: 'Delete' },
         { id: 'enable_disable', label: 'Enable/Disable' }
       ]
@@ -66,6 +67,7 @@ export const modulesData = [
     name: 'Network',
     submodules: [
       { id: 'list', label: 'List' },
+      { id: 'view', label: ' View' },
       { id: 'netwrok_request_approve', label: 'Network Request Approve' },
       { id: 'add_network_amount', label: 'Add network amount' },
       { id: 'enable_disable', label: 'Enable/Disable network' }

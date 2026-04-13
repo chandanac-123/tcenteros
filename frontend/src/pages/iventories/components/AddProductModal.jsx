@@ -36,7 +36,7 @@ const AddProductModal = ({ open, setOpen }) => {
   const { data: skus } = useAllSKUsQuery()
   const navigate = useNavigate()
 
-  const isCategoryEmpty = !skus || skus.length === 0
+  const isCategoryEmpty = !skus || skus.length == 0
   const initialValues = {
     name: '',
     category: '',
@@ -46,7 +46,7 @@ const AddProductModal = ({ open, setOpen }) => {
     reorder_level: ''
   }
   useEffect(() => {
-    if (isCategoryEmpty) {
+    if (skus?.length == 0) {
       setCategoryOpen(true)
     }
   }, [open])
