@@ -85,7 +85,7 @@ export const routes = [
   { key: 24, path: '/reset-password', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
   { key: 25, path: '/reset-success', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permissionKey: true },
 
-  { key: 26, path: '/dashboard', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permissionKey: 'dashboard' },
+  { key: 26, path: '/dashboard', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permissionKey: 'dashboard' ,alwaysVisible: true},
   { key: 27, path: '/employee-management', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Employee Management', component: EmployeeManagement, icon: <UserCog />, menubar: true, permissionKey: 'employee_management'},
   { key: 28, path: '/membership-plan', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Membership Plans', component: MembershipPlan, icon: <NotebookText />, menubar: true, permissionKey: 'membership_plan'},
   { key: 29, path: '/crm', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'CRM', component: CRM, icon: <FileUserIcon />, menubar: true, permissionKey: 'crm'},

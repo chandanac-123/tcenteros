@@ -5,7 +5,7 @@ import logo from "@assets/header-icons/logo.svg";
 import { sidebarPermission } from "@utils/helper";
 import { useAuthStore } from "@store/authStore";
 import SubmenuCard from "@common/superadmin-masterlayout/SubmenuCard";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { useLocation } from "react-router-dom";
 
@@ -16,9 +16,19 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
   const location = useLocation();
   const [openMenuKey, setOpenMenuKey] = useState(null);
 
-  useEffect(() => {
-    const activeMenu = routes.find((item) => isSubmenuActive(item));
+  const role = useAuthStore((state) => state.auth?.role);
+  const isSuperAdmin = role === "superadmin";
 
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((item) => {
+      if (item.alwaysVisible) return true; // Show for all roles
+      if (isSuperAdmin) return item.isSuperAdmin === true;
+      return item.isSuperAdmin !== true;
+    });
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    const activeMenu = filteredRoutes.find((item) => isSubmenuActive(item));
     if (activeMenu) {
       //  Open submenu if inside it
       setOpenMenuKey(activeMenu.key);
@@ -56,7 +66,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
       {/* MENU */}
       <div className="flex flex-col gap-1 w-full my-3 px-2 overflow-auto">
-        {routes.map((item) => {
+        {filteredRoutes.map((item) => {
           const allowed = sidebarPermission(permissions, item.permissionKey);
           if (!item?.menubar || !allowed) return null;
 
