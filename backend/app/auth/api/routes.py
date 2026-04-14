@@ -227,7 +227,7 @@ async def centeradmin_login(
     payload: CenterAdminLoginRequest,
     db: AsyncSession = Depends(get_async_session)
 ):
-    # 1) Authenticate user by email + password
+    # 1) Authenticate by email + password
     result = await db.execute(
         select(User).where(User.email == payload.email)
     )
@@ -236,29 +236,16 @@ async def centeradmin_login(
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # 2) Validate allowed roles for this login endpoint
+    # 2) Allow only supported roles
     if user.role not in ["superadmin", "centeradmin", "employee"]:
         raise HTTPException(status_code=403, detail="Invalid role")
 
     # 3) Generate tokens
-    access_token = create_access_token({
-        "sub": str(user.id),
-        "role": user.role
-    })
-    refresh_token = create_refresh_token({
-        "sub": str(user.id),
-        "role": user.role
-    })
+    access_token = create_access_token({"sub": str(user.id), "role": user.role})
+    refresh_token = create_refresh_token({"sub": str(user.id), "role": user.role})
 
-    # 4) Superadmin flow
+    # 4) Superadmin login (no child-table hard dependency)
     if user.role == "superadmin":
-        superadmin_result = await db.execute(
-            select(SuperAdmin).where(SuperAdmin.id == user.id)
-        )
-        superadmin = superadmin_result.scalar_one_or_none()
-        if not superadmin:
-            raise HTTPException(status_code=404, detail="Superadmin not found")
-
         return {
             "id": str(user.id),
             "email": user.email,
@@ -271,19 +258,18 @@ async def centeradmin_login(
             "token_type": "bearer"
         }
 
-    # 5) Center admin flow
+    # 5) Center admin login
     if user.role == "centeradmin":
         center_admin_result = await db.execute(
             select(CenterAdmin).where(CenterAdmin.id == user.id)
         )
         center_admin = center_admin_result.scalar_one_or_none()
-        center_id = str(center_admin.center_id) if center_admin and center_admin.center_id else None
 
         return {
             "id": str(user.id),
             "email": user.email,
             "role": "centeradmin",
-            "center_id": center_id,
+            "center_id": str(center_admin.center_id) if center_admin and center_admin.center_id else None,
             "designation": None,
             "permissions": None,
             "access_token": access_token,
@@ -291,7 +277,7 @@ async def centeradmin_login(
             "token_type": "bearer"
         }
 
-    # 6) Employee flow
+    # 6) Employee login
     employee_result = await db.execute(
         select(Employee).where(Employee.id == user.id)
     )
@@ -318,22 +304,15 @@ async def centeradmin_login(
             .where(DesignationPermission.designation_id == designation.id)
         )
 
-        rows = perm_result.all()
-
-        for perm, module, submodule, action in rows:
+        for perm, module, submodule, action in perm_result.all():
             module_name = module.name
-
             if module_name not in permissions_dict:
-                permissions_dict[module_name] = {
-                    "enabled": True,
-                    "submodules": {}
-                }
+                permissions_dict[module_name] = {"enabled": True, "submodules": {}}
 
             if not submodule:
                 continue
 
             sub_name = submodule.name
-
             if sub_name not in permissions_dict[module_name]["submodules"]:
                 permissions_dict[module_name]["submodules"][sub_name] = {}
 
