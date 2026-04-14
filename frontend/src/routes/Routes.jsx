@@ -61,6 +61,7 @@ import Analytics from '@super-admin/analytics'
 import ExpiringSoon from '@super-admin/subscriptions/expiring-soon'
 import RenewalCalender from '@super-admin/subscriptions/renewal-calender'
 import ActiveSubscriptions from '@super-admin/subscriptions/active-subscriptions'
+import SubscriptionsLayout from '@super-admin/subscriptions'
 
 export const routes = [
   { key: 1, path: '/', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permissionKey: true },
@@ -102,8 +103,7 @@ export const routes = [
   { key: 41, path: '/profile', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Profile', component: ProfilePage, menubar: false, permissionKey: true },
   { key: 42, path: '/notifications', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Notifications', component: Notifications, menubar: false, permissionKey: true },
   { key: 43, path: '/role', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role and Permission', component: RoleAndPermission,icon:<UserRoundPen />, menubar: true, permissionKey: 'role'},
-
-  { key: 44, path: '/subscriptions', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Subscriptions', component: '',icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
+  { key: 44, path: '/subscriptions', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Subscriptions', component: SubscriptionsLayout,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
       submodules: [
       { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
