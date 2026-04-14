@@ -6,7 +6,7 @@ from app.core.database import get_async_session
 from app.auth.schema.schema import CenterAdminLoginRequest, CenterAdminLoginResponse, EmployeeDeleteRequest, LoginResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.auth.models.models import User
+from app.auth.models.models import User, SuperAdmin
 from app.core.security import verify_password
 from app.core.security import create_access_token, create_refresh_token
 from app.auth.schema.schema import OTPRequest, OTPVerify, MemberLoginResponse, EmployeeCreate, EmployeeOut, EmployeeUpdate, MemberProfileOut, EmployeeOut, TimeSlotOut, AddressOut, CenterAdminChangePasswordIn, CenterAdminForgotPasswordRequest, CenterAdminVerifyOtpIn,  CenterAdminSetPasswordOnlyIn
@@ -81,14 +81,153 @@ def hash_password(password: str) -> str:
 
 
 
+# @router.post("/centeradmin/login", response_model=LoginResponse)
+# async def centeradmin_login(
+#     payload: CenterAdminLoginRequest,
+#     db: AsyncSession = Depends(get_async_session)
+# ):
+#     # =========================
+#     # 1. AUTHENTICATION
+#     # =========================
+#     result = await db.execute(
+#         select(User).where(User.email == payload.email)
+#     )
+#     user = result.scalar_one_or_none()
+
+#     if not user or not verify_password(payload.password, user.password_hash):
+#         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+#     # =========================
+#     # 2. GENERATE TOKENS
+#     # =========================
+#     access_token = create_access_token({
+#         "sub": str(user.id),
+#         "role": user.role
+#     })
+
+#     refresh_token = create_refresh_token({
+#         "sub": str(user.id),
+#         "role": user.role
+#     })
+
+#     # =========================
+#     # 3. CENTER ADMIN FLOW
+#     # =========================
+#     if user.role == "centeradmin":
+
+#         result = await db.execute(
+#             select(CenterAdmin).where(CenterAdmin.id == user.id)
+#         )
+#         center_admin = result.scalar_one_or_none()
+
+#         center_id = str(center_admin.center_id) if center_admin else None
+
+#         return {
+#             "id": str(user.id),
+#             "email": user.email,
+#             "role": user.role,
+#             "center_id": center_id,
+#             "designation": None,
+#             "permissions": None,
+#             "access_token": access_token,
+#             "refresh_token": refresh_token,
+#             "token_type": "bearer"
+#         }
+
+#     # =========================
+#     # 4. EMPLOYEE FLOW
+#     # =========================
+#     elif user.role == "employee":
+
+#         # 🔹 Get employee
+#         result = await db.execute(
+#             select(Employee).where(Employee.id == user.id)
+#         )
+#         employee = result.scalar_one_or_none()
+
+#         if not employee:
+#             raise HTTPException(404, "Employee not found")
+
+#         # 🔹 Get designation
+#         designation = None
+#         if employee.designation_id:
+#             result = await db.execute(
+#                 select(Designation).where(Designation.id == employee.designation_id)
+#             )
+#             designation = result.scalar_one_or_none()
+
+#         # 🔹 Get permissions
+#         permissions_dict = {}
+
+#         if designation:
+#             result = await db.execute(
+#                 select(Permission, Module, SubModule, Action)
+#                 .join(DesignationPermission, DesignationPermission.permission_id == Permission.id)
+#                 .join(Module, Module.id == Permission.module_id)
+#                 .outerjoin(SubModule, SubModule.id == Permission.submodule_id)
+#                 .outerjoin(Action, Action.id == Permission.action_id)
+#                 .where(DesignationPermission.designation_id == designation.id)
+#             )
+
+#             rows = result.all()
+
+#             for perm, module, submodule, action in rows:
+
+#                 module_name = module.name
+
+#                 if module_name not in permissions_dict:
+#                     permissions_dict[module_name] = {
+#                         "enabled": True,
+#                         "submodules": {}
+#                     }
+
+#                 if not submodule:
+#                     continue
+
+#                 sub_name = submodule.name
+
+#                 if sub_name not in permissions_dict[module_name]["submodules"]:
+#                     permissions_dict[module_name]["submodules"][sub_name] = {}
+
+#                 # Boolean submodule
+#                 if not action:
+#                     permissions_dict[module_name]["submodules"][sub_name] = True
+
+#                 # Action-based
+#                 else:
+#                     if isinstance(permissions_dict[module_name]["submodules"][sub_name], bool):
+#                         permissions_dict[module_name]["submodules"][sub_name] = {}
+
+#                     permissions_dict[module_name]["submodules"][sub_name][action.name] = True
+
+#         return {
+#             "id": str(user.id),
+#             "email": user.email,
+#             "role": user.role,
+#             "center_id": str(employee.center_id) if employee.center_id else None,
+#             "designation": {
+#                 "id": str(designation.id) if designation else None,
+#                 "name": designation.name if designation else None
+#             },
+#             "permissions": permissions_dict,
+#             "access_token": access_token,
+#             "refresh_token": refresh_token,
+#             "token_type": "bearer"
+#         }
+
+#     # =========================
+#     # 5. INVALID ROLE
+#     # =========================
+#     else:
+#         raise HTTPException(status_code=403, detail="Invalid role")
+
+
 @router.post("/centeradmin/login", response_model=LoginResponse)
 async def centeradmin_login(
     payload: CenterAdminLoginRequest,
     db: AsyncSession = Depends(get_async_session)
 ):
-    # =========================
-    # 1. AUTHENTICATION
-    # =========================
+    # 1) Authenticate user by email + password
     result = await db.execute(
         select(User).where(User.email == payload.email)
     )
@@ -97,35 +236,53 @@ async def centeradmin_login(
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    # =========================
-    # 2. GENERATE TOKENS
-    # =========================
+    # 2) Validate allowed roles for this login endpoint
+    if user.role not in ["superadmin", "centeradmin", "employee"]:
+        raise HTTPException(status_code=403, detail="Invalid role")
+
+    # 3) Generate tokens
     access_token = create_access_token({
         "sub": str(user.id),
         "role": user.role
     })
-
     refresh_token = create_refresh_token({
         "sub": str(user.id),
         "role": user.role
     })
 
-    # =========================
-    # 3. CENTER ADMIN FLOW
-    # =========================
-    if user.role == "centeradmin":
-
-        result = await db.execute(
-            select(CenterAdmin).where(CenterAdmin.id == user.id)
+    # 4) Superadmin flow
+    if user.role == "superadmin":
+        superadmin_result = await db.execute(
+            select(SuperAdmin).where(SuperAdmin.id == user.id)
         )
-        center_admin = result.scalar_one_or_none()
-
-        center_id = str(center_admin.center_id) if center_admin else None
+        superadmin = superadmin_result.scalar_one_or_none()
+        if not superadmin:
+            raise HTTPException(status_code=404, detail="Superadmin not found")
 
         return {
             "id": str(user.id),
             "email": user.email,
-            "role": user.role,
+            "role": "superadmin",
+            "center_id": None,
+            "designation": None,
+            "permissions": None,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+
+    # 5) Center admin flow
+    if user.role == "centeradmin":
+        center_admin_result = await db.execute(
+            select(CenterAdmin).where(CenterAdmin.id == user.id)
+        )
+        center_admin = center_admin_result.scalar_one_or_none()
+        center_id = str(center_admin.center_id) if center_admin and center_admin.center_id else None
+
+        return {
+            "id": str(user.id),
+            "email": user.email,
+            "role": "centeradmin",
             "center_id": center_id,
             "designation": None,
             "permissions": None,
@@ -134,92 +291,73 @@ async def centeradmin_login(
             "token_type": "bearer"
         }
 
-    # =========================
-    # 4. EMPLOYEE FLOW
-    # =========================
-    elif user.role == "employee":
+    # 6) Employee flow
+    employee_result = await db.execute(
+        select(Employee).where(Employee.id == user.id)
+    )
+    employee = employee_result.scalar_one_or_none()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
 
-        # 🔹 Get employee
-        result = await db.execute(
-            select(Employee).where(Employee.id == user.id)
+    designation = None
+    if employee.designation_id:
+        designation_result = await db.execute(
+            select(Designation).where(Designation.id == employee.designation_id)
         )
-        employee = result.scalar_one_or_none()
+        designation = designation_result.scalar_one_or_none()
 
-        if not employee:
-            raise HTTPException(404, "Employee not found")
+    permissions_dict = {}
 
-        # 🔹 Get designation
-        designation = None
-        if employee.designation_id:
-            result = await db.execute(
-                select(Designation).where(Designation.id == employee.designation_id)
-            )
-            designation = result.scalar_one_or_none()
+    if designation:
+        perm_result = await db.execute(
+            select(Permission, Module, SubModule, Action)
+            .join(DesignationPermission, DesignationPermission.permission_id == Permission.id)
+            .join(Module, Module.id == Permission.module_id)
+            .outerjoin(SubModule, SubModule.id == Permission.submodule_id)
+            .outerjoin(Action, Action.id == Permission.action_id)
+            .where(DesignationPermission.designation_id == designation.id)
+        )
 
-        # 🔹 Get permissions
-        permissions_dict = {}
+        rows = perm_result.all()
 
-        if designation:
-            result = await db.execute(
-                select(Permission, Module, SubModule, Action)
-                .join(DesignationPermission, DesignationPermission.permission_id == Permission.id)
-                .join(Module, Module.id == Permission.module_id)
-                .outerjoin(SubModule, SubModule.id == Permission.submodule_id)
-                .outerjoin(Action, Action.id == Permission.action_id)
-                .where(DesignationPermission.designation_id == designation.id)
-            )
+        for perm, module, submodule, action in rows:
+            module_name = module.name
 
-            rows = result.all()
+            if module_name not in permissions_dict:
+                permissions_dict[module_name] = {
+                    "enabled": True,
+                    "submodules": {}
+                }
 
-            for perm, module, submodule, action in rows:
+            if not submodule:
+                continue
 
-                module_name = module.name
+            sub_name = submodule.name
 
-                if module_name not in permissions_dict:
-                    permissions_dict[module_name] = {
-                        "enabled": True,
-                        "submodules": {}
-                    }
+            if sub_name not in permissions_dict[module_name]["submodules"]:
+                permissions_dict[module_name]["submodules"][sub_name] = {}
 
-                if not submodule:
-                    continue
-
-                sub_name = submodule.name
-
-                if sub_name not in permissions_dict[module_name]["submodules"]:
+            if not action:
+                permissions_dict[module_name]["submodules"][sub_name] = True
+            else:
+                if isinstance(permissions_dict[module_name]["submodules"][sub_name], bool):
                     permissions_dict[module_name]["submodules"][sub_name] = {}
+                permissions_dict[module_name]["submodules"][sub_name][action.name] = True
 
-                # Boolean submodule
-                if not action:
-                    permissions_dict[module_name]["submodules"][sub_name] = True
-
-                # Action-based
-                else:
-                    if isinstance(permissions_dict[module_name]["submodules"][sub_name], bool):
-                        permissions_dict[module_name]["submodules"][sub_name] = {}
-
-                    permissions_dict[module_name]["submodules"][sub_name][action.name] = True
-
-        return {
-            "id": str(user.id),
-            "email": user.email,
-            "role": user.role,
-            "center_id": str(employee.center_id) if employee.center_id else None,
-            "designation": {
-                "id": str(designation.id) if designation else None,
-                "name": designation.name if designation else None
-            },
-            "permissions": permissions_dict,
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
-
-    # =========================
-    # 5. INVALID ROLE
-    # =========================
-    else:
-        raise HTTPException(status_code=403, detail="Invalid role")
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "role": "employee",
+        "center_id": str(employee.center_id) if employee.center_id else None,
+        "designation": {
+            "id": str(designation.id) if designation else None,
+            "name": designation.name if designation else None
+        },
+        "permissions": permissions_dict,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 
 
