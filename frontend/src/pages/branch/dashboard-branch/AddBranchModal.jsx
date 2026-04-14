@@ -151,11 +151,11 @@ const AddBranchModal = ({ open, onOpenChange }) => {
             >
               {isPending ? 'Processing...' : 'Proceed to Payment'}
             </Button>
-               <RazorpayButton
+               {/* <RazorpayButton
                 amount={50000} // ₹500
                 onSuccess={handleSuccess}
                 onFailure={handleFailure}
-              />
+              /> */}
           </div>
         </div>
       </div>
