@@ -1,5 +1,3 @@
-import React from "react";
-
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -15,10 +13,33 @@ const MenuCard = ({
 }) => {
   const location = useLocation();
 
-  const isActive = location.pathname.startsWith(path);
+  const isActive =
+    location.pathname === path || location.pathname.startsWith(path + "/");
 
+  // ✅ NORMAL MENU (NO SUBMENU)
+  if (!hasSubmenu) {
+    return (
+      <NavLink to={path} className="w-full">
+        {({ isActive }) => (
+          <div
+            className={`flex items-center ${
+              collapsed ? "justify-center" : "gap-2"
+            } px-3 py-2 rounded-lg transition
+            ${isActive ? "bg-primary text-white" : "text-white"}`}
+          >
+            <span className={isActive ? "text-white" : "text-primary"}>
+              {icon}
+            </span>
+            {!collapsed && <span>{title}</span>}
+          </div>
+        )}
+      </NavLink>
+    );
+  }
+
+  // ✅ MENU WITH SUBMENU → ONLY TOGGLE
   return (
-    <NavLink to={path} className="w-full">
+    <div className="w-full">
       <div
         onClick={onClick}
         className={`flex items-center ${
@@ -26,26 +47,21 @@ const MenuCard = ({
         } px-3 py-2 rounded-lg cursor-pointer transition
         ${isActive ? "bg-primary text-white" : "text-white"}`}
       >
-        <span className={isActive ? "text-textwhite" : "text-primary"}>
-          {icon}
-        </span>
+        <span className={isActive ? "text-white" : "text-primary"}>{icon}</span>
 
         {!collapsed && (
           <>
             <span>{title}</span>
-
-            {hasSubmenu && (
-              <span className="ml-auto">
-                {isOpen ? <ChevronUp /> : <ChevronDown />}
-              </span>
-            )}
+            <span className="ml-auto">
+              {isOpen ? <ChevronUp /> : <ChevronDown />}
+            </span>
           </>
         )}
       </div>
 
       {/* SUBMENU */}
       {!collapsed && children}
-    </NavLink>
+    </div>
   );
 };
 

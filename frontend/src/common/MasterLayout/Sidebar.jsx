@@ -5,7 +5,7 @@ import logo from "@assets/header-icons/logo.svg";
 import { sidebarPermission } from "@utils/helper";
 import { useAuthStore } from "@store/authStore";
 import SubmenuCard from "@common/superadmin-masterlayout/SubmenuCard";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useLocation } from "react-router-dom";
 
@@ -14,8 +14,19 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
   const permissions = useAuthStore((state) => state.auth?.permissions);
   const hydrated = useAuthStore((state) => state._hasHydrated);
   const location = useLocation();
-
   const [openMenuKey, setOpenMenuKey] = useState(null);
+
+  useEffect(() => {
+    const activeMenu = routes.find((item) => isSubmenuActive(item));
+
+    if (activeMenu) {
+      //  Open submenu if inside it
+      setOpenMenuKey(activeMenu.key);
+    } else {
+      //  Close submenu if navigating outside
+      setOpenMenuKey(null);
+    }
+  }, [location.pathname]);
 
   if (!hydrated) return null;
 
@@ -51,7 +62,8 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
           const hasSubmenu = item.submodules?.length > 0;
 
-          const isOpen = openMenuKey === item.key || isSubmenuActive(item);
+          const isActiveMenu = isSubmenuActive(item);
+          const isOpen = openMenuKey === item.key;
 
           return (
             <MenuCard
