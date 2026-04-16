@@ -13,6 +13,7 @@
       "@api-queries/*": ["src/api-queries/*"],
       "@api/*": ["src/api/*"],
       "@hooks/*": ["src/hooks/*"],
+      "@super-admin/*": ["src/super-admin/*"]
     }
   },
   "include": ["src"]
