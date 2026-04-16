@@ -98,7 +98,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
             >
               {hasSubmenu && isOpen && (
                 <SubmenuCard
-                  submenu={item.submodules}
+                  submenu={item?.submodules?.filter(sub => sub?.menubar)}
                   parentPath={item.path.replace(/^\//, "")}
                   collapsed={collapsed}
                   onClick={() => isMobile && setOpen(false)}

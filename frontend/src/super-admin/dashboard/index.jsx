@@ -75,7 +75,7 @@ const SuperAdminDashboard = () => {
 
   const chartData = [
   { label: "Monthly Subscriptions", value: 62, color: "#4DB6AC" },
-  { label: "Yearly Subscriptions", value: 26, color: "#B57CC2" },
+  { label: "Yearly Subscriptions", value: 29, color: "#B57CC2" },
   { label: "Network Subscriptions", value: 26, color: "#E6A57A" },
   { label: "Via Partners", value: 12, color: "#3BA3C9" },
   { label: "Branching", value: 12, color: "#7E57C2" },

@@ -65,6 +65,7 @@ import FailedPayments from '@super-admin/subscriptions/failed-payments'
 import RevenueBillingLayout from '@super-admin/revenue-billing'
 import PartnerCommision from '@super-admin/revenue-billing/partner-commision'
 import SASRevenue from '@super-admin/revenue-billing/sas-revenue'
+import DetailView from '@super-admin/subscriptions/active-subscriptions/DetailView'
 
 export const routes = [
   //public routes
@@ -113,6 +114,7 @@ export const routes = [
   { key: 44, path: '/subscriptions', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Subscriptions', component: SubscriptionsLayout,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
       submodules: [
       { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
+      { key: 'active-subscriptions-detail', title: 'Active Subscriptions Detail', path: 'active-subscriptions/detail/:id', component: DetailView, menubar: false, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
       { key: 'expiring-soon', title: 'Expiring Soon', path: 'expiring-soon', component: ExpiringSoon, menubar: true, permissionKey: true },
       { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },

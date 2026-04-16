@@ -1,9 +1,10 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout"
+import ActiveSubcriptionTable from "./Table"
 
 const ActiveSubscriptions = () => {
   return (
     <ContentLayout>
-      ccc
+    < ActiveSubcriptionTable/>
     </ContentLayout>
   )
 }
