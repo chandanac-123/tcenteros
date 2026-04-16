@@ -8,6 +8,7 @@ import SuccessModal from '../message-popup/success'
 import FaledModal from '../message-popup/failed'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
+import RazorpayButton from '@common/Razorpay/RazorpayButton'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
   const navigate = useNavigate()
@@ -56,6 +57,15 @@ const AddBranchModal = ({ open, onOpenChange }) => {
       setOpenFailed(true)
     }
   }
+
+   const handleSuccess = (response) => {
+    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+    // Optionally, send response to your backend for verification
+  };
+
+  const handleFailure = () => {
+    alert("Payment Cancelled or Failed");
+  };
 
   return (
     <CustomeModal open={open} onOpenChange={onOpenChange}>
@@ -141,6 +151,11 @@ const AddBranchModal = ({ open, onOpenChange }) => {
             >
               {isPending ? 'Processing...' : 'Proceed to Payment'}
             </Button>
+               {/* <RazorpayButton
+                amount={50000} // ₹500
+                onSuccess={handleSuccess}
+                onFailure={handleFailure}
+              /> */}
           </div>
         </div>
       </div>

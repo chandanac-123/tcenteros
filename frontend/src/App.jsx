@@ -1,78 +1,87 @@
-import { Routes, Route } from 'react-router-dom'
-import PrivateRoute from './routes/PrivateRoute'
-import { routes } from './routes/Routes'
-import PublicRoute from './routes/PublicRoute'
-import { v4 as uuidv4 } from 'uuid'
-import MasterLayout from './common/MasterLayout'
-import { useBrandingStore } from '@store/brandingStore'
-import { useEffect } from 'react'
-import { useAllBrandQuery } from './api-queries/branding/Query'
-import PageNotFound from './common/components/PageNotFound'
-import { useJsApiLoader } from '@react-google-maps/api'
-const LIBRARIES = ['places']
+import { Routes, Route } from "react-router-dom";
+import PrivateRoute from "./routes/PrivateRoute";
+import { routes } from "./routes/Routes";
+import PublicRoute from "./routes/PublicRoute";
+import { v4 as uuidv4 } from "uuid";
+import MasterLayout from "./common/masterLayout";
+import { useBrandingStore } from "@store/brandingStore";
+import { useEffect } from "react";
+import { useAllBrandQuery } from "./api-queries/branding/Query";
+import PageNotFound from "./common/components/PageNotFound";
+import { useJsApiLoader } from "@react-google-maps/api";
+const LIBRARIES = ["places"];
 
 const App = () => {
-  const { data } = useAllBrandQuery()
+  const { data } = useAllBrandQuery();
 
-const { isLoaded } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
-    libraries: LIBRARIES 
-  })
+    libraries: LIBRARIES,
+  });
 
   const loadBrandingFromStorage = useBrandingStore(
-    state => state.loadBrandingFromStorage
-  )
+    (state) => state.loadBrandingFromStorage,
+  );
   const loadBrandingFromAPI = useBrandingStore(
-    state => state.loadBrandingFromAPI
-  )
+    (state) => state.loadBrandingFromAPI,
+  );
 
   useEffect(() => {
-    loadBrandingFromStorage()
-  }, [])
+    loadBrandingFromStorage();
+  }, []);
 
   useEffect(() => {
     if (data?.centers?.[0]?.branding) {
-      loadBrandingFromAPI(data.centers[0].branding)
+      loadBrandingFromAPI(data.centers[0].branding);
     }
-  }, [data])
-  
+  }, [data]);
+
   if (!isLoaded) {
-    return <p></p>
+    return <p></p>;
   }
-  
+
   return (
     <Routes>
       <Route element={<PrivateRoute />}>
         <Route element={<MasterLayout />}>
-          <Route path='*' element={<PageNotFound />} />
-          {routes.map(item => {
+          <Route path="*" element={<PageNotFound />} />
+          {routes.map((item) => {
             if (item.privetRoute) {
               return (
                 <Route
                   key={uuidv4()}
-                  path={'/' + item.path}
+                  path={"/" + item.path}
                   element={<item.component />}
-                />
-              )
+                >
+                  {item.submodules &&
+                    item.submodules.map((sub) => (
+                      <Route
+                        key={sub.key}
+                        path={sub.path}
+                        element={<sub.component />}
+                      />
+                    ))}
+                </Route>
+              );
             }
           })}
         </Route>
       </Route>
       <Route element={<PublicRoute />}>
-        {routes.map(item => {
+        {routes.map((item) => {
           if (!item.privetRoute) {
             return (
               <Route
                 key={uuidv4()}
-                path={'/' + item.path}
+                path={"/" + item.path}
                 element={<item.component />}
               />
-            )
+            );
           }
         })}
       </Route>
     </Routes>
-  )
-}
+  );
+};
 
-export default App
+export default App;
