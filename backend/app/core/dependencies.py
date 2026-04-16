@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from app.core.config import settings
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.auth.models.models import CenterAdmin
+from app.auth.models.models import CenterAdmin, Employee
 from sqlalchemy.future import select
 
 
@@ -42,6 +42,7 @@ async def get_current_user(
 
     user_id = payload.get("sub")
     role = payload.get("role")
+    center_id = payload.get("center_id")  # <-- Extract center_id if present
 
     if not user_id or not role:
         raise HTTPException(
@@ -49,10 +50,14 @@ async def get_current_user(
             detail="Invalid token payload",
         )
 
-    return {
+    user = {
         "user_id": user_id,
         "role": role,
     }
+    if center_id:
+        user["center_id"] = center_id
+
+    return user
 
 
 
@@ -64,30 +69,97 @@ def superadmin_required(user=Depends(get_current_user)):
         )
     return user
 
+# async def centeradmin_required(
+#     user=Depends(get_current_user),
+#     session: AsyncSession = Depends(get_async_session)
+# ):
+#     if not user or user.get("role") != "centeradmin":
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Centeradmin privileges required"
+#         )
+#     # Fetch CenterAdmin from DB to get center_id
+#     result = await session.execute(
+#         select(CenterAdmin).where(CenterAdmin.id == user["user_id"])
+#     )
+#     center_admin = result.scalar_one_or_none()
+#     if not center_admin:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Centeradmin not found"
+#         )
+#     return {
+#         "user_id": user["user_id"],
+#         "role": user["role"],
+#         "center_id": str(center_admin.center_id)
+#     }
+
+
 async def centeradmin_required(
     user=Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ):
-    if not user or user.get("role") != "centeradmin":
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized"
+        )
+
+    role = user.get("role")
+    user_id = user.get("user_id")
+
+    # =========================
+    # CENTER ADMIN
+    # =========================
+    if role == "centeradmin":
+
+        result = await session.execute(
+            select(CenterAdmin).where(CenterAdmin.id == user_id)
+        )
+        center_admin = result.scalar_one_or_none()
+
+        if not center_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Centeradmin not found"
+            )
+
+        return {
+            "user_id": user_id,
+            "role": role,
+            "center_id": str(center_admin.center_id)
+        }
+
+    # =========================
+    # EMPLOYEE (✅ ADDED)
+    # =========================
+    elif role == "employee":
+
+        result = await session.execute(
+            select(Employee).where(Employee.id == user_id)
+        )
+        employee = result.scalar_one_or_none()
+
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Employee not found"
+            )
+
+        return {
+            "user_id": user_id,
+            "role": role,
+            "center_id": str(employee.center_id)
+        }
+
+    # =========================
+    # INVALID ROLE
+    # =========================
+    else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Centeradmin privileges required"
+            detail="Access denied"
         )
-    # Fetch CenterAdmin from DB to get center_id
-    result = await session.execute(
-        select(CenterAdmin).where(CenterAdmin.id == user["user_id"])
-    )
-    center_admin = result.scalar_one_or_none()
-    if not center_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Centeradmin not found"
-        )
-    return {
-        "user_id": user["user_id"],
-        "role": user["role"],
-        "center_id": str(center_admin.center_id)
-    }
 
 
 def member_required(user=Depends(get_current_user)):

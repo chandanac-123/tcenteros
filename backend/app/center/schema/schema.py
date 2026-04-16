@@ -19,6 +19,7 @@ class CenterOnboardingTempCreate(BaseModel):
     marketing_platform: Optional[Union[dict, list]] = None  # <-- JSON
     platform_feature_ids: List[UUID4]
     is_terms_and_conditions: bool = False
+    subscription_duration: str = "yearly"  # "monthly" or "yearly"
 
 
 class CenterOnboardingTempOut(CenterOnboardingTempCreate):
@@ -53,6 +54,7 @@ class CenterOnboardingTempDetailedOut(BaseModel):
     marketing_platform: Optional[Union[dict, list]] = None
     platform_features: List[PlatformFeatureInfo]
     is_terms_and_conditions: bool
+    subscription_duration: str
     calculated_amount: float
 
 class GSTCalculationRequest(BaseModel):
@@ -72,7 +74,11 @@ class GSTCalculationResponse(BaseModel):
     total_base_price: float
     total_tax: float
     total_amount: float
-    tax: Optional[TaxInfo] = None
+    tax: Optional[dict] = None
+    pricing_note: Optional[str] = None  # Add this line
+
+    class Config:
+        from_attributes = True
 
 class PaymentOrderCreate(BaseModel):
     onboarding_id: UUID4
@@ -135,10 +141,12 @@ class FeatureSubscriptionInfo(BaseModel):
         from_attributes = True
 
 class OnboardingFinalizeResponse(BaseModel):
+    message: str
     center: CenterInfo
     center_admin: CenterAdminInfo
     payment: PaymentOrderInfo
     feature_subscriptions: List[FeatureSubscriptionInfo]
+    accounts_initialized: bool = True
 
     class Config:
         from_attributes = True
@@ -198,14 +206,24 @@ class CenterProfileUpdate(BaseModel):
     about: Optional[str] = None
     facilities: Optional[List[str]] = None
     website_url: Optional[str] = None
-    capacity: Optional[float] = None
-    kind_of_center: Optional[Dict] = None
+    capacity: Optional[int] = None
+    approval_status: Optional[str] = None
+    center_status: Optional[str] = None
+    network_enabled: Optional[bool] = None
+    networking_amount: Optional[float] = None
+    white_label_enabled: Optional[bool] = None
+    kind_of_center: Optional[str] = None # <-- Make sure this is str or Enum, not dict
+    members_count: Optional[int] = None
+    trainer_count: Optional[int] = None
+    currently_using_digital_tool: Optional[List[str]] = None
+    marketing_platform: Optional[List[str]] = None
     contact_person: Optional[str] = None
     center_email: Optional[str] = None
     center_phone: Optional[str] = None
     gst_number: Optional[str] = None
     live_class_enable: Optional[bool] = None
     address: Optional[AddressUpdate] = None
+    whatsapp_number: str
 
 #image gallary schema
 class CenterGalleryImageOut(BaseModel):

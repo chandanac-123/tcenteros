@@ -9,7 +9,13 @@ from app.attendance.api.routes import router as attendance_router
 from app.networking.api.routes import router as networking_router
 from app.support.api.routes import router as support_router
 from app.branding.api.routes import router as branding_router
-
+from app.branching.api.routes import router as branching_router
+from app.payrole.api.routes import router as payrole_router
+from app.inventory.api.routes import router as inventory_router
+from app.billing.api.routes import router as billing_router
+from app.accounts.api.routes import router as accounts_router
+from app.report.api.routes import router as report_router
+from app.permissions.api.routes import router as permission_router
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,3 +63,10 @@ app.include_router(attendance_router, prefix="/api/attendance", tags=["Attendanc
 app.include_router(networking_router, prefix="/api/networking", tags=["Networking"])
 app.include_router(support_router, prefix="/api/support", tags=["Support"])
 app.include_router(branding_router, prefix="/api/branding", tags=["Branding"])
+app.include_router(branching_router, prefix="/api/branching", tags=["Branching"])
+app.include_router(payrole_router, prefix="/api/payrole", tags=["Payrole"])
+app.include_router(inventory_router, prefix="/api/inventory", tags=["Inventory"])
+app.include_router(billing_router, prefix="/api/billing", tags=["Billing"])
+app.include_router(accounts_router, prefix="/api/accounts", tags=["Accounts"])
+app.include_router(report_router, prefix="/api/reports", tags=["Reports"])
+app.include_router(permission_router, prefix="/api/permissions", tags=["Permissions"])

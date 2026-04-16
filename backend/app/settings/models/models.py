@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 import uuid
 import enum
-
+from sqlalchemy import UniqueConstraint
 
 class WeekDayEnum(enum.Enum):
     monday = "monday"
@@ -37,6 +37,9 @@ class TaxScope(enum.Enum):
     product = "product"
     service = "service"
     platform_fee = "platform_fee"
+    add_on = "add_on"
+    branch_purchase = "branch_purchase"
+
 
 class Address(Base, AuditMixin):
     __tablename__ = "address"
@@ -88,6 +91,7 @@ class TaxCategory(Base, AuditMixin):
         "CenterFeatureSubscription",
         back_populates="tax_category"
     )
+    sales = relationship("Sale", back_populates="tax_category", foreign_keys="[Sale.tax_category_id]")
 
 
 # ------------------------
@@ -95,10 +99,15 @@ class TaxCategory(Base, AuditMixin):
 # ------------------------
 class Designation(Base, AuditMixin):
     __tablename__ = "designations"
-    __table_args__ = {"schema": "settings"}
+    __table_args__ = (
+        # Add unique constraint for (center_id, name)
+        UniqueConstraint('center_id', 'name', name='uq_designation_center_name'),
+        {"schema": "settings"}
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, unique=True, nullable=False)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=True)
+    name = Column(String, nullable=False)
     code = Column(String, unique=True, nullable=False)
     description = Column(Text)
     hierarchy_level = Column(Integer, default=0)
@@ -106,6 +115,8 @@ class Designation(Base, AuditMixin):
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
     image_url = Column(String, nullable=True)  # S3 image URL
 
+    center = relationship("Center", backref="designations", foreign_keys=[center_id])
+  
 
 # ------------------------
 # Center Categories
@@ -135,11 +146,14 @@ class SKUCategory(Base, AuditMixin):
     __table_args__ = {"schema": "settings"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
     name = Column(String, nullable=False, unique=True)
     description = Column(Text)
 
     # Relationship: one category has many SKUs
     skus = relationship("SKU", back_populates="category")
+    center = relationship("Center", back_populates="sku_categories")
+    
 
 
 
@@ -168,7 +182,8 @@ class CenterOperationalSetting(Base, AuditMixin):
     )
 
     attendance_allowed_radius_meters = Column(Integer, default=5, nullable=True)
-
+    inventory_profit = Column(Numeric(10, 2), default=0.0, nullable=False)
+    payroll_cycle_day = Column(Integer, nullable=False, default=1) # 1 = 1st of the month, 15 = 15th, etc.                          
                                                                                          
     center = relationship(
         "Center",
@@ -233,3 +248,5 @@ class FAQ(Base):
     answer = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+

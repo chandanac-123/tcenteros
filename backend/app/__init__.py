@@ -1,0 +1,11 @@
+from app.auth.models import models as auth_models
+from app.center.models import models as center_models
+from app.platforms.models import models as platforms_models
+from app.networking.models import models as networking_models
+from app.core.models import models as core_models
+from app.billing.models import models as billing_models
+from app.attendance.models import models as attendance_models
+from app.membership.models import models as membership_models
+from app.settings.models import models as settings_models
+from app.support.models import models as support_models
+from app.branding.models import models as branding_models

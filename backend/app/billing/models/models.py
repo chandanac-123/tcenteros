@@ -1,6 +1,7 @@
 from sqlalchemy import (
-    Column, Enum, Numeric, ForeignKey, String
+    Column, Enum, Numeric, ForeignKey, String, ARRAY, Text, Date
 )
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.models.base import AuditMixin, Base
@@ -19,21 +20,37 @@ class PayeeType(enum.Enum):
     center = "center"
     trainer = "trainer"
 
+class TransactionSourceEnum(str, Enum):
+    local = "local"
+    pos = "pos"
+    visit = "visit"
+    online = "online"
+
 
 class OrderType(enum.Enum):
+    membership = "membership"
+    membership_renewal = "membership_renewal"
+    membership_upgrade = "membership_upgrade"
+    inventory_sale = "inventory_sale"
+    inventory_purchase = "inventory_purchase"
+    payroll = "payroll"
+    network_in = "network_in"
+    network_out = "network_out"
+    network_settlement = "network_settlement"
+    branch_purchase = "branch_purchase"
     center_subscription = "center_subscription"
     feature_purchase = "feature_purchase"
-    renewal = "renewal"
-    upgrade = "upgrade"
     add_on = "add_on"
     refund = "refund"
-
+    other_charges = "other_charges"
+    wallet = "wallet"
 
 class ReferenceSchema(enum.Enum):
     center = "center"
     center_feature = "center_feature"
     wallet = "wallet"
     invoice = "invoice"
+    networking_access_request = "networking_access_request"
 
 
 class Currency(enum.Enum):
@@ -47,11 +64,18 @@ class PaymentOrderStatus(enum.Enum):
     created = "created"
     processing = "processing"
     paid = "paid"
+    unpaid = "unpaid"
     failed = "failed"
     cancelled = "cancelled"
     refunded = "refunded"
     expired = "expired"
 
+class PaymentMethod(enum.Enum):
+    cash = "cash"
+    card = "card"
+    upi = "upi"
+    bank_transfer = "bank_transfer"
+    other = "other"
 
 
 
@@ -88,9 +112,9 @@ class PaymentOrder(Base, AuditMixin):
     )
 
     order_type = Column(
-        Enum(OrderType),
-        nullable=False, index=True
-    )
+    Enum(OrderType, name="ordertype", schema="public"),
+    nullable=False, index=True
+   )
 
     reference_schema = Column(
         Enum(ReferenceSchema),
@@ -99,7 +123,7 @@ class PaymentOrder(Base, AuditMixin):
 
     reference_id = Column(
         UUID(as_uuid=True),
-        nullable=True
+        nullable=False
     )
 
     subtotal_amount = Column(
@@ -129,6 +153,13 @@ class PaymentOrder(Base, AuditMixin):
         nullable=False, index=True
     )
 
+    payment_method = Column(
+        Enum(PaymentMethod),
+        nullable=True
+    )
+
+    
+
     # ------------------------
     # Relationships
     # ------------------------
@@ -137,3 +168,96 @@ class PaymentOrder(Base, AuditMixin):
     feature_subscriptions = relationship("CenterFeatureSubscription", back_populates="payment_order")
 
 
+
+
+
+
+class MiscellaneousTransaction(Base, AuditMixin):
+    """
+    Track miscellaneous income/expenses like rent, electricity, maintenance, etc.
+    Each transaction is linked to a PaymentOrder for unified tracking.
+    """
+    __tablename__ = "miscellaneous_transactions"
+    __table_args__ = {"schema": "billing"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    center_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("center.centers.id"),
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction classification - now as String instead of Enum
+    transaction_type = Column(
+        String(50),
+        nullable=False,
+        index=True
+    )
+    
+    # Category as string for flexibility
+    category = Column(
+        String(100),
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction details
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Amount details
+    amount = Column(Numeric(10, 2), nullable=False)
+    tax_amount = Column(Numeric(10, 2), default=0.00)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+
+    tax_category_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("settings.tax_categories.id"),
+        nullable=True,
+        index=True
+    )
+    
+    # Payment info
+    payment_order_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("billing.payment_orders.payment_order_id"),
+        nullable=True,
+        unique=True,
+        index=True
+    )
+    
+    payment_method = Column(
+        postgresql.ENUM('cash', 'bank_transfer', 'upi', 'card', 'other', name='payroll_payment_method', schema='public', create_type=False),
+        nullable=True
+    )
+    
+    payment_status = Column(
+        Enum(PaymentOrderStatus),
+        default=PaymentOrderStatus.pending,
+        nullable=False,
+        index=True
+    )
+    
+    # Transaction date
+    transaction_date = Column(Date, nullable=False, index=True)
+    
+    # Vendor/Party details
+    party_name = Column(String(255), nullable=True)
+    party_contact = Column(String(50), nullable=True)
+    
+    # Document tracking
+    invoice_number = Column(String(100), nullable=True)
+    receipt_number = Column(String(100), nullable=True)
+    
+    # Attachments (URLs to S3 or file storage)
+    attachment_urls = Column(ARRAY(String), nullable=True)
+    
+    # Notes
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    center = relationship("Center", foreign_keys=[center_id], backref="miscellaneous_transactions")
+    payment_order = relationship("PaymentOrder", foreign_keys=[payment_order_id], backref="miscellaneous_transaction")
+    tax_category = relationship("TaxCategory", foreign_keys=[tax_category_id], backref="miscellaneous_transactions")

@@ -76,8 +76,11 @@ class Center(Base, AuditMixin):
     contact_person = Column(String)
     center_email = Column(String)
     center_phone = Column(String)
+    whatsapp_number = Column(String, nullable=True)
     gst_number = Column(String, nullable=True)
     live_class_enable = Column(Boolean, default=False)
+    branch_count = Column(Integer, default=0)
+    center_image = Column(String, nullable=True)
 
 
 
@@ -103,6 +106,17 @@ class Center(Base, AuditMixin):
     cascade="all, delete-orphan"
 )
     terms_privacies = relationship("TermsPrivacy", back_populates="center", foreign_keys="[TermsPrivacy.center_id]")
+    sku_categories = relationship("SKUCategory", back_populates="center")
+    skus = relationship("SKU", back_populates="center")
+    sales = relationship("Sale", back_populates="center")
+
+    #accounting relationships
+    chart_of_accounts = relationship("ChartOfAccounts", back_populates="center", cascade="all, delete-orphan")
+    journal_entries = relationship("JournalEntry", back_populates="center", cascade="all, delete-orphan")
+    general_ledger = relationship("GeneralLedger", back_populates="center", cascade="all, delete-orphan")
+    fiscal_periods = relationship("FiscalPeriod", back_populates="center", cascade="all, delete-orphan")
+    tax_ledger = relationship("TaxLedger", back_populates="center", cascade="all, delete-orphan")
+
 
 
 class CenterOnboardingTemp(Base, AuditMixin):
@@ -124,6 +138,7 @@ class CenterOnboardingTemp(Base, AuditMixin):
     platform_feature_ids = Column(JSON, nullable=False)  # list of feature UUIDs
     is_terms_and_conditions = Column(Boolean, default=False)
     calculated_amount = Column(Numeric(10, 2), nullable=False)
+    subscription_duration = Column(String, nullable=False, default="yearly")  # "monthly" or "yearly"
 
 
 
@@ -184,13 +199,18 @@ class WalletTransaction(Base, AuditMixin):
     __table_args__ = {"schema": "center"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    txn_id = Column(UUID(as_uuid=True), index=True, nullable=False, default=uuid.uuid4)
     from_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
     to_wallet_id = Column(UUID(as_uuid=True), ForeignKey("center.center_wallets.id"), nullable=True)
     platform_wallet_id = Column(UUID(as_uuid=True), ForeignKey("platform.platform_wallet.id"), nullable=True)
     amount = Column(Numeric(12, 2), nullable=False)
-    transaction_type = Column(String, nullable=False)  # e.g., "deposit", "transfer", "platform_income"
+    transaction_type = Column(String, nullable=False)  # e.g., "network-in", "network-out"
     description = Column(String, nullable=True)
+    balance = Column(Numeric(12, 2), nullable=False, default=0)
+    type = Column(String, nullable=False, default="debit")  # "debit" or "credit"
+    status = Column(String, nullable=False, default="completed")  # "pending", "completed", "reserved"
     created_at = Column(DateTime, default=datetime.utcnow)
+
 
     from_wallet = relationship("CenterWallet", foreign_keys=[from_wallet_id])
     to_wallet = relationship("CenterWallet", foreign_keys=[to_wallet_id])

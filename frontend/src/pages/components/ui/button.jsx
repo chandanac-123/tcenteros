@@ -23,6 +23,7 @@ const buttonVariants = cva(
         button_outlined_textleft: 'text-primary outline justify-start',
         button_filter: 'text-textgrey border-2 border-filter_border',
         link: 'text-primary underline-offset-4 underline',
+        danger:'text-white bg-[#D50A0A] px-2 py-1',
       },
       size: {
         default: 'h-10 pl-4 pr-1 rounded-xl text-md gap-16',

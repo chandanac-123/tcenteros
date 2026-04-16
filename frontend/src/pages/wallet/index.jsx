@@ -1,4 +1,4 @@
-import ContentLayout from '@common/masterLayout/ContentLayout'
+import ContentLayout from "@common/MasterLayout/ContentLayout"
 import { Button } from '@pages/components/ui/button'
 import filters from '@assets/form-icons/filter.svg'
 import WalletTable from './WalletTable'

@@ -1,0 +1,36 @@
+Scenario	                             Income (for center)	          Expense (for center)	        Settlement (for center)
+Memberships (new/renew/change)	     Membership fees from members	               —	                            —
+Purchase branch from platform	                —	                      Branch purchase cost	          Pay platform for branch
+Networking In	                      Networking fees received	                  —	                      Receive from home center, share with platform
+Networking Out	                                —	                                                      Networking fees paid	                                                              Pay networking center, pay platform share
+Inventory Sale	                          Sales revenue	                                                  —	                                                                      Collect payment from customer
+Inventory Purchase	—	I                                             Inventory purchase cost	Pay supplier
+Salary Payroll	—	Salaries/wages	Pay employees
+Other Charges	—	Rent, utilities, etc.	Pay vendors/service providers
+
+
+
+
+
+Settlements
+------------
+
+Purchase branch from platform
+Settlement: Pay platform for branch
+
+Networking In
+Settlement: Receive from home center, share with platform
+
+Networking Out
+Settlement: Pay networking center, pay platform share
+
+Inventory Purchase
+Settlement: Pay supplier
+
+Salary Payroll
+Settlement: Pay employees
+
+Other Charges
+Settlement: Pay vendors/service providers etc
+
+

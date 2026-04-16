@@ -1,6 +1,6 @@
-import ContentLayout from '@common/masterLayout/ContentLayout'
-import { Switch } from '@pages/components/ui/switch'
-import NetworkTables from './NetworkTables'
+import ContentLayout from "@common/MasterLayout/ContentLayout"
+import { Switch } from "@pages/components/ui/switch"
+import NetworkTables from "./NetworkTables"
 import CustomeTab from '@common/components/CustomeTab'
 import { useState } from 'react'
 import AmountForm from './AmountForm'

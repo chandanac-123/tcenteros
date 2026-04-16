@@ -19,10 +19,20 @@ class MemberStatusEnum(enum.Enum):
     visitor = "visitor"
     network_member = "network_member"
 
+
+class NetworkingStatusEnum(enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    paid = "paid"
+    completed = "completed"
+    pending_settlement = "pending_settlement"
+
+
 class SuperAdmin(User):
     __tablename__ = "superadmins"
     __table_args__ = {"schema": "auth"}
     id = Column(UUID(as_uuid=True), ForeignKey("shared.users.id", ondelete="CASCADE"), primary_key=True)
+    
     __mapper_args__ = {
         "polymorphic_identity": "superadmin",
     }
@@ -109,6 +119,8 @@ class Employee(User):
     joining_date = Column(DateTime, nullable=True)
     attendance_marking_allowed = Column(Boolean, default=False, nullable=False)
     qualification = Column(String, nullable=True)
+    salary_type = Column(String, nullable=True)  
+    pay_cycle = Column(String, nullable=True)    
 
     center = relationship("Center", foreign_keys=[center_id])
     designation = relationship("Designation", foreign_keys=[designation_id])
@@ -157,6 +169,12 @@ class Member(User):
     member_status = Column(Enum(MemberStatusEnum, name="member_status_enum"), nullable=False, default=MemberStatusEnum.member)
     home_center = relationship("Center", foreign_keys=[home_center_id])
     network_center = relationship("Center", foreign_keys=[network_center_id])
+    visited_date = Column(Date, nullable=True)
+    member_memberships = relationship(
+        "MemberMembership",
+        back_populates="member",
+        cascade="all, delete-orphan"
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "member",
@@ -177,9 +195,17 @@ class UserCenterMembership(Base, AuditMixin):
     network_eligible = Column(Boolean, default=True, nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+    network_status = Column(
+        Enum(NetworkingStatusEnum, name="networking_status_enum", schema="public"),
+        nullable=False,
+        default=NetworkingStatusEnum.pending
+    )
     # Add other membership-specific fields as needed
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
     center = relationship("Center", foreign_keys=[center_id])
     time_slot = relationship("CenterTimeSlot", foreign_keys=[time_slot_id])
+
+
+

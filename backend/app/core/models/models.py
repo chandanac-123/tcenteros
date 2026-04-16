@@ -42,6 +42,7 @@ class User(Base, AuditMixin):
     email = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, nullable=True)
     mobile = Column(String, nullable=True)
+    whatsapp_number = Column(String, nullable=True)
     profile_photo = Column(String, nullable=True)
     gender = Column(Enum(GenderEnum, name="gender_enum"), nullable=True)
 
@@ -86,12 +87,28 @@ class SKU(Base, AuditMixin):
     __table_args__ = {"schema": "shared"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sku_code = Column(String, unique=True, nullable=False)
+    sku_code = Column(String, unique=True, nullable=True)
     name = Column(String, nullable=False)
     sku_category_id = Column(UUID(as_uuid=True), ForeignKey("settings.sku_categories.id"))
+    center_id = Column(UUID(as_uuid=True), ForeignKey("center.centers.id"), nullable=False)
     description = Column(Text)
     base_price = Column(Numeric(10, 2))
     unit_of_measure = Column(String)
     status = Column(Enum(StatusEnum), default=StatusEnum.active)
 
     category = relationship("SKUCategory", back_populates="skus")
+    center = relationship("Center", back_populates="skus")
+    # If you want to link SKU to Product, add:
+    product = relationship("Product", back_populates="sku", uselist=False)
+
+
+
+
+class SuperadminInfo(Base):
+    __tablename__ = "superadmin_info"
+    __table_args__ = {"schema": "shared"}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    searched_location = Column(String, nullable=False)
+    searched_by = Column(String, nullable=True)  # Optionally store user email or id
+    searched_at = Column(DateTime, default=datetime.utcnow)

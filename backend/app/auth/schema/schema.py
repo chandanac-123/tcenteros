@@ -1,13 +1,40 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, UUID4
 from pydantic import BaseModel, EmailStr
 from app.auth.models import MemberStatusEnum
 from datetime import date
+from pydantic import BaseModel, EmailStr, constr
+
+
 
 #center admin login request and response schemas
 class CenterAdminLoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+# =========================
+# RESPONSE (COMMON MODEL)
+# =========================
+class LoginResponse(BaseModel):
+    id: str
+    email: EmailStr
+    role: str
+
+    # Center Admin
+    center_id: Optional[str] = None
+
+    # Employee
+    designation: Optional[Dict[str, Any]] = None
+    permissions: Optional[Dict[str, Any]] = None
+
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+
+
+
 
 class CenterAdminLoginResponse(BaseModel):
     id: str
@@ -80,7 +107,6 @@ class EmployeeCreate(BaseModel):
     address: Optional[str] = None
     password: str
     designation_id: UUID4
-    center_id: UUID4
     joining_date: Optional[date] = None  # <-- Add this
 
 class EmployeeUpdate(BaseModel):
@@ -113,3 +139,30 @@ class EmployeeOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+#employee multiple delete request schema
+class EmployeeDeleteRequest(BaseModel):
+    employee_ids: list[str]
+
+#set password
+
+class CenterAdminChangePasswordIn(BaseModel):
+    email: EmailStr
+    password: constr(min_length=8)
+    confirm_password: constr(min_length=8)
+
+
+#forgot password schemas
+
+class CenterAdminForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class CenterAdminVerifyOtpIn(BaseModel):
+    otp: str
+
+#Set New Password
+class CenterAdminSetPasswordOnlyIn(BaseModel):
+    password: str
+    confirm_password: str
+
+
