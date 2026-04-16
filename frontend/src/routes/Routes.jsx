@@ -55,15 +55,19 @@ import RoleAndPermission from '@pages/role-permissions/index'
 import Partners from '@super-admin/partners'
 import Centers from '@super-admin/centers'
 import PlatformFeatures from '@super-admin/platform-features'
-import RenewBilling from '@super-admin/renew-billing'
 import PlatformSettings from '@super-admin/platform-settings'
 import Analytics from '@super-admin/analytics'
 import ExpiringSoon from '@super-admin/subscriptions/expiring-soon'
 import RenewalCalender from '@super-admin/subscriptions/renewal-calender'
 import ActiveSubscriptions from '@super-admin/subscriptions/active-subscriptions'
 import SubscriptionsLayout from '@super-admin/subscriptions'
+import FailedPayments from '@super-admin/subscriptions/failed-payments'
+import RevenueBillingLayout from '@super-admin/revenue-billing'
+import PartnerCommision from '@super-admin/revenue-billing/partner-commision'
+import SASRevenue from '@super-admin/revenue-billing/sas-revenue'
 
 export const routes = [
+  //public routes
   { key: 1, path: '/', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permissionKey: true },
   { key: 2, path: '/type-selection', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: TypeSelection, menubar: false, permissionKey: true },
   { key: 3, path: '/class-mode', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ClassSelectionMode, menubar: false, permissionKey: true },
@@ -85,6 +89,7 @@ export const routes = [
   { key: 24, path: '/reset-password', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
   { key: 25, path: '/reset-success', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permissionKey: true },
 
+  //private routes
   { key: 26, path: '/dashboard', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permissionKey: 'dashboard' ,alwaysVisible: true},
   { key: 27, path: '/employee-management', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Employee Management', component: EmployeeManagement, icon: <UserCog />, menubar: true, permissionKey: 'employee_management'},
   { key: 28, path: '/membership-plan', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Membership Plans', component: MembershipPlan, icon: <NotebookText />, menubar: true, permissionKey: 'membership_plan'},
@@ -103,17 +108,25 @@ export const routes = [
   { key: 41, path: '/profile', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Profile', component: ProfilePage, menubar: false, permissionKey: true },
   { key: 42, path: '/notifications', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Notifications', component: Notifications, menubar: false, permissionKey: true },
   { key: 43, path: '/role', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role and Permission', component: RoleAndPermission,icon:<UserRoundPen />, menubar: true, permissionKey: 'role'},
+
+  //super admin routes
   { key: 44, path: '/subscriptions', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Subscriptions', component: SubscriptionsLayout,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
       submodules: [
       { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
       { key: 'expiring-soon', title: 'Expiring Soon', path: 'expiring-soon', component: ExpiringSoon, menubar: true, permissionKey: true },
+      { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },
     ]
   },
   { key: 45, path: '/platform-features', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
   { key: 46, path: '/centers', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
   { key: 47, path: '/partners', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
-  { key: 48, path: '/renew-billing', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Renew Billing', component: RenewBilling,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
+  { key: 48, path: '/revenue-billing', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
+      submodules: [
+      { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: true, permissionKey: true },
+      { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
+    ]
+  },
   { key: 49, path: '/platform-settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
   { key: 50, path: '/analytics', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics,icon:<UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true},
 
