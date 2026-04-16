@@ -65,7 +65,7 @@ import FailedPayments from '@super-admin/subscriptions/failed-payments'
 import RevenueBillingLayout from '@super-admin/revenue-billing'
 import PartnerCommision from '@super-admin/revenue-billing/partner-commision'
 import SASRevenue from '@super-admin/revenue-billing/sas-revenue'
-import DetailView from '@super-admin/subscriptions/active-subscriptions/DetailView'
+import DetailView from '@super-admin/subscriptions/active-subscriptions/detail-view'
 
 export const routes = [
   //public routes
