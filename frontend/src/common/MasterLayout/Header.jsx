@@ -27,6 +27,7 @@ import defalutUser from "@assets/header-icons/user.svg";
 import { useCrmPermissions } from "@hooks/permissions/UseCRMPermission";
 
 const Header = ({ toggleSidebar, collapsed }) => {
+  const role = useAuthStore((state) => state.auth?.role);
   const { hydrated, canAddMember } = useCrmPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
@@ -50,30 +51,32 @@ const Header = ({ toggleSidebar, collapsed }) => {
         </button>
       </div>
       <div className="flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200">
-        <div className="flex w-full justify-end gap-2 items-center">
-          <button onClick={() => setLocationOpen(true)}>
-            <span className="flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md">
-              <img src={map} alt="" className="w-5 h-5 mr-2" />
-              Fitness center
-            </span>
-          </button>
-          <GoogleMapComponent
-            open={locationOpen}
-            setLocationOpen={setLocationOpen}
-          />
-          <AddBranchButton />
-          <Button
-            disabled={!canAddMember}
-            size="addbutton"
-            onClick={() => {
-              setSelectedTab(1);
-              setMemberView("add");
-              navigate("/crm");
-            }}
-          >
-            + Add Member
-          </Button>
-        </div>
+        {role != "superadmin" && (
+          <div className="flex w-full justify-end gap-2 items-center">
+            <button onClick={() => setLocationOpen(true)}>
+              <span className="flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md">
+                <img src={map} alt="" className="w-5 h-5 mr-2" />
+                Fitness center
+              </span>
+            </button>
+            <GoogleMapComponent
+              open={locationOpen}
+              setLocationOpen={setLocationOpen}
+            />
+            <AddBranchButton />
+            <Button
+              disabled={!canAddMember}
+              size="addbutton"
+              onClick={() => {
+                setSelectedTab(1);
+                setMemberView("add");
+                navigate("/crm");
+              }}
+            >
+              + Add Member
+            </Button>
+          </div>
+        )}
         <button onClick={() => navigate("/notifications")}>
           <img src={bell_active} alt="logo" className="mr-2" />
         </button>

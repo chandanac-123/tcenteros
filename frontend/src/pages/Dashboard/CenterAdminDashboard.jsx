@@ -12,9 +12,10 @@ import { useAuthStore } from "@store/authStore";
 import { useGetBranchCountQuery } from "@api-queries/branch/Query";
 import InstructionPage from "./components/InstructionPage";
 import { useDashboardPermissions } from "@hooks/permissions/DashboardPermission";
+import { getGreeting } from "@utils/helper";
 
 const CenterAdminDashboard = () => {
-  const [greeting, setGreeting] = useState("");
+  const [greeting, setGreeting] = useState(getGreeting());
   const [instructionOpen, setInstructionOpen] = useState(false);
   const navigate = useNavigate();
   const firstLogin = useAuthStore((state) => state.firstLogin);
@@ -93,23 +94,13 @@ const CenterAdminDashboard = () => {
   const attendanceData =
     data?.attendance_chart?.map((i) => i.attendance_percentage) || [];
 
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 12) {
-        setGreeting("Good Morning 🌞🌻");
-      } else if (hour >= 12 && hour < 17) {
-        setGreeting("Good Afternoon 🌤️😎");
-      } else if (hour >= 17 && hour < 21) {
-        setGreeting("Good Evening 🌇💫");
-      } else {
-        setGreeting("Good Night 🌙⭐");
-      }
-    };
-    updateGreeting(); // initial call
-    const interval = setInterval(updateGreeting, 100000);
+   useEffect(() => {
+    const interval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 300000); //  every 5 min is enough
     return () => clearInterval(interval);
   }, []);
+
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col w-full">

@@ -89,7 +89,11 @@ export default {
         profile_bg_brown: '#ECF0CE',
         profile_bg_pink: '#FFE3E1',
         blue:'#407BFF',
-        yellow:'#FFCD0F'
+        yellow:'#FFCD0F',
+        green:'#34C759',
+        red:'#880303',
+        light_red:'#FFD7D5',
+        light_green:'#D5FFE7',
       }
     }
   },
