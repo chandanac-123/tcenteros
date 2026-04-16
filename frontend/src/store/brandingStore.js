@@ -5,7 +5,7 @@ export const useBrandingStore = create(set => ({
   branding: {
     logo_url: null,
     primary_color: '#1452D4',
-    secondary_color: '#8B24E2'
+    secondary_color: '#100F0F'
   },
 
   setBranding: data => {
