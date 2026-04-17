@@ -1,78 +1,79 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
-import active_centers from "@assets/superadmin-dashboard/activecenter.svg";
-import active_partners from "@assets/superadmin-dashboard/partner.svg";
-import monthly_revenue from "@assets/superadmin-dashboard/revenue.svg";
-import yearly_revenue from "@assets/superadmin-dashboard/locked-revenue.svg";
-import upcoming_renewal from "@assets/superadmin-dashboard/upcoming_renewal.svg";
-import new_center from "@assets/superadmin-dashboard/new-center.svg";
-import branching from "@assets/superadmin-dashboard/branching.svg";
-import network from "@assets/superadmin-dashboard/network.svg";
-import churn from "@assets/superadmin-dashboard/churn.svg";
-import failed_payment from "@assets/superadmin-dashboard/failed-payment.svg";
+import {
+  Briefcase,
+  Building,
+  Building2,
+  CalendarSearch,
+  CircleAlert,
+  Handshake,
+  Network,
+  Receipt,
+  Split,
+  TriangleAlert,
+} from "lucide-react";
 import TrendBadge from "@common/components/TrendBadge";
 import { useNavigate } from "react-router-dom";
 
 const HeaderCard = ({ data }) => {
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const cardsData = [
     {
       label: "Total Active Centers",
       value: 0,
-      icon: active_centers,
+      icon: <Building2 size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/employee-management"),
     },
     {
       label: "New Centers This Month",
       value: 0,
-      icon: new_center,
+      icon: <Building size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm/members"),
     },
     {
       label: "Monthly Recurring Revenue",
       value: 0,
-      icon: monthly_revenue,
+      icon: <Receipt size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/membership-plan?tab=active"),
     },
     {
       label: "Yearly Locked Revenue",
       value: 0,
-      icon: yearly_revenue,
+      icon: <Briefcase size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=leads"),
     },
     {
       label: "Branching Earning",
       value: 0,
-      icon: branching,
+      icon: <Split size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
     },
     {
       label: "Partner Earning",
       value: 0,
-      icon: active_partners,
+      icon: <Handshake size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
     },
     {
       label: "Network Earning",
       value: 0,
-      icon: network,
+      icon: <Network size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/attendance"),
     },
     {
       label: "Upcoming Renewal Value",
       value: 0,
-      icon: upcoming_renewal,
+      icon: <CalendarSearch size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Churn Rate",
       value: 0,
-      icon: churn,
+      icon: <CircleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Failed Payments Value",
       value: 0,
-      icon: failed_payment,
+      icon: <TriangleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
   ];
@@ -85,7 +86,9 @@ const HeaderCard = ({ data }) => {
           className="w-full h-28 cursor-pointer flex flex-col justify-between p-4 bg-textwhite rounded-xl shadow-primary-shadow"
         >
           <div className="flex items-center gap-3 mb-2">
-            <img src={item?.icon} alt={item?.label} className="w-8 h-8" />
+            <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.10)]">
+              {item?.icon}
+            </div>
             <span className="text-xs font-medium text-grey">{item?.label}</span>
           </div>
           <div className="flex items-end justify-between mt-auto">

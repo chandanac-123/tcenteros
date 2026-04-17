@@ -1,27 +1,18 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { getGreeting } from "@utils/helper";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@pages/components/ui/card";
 import LineChart from "@common/charts/LineChart";
 import CustomDatePicker from "@common/components/CustomeDatepicker";
 import HeaderCard from "./components/HeaderCards";
 import BaseCard from "./components/BaseCard";
-import active_partner from "@assets/superadmin-dashboard/active-partner.svg";
-import revenue from "@assets/superadmin-dashboard/revenue.svg";
-import commision from "@assets/superadmin-dashboard/commision.svg";
 import MultiRingChart from "@common/charts/MultiRingChart";
-import { TrendingDown, TrendingUp } from "lucide-react";
-import active_centers from "@assets/superadmin-dashboard/activecenter.svg";
-import active_partners from "@assets/superadmin-dashboard/partner.svg";
-import monthly_revenue from "@assets/superadmin-dashboard/revenue.svg";
-import yearly_revenue from "@assets/superadmin-dashboard/locked-revenue.svg";
-import upcoming_renewal from "@assets/superadmin-dashboard/upcoming_renewal.svg";
-import new_center from "@assets/superadmin-dashboard/new-center.svg";
-import branching from "@assets/superadmin-dashboard/branching.svg";
-import network from "@assets/superadmin-dashboard/network.svg";
-import churn from "@assets/superadmin-dashboard/churn.svg";
-import failed_payment from "@assets/superadmin-dashboard/failed-payment.svg";
+import {
+  NotebookPen,
+  Receipt,
+  Users,
+} from "lucide-react";
+
 
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
@@ -37,17 +28,17 @@ const SuperAdminDashboard = () => {
     {
       label: "Total Active Centers",
       value: 0,
-      icon: active_partner,
+      icon: <Users size={16} strokeWidth={2.75} />,
     },
     {
       label: "New Centers This Month",
       value: 0,
-      icon: revenue,
+      icon: <Receipt size={16} strokeWidth={2.75} />,
     },
     {
       label: "Commission Payable",
       value: 0,
-      icon: commision,
+      icon: <NotebookPen size={16} strokeWidth={2.75} />,
     },
   ];
 
@@ -85,75 +76,13 @@ const SuperAdminDashboard = () => {
   ];
 
   const chartData = [
-  { label: "Monthly Subscriptions", value: 62, color: "#4DB6AC" },
-  { label: "Yearly Subscriptions", value: 29, color: "#B57CC2" },
-  { label: "Network Subscriptions", value: 26, color: "#E6A57A" },
-  { label: "Via Partners", value: 12, color: "#3BA3C9" },
-  { label: "Branching", value: 12, color: "#7E57C2" },
-];
-
- const cardsData = [
-    {
-      label: "Total Active Centers",
-      value: 0,
-      icon: active_centers,
-      onClick: () => navigate("/employee-management"),
-    },
-    {
-      label: "New Centers This Month",
-      value: 0,
-      icon: new_center,
-      onClick: () => navigate("/crm/members"),
-    },
-    {
-      label: "Monthly Recurring Revenue",
-      value: 0,
-      icon: monthly_revenue,
-      onClick: () => navigate("/membership-plan?tab=active"),
-    },
-    {
-      label: "Yearly Locked Revenue",
-      value: 0,
-      icon: yearly_revenue,
-      onClick: () => navigate("/crm?tab=leads"),
-    },
-    {
-      label: "Branching Earning",
-      value: 0,
-      icon: branching,
-      onClick: () => navigate("/crm?tab=guests"),
-    },
-    {
-      label: "Partner Earning",
-      value: 0,
-      icon: active_partners,
-      onClick: () => navigate("/crm?tab=guests"),
-    },
-    {
-      label: "Network Earning",
-      value: 0,
-      icon: network,
-      onClick: () => navigate("/attendance"),
-    },
-    {
-      label: "Upcoming Renewal Value",
-      value: 0,
-      icon: upcoming_renewal,
-      onClick: () => navigate("/accounts"),
-    },
-    {
-      label: "Churn Rate",
-      value: 0,
-      icon: churn,
-      onClick: () => navigate("/accounts"),
-    },
-    {
-      label: "Failed Payments Value",
-      value: 0,
-      icon: failed_payment,
-      onClick: () => navigate("/accounts"),
-    },
+    { label: "Monthly Subscriptions", value: 62, color: "#4DB6AC" },
+    { label: "Yearly Subscriptions", value: 29, color: "#B57CC2" },
+    { label: "Network Subscriptions", value: 26, color: "#E6A57A" },
+    { label: "Via Partners", value: 12, color: "#3BA3C9" },
+    { label: "Branching", value: 12, color: "#7E57C2" },
   ];
+
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col">
@@ -164,7 +93,7 @@ const SuperAdminDashboard = () => {
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <HeaderCard cardsData={cardsData} dashboardHead={true}/>
+          <HeaderCard dashboardHead={true} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

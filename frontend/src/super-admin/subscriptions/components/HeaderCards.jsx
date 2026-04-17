@@ -1,46 +1,37 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
-import active_centers from "@assets/superadmin-dashboard/activecenter.svg";
-import active_partners from "@assets/superadmin-dashboard/partner.svg";
-import monthly_revenue from "@assets/superadmin-dashboard/revenue.svg";
-import yearly_revenue from "@assets/superadmin-dashboard/locked-revenue.svg";
-import upcoming_renewal from "@assets/superadmin-dashboard/upcoming_renewal.svg";
-import new_center from "@assets/superadmin-dashboard/new-center.svg";
-import branching from "@assets/superadmin-dashboard/branching.svg";
-
+import { Briefcase, Calendar, Clock, Network, Receipt, Split } from "lucide-react";
 
 const HeaderCard = ({ data }) => {
- const cardsData = [
+  const cardsData = [
     {
       label: "Total Revenue",
       value: 0,
-      icon: active_centers,
+      icon: <Briefcase size={16} strokeWidth={2.75} />,
     },
     {
       label: "Monthly Revenue",
       value: 0,
-      icon: new_center,
+      icon: <Receipt size={16} strokeWidth={2.75} />,
     },
     {
       label: "Renewal Date",
       value: 0,
-      icon: monthly_revenue,
+      icon: <Calendar size={16} strokeWidth={2.75} />,
     },
     {
       label: "Days Remaining",
       value: 0,
-      icon: yearly_revenue,
+      icon: <Clock size={16} strokeWidth={2.75} />,
     },
     {
       label: "Network commission",
       value: 0,
-      icon: branching,
+      icon: <Network size={16} strokeWidth={2.75} />,
     },
     {
       label: "Branch Count",
       value: 0,
-      icon: active_partners,
+      icon: <Split size={16} strokeWidth={2.75} />,
     },
-    
   ];
   return (
     <>
@@ -50,7 +41,9 @@ const HeaderCard = ({ data }) => {
           className="w-full h-24 cursor-pointer flex flex-col justify-between p-4 bg-textwhite rounded-xl shadow-primary-shadow"
         >
           <div className="flex items-center gap-3 mb-2">
-            <img src={item?.icon} alt={item?.label} className="w-8 h-8" />
+            <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
+              {item?.icon}
+            </div>
             <span className="text-xs font-medium text-grey">{item?.label}</span>
           </div>
           <div className="flex items-end justify-between mt-auto">
