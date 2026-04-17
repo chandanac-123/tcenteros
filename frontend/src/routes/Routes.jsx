@@ -35,17 +35,27 @@ import AddBranches from "@pages/branch/AddBranches"
 import ProfilePage from '@pages/profile'
 
 import {
+  Boxes,
+  Building2,
+  ChartPie,
+  CircleDollarSign,
   CrownIcon,
   FileUserIcon,
+  Handshake,
+  Headset,
   LayoutDashboard,
   ListChecks,
+  LucideNetwork,
   NetworkIcon,
   NotebookText,
   ProportionsIcon,
   Receipt,
+  SettingsIcon,
   ShapesIcon,
+  Split,
   Tickets,
   UserCog,
+  UserRoundCog,
   UserRoundPen,
   WalletIcon
 } from 'lucide-react'
@@ -67,6 +77,10 @@ import PartnerCommision from '@super-admin/revenue-billing/partner-commision'
 import SASRevenue from '@super-admin/revenue-billing/sas-revenue'
 import DetailView from '@super-admin/subscriptions/active-subscriptions/detail-view'
 import PartnerById from '@super-admin/partners/partnerById'
+import Branching from '@super-admin/branching'
+import Networking from '@super-admin/networking'
+import Support from '@super-admin/support'
+import RoleAndPermissions from '@super-admin/roleAndpermissions'
 
 export const routes = [
   //public routes
@@ -122,18 +136,23 @@ export const routes = [
       { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },
     ]
   },
-  { key: 45, path: '/platform-features', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 46, path: '/centers', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 47, path: '/partners', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 45, path: '/platform-features', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 46, path: '/centers', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 47, path: '/partners', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 52, path: '/branching', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Branching', component: Branching, icon: <Split />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 54, path: '/networking', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Networking', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: true, isSuperAdmin: true },
+
   {
-    key: 48, path: '/revenue-billing', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
+    key: 48, path: '/revenue-billing', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign/>, menubar: true, permissionKey: true, isSuperAdmin: true,
     submodules: [
       { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: true, permissionKey: true },
       { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
     ]
   },
-  { key: 49, path: '/platform-settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 50, path: '/analytics', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 50, path: '/analytics', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 53, path: '/support', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 51, path: '/partnersbyId/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
+  { key: 55, path: '/roleAndpermission', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog/>, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 49, path: '/platform-settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
 ]
