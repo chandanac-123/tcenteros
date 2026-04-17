@@ -58,7 +58,7 @@ const Input = React.forwardRef(
             {...props}
           />
         )}
-        {error && <div className='text-xs text-red-500'>{error}</div>}
+        {error && <div className='text-xs text-red_text'>{error}</div>}
       </div>
     )
   }

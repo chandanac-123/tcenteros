@@ -395,7 +395,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             onChange={id => formik.setFieldValue('time_slot_id', id)}
           />
           {formik.touched.time_slot_id && formik.errors.time_slot_id && (
-            <p className='text-red-500 text-sm'>{formik.errors.time_slot_id}</p>
+            <p className='text-red_text text-sm'>{formik.errors.time_slot_id}</p>
           )}
         </div>
 

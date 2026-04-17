@@ -32,7 +32,7 @@ const DynamicListInput = ({ label, values = [], setValues }) => {
                 const updated = values.filter((_, i) => i !== index)
                 setValues(updated)
               }}
-              className='text-red-500 hover:text-red-700'
+              className='text-red_text hover:text-red-700'
             >
               <X size={18} />
             </button>

@@ -51,7 +51,7 @@ const SettlementViewPage = ({ open, setOpen, id }) => {
 
               <div className='flex flex-col'>
                 <span>Total Expenses</span>
-                <span className='font-semibold text-red-500'>
+                <span className='font-semibold text-red_text'>
                   ₹ {summary?.total_expenses}
                 </span>
               </div>

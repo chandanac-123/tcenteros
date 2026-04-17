@@ -6,19 +6,10 @@ const BillingHistory = () => {
     { accessorKey: "full_name", header: "Invoice ID" },
     { accessorKey: "designation_name", header: "Period" },
     { accessorKey: "email", header: "Amount" },
+    { accessorKey: "email", header: "Tax Amount" },
+    { accessorKey: "email", header: "Total Amount" },
     { accessorKey: "mobile", header: "Date" },
-    { accessorKey: "joining_date", header: "Status" },
-    {
-      accessorKey: "action",
-      header: "Action",
-      cell: ({ row }) => (
-        <div className="flex">
-          <button className="px-3 py-1 text-xs  items-center justify-center rounded-xl border">
-            Download
-          </button>
-        </div>
-      ),
-    },
+    { accessorKey: "joining_date", header: "Status" }
   ];
   return (
     <div className="w-full">

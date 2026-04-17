@@ -25,7 +25,7 @@ const BranchDetailsButton = ({ isLimitReached }) => {
       </div>
 
       {showError && (
-        <p className='text-red-500 mb-2'>
+        <p className='text-red_text mb-2'>
           No branches purchased. Please purchase a branch.
         </p>
       )}

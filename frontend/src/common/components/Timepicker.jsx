@@ -133,13 +133,13 @@ export default function TimePicker ({ label, value, onChange, error }) {
               <X
                 size={16}
                 onClick={handleClear}
-                className='cursor-pointer text-gray-400 hover:text-red-500'
+                className='cursor-pointer text-gray-400 hover:text-red_text'
               />
             )}
           </div>
         </div>
       </div>
-      {error && <p className='text-red-500 text-xs mt-1'>{error}</p>}
+      {error && <p className='text-red_text text-xs mt-1'>{error}</p>}
     </div>
   )
 }

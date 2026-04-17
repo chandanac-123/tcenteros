@@ -121,7 +121,7 @@ const CenterDesignations = () => {
                     setDelValue(d.id)
                     setDeleteOpen(true)
                   }}
-                  className='bg-[#FFE4E6] text-red-500  rounded-md hover:bg-red-100 transition'
+                  className='bg-[#FFE4E6] text-red_text  rounded-md hover:bg-red-100 transition'
                 >
                   <img src={deleteicon} alt='delete' />
                 </button>

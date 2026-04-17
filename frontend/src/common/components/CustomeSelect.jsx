@@ -125,7 +125,7 @@ export default function CustomeSelect ({
         </SelectContent>
       </Select>
 
-      {error && <p className='text-red-500 text-xs mt-1'>{error}</p>}
+      {error && <p className='text-red_text text-xs mt-1'>{error}</p>}
     </div>
   )
 }

@@ -147,7 +147,7 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
                 </div>
                 {formik.touched.designation_id &&
                   formik.errors.designation_id && (
-                    <div className='text-xs text-red-500 mt-1'>
+                    <div className='text-xs text-red_text mt-1'>
                       {formik.errors.designation_id}
                     </div>
                   )}{' '}

@@ -56,7 +56,7 @@
 //         )}
 //       </div>
 
-//       {error && <p className="text-xs text-red-500">{error}</p>}
+//       {error && <p className="text-xs text-red_text">{error}</p>}
 //     </>
 //   )
 // }
@@ -162,7 +162,7 @@ const InputFile = ({
         </button>
       )}
 
-      {error && <p className='text-xs text-red-500 mt-1'>{error}</p>}
+      {error && <p className='text-xs text-red_text mt-1'>{error}</p>}
     </>
   )
 }

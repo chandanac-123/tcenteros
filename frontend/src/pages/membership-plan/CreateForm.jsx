@@ -194,7 +194,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
               {formik.touched.membership_features &&
                 formik.errors.membership_features &&
                 typeof formik.errors.membership_features === 'string' && (
-                  <p className='text-red-500 text-xs mt-1'>
+                  <p className='text-red_text text-xs mt-1'>
                     {formik.errors.membership_features}
                   </p>
                 )}
@@ -213,7 +213,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                   <button
                     type='button'
                     onClick={() => handleRemoveFeature(index)}
-                    className='text-red-500 hover:text-red-700 shrink-0 font-bold text-lg'
+                    className='text-red_text hover:text-red-700 shrink-0 font-bold text-lg'
                   >
                     ✕
                   </button>

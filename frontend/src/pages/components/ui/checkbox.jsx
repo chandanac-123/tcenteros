@@ -21,7 +21,7 @@ const Checkbox = React.forwardRef(({ className, checked, onCheckedChange, error,
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
     {error && (
-      <span className="text-xs text-red-500 mt-1">{error}</span>
+      <span className="text-xs text-red_text mt-1">{error}</span>
     )}
   </div>
 ))

@@ -38,7 +38,7 @@ const Memberships = () => {
         const days = row.original.days_until_expiry
         if (days < 0) {
           return (
-            <span className='text-red-500'>
+            <span className='text-red_text'>
               Expired {Math.abs(days)} day's ago
             </span>
           )
