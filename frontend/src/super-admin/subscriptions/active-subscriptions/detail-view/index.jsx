@@ -73,8 +73,9 @@ const DetailView = () => {
       <DeleteModal
         open={suspendOpen}
         setOpen={setSuspendOpen}
-        header="Delete Employee"
-        description="Are you sure you want to delete this employee?"
+        suspend={true}
+        header="Are you sure you want to suspend this subscription?"
+        description="This Subscription will be removed from your listing the center will lost the full access as per the subscription This action cannot be undone.?"
       />
     </ContentLayout>
   );
