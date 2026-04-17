@@ -1,9 +1,10 @@
 import React from 'react'
+import AssignedCenterTable from './AssignedCenterTable'
 
 const AssiginedCenters = () => {
   return (
-    <div>
-      fgfd
+    <div className=''>
+      <AssignedCenterTable />
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const MultiRingChart = ({ dataConfig, size = 260 }) => {
+const MultiRingChart = ({ dataConfig, size = 260, display = true }) => {
   const baseCutout = 40; // center hole
   const step = 3; // distance between rings
 
@@ -40,19 +40,22 @@ const MultiRingChart = ({ dataConfig, size = 260 }) => {
       </div>
 
       {/* Legend */}
-      <div className="grid grid-cols-2 gap-x-10 gap-y-3 mt-6">
-        {dataConfig.map((item, idx) => (
-          <div key={idx} className="flex items-center gap-2">
-            <span
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-sm text-gray-600">
-              {item.label} – {item.value}%
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* Legend */}
+      {display && (
+        <div className="grid grid-cols-2 gap-x-10 gap-y-3 mt-6">
+          {dataConfig.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-sm text-gray-600">
+                {item.label} – {item.value}%
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

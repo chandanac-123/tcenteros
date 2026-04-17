@@ -16,7 +16,8 @@ const BarChart = ({
   labels = [],
   datasets = [],
   height = 'h-72',
-  isDashboard = false
+  isDashboard = false,
+  barThickness = 20
 }) => {
   const [visible, setVisible] = useState(
     datasets.reduce((acc, ds, i) => {
@@ -24,7 +25,7 @@ const BarChart = ({
       return acc
     }, {})
   )
-      
+
   const toggleDataset = index => {
     setVisible(prev => ({
       ...prev,
@@ -40,20 +41,20 @@ const BarChart = ({
     labels: hasData ? labels : ['No Data'],
     datasets: hasData
       ? datasets.map((ds, index) => ({
-          ...ds,
-          hidden: !visible[index],
-          backgroundColor:
-            ds.backgroundColor || (isDashboard ? '#15CAB8' : '#4581FF'),
-          borderRadius: isDashboard ? 0 : 8,
-          barThickness: isDashboard ? 15 : 10
-        }))
+        ...ds,
+        hidden: !visible[index],
+        backgroundColor:
+          ds.backgroundColor || (isDashboard ? '#15CAB8' : '#4581FF'),
+        borderRadius: isDashboard ? 0 : 8,
+        barThickness: barThickness
+      }))
       : [
-          {
-            label: 'No Data',
-            data: [1],
-            backgroundColor: '#E5E7EB'
-          }
-        ]
+        {
+          label: 'No Data',
+          data: [1],
+          backgroundColor: '#E5E7EB'
+        }
+      ]
   }
 
   const options = {
@@ -107,9 +108,8 @@ const BarChart = ({
                 }}
               />
               <span
-                className={`text-sm font-medium ${
-                  visible[index] ? 'text-black' : 'text-gray-400'
-                }`}
+                className={`text-sm font-medium ${visible[index] ? 'text-black' : 'text-gray-400'
+                  }`}
               >
                 {ds.label}
               </span>

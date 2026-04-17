@@ -4,17 +4,23 @@ import React, { useState } from 'react'
 import PartnerDisplay from './components/PartnerDisplay'
 import PartnerCards from './components/PartnerCards'
 import CustomeTab from '@common/components/CustomeTab'
-import AssiginedCenters from './components/AssiginedCenters'
-import CommissionLedger from './components/CommissionLedger'
+import AssiginedCenters from './components/AssignedCenters/AssiginedCenters'
+import CommissionLedger from './components/CommissionLedger/CommissionLedger'
+import CustomFilter from '@common/components/CustomeFilter'
 
 const PartnerById = () => {
+    const [activeTab, setActiveTab] = useState('center_assigned');
     const partnerTabs = [
-        { id: 'center_assigined', name: 'Center Assigned', component: <AssiginedCenters /> },
+        { id: 'center_assigned', name: 'Center Assigned', component: <AssiginedCenters /> },
         { id: 'commission_ledger', name: 'Commission Ledger', component: <CommissionLedger /> }
     ]
+    const activeModule = partnerTabs.find(item => item.id === activeTab);
+    const assignedCenterFilter = [
+        { key: "active", label: "Active" },
+        { key: "inactive", label: "Inactive" }
+    ]
 
-      const [activeTab, setActiveTab] = useState('center_assigined')
-    
+
     return (
         <ContentLayout>
             <div>
@@ -46,13 +52,23 @@ const PartnerById = () => {
                     <PartnerCards />
                 </div>
 
-                <div className="">
-                    <CustomeTab
-                        tabList={partnerTabs}
-                        value={activeTab}
-                        defaultVal='center_assigined'
-                        onChange={setActiveTab}
-                    />
+                <div className="px-5 py-5">
+                    <div className=" flex items-center justify-between">
+                        <CustomeTab
+                            tabList={partnerTabs}
+                            value={activeTab}
+                            defaultVal='center_assigned'
+                            onChange={setActiveTab}
+                            tabsClass={"w-[50%]"}
+                        />
+                        {activeTab === 'center_assigned' && (
+                            <CustomFilter
+                                options={assignedCenterFilter}
+                            />
+                        )}
+                    </div>
+
+                    <div className='mt-4'>{activeModule?.component}</div>
                 </div>
             </div>
         </ContentLayout>
