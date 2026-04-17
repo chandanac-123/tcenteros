@@ -94,6 +94,7 @@ export default {
         red:'#880303',
         light_red:'#FFD7D5',
         light_green:'#D5FFE7',
+        danger:'#B2321F'
       }
     }
   },
