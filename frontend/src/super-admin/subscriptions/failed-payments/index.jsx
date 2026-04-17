@@ -11,11 +11,7 @@ const FailedPayments = () => {
       <div className="flex items-center justify-between p-4">
         <div className="flex  gap-4">
           <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-            <TriangleAlert
-              size={16}
-              strokeWidth={2.75}
-              className="text-danger"
-            />
+            <TriangleAlert size={30} className="text-danger" />
           </div>
           <div className="flex flex-col justify-center gap-2">
             <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
@@ -30,18 +26,14 @@ const FailedPayments = () => {
         <div className="flex gap-4">
           <div className="flex flex-col border rounded-xl py-2 px-6 justify-center items-center gap-2">
             <div className="flex gap-2">
-              <TriangleAlert
-                size={16}
-                strokeWidth={2.75}
-                className="text-danger"
-              />
+              <TriangleAlert size={20} className="text-danger" />
               <span className="flex text-xs text-textgrey">Failed Payment</span>
             </div>
             <span className="flex font-semibold">125 Centers</span>
           </div>
           <div className="flex flex-col border rounded-xl py-2 px-6 justify-center items-center gap-2">
             <div className="flex gap-2">
-              <BanknoteX size={16} strokeWidth={2.75} className="text-danger" />
+              <BanknoteX size={20} strokeWidth={2.75} className="text-danger" />
               <span className="flex text-xs text-textgrey">
                 Total Failed Amount
               </span>

@@ -18,8 +18,7 @@ const RenewalDetailView = () => {
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
             <Calendar
-              size={16}
-              strokeWidth={2.75}
+              size={30}
               className="text-onboard_primary"
             />
           </div>

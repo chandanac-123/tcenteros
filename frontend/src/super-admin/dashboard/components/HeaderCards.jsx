@@ -82,8 +82,8 @@ const HeaderCard = ({ data }) => {
       {cardsData?.map((item, index) => (
         <div
           key={index}
-          onClick={item.onClick}
-          className="w-full h-28 cursor-pointer flex flex-col justify-between p-4 bg-textwhite rounded-xl shadow-primary-shadow"
+          // onClick={item.onClick}
+          className="w-full h-28  flex flex-col justify-between p-4 bg-textwhite rounded-xl shadow-primary-shadow"
         >
           <div className="flex items-center gap-3 mb-2">
             <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.10)]">
