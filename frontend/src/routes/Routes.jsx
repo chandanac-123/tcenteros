@@ -67,6 +67,7 @@ import PartnerCommision from '@super-admin/revenue-billing/partner-commision'
 import SASRevenue from '@super-admin/revenue-billing/sas-revenue'
 import DetailView from '@super-admin/subscriptions/active-subscriptions/detail-view'
 import PartnerById from '@super-admin/partners/partnerById'
+import RenewalDetailView from '@super-admin/subscriptions/renewal-calender/RenewalDetailView'
 
 export const routes = [
   //public routes
@@ -118,6 +119,7 @@ export const routes = [
       { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
       { key: 'active-subscriptions-detail', title: 'Active Subscriptions Detail', path: 'active-subscriptions/detail/:id', component: DetailView, menubar: false, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
+      { key: 'renewal-calender-detail', title: 'Renewal Calender Detail', path: 'renewal-calender/detail/:id', component: RenewalDetailView, menubar: false, permissionKey: true },
       { key: 'expiring-soon', title: 'Expiring Soon', path: 'expiring-soon', component: ExpiringSoon, menubar: true, permissionKey: true },
       { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },
     ]
