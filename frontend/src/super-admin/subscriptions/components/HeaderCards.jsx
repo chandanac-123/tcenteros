@@ -11,32 +11,32 @@ import branching from "@assets/superadmin-dashboard/branching.svg";
 const HeaderCard = ({ data }) => {
  const cardsData = [
     {
-      label: "Total Active Centers",
+      label: "Total Revenue",
       value: 0,
       icon: active_centers,
     },
     {
-      label: "New Centers This Month",
+      label: "Monthly Revenue",
       value: 0,
       icon: new_center,
     },
     {
-      label: "Monthly Recurring Revenue",
+      label: "Renewal Date",
       value: 0,
       icon: monthly_revenue,
     },
     {
-      label: "Yearly Locked Revenue",
+      label: "Days Remaining",
       value: 0,
       icon: yearly_revenue,
     },
     {
-      label: "Branching Earning",
+      label: "Network commission",
       value: 0,
       icon: branching,
     },
     {
-      label: "Partner Earning",
+      label: "Branch Count",
       value: 0,
       icon: active_partners,
     },

@@ -1,38 +1,81 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import React from "react";
-import { TrendingDown, TrendingUp } from "lucide-react";
-import active_centers from "@assets/superadmin-dashboard/activecenter.svg";
-import active_partners from "@assets/superadmin-dashboard/partner.svg";
-import monthly_revenue from "@assets/superadmin-dashboard/revenue.svg";
-import yearly_revenue from "@assets/superadmin-dashboard/locked-revenue.svg";
-import new_center from "@assets/superadmin-dashboard/new-center.svg";
-import branching from "@assets/superadmin-dashboard/branching.svg";
+import React, { useState } from "react";
 import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
 import { Button } from "@pages/components/ui/button";
+import CustomeTab from "@common/components/CustomeTab";
+import RevenueSummary from "./RevenueSummary";
+import BillingHistory from "./BillingHistory";
+import DeleteModal from "@common/components/CustomeDelete";
+import { Badge } from "@pages/components/ui/badge";
+
+const revenueOrBilling = [
+  { id: "revenue", name: "Revenue Summaries", component: <RevenueSummary /> },
+  { id: "billing", name: "Billing History", component: <BillingHistory /> },
+];
 
 const DetailView = () => {
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("revenue");
+  const activeModule = revenueOrBilling.find((item) => item.id === activeTab);
+
   return (
     <ContentLayout>
-      <div className="flex justify-between">
-        <div className="flex items-center gap-4 p-4">
-          <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-            {/* <Handshake size={30} className="text-onboard_primary" /> */}
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-base font-semibold">Golds Fitness</span>
+            <Badge
+              className="bg-badge_bg_green border-none text-green_text rounded-xl w-auto"
+              variant="future_lead"
+              label="Active"
+            />
           </div>
-          <div className="flex flex-col justify-center gap-3">
-            <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
-              Partners Management
-            </p>
-            <p className="text-[#393636] font-inter text-[14px] font-medium">
-              Manage reseller partners and commissions
-            </p>
+
+          <div className="flex flex-wrap text-xs gap-2 items-center">
+            <span className="font-medium">Bangalore</span>
+            <Badge
+              className="bg-plan_bg_purple border-none text-plan_purple rounded-lg w-auto h-4"
+              variant="future_lead"
+              label="Yearly"
+            />
           </div>
         </div>
-        <Button>abc</Button>
+
+        <Button
+          variant="danger"
+          size="addbutton"
+          className="w-full sm:w-auto"
+          onClick={() => setSuspendOpen(true)}
+        >
+          Suspend
+        </Button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      {/* Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
         <HeaderCard />
       </div>
+
+      {/* Tabs + Content */}
+      <div className="flex flex-col mt-6 gap-4">
+        <CustomeTab
+          tabList={revenueOrBilling}
+          defaultVal="revenue"
+          tabsListClass="p-[1px] w-full sm:w-[400px]"
+          onChange={(value) => setActiveTab(value)}
+        />
+
+        <div className="w-full">{activeModule?.component}</div>
+      </div>
+
+      {/* Modal */}
+      <DeleteModal
+        open={suspendOpen}
+        setOpen={setSuspendOpen}
+        header="Delete Employee"
+        description="Are you sure you want to delete this employee?"
+      />
     </ContentLayout>
   );
 };

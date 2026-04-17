@@ -15,8 +15,9 @@ const ActiveSubcriptionTable = () => {
       accessorKey: "action",
       header: "Action",
       cell: ({ row }) => (
-        <div className="flex items-center justify-center rounded-xl border p-1">
+        <div className="flex">
           <button
+            className="px-3 py-1 text-xs  items-center justify-center rounded-xl border"
             onClick={() =>
               navigate(
                 `/subscriptions/active-subscriptions/detail/${row.original.id}`,
