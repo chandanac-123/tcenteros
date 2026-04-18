@@ -47,7 +47,7 @@ const RoleAndPermissions = () => {
           value={activeTab}
           defaultVal="employees"
           onChange={setActiveTab}
-          tabsClass={"w-[50%]"}
+          tabsClass={"w-[30%]"}
         />
       </div>
       <div className="mt-4">{activeModule?.component}</div>

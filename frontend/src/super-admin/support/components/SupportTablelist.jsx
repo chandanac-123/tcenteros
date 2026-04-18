@@ -55,6 +55,7 @@ const SupportTablelist = () => {
                 return (
                     <div className="flex items-center gap-5">
                         <Button
+                        size='notificationbutton'
                             onClick={() =>
                                 navigate(`/supportById/${id}`, {
                                     state: allData, 
@@ -62,12 +63,12 @@ const SupportTablelist = () => {
                                 })
                             }
                             variant="outline_secondary"
-                            size="addbutton"
+                          
                         >
                             View Ticket
                         </Button>
                         <Button
-                            size="addbutton"
+                           size='notificationbutton'
                         >
                             Assign CenterAdmin
                         </Button>
