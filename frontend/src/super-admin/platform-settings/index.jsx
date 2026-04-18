@@ -1,14 +1,26 @@
+import CustomeTab from "@common/components/CustomeTab";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import { Card } from "@pages/components/ui/card";
-import { Input } from "@pages/components/ui/input";
 import { Settings } from "lucide-react";
+import { useState } from "react";
+import GeneralSettings from "./general-settings";
+import LegalDocuments from "./legal-documents";
+
+const settingType = [
+  { id: "general", name: "General Settings", component: GeneralSettings },
+  { id: "legal", name: "Legal Documents", component: LegalDocuments },
+];
 
 const PlatformSettings = () => {
+  const [activeTab, setActiveTab] = useState("general");
+
+  const activeTabData = settingType.find((tab) => tab.id === activeTab);
+  const ActiveComponent = activeTabData?.component;
+
   return (
     <ContentLayout>
       <div>
         <div className="flex items-center gap-4 p-4">
-          <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
+          <div className="p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
             <Settings size={30} className="text-onboard_primary" />
           </div>
           <div className="flex flex-col justify-center gap-3">
@@ -21,36 +33,17 @@ const PlatformSettings = () => {
           </div>
         </div>
       </div>
-      <Card>
-        <div className="flex flex-col p-4 space-y-4">
-          <span className="text-grey font-semibold">
-            Revenu & Subscription Management
-          </span>
 
-          <div className="grid grid-cols-2 gap-4 ">
-            <Input
-              label="Default Yearly Discount (%)"
-              name="mobile"
-              placeholder="Enter Your Mobile Number"
-            />
-              <Input
-              label="Default Partner Commission (%)"
-              name="mobile"
-              placeholder="Enter Your Mobile Number"
-            />
-              <Input
-              label="Grace Period (Days)"
-              name="mobile"
-              placeholder="Enter Your Mobile Number"
-            />
-              <Input
-              label="Payment Retry Attempts"
-              name="mobile"
-              placeholder="Enter Your Mobile Number"
-            />
-          </div>
-        </div>
-      </Card>
+      <CustomeTab
+        tabList={settingType}
+        defaultVal={activeTab}
+        tabsListClass="p-[1px] w-max"
+        onChange={setActiveTab}
+      />
+
+      <div >
+        {ActiveComponent && <ActiveComponent />}
+      </div>
     </ContentLayout>
   );
 };
