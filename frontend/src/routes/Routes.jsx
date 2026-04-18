@@ -82,6 +82,7 @@ import Branching from '@super-admin/branching'
 import Networking from '@super-admin/networking'
 import Support from '@super-admin/support'
 import RoleAndPermissions from '@super-admin/roleAndpermissions'
+import SupportById from '@super-admin/support/supportById'
 
 export const routes = [
   //public routes
@@ -145,7 +146,7 @@ export const routes = [
   { key: 54, path: '/networking', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Networking', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
   {
-    key: 48, path: '/revenue-billing', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign/>, menubar: true, permissionKey: true, isSuperAdmin: true,
+    key: 48, path: '/revenue-billing', label: '', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign />, menubar: true, permissionKey: true, isSuperAdmin: true,
     submodules: [
       { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: true, permissionKey: true },
       { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
@@ -153,8 +154,9 @@ export const routes = [
   },
   { key: 50, path: '/analytics', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 53, path: '/support', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 56, path: '/supportById/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: SupportById, icon: <Headset />, menubar: false, permissionKey: true, isSuperAdmin: true },
   { key: 51, path: '/partnersbyId/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
-  { key: 55, path: '/roleandpermission', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog/>, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 55, path: '/roleandpermission', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 49, path: '/platform-settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
 ]
