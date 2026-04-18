@@ -7,7 +7,8 @@ import DeleteModal from '@common/components/CustomeDelete'
 import { useDeletePlanMutation } from '@api-queries/membership-plan/Query'
 import CreateMembershipForm from './CreateForm'
 import { useUpdatePlanStatusMutation } from '@api-queries/membership-plan/Query'
-import { useMembershipPermissions } from '@hooks/permissions/UseMembershipPermission'
+
+import { useAppPermissions } from '@hooks/permissions'
 
 const PlanCard = ({ data, colors }) => {
   const [open, setOpen] = useState(false)
@@ -24,7 +25,7 @@ const PlanCard = ({ data, colors }) => {
     canEditMembership,
     canDeleteMembership,
     canEnableMembership
-  } = useMembershipPermissions()
+  } = useAppPermissions()
   if (!hydrated) return null
 
   useEffect(() => {

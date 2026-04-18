@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { useVisitorQuery } from '@api-queries/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
-import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
+import { useAppPermissions } from '@hooks/permissions'
 
 const Visitors = () => {
-  const { hydrated, canConvertVisitor } = useCrmPermissions()
+  const { hydrated, canConvertVisitor } = useAppPermissions()
   if (!hydrated) return null
   const [tableParams, setTableParams] = useState({
     page: 1,

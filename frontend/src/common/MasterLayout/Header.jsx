@@ -24,11 +24,11 @@ import { useCrmStore } from "@store/tabStore";
 import { useGetProfileInfoQuery } from "@api-queries/center-profile/Query";
 import GoogleMapComponent from "../components/GoogleMapComponent";
 import defalutUser from "@assets/header-icons/user.svg";
-import { useCrmPermissions } from "@hooks/permissions/UseCRMPermission";
+import { useAppPermissions } from "@hooks/permissions";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const role = useAuthStore((state) => state.auth?.role);
-  const { hydrated, canAddMember } = useCrmPermissions();
+  const { hydrated, canAddMember } = useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
   const [popoverOpen, setPopoverOpen] = useState(false);

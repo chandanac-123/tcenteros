@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Button } from '@pages/components/ui/button'
 import AddBranchModal from './dashboard-branch/AddBranchModal'
-import { useDashboardPermissions } from '@hooks/permissions/DashboardPermission'
+import { useAppPermissions } from '@hooks/permissions'
 
 const AddBranchButton = () => {
-      const { hydrated, canAddBranch } = useDashboardPermissions()
+      const { hydrated, canAddBranch } = useAppPermissions()
       if (!hydrated) return null
     const [openAddBranch, setOpenAddbranch] = useState(false)
     const handleOpenBranch = () => {

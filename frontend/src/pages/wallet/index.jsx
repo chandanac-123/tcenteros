@@ -13,7 +13,8 @@ import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { format } from 'date-fns'
 import { useGetWalletAmountQuery } from '@api-queries/wallet/Query'
 import { formatIndianCurrency } from '@utils/helper'
-import { useWalletPermissions } from '@hooks/permissions/UseWalletPermission'
+
+import { useAppPermissions } from "@hooks/permissions"
 
 const Wallet = () => {
   const [open, setOpen] = useState(false)
@@ -36,7 +37,7 @@ const Wallet = () => {
     from: null,
     to: null
   })
-  const { hydrated, canAddTopup } = useWalletPermissions()
+  const { hydrated, canAddTopup } = useAppPermissions()
   if (!hydrated) return null
   const { data, isPending, isError } = useGetWalletSummaryQuery()
   const {

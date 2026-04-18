@@ -12,10 +12,11 @@ import {
 import { useNetworkTabStore } from '@store/networkTabstore'
 import { format } from 'date-fns'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
-import { useNetworkPermissions } from '@hooks/permissions/UseNetworkPermission'
+
+import { useAppPermissions } from "@hooks/permissions"
 
 const Network = () => {
-  const { hydrated, canEnableNetwork, canAddAmount } = useNetworkPermissions()
+  const { hydrated, canEnableNetwork, canAddAmount } = useAppPermissions()
   if (!hydrated) return null
   const { activeTab, setActiveTab } = useNetworkTabStore()
   const [open, setOpen] = useState(false)

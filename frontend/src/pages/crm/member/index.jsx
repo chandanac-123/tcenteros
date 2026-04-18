@@ -14,7 +14,7 @@ import {
   useDeleteMemberMutation,
   useUpdateMemberStatusMutation
 } from '@api-queries/crm/Query'
-import { useCrmPermissions } from '@hooks/permissions/UseCRMPermission'
+import { useAppPermissions } from '@hooks/permissions'
 const statusVariantMap = { active: 'active', inactive: 'inactive' }
 const paymentVariantMap = { paid: 'future_lead', null: 'inactive' }
 
@@ -25,7 +25,7 @@ const Members = ({ onView, onEdit }) => {
     canEditMember,
     canDeleteMember,
     canEnableMember
-  } = useCrmPermissions()
+  } = useAppPermissions()
   if (!hydrated) return null
   const [tableParams, setTableParams] = useState({
     page: 1,

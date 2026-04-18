@@ -14,7 +14,8 @@ import {
   useDeleteMultipleEmployeeMutation
 } from '@api-queries/employee-management/Query'
 import useTableSelection from '@common/components/UseTableSelection'
-import { useEmployeePermissions } from '@hooks/permissions/UseEmployeePermission'
+
+import { useAppPermissions } from '@hooks/permissions'
 
 const EmployeeTable = ({
   data,
@@ -32,7 +33,7 @@ const EmployeeTable = ({
     canEditEmployee,
     canDeleteEmployee,
     canEnableEmployee
-  } = useEmployeePermissions()
+  } = useAppPermissions()
   if (!hydrated) return null
 
   const [viewopen, setViewOpen] = useState(false)

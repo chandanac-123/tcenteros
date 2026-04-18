@@ -9,7 +9,7 @@ import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useLocation } from 'react-router-dom'
-import { useMembershipPermissions } from '@hooks/permissions/UseMembershipPermission'
+import { useAppPermissions } from '@hooks/permissions'
 
 const MembershipPlan = () => {
   const location = useLocation()
@@ -18,7 +18,7 @@ const MembershipPlan = () => {
   const [activeTab, setActiveTab] = useState(initialTab)
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
-  const { hydrated, canAddMembership } = useMembershipPermissions()
+  const { hydrated, canAddMembership } = useAppPermissions()
   if (!hydrated) return null
 
   const Status = [
