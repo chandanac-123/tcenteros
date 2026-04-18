@@ -37,10 +37,10 @@ const RoleAndPermission = () => {
       modulesData.forEach(module => {
         const moduleState = roleData[module.id]
 
-        // ✅ ALWAYS include dashboard
+        //  ALWAYS include dashboard
         if (module.id !== 'dashboard' && !moduleState?.enabled) return
 
-        // ✅ CASE 1: NO SUBMODULES
+        //  CASE 1: NO SUBMODULES
         if (!module.submodules || module.submodules.length === 0) {
           cleanedPermissions[module.id] = {
             enabled: true
@@ -48,14 +48,14 @@ const RoleAndPermission = () => {
           return
         }
 
-        // ✅ CASE 2: HAS SUBMODULES
+        //  CASE 2: HAS SUBMODULES
         const modulePayload = {
           enabled: true,
           submodules: {}
         }
 
         module.submodules.forEach(sub => {
-          // ✅ FORCE dashboard overview always
+          //  FORCE dashboard overview always
           if (module.id === 'dashboard' && sub.id === 'overview') {
             modulePayload.submodules['overview'] = true
             return
@@ -64,7 +64,7 @@ const RoleAndPermission = () => {
           const subState = moduleState?.submodules?.[sub.id]
           if (!subState?.enabled) return
 
-          // ✅ HAS ACTIONS
+          //  HAS ACTIONS
           if (module.sub_submodules?.[sub.id]) {
             const actions = {}
 
@@ -78,18 +78,18 @@ const RoleAndPermission = () => {
               modulePayload.submodules[sub.id] = actions
             }
           }
-          // ✅ NO ACTIONS
+          //  NO ACTIONS
           else {
             modulePayload.submodules[sub.id] = true
           }
         })
 
-        // ✅ Ensure dashboard always has overview
+        //  Ensure dashboard always has overview
         if (module.id === 'dashboard') {
           modulePayload.submodules['overview'] = true
         }
 
-        // ✅ Add only if has submodules OR dashboard
+        //  Add only if has submodules OR dashboard
         if (
           Object.keys(modulePayload.submodules).length > 0 ||
           module.id === 'dashboard'
@@ -98,7 +98,7 @@ const RoleAndPermission = () => {
         }
       })
 
-      // 🚨 Prevent empty submission (except dashboard)
+      //  Prevent empty submission (except dashboard)
       if (!Object.keys(cleanedPermissions).length) {
         console.warn('No permissions selected')
         return
@@ -111,7 +111,7 @@ const RoleAndPermission = () => {
 
       console.log('FINAL API PAYLOAD 👉', finalPayload)
 
-      // ✅ API CALL
+      //  API CALL
       await create_permission(finalPayload)
 
       console.log('Permissions saved successfully')
@@ -128,14 +128,14 @@ const RoleAndPermission = () => {
       const submodules = {}
 
       Object.entries(module.submodules || {}).forEach(([subId, value]) => {
-        // ✅ if submodule has actions
+        //  if submodule has actions
         if (typeof value === 'object') {
           submodules[subId] = {
             enabled: true,
             actions: value
           }
         }
-        // ✅ simple true/false
+        //  simple true/false
         else {
           submodules[subId] = {
             enabled: value
@@ -331,7 +331,7 @@ const RoleAndPermission = () => {
                 return (
                   <div key={module.id} className='border rounded'>
                     {!module.submodules?.length ? (
-                      // ✅ NO SUBMODULE → SIMPLE ROW
+                      //  NO SUBMODULE → SIMPLE ROW
                       <div className='flex items-center gap-2 p-3'>
                         <input
                           type='checkbox'
@@ -342,7 +342,7 @@ const RoleAndPermission = () => {
                         <span className='font-semibold'>{module.name}</span>
                       </div>
                     ) : (
-                      // ✅ HAS SUBMODULE → COLLAPSE UI
+                      //  HAS SUBMODULE → COLLAPSE UI
                       <>
                         {/* HEADER */}
                         <div
