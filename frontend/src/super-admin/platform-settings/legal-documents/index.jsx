@@ -1,9 +1,11 @@
 import { Button } from "@pages/components/ui/button";
 import { Textarea } from "@pages/components/ui/textarea";
 import { Eye, FileText } from "lucide-react";
-import React from "react";
+import { useState } from "react";
+import Preview from "./Preview";
 
 const LegalDocuments = () => {
+  const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col p-4 rounded-lg space-y-4 mt-4 shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
       <form>
@@ -23,10 +25,16 @@ const LegalDocuments = () => {
           </div>
 
           <div className="flex gap-4">
-            <Button size="addbutton" variant="outline_secondary">
+            <Button
+              size="addbutton"
+              variant="outline_secondary"
+              type="button"
+              onClick={() => setOpen(true)}
+            >
               <Eye />
               Show Preview
             </Button>
+            <Preview open={open} setOpen={setOpen} />
           </div>
         </div>
 
