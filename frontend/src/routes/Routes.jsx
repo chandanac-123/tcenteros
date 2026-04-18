@@ -152,7 +152,7 @@ export const routes = [
   { key: 50, path: '/analytics', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 53, path: '/support', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 51, path: '/partnersbyId/:id', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
-  { key: 55, path: '/roleAndpermission', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog/>, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 55, path: '/roleandpermission', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog/>, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 49, path: '/platform-settings', label: '', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
 ]

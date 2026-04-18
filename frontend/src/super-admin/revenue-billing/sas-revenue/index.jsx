@@ -1,5 +1,6 @@
 import { CircleDollarSign } from 'lucide-react'
 import React from 'react'
+import RevenueCards from './components/RevenueCards'
 
 const SASRevenue = () => {
   return (
@@ -16,6 +17,10 @@ const SASRevenue = () => {
             Track SaaS revenue and partner commissions
           </p>
         </div>
+      </div>
+
+      <div className="p-4">
+        <RevenueCards/>
       </div>
 
     </div>
