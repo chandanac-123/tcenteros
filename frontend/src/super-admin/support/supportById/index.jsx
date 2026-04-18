@@ -1,12 +1,17 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { Headset } from 'lucide-react'
 import React from 'react'
-import SupportTablelist from './components/SupportTablelist'
+import MessageBox from './components/MessageBox'
+import { useLocation } from 'react-router-dom'
+import TicketList from './components/TicketList'
 
-const Support = () => {
+const SupportById = () => {
+    const { state } = useLocation();
+    console.log("state",state);
+    
     return (
         <ContentLayout>
-            <div className="">
+            <div className='flex flex-col gap-5'>
                 <div className="flex items-center gap-4 p-4">
                     <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
                         <Headset size={30} className="text-onboard_primary" />
@@ -21,8 +26,13 @@ const Support = () => {
                     </div>
                 </div>
 
-                <div className=" px-4">
-                    <SupportTablelist/>
+                <div className="flex items-stretch gap-10 px-4">
+                    <div className="w-[50%]">
+                        <TicketList data={state} />
+                    </div>
+                    <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-lg w-[50%]">
+                        <MessageBox />
+                    </div>
                 </div>
 
             </div>
@@ -31,4 +41,4 @@ const Support = () => {
     )
 }
 
-export default Support
+export default SupportById
