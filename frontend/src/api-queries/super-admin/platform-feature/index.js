@@ -2,4 +2,4 @@ import axiosInstance from "@api/axiosInstance"
 
 
 export const getPlatformFeatures = data =>
-    axiosInstance.get(``)
+    axiosInstance.get(`/platforms`,data);
