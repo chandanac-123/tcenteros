@@ -1,65 +1,74 @@
+import { useCreateDesignationMutation } from "@api-queries/super-admin/role-permission/Query";
 import CustomeModal from "@common/components/CustomeModal";
 import { Button } from "@pages/components/ui/button";
 import { Input } from "@pages/components/ui/input";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
-const AddDesignation = ({ open, setOpen }) => {
+const designationValidationSchema = Yup.object().shape({
+  name: Yup.string().trim().required("Designation name is required"),
+});
+
+const AddDesignation = ({ designationOpen, setDesignationOpen, open, setOpen }) => {
+  const { mutateAsync: createDesignation, isPending } =
+    useCreateDesignationMutation();
+
+  const modalOpen = designationOpen ?? open;
+  const setModalOpen = setDesignationOpen ?? setOpen;
+
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+    },
+    validationSchema: designationValidationSchema,
+    onSubmit: async (values) => {
+      try {
+        await createDesignation({ name: values.name.trim() });
+        formik.resetForm();
+        setModalOpen(false);
+      } catch (error) {
+        return error;
+      }
+    },
+  });
+
+  const handleClose = () => {
+    formik.resetForm();
+    setModalOpen(false);
+  };
+
   return (
     <CustomeModal
-      open={open}
-      onOpenChange={setOpen}
+      open={modalOpen}
+      onOpenChange={setModalOpen}
       header="Add New Designation"
-      className="max-w-xl w-full"
+      className=""
     >
-      <form className="flex flex-col space-y-4">
+      <form className="flex flex-col space-y-4" onSubmit={formik.handleSubmit}>
         <div className="flex flex-col gap-2">
           <Input
             label="Name"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
-          />
-          <Input
-            label="Email"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
-          />{" "}
-          <Input
-            label="Phone number"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
-          />{" "}
-          <Input
-            label="Designation"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
-          />
-          <Input
-            label="Joing Date"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
-          />
-          <Input
-            label="Set Password"
-            name="salary"
-            // value={formik.values.salary}
-            // onChange={formik.handleChange}
-            // error={formik.touched.salary && formik.errors.salary}
+            name="name"
+            placeholder="Enter designation name"
+            value={formik.values.name}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.name && formik.errors.name}
           />
         </div>
         <div className="flex gap-2 justify-end ">
-          <Button size='addbutton' variant="outline_secondary" type="button">
+          <Button
+            size="addbutton"
+            variant="outline_secondary"
+            type="button"
+            onClick={handleClose}
+            disabled={isPending}
+          >
             Cancel
           </Button>
-          <Button size="addbutton">Submit</Button>
+          <Button size="addbutton" type="submit" disabled={isPending}>
+            {isPending ? "Submitting..." : "Submit"}
+          </Button>
         </div>
       </form>
     </CustomeModal>

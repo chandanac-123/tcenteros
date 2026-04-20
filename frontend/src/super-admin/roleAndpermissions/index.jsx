@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import EmployeeTab from "./components/EmployeeTab";
 import PermissionTabs from "./components/PermissionTabs";
 import AddDesignation from "./components/AddDesignation";
+import AddEmployee from "./components/AddEmployee";
 
 const RoleAndPermissions = () => {
   const [open, setOpen] = useState(false);
@@ -37,7 +38,7 @@ const RoleAndPermissions = () => {
             <Plus />
             Create New Designation
           </Button>
-          <AddDesignation open={open} setOpen={setOpen} />
+          <AddEmployee open={open} setOpen={setOpen} />
         </div>
       </div>
 
