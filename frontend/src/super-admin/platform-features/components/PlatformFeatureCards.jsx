@@ -59,7 +59,7 @@ const PlatformFeatureCards = () => {
                                 onClick={() =>
                                     setActiveIndex(activeIndex === index ? null : index)
                                 }
-                                className="w-full bg-white border border-stone-200 rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.09)] p-4 sm:p-5 cursor-pointer"
+                                className="w-full bg-white border border-stone-200 rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.09)] p-4 sm:p-5 cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02]"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
 
