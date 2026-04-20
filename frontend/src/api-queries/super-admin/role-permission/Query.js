@@ -7,6 +7,7 @@ import {
   getDesignation,
   getEmployee,
   getPermission,
+  deleteDesignation
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -30,6 +31,23 @@ export const useCreateDesignationMutation = () => {
     },
     onError: (err) => {
       showError(err?.response?.data?.message || "Failed to create designation");
+      return err;
+    },
+  });
+};
+
+export const useDeleteDesignationMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => deleteDesignation(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["designations"] });
+      showSuccess(data?.detail || "Designation deleted successfully");
+    },
+    onError: (err) => {
+      showError(
+        err?.response?.data?.message || "Failed to delete selected designations"
+      );
       return err;
     },
   });

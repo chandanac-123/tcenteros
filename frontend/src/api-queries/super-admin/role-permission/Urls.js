@@ -6,6 +6,7 @@ import {
   getDesignationApiCall,
   getEmployeeApiCall,
   getPermissionApiCall,
+  deleteDesignationApiCall
 } from "./index";
 
 export const getDesignation = async (data) => {
@@ -20,6 +21,15 @@ export const getDesignation = async (data) => {
 export const createDesignation = async (details) => {
   try {
     const response = await createDesignationApiCall(details);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteDesignation = async (id) => {
+  try {
+    const response = await deleteDesignationApiCall(id);
     return response.data;
   } catch (error) {
     throw error;

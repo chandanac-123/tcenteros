@@ -8,7 +8,9 @@ import { permissionData } from "./PermissionData";
 import {
   useCreatePermissionMutation,
   usePermissionQuery,
+  useDeleteDesignationMutation,
 } from "@api-queries/super-admin/role-permission/Query";
+import { Trash2 } from "lucide-react";
 
 const PermissionTabs = () => {
   const [open, setOpen] = useState(false);
@@ -17,8 +19,17 @@ const PermissionTabs = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [openModules, setOpenModules] = useState({});
   const { data, isFetching } = usePermissionQuery();
-  console.log("data: ", data);
   const { mutateAsync: create_permission } = useCreatePermissionMutation();
+  const { mutate: delete_designation } = useDeleteDesignationMutation();
+
+  const handleDelete = async (id) => {
+    try {
+      await delete_designation(id);
+      setDeleteOpen(false);
+    } catch (err) {
+      return err;
+    }
+  };
 
   const toggleCollapse = (moduleId) => {
     setOpenModules((prev) => ({
@@ -260,6 +271,9 @@ const PermissionTabs = () => {
   };
 
   const rolePermissions = permissions[selectedRole] || {};
+  const selectedRoleData = data?.data?.find(
+    (role) => role.designation_id === selectedRole,
+  );
 
   useEffect(() => {
     if (data?.data?.length) {
@@ -298,18 +312,33 @@ const PermissionTabs = () => {
             {/* LEFT */}
             <div className="w-full md:w-60 flex flex-col gap-2 p-3 border rounded-lg overflow-y-auto">
               {data?.data?.map((role) => (
-                <button
+                <div
                   key={role?.designation_id}
-                  type="button"
-                  onClick={() => setSelectedRole(role.designation_id)}
-                  className={`block w-full text-left p-2 mb-2 ${
-                    selectedRole === role.designation_id
-                      ? "bg-primary text-white rounded-md"
-                      : ""
-                  }`}
+                  className="mb-2 flex items-center gap-2"
                 >
-                  {role?.designation_name}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole(role.designation_id)}
+                    className={`block flex-1 text-left p-2 ${
+                      selectedRole === role.designation_id
+                        ? "bg-primary/20 text-primary rounded-md"
+                        : "rounded-md hover:bg-gray-100"
+                    }`}
+                  >
+                    {role?.designation_name}
+                  </button>
+
+                  {selectedRole === role.designation_id && (
+                    <Button
+                      size="mini"
+                      variant="danger"
+                      type="button"
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -449,7 +478,13 @@ const PermissionTabs = () => {
         </div>
 
         <AddCategory categoryOpen={open} setCategoryOpen={setOpen} />
-        <DeleteModal open={deleteOpen} setOpen={setDeleteOpen} />
+        <DeleteModal
+          open={deleteOpen}
+          setOpen={setDeleteOpen}
+          header="Delete Designation"
+          description={`Are you sure you want to delete ${selectedRoleData?.designation_name || "this designation"}?`}
+          onConfirm={handleDelete}
+        />
       </div>
     </ContentLayout>
   );
