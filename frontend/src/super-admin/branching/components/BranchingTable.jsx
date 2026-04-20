@@ -1,7 +1,7 @@
 import { DataTable } from '@common/components/DataTable';
 import React from 'react'
 
-const BranchingTable = () => {
+const BranchingTable = ({ data, isLoading, tableParams, setTableParams,pagination }) => {
 
     const columns = [
         {
@@ -25,10 +25,10 @@ const BranchingTable = () => {
             header: "Total Amount",
         },
         {
-            accessorKey: "status",
+            accessorKey: "payment_status",
             header: "Status",
             cell: ({ row }) => {
-                const status = row.getValue("status")?.toLowerCase();
+                const status = row.getValue("payment_status")?.toLowerCase();
 
                 const styles = {
                     paid: "bg-[#DEF4E6] text-[#34C759]",
@@ -47,82 +47,16 @@ const BranchingTable = () => {
         },
     ];
 
-    const data = [
-        {
-            center_name: "Golds Fitness",
-            branch_count: 13,
-            branch_amount: 5339,
-            tax_amount: 45339,
-            total_amount: 45339,
-            status: "Paid"
-        },
-        {
-            center_name: "FitLife Gym",
-            branch_count: 10,
-            branch_amount: 3250,
-            tax_amount: 38250,
-            total_amount: 38250,
-            status: "Paid"
-        },
-        {
-            center_name: "PowerHouse",
-            branch_count: 15,
-            branch_amount: 7999,
-            tax_amount: 52999,
-            total_amount: 52999,
-            status: "Paid"
-        },
-        {
-            center_name: "FlexZone",
-            branch_count: 8,
-            branch_amount: 2499,
-            tax_amount: 29499,
-            total_amount: 29499,
-            status: "Paid"
-        },
-        {
-            center_name: "MuscleMax",
-            branch_count: 12,
-            branch_amount: 4850,
-            tax_amount: 47850,
-            total_amount: 47850,
-            status: "Pending"
-        },
-        {
-            center_name: "Urban Fitness",
-            branch_count: 11,
-            branch_amount: 3200,
-            tax_amount: 41200,
-            total_amount: 41200,
-            status: "Paid"
-        },
-        {
-            center_name: "Peak Performance",
-            branch_count: 14,
-            branch_amount: 6600,
-            tax_amount: 53600,
-            total_amount: 53600,
-            status: "Paid"
-        },
-        {
-            center_name: "Iron Temple",
-            branch_count: 9,
-            branch_amount: 3750,
-            tax_amount: 36750,
-            total_amount: 36750,
-            status: "Paid"
-        }
-    ];
-
+    
     return (
         <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] p-3 rounded-lg">
             <DataTable
                 columns={columns}
                 data={data}
-                loading={false}
-                // tableParams={tableParams}
-                // setTableParams={setTableParams}
-                pagination={11}
+                loading={isLoading}
+                tableParams={tableParams}
+                setTableParams={setTableParams}
+                pagination={pagination}
                 paginationVisibile={true}
                 search={false}
             />

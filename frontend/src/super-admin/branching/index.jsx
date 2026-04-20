@@ -1,10 +1,17 @@
-import ContentLayout from '@common/MasterLayout/ContentLayout'
-import { Split } from 'lucide-react'
-import React from 'react'
-import AddBranchPrice from './components/AddBranchPrice'
-import BranchingTable from './components/BranchingTable'
+import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { Split } from "lucide-react";
+import React, { useState } from "react";
+import AddBranchPrice from "./components/AddBranchPrice";
+import BranchingTable from "./components/BranchingTable";
+import { useBranchQuery } from "@api-queries/super-admin/branching/Query";
 
 const Branching = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+  });
+  const { data, isLoading, isError } = useBranchQuery(tableParams);
+  console.log("data: ", data);
+
   return (
     <ContentLayout>
       <div>
@@ -22,15 +29,19 @@ const Branching = () => {
           </div>
         </div>
 
-
         <div className="px-4 flex flex-col gap-5 ">
           <AddBranchPrice />
-          <BranchingTable />
+          <BranchingTable
+            data={data?.centers}
+            isLoading={isLoading}
+            tableParasms={tableParams}
+            setTableParams={setTableParams}
+            pagination={data?.total}
+          />
         </div>
       </div>
     </ContentLayout>
+  );
+};
 
-  )
-}
-
-export default Branching
+export default Branching;
