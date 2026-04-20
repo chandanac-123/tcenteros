@@ -97,9 +97,9 @@ const CenterManagement = () => {
                 return (
                   <>
                     {mandatoryTools.map(({ tool }) => renderTool(tool))}
-                    {orderedOptionalTools.map(({ tool }, index) =>
+                    {/* {orderedOptionalTools.map(({ tool }, index) =>
                       renderTool(tool, index)
-                    )}
+                    )} */}
                   </>
                 )
               })()}
