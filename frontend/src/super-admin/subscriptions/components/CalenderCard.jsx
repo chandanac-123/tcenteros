@@ -29,7 +29,7 @@ const CalenderCard = ({
 
           <div className="flex flex-col justify-center items-center gap-2">
             <span className="flex text-xs text-gray">{renewals} Renewals</span>
-            <span>₹{revenue.toLocaleString()}</span>
+            <span>₹{revenue?.toLocaleString()}</span>
           </div>
         </div>
       )}

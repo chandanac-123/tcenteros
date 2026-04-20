@@ -5,7 +5,7 @@ import { useRenewalExpiringQuery } from "@api-queries/super-admin/subcriptions/Q
 import CustomFilter from "@common/components/CustomeFilter";
 
 const ExpiringSoon = () => {
-  const { data, isLoading, isError } = useRenewalExpiringQuery();
+  const { data, isLoading, isError } = useRenewalExpiringQuery(3);
   return (
     <ContentLayout>
       <div className="flex justify-between">
@@ -30,14 +30,14 @@ const ExpiringSoon = () => {
               className={`flex rounded-full w-6 h-6 border text-xs font-semibold text-red_text justify-center items-center shadow-[0px_5px_15px_rgba(0,0,0,0.15)]
         `}
             >
-              1
+             {data?.days_until_expiry}
             </span>
             <span className="flex text-xs text-grey_text"> Days Remaining</span>
           </div>
 
           <div className="flex flex-col justify-center items-center gap-2">
-            <span className="flex text-xs text-red_text font-semibold"> 2 Centers</span>
-            <span className="flex text-xs text-grey_text"> ₹ 27,393 </span>
+            <span className="flex text-xs text-red_text font-semibold"> {data?.summary?.total_expiring_count} Centers</span>
+            <span className="flex text-xs text-grey_text"> ₹ {data?.summary?.total_expected_revenue} </span>
           </div>
         </div>
       </div>

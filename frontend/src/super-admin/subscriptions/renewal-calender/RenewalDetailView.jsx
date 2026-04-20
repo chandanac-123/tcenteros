@@ -39,38 +39,39 @@ const RenewalDetailView = () => {
 
         {/* Right */}
         <div className="w-full sm:w-auto">
-          <CalenderCard day="04" renewals="15" revenue="1458" />
+          <CalenderCard day={data?.target_date?.split("-")[2]} renewals={data?.summary?.total_renewal_count} revenue={data?.summary?.total_renewal_revenue} />
         </div>
       </div>
 
       {/* Content */}
       <div className="flex flex-col mt-6 gap-4 w-full">
-        <p className="font-medium text-base">15 Renewals</p>
+        <p className="font-medium text-base">{data?.summary?.total_renewal_count} Renewals</p>
 
         {/* Card */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4">
+       {data?.renewals?.map((renewal) => (
+         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4" key={renewal.id}>
           {/* Left Section */}
           <div className="flex items-start gap-3">
             <MapIcon className="text-gray-500 mt-1" />
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium">John Doe</span>
+                <span className="font-medium">{renewal.center_name}</span>
                 <Badge
                   className="bg-badge_bg_green border-none text-green_text rounded-xl w-auto"
                   variant="future_lead"
-                  label="Active"
+                  label={renewal.center_status}
                 />
               </div>
 
               <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                <span>Bangalore ,</span>
+                <span>{renewal.city},</span>
                 <span>1200 + Members</span>
-                <span className="flex text-textblack font-semibold">
-                  Renew Date : <p className="">13 - 04 - 2026</p>
+                <span className="flex text-textblack font-semibold gap-2">
+                  Renew Date : <p className=""> {renewal?.renewal_date?.split("-")?.reverse()?.join("-")}</p>
                 </span>
-                <span className="flex">
-                  Days Left : <p className="text-red_text">7 Days</p>
+                <span className="flex gap-2">
+                  Days Left : <p className="text-red_text">{renewal?.days_left_for_renewal} Days</p>
                 </span>
               </div>
             </div>
@@ -78,13 +79,14 @@ const RenewalDetailView = () => {
 
           {/* Right Section */}
           <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
-            <span className="font-semibold text-base">₹1,45,800</span>
+            <span className="font-semibold text-base">₹{renewal?.renewal_amount}</span>
 
             <Button size="addbutton" className="w-full sm:w-auto">
               Send Reminder
             </Button>
           </div>
-        </div>
+        </div>))}
+
       </div>
     </ContentLayout>
   );
