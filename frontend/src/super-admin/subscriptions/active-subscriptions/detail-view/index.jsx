@@ -15,48 +15,56 @@ import {
   Receipt,
   Split,
 } from "lucide-react";
-
-const revenueOrBilling = [
-  { id: "revenue", name: "Revenue Summaries", component: <RevenueSummary /> },
-  { id: "billing", name: "Billing History", component: <BillingHistory /> },
-];
+import { useParams } from "react-router-dom";
+import { useSubscriptionGetByIdQuery } from "@api-queries/super-admin/subcriptions/Query";
 
 const DetailView = () => {
+  const params = useParams();
+  const { data } = useSubscriptionGetByIdQuery(params.id);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
-  const activeModule = revenueOrBilling.find((item) => item.id === activeTab);
+  const revenueOrBilling = [
+    {
+      id: "revenue",
+      name: "Revenue Summaries",
+      component: <RevenueSummary data={data} />,
+    },
+    { id: "billing", name: "Billing History", component: <BillingHistory /> },
+  ];
   const cardsData = [
     {
       label: "Total Revenue",
-      value: 0,
+      value: data?.total_revenue || 0,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
     },
     {
       label: "Monthly Revenue",
-      value: 0,
+      value: data?.current_month_revenue || 0,
       icon: <Receipt size={16} strokeWidth={2.75} />,
     },
     {
       label: "Renewal Date",
-      value: 0,
+      value: data?.renewal_date || 0,
       icon: <Calendar size={16} strokeWidth={2.75} />,
     },
     {
       label: "Days Remaining",
-      value: 0,
+      value: data?.days_remaining || 0,
       icon: <Clock size={16} strokeWidth={2.75} />,
     },
     {
       label: "Network commission",
-      value: 0,
+      value: data?.network_commission || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
     },
     {
       label: "Branch Count",
-      value: 0,
+      value: data?.total_purchased_branch_count || 0,
       icon: <Split size={16} strokeWidth={2.75} />,
     },
   ];
+  const activeModule = revenueOrBilling.find((item) => item.id === activeTab);
+
   return (
     <ContentLayout>
       {/* Header */}

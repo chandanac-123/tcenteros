@@ -1,18 +1,18 @@
-const RevenueCard = () => {
+const RevenueCard = ({ revenue, avgYear, avgMonth }) => {
   const data = [
     {
       label: "Lifetime Revenue",
-      value: "₹12,32,4700",
+      value: revenue ? `₹${revenue.toLocaleString()}` : "₹0",
       color: "text-blue",
     },
     {
       label: "Avg Yearly Revenue",
-      value: "₹7,32,4700",
+      value: avgYear ? `₹${avgYear.toLocaleString()}` : "₹0",
       color: "text-green",
     },
     {
       label: "Avg Monthly Revenue",
-      value: "₹1,48,399",
+      value: avgMonth ? `₹${avgMonth.toLocaleString()}` : "₹0",
       color: "text-badge_yellow",
     },
   ];

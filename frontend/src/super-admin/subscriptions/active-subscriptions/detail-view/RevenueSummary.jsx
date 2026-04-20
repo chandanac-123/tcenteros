@@ -4,7 +4,12 @@ import { Card } from "@pages/components/ui/card";
 import RevenueCard from "@super-admin/subscriptions/components/RevenueCard";
 import React from "react";
 
-const RevenueSummary = () => {
+const RevenueSummary = ({ data }) => {
+  console.log("data: ", data);
+  const revenueLabels = data?.revenue_chart?.map((i) => i.month) || [];
+
+  const revenueData = data?.revenue_chart?.map((i) => i.revenue) || [];
+
   return (
     <div className="w-full p-4 border rounded-xl">
       <div className="flex flex-col gap-4">
@@ -16,10 +21,11 @@ const RevenueSummary = () => {
             </div>
           </div>
           <LineChart
+           labels={revenueLabels}
             datasets={[
               {
-                label: "New Leads",
-                data: [500, 200, 3000, 1500, 800, 1200],
+                label: "Revenue",
+                data: revenueData,
                 borderColor: "#3B82F6",
               },
             ]}
@@ -30,7 +36,11 @@ const RevenueSummary = () => {
         </Card>
 
         <Card className="p-4">
-          <RevenueCard />
+          <RevenueCard
+            revenue={data?.lifetime_revenue}
+            avgYear={data?.average_yearly_revenue}
+            avgMonth={data?.average_monthly_revenue}
+          />
         </Card>
       </div>
     </div>

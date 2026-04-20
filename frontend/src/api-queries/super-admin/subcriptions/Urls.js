@@ -1,49 +1,17 @@
-import {
-  createMemberApiCall,
-  getMemberApiCall,
-  updateMemberApiCall,
-  deleteMemberApiCall,
-  getMemberByIdApiCall,
-} from "./index";
+import { getSubscriptionApiCall, getSubscriptionByIdApiCall } from "./index";
 
-export const getAllMember = async (data) => {
+export const getActiveSubscriptions = async (data) => {
   try {
-    const response = await getMemberApiCall(data);
+    const response = await getSubscriptionApiCall(data);
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
-export const createMember = async (details) => {
+export const getSubscriptionById = async (id) => {
   try {
-    const response = await createMemberApiCall(details);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const updateMember = async (details, id) => {
-  try {
-    const response = await updateMemberApiCall(details, id);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-export const deleteMember = async (id) => {
-  try {
-    const response = await deleteMemberApiCall(id);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getMemberById = async (id) => {
-  try {
-    const response = await getMemberByIdApiCall(id);
+    const response = await getSubscriptionByIdApiCall(id);
     return response.data;
   } catch (error) {
     throw error;
