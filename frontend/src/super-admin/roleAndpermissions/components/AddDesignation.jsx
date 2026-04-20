@@ -42,7 +42,7 @@ const AddDesignation = ({ designationOpen, setDesignationOpen, open, setOpen }) 
       open={modalOpen}
       onOpenChange={setModalOpen}
       header="Add New Designation"
-      className=""
+      className="max-w-xl w-full"
     >
       <form className="flex flex-col space-y-4" onSubmit={formik.handleSubmit}>
         <div className="flex flex-col gap-2">

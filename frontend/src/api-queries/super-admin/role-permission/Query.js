@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createDesignation,
   createEmployee,
+  createPermission,
   getDesignation,
   getEmployee,
+  getPermission,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -52,6 +54,31 @@ export const useCreateEmployeeMutation = () => {
     },
     onError: (err) => {
       showError(err?.response?.data?.message || "Failed to create employee");
+      return err;
+    },
+  });
+};
+
+export const usePermissionQuery = (data) => {
+  return useQuery({
+    queryKey: ["permissions", data],
+    queryFn: () => getPermission(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
+
+export const useCreatePermissionMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) => createPermission(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["permissions"] });
+      showSuccess("Permission created successfully");
+    },
+    onError: (err) => {
+      showError(err?.response?.data?.message || "Failed to create permission");
       return err;
     },
   });

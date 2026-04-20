@@ -6,12 +6,13 @@ import CustomeModal from "@common/components/CustomeModal";
 import AddDesignation from "@super-admin/roleAndpermissions/components/AddDesignation";
 import { Button } from "@pages/components/ui/button";
 import { Input } from "@pages/components/ui/input";
+import CustomeSelect from "@common/components/CustomeSelect";
+import CustomDatePicker from "@common/components/CustomeDatepicker";
+import { format } from "date-fns";
 import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import * as Yup from "yup";
-import CustomeSelect from "@common/components/CustomeSelect";
-import CustomDatePicker from "@common/components/CustomeDatepicker";
 
 const employeeValidationSchema = Yup.object().shape({
   full_name: Yup.string().trim().required("Full name is required"),
@@ -28,9 +29,12 @@ const employeeValidationSchema = Yup.object().shape({
 const AddEmployee = ({ open, setOpen }) => {
   const [designationOpen, setDesignationOpen] = useState(false);
   const { data, isLoading } = useDesignationQuery({ page: 1 });
-  console.log("data: ", data);
   const { mutateAsync: createEmployee, isPending } =
     useCreateEmployeeMutation();
+
+  const designationOptions = Array.isArray(data)
+    ? data
+    : data?.designations || data?.results || data?.data?.results || data?.data || [];
 
   const initialValues = {
     full_name: "",
@@ -67,6 +71,10 @@ const AddEmployee = ({ open, setOpen }) => {
     setOpen(false);
   };
 
+  const handleDateChange = (field, value) => {
+    formik.setFieldValue(field, value ? format(value, "yyyy-MM-dd") : "");
+  };
+
   return (
     <>
       <CustomeModal
@@ -79,7 +87,7 @@ const AddEmployee = ({ open, setOpen }) => {
           className="flex flex-col space-y-4"
           onSubmit={formik.handleSubmit}
         >
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Input
               label="Full Name"
               name="full_name"
@@ -108,50 +116,6 @@ const AddEmployee = ({ open, setOpen }) => {
               onBlur={formik.handleBlur}
               error={formik.touched.phone && formik.errors.phone}
             />
-
-            {data?.designations?.length > 0 && (
-              <div className="flex justify-start items-center gap-2">
-                <div>
-                  <CustomeSelect
-                    label="Designation"
-                    name="designation_id"
-                    options={data?.designations}
-                    value={formik.values.designation_id}
-                    onChange={(value) =>
-                      formik.setFieldValue("designation_id", value)
-                    }
-                    error={
-                      formik.touched.designation_id &&
-                      formik.errors.designation_id
-                    }
-                    placeholder="Select Designation"
-                  />
-                </div>
-
-                <div>
-                  <Button
-                    size="mini"
-                    type="button"
-                    onClick={() => setDesignationOpen(true)}
-                  >
-                    <Plus />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <CustomDatePicker
-              disableFuture={true}
-              label="Joining Date"
-              name="joining_date"
-              value={
-                formik.values.joining_date
-                  ? new Date(formik.values.joining_date)
-                  : null
-              }
-              onChange={(val) => handleDateChange("joining_date", val)}
-              error={formik.touched.joining_date && formik.errors.joining_date}
-            />
             <Input
               label="Set Password"
               name="password"
@@ -162,6 +126,80 @@ const AddEmployee = ({ open, setOpen }) => {
               onBlur={formik.handleBlur}
               error={formik.touched.password && formik.errors.password}
             />
+
+            <div className="md:col-span-2">
+              {isLoading ? (
+                <Input label="Designation" value="Loading designations..." disabled />
+              ) : designationOptions.length > 0 ? (
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <CustomeSelect
+                      label="Designation"
+                      name="designation_id"
+                      options={designationOptions}
+                      value={formik.values.designation_id}
+                      onChange={(value) => {
+                        formik.setFieldValue("designation_id", value);
+                        formik.setFieldTouched("designation_id", true, false);
+                      }}
+                      error={
+                        formik.touched.designation_id &&
+                        formik.errors.designation_id
+                      }
+                      placeholder="Select designation"
+                    />
+                  </div>
+                  <Button
+                    size="mini"
+                    type="button"
+                    className="mb-[2px]"
+                    onClick={() => setDesignationOpen(true)}
+                  >
+                    <Plus />
+                    Add
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <label className="block mb-1 text-sm font-normal text-textblack">
+                    Designation
+                  </label>
+                  <div className="flex items-center justify-between rounded-md border border-dashed border-input bg-muted/20 px-4 py-3">
+                    <span className="text-sm text-muted-foreground">
+                      No designation found. Create one to continue.
+                    </span>
+                    <Button
+                      size="mini"
+                      type="button"
+                      onClick={() => setDesignationOpen(true)}
+                    >
+                      <Plus />
+                      Add Designation
+                    </Button>
+                  </div>
+                  {formik.touched.designation_id && formik.errors.designation_id ? (
+                    <div className="text-xs text-red_text mt-1">
+                      {formik.errors.designation_id}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <CustomDatePicker
+                disableFuture={true}
+                label="Joining Date"
+                name="joining_date"
+                value={
+                  formik.values.joining_date
+                    ? new Date(formik.values.joining_date)
+                    : null
+                }
+                onChange={(value) => handleDateChange("joining_date", value)}
+                error={formik.touched.joining_date && formik.errors.joining_date}
+              />
+            </div>
           </div>
           <div className="flex gap-2 justify-end ">
             <Button
