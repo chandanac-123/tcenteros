@@ -2,13 +2,17 @@ import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Calendar, MapIcon } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import CalenderCard from "../components/CalenderCard";
 import { Button } from "@pages/components/ui/button";
 import { Badge } from "@pages/components/ui/badge";
+import { useRenewalByIdQuery } from "@api-queries/super-admin/subcriptions/Query";
 
 const RenewalDetailView = () => {
+  const params = useParams();
   const navigate = useNavigate();
+  const { data, isLoading, error } = useRenewalByIdQuery(params?.id);
+  console.log('data: ', data);
 
   return (
     <ContentLayout>
@@ -17,10 +21,7 @@ const RenewalDetailView = () => {
         {/* Left */}
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-            <Calendar
-              size={30}
-              className="text-onboard_primary"
-            />
+            <Calendar size={30} className="text-onboard_primary" />
           </div>
 
           <div className="flex flex-col gap-1">

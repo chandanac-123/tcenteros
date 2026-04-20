@@ -128,8 +128,10 @@ export const getGreeting = () => {
   return "Good Night 🌙⭐";
 };
 
-const today = new Date();// "April 2026"
-export const getTodayFormattedMonthYear = today.toLocaleString("en-US", {
-  month: "long",
-  year: "numeric",
-});
+
+export const getTodayFormattedMonthYear = () => {
+  return new Date().toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+};
