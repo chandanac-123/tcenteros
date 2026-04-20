@@ -10,7 +10,12 @@ const statusVariant = {
   suspended: "suspended",
 };
 
-const ActiveSubcriptionTable = ({ data, tableParams, setTableParams, isLoading }) => {
+const ActiveSubcriptionTable = ({
+  data,
+  tableParams,
+  setTableParams,
+  isLoading,
+}) => {
   const navigate = useNavigate();
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
@@ -49,7 +54,24 @@ const ActiveSubcriptionTable = ({ data, tableParams, setTableParams, isLoading }
     {
       accessorKey: "days_left_for_renewal",
       header: "Days left",
-      // cell: ({ row }) => <div className="flex"></div>,
+      cell: ({ row }) => {
+        const days = row.original.days_left_for_renewal;
+        let colorClass = "";
+        if (days < 5) {
+          colorClass = "text-red_text border-red_text";
+        } else if (days <= 10) {
+          colorClass = "text-yellow border-yellow-500";
+        } else {
+          colorClass = "text-green_text border-green_text";
+        }
+        return (
+          <span
+            className={`font-medium ${colorClass} text-xs border px-2 rounded-md`}
+          >
+          {days !== null && days !== undefined ? `${days} d` : "N/A"}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "status",
