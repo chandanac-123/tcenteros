@@ -8,6 +8,8 @@ export const getEmployeeApiCall = (data) =>
   axiosInstance.get(`/superadmin/superadmin/platform/employees?page=${data?.page}`);
 export const createEmployeeApiCall = (details) =>
   axiosInstance.post(`/superadmin/superadmin/platform/employees`, details);
+export const deleteEmployeeApiCall = id =>
+  axiosInstance.delete(`/superadmin/superadmin/platform/employees/${id}`);
 
 export const getPermissionApiCall = () =>
   axiosInstance.get(`/permissions/platform/designations/permissions`);

@@ -2,6 +2,7 @@ import {
   createDesignationApiCall,
   createEmployeeApiCall,
   createPermissionApiCall,
+  deleteEmployeeApiCall,
   getDesignationApiCall,
   getEmployeeApiCall,
   getPermissionApiCall,
@@ -37,6 +38,15 @@ export const getEmployee = async (data) => {
 export const createEmployee = async (details) => {
   try {
     const response = await createEmployeeApiCall(details);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteEmployee = async (id) => {
+  try {
+    const response = await deleteEmployeeApiCall(id);
     return response.data;
   } catch (error) {
     throw error;

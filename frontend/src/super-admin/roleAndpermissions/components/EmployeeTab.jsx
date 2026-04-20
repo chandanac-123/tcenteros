@@ -1,13 +1,31 @@
-import { useEmployeeQuery } from "@api-queries/super-admin/role-permission/Query";
+import {
+  useDeleteEmployeeMutation,
+  useEmployeeQuery,
+} from "@api-queries/super-admin/role-permission/Query";
 import { DataTable } from "@common/components/DataTable";
 import React, { useState } from "react";
 import deleteicon from "@assets/form-icons/delete.svg";
+import DeleteModal from "@common/components/CustomeDelete";
 
 const EmployeeTab = () => {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
   const [tableParams, setTableParams] = useState({
     page: 1,
   });
   const { data, isPending } = useEmployeeQuery(tableParams);
+  const { mutateAsync: deleteEmployee } = useDeleteEmployeeMutation();
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteEmployee(id);
+      setDeleteOpen(false);
+      setDeleteId(null);
+    } catch (err) {
+      return err;
+    }
+  };
+
   const columns = [
     { accessorKey: "full_name", header: "Employee Name" },
     { accessorKey: "email", header: "Email" },
@@ -15,14 +33,23 @@ const EmployeeTab = () => {
     { accessorKey: "designation_name", header: "Designation" },
     { accessorKey: "joining_date", header: "Joining Date" },
     {
-      accessorKey: "pending",
+      id: "action",
       header: "Action",
       cell: ({ row }) => {
-        <div>
-          <button>
-            <img src={deleteicon} alt="delete" className="w-6 h-6" />
-          </button>
-        </div>;
+        return (
+          <div className="flex ">
+            <button
+              type="button"
+              className="rounded-md p-1 transition hover:bg-red-50"
+              onClick={() => {
+                setDeleteId(row.original.id);
+                setDeleteOpen(true);
+              }}
+            >
+              <img src={deleteicon} alt="delete" className="w-6 h-6" />
+            </button>
+          </div>
+        );
       },
     },
   ];
@@ -41,6 +68,13 @@ const EmployeeTab = () => {
           search={false}
         />
       </div>
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header="Delete Employee"
+        description="Are you sure you want to delete this employee?"
+        onConfirm={() => handleDelete(deleteId)}
+      />
     </div>
   );
 };

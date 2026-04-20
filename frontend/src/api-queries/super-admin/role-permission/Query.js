@@ -3,6 +3,7 @@ import {
   createDesignation,
   createEmployee,
   createPermission,
+  deleteEmployee,
   getDesignation,
   getEmployee,
   getPermission,
@@ -79,6 +80,23 @@ export const useCreatePermissionMutation = () => {
     },
     onError: (err) => {
       showError(err?.response?.data?.message || "Failed to create permission");
+      return err;
+    },
+  });
+};
+
+export const useDeleteEmployeeMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => deleteEmployee(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      showSuccess(data?.detail || "Employee deleted successfully");
+    },
+    onError: (err) => {
+      showError(
+        err?.response?.data?.message || "Failed to delete selected employees"
+      );
       return err;
     },
   });
