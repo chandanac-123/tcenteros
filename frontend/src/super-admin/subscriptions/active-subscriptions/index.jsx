@@ -23,6 +23,7 @@ const ActiveSubscriptions = () => {
         data={data}
         tableParams={tableParams}
         setTableParams={setTableParams}
+        isLoading={isLoading}
       />
     </ContentLayout>
   );

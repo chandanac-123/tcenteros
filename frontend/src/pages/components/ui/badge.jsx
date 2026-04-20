@@ -17,7 +17,9 @@ const badgeVariants = cva(
         future_lead:
           'bg-plan_bg_purple border-none  text-plan_purple  rounded-lg text-xs font-medium justify-center w-32 px-3 py-1',
         follow_up:
-          'bg-badge_blue_bg border-none  text-badge_blue rounded-lg  text-xs font-medium justify-center w-32 px-3 py-1'
+          'bg-badge_blue_bg border-none  text-badge_blue rounded-lg  text-xs font-medium justify-center w-32 px-3 py-1',
+        suspended:
+          'bg-[#E6E7E7] border-none  text-[#757775] rounded-lg  text-xs font-medium justify-center w-32 px-3 py-1'
       }
     },
     defaultVariants: {

@@ -1,14 +1,79 @@
 import { DataTable } from "@common/components/DataTable";
+import { Badge } from "@pages/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
-const ActiveSubcriptionTable = ({ data, tableParams, setTableParams }) => {
+const billingVariant = { yearly: "follow_up", monthly: "future_lead" };
+const statusVariant = {
+  active: "active",
+  inactive: "inactive",
+  grace: "future_lead",
+  suspended: "suspended",
+};
+
+const ActiveSubcriptionTable = ({ data, tableParams, setTableParams, isLoading }) => {
   const navigate = useNavigate();
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
-    { accessorKey: "subscription_duration", header: "Billing" },
-    { accessorKey: "current_month_revenue", header: "Monthly Revenue" },
-    { accessorKey: "days_left_for_renewal", header: "Days left" },
-    { accessorKey: "status", header: "Status" },
+    {
+      accessorKey: "subscription_duration",
+      header: "Billing",
+      cell: ({ row }) => {
+        const billing = row.original.subscription_duration;
+        return (
+          <Badge
+            label={
+              billing === "yearly"
+                ? "Yearly"
+                : billing === "monthly"
+                  ? "Monthly"
+                  : "Null"
+            }
+            variant={billingVariant[billing]}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: "current_month_revenue",
+      header: "Monthly Revenue",
+      cell: ({ row }) => {
+        return (
+          <span>
+            {row.original.current_month_revenue
+              ? `$${row.original.current_month_revenue}`
+              : "N/A"}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "days_left_for_renewal",
+      header: "Days left",
+      // cell: ({ row }) => <div className="flex"></div>,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge
+            label={
+              status === "active"
+                ? "Active"
+                : status === "inactive"
+                  ? "Inactive"
+                  : status === "grace"
+                    ? "Grace"
+                    : status === "suspended"
+                      ? "Suspended"
+                      : "Null"
+            }
+            variant={statusVariant[status]}
+          />
+        );
+      },
+    },
     { accessorKey: "partner", header: "Partner" },
     { accessorKey: "total_revenue", header: "Total Revenue" },
     {
@@ -37,8 +102,8 @@ const ActiveSubcriptionTable = ({ data, tableParams, setTableParams }) => {
       data={data?.subscriptions || []}
       setTableParams={setTableParams}
       tableParams={tableParams}
-      // pagination={employees?.total}
-      // loading={isEmployeesLoading}
+      pagination={data?.pagination?.total}
+      loading={isLoading}
       paginationVisibile={true}
       search={false}
     />
