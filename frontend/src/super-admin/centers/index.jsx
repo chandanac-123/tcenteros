@@ -1,7 +1,8 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import { UserRoundCog } from "lucide-react";
+import { CircleArrowDown, UserRoundCog } from "lucide-react";
 import CenterTable from "./components/CenterTable";
 import CustomFilter from "@common/components/CustomeFilter";
+import { Button } from "@pages/components/ui/button";
 
 const Centers = () => {
   return (
@@ -20,7 +21,12 @@ const Centers = () => {
             </p>
           </div>
         </div>
-
+        <div className="pe-5">
+          <Button size="addbutton" onClick={() => setOpen(true)}>
+            <CircleArrowDown />
+            Export Report
+          </Button>
+        </div>
       </div>
 
       <div>
