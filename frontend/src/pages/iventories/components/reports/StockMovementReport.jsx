@@ -1,6 +1,6 @@
 import React from 'react'
 import { DataTable } from '@common/components/DataTable'
-import { useStockReportQuery } from '@api-queries/inventory/Query'
+import { useStockReportQuery } from '@api-queries/center-admin/inventory/Query'
 import { formatDate } from '@utils/helper'
 import { Badge } from '@pages/components/ui/badge'
 const statusVariantMap = { 'IN': 'active', 'OUT': 'inactive' }

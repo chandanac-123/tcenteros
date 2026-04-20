@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   useCalculateGstQuery,
   useFinalizeOnboardCenterMutation
-} from '@api-queries/on-boarding/Query'
+} from '@api-queries/center-admin/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { Input } from '@pages/components/ui/input'
 import { useFormik } from 'formik'

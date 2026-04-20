@@ -1,6 +1,6 @@
 import { Button } from '@pages/components/ui/button'
 import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
-import { useMembersGetByIdQuery } from '@api-queries/crm/Query'
+import { useMembersGetByIdQuery } from '@api-queries/center-admin/crm/Query'
 import { convertTo12Hour } from '@utils/helper'
 
 const MemberView = ({ goBack, memberId }) => {

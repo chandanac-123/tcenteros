@@ -4,7 +4,7 @@ import single_arrow from '@assets/navigate-icons/single-left-arrow.svg'
 import OtpInput from '@common/components/OtpInput'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
-import { useVerifyOTPforgotPasswordMutation } from '@api-queries/authentication/Query'
+import { useVerifyOTPforgotPasswordMutation } from '@api-queries/center-admin/authentication/Query'
 import { showError, showSuccess } from '@utils/toast'
 
 const OTPVerification = () => {

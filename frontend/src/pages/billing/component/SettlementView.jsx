@@ -1,5 +1,5 @@
 import CustomeModal from '@common/components/CustomeModal'
-import { useSettlementByIdQuery } from '@api-queries/billing/Query'
+import { useSettlementByIdQuery } from '@api-queries/center-admin/billing/Query'
 
 const SettlementViewPage = ({ open, setOpen, id }) => {
   const { data, isFetching } = useSettlementByIdQuery(id)

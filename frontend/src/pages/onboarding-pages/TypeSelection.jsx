@@ -6,7 +6,7 @@ import OnboardHeader from './components/OnboardHeader'
 import OnboardProgress from './components/OnboardProgress'
 import SelectionCard from './components/SelectionCard'
 import { useNavigate } from 'react-router-dom'
-import { useAllClassTypesQuery } from '@api-queries/on-boarding/Query'
+import { useAllClassTypesQuery } from '@api-queries/center-admin/on-boarding/Query'
 import { useEffect } from 'react'
 import { Spinner } from '@pages/components/ui/spinner'
 

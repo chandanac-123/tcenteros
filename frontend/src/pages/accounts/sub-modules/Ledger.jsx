@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useAllLedgerQuery } from '@api-queries/accounts/Query'
+import { useAllLedgerQuery } from '@api-queries/center-admin/accounts/Query'
 import { useState } from 'react'
 
 const Ledger = () => {

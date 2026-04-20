@@ -1,10 +1,10 @@
 import { Button } from '@pages/components/ui/button'
 import React, { useState } from 'react'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { useGalleryQuery } from '@api-queries/gallery/Query'
+import { useGalleryQuery } from '@api-queries/center-admin/gallery/Query'
 import { useAuthStore } from '@store/authStore'
 import UploadImage from './components/UploadImage'
-import { useDeleteGalleryMutation } from '@api-queries/gallery/Query'
+import { useDeleteGalleryMutation } from '@api-queries/center-admin/gallery/Query'
 
 const GalleryUpload = () => {
   const state = useAuthStore.getState()

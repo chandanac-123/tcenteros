@@ -1,7 +1,7 @@
 import CustomeModal from '@common/components/CustomeModal'
 import { Badge } from '@pages/components/ui/badge'
 import { Spinner } from '@pages/components/ui/spinner'
-import { useGetSaleByIdQuery } from '@api-queries/billing/Query'
+import { useGetSaleByIdQuery } from '@api-queries/center-admin/billing/Query'
 
 const ViewForm = ({ open, setOpen, id }) => {
   const { data: saleData, isFetching } =

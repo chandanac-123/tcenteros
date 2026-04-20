@@ -5,7 +5,7 @@ import {
   useRunPayrollMutation,
   useCreatePayCycleMutation,
   usePayCyclesQuery
-} from '@api-queries/employee-management/Query'
+} from '@api-queries/center-admin/employee-management/Query'
 import { Button } from '@pages/components/ui/button'
 import { ArrowBigRightDash } from 'lucide-react'
 import { Badge } from '@pages/components/ui/badge'

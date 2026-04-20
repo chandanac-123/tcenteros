@@ -9,7 +9,7 @@ import {
   useCreateEmployeeMutation,
   useUpdateEmployeeMutation,
   useEmployeeGetByIdQuery
-} from '@api-queries/employee-management/Query'
+} from '@api-queries/center-admin/employee-management/Query'
 import InputFile from '@common/components/CustomeFileUpload'
 import { useFormik } from 'formik'
 import { employeeValidationSchema } from '@utils/validations'

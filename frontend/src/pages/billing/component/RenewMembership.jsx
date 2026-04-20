@@ -4,8 +4,8 @@ import { Button } from '@pages/components/ui/button'
 import {
   useRenewMembershipMutation,
   useGetRenewMembershipByIdQuery
-} from '@api-queries/billing/Query'
-import { useActiveMembersPlanQuery } from '@api-queries/crm/Query'
+} from '@api-queries/center-admin/billing/Query'
+import { useActiveMembersPlanQuery } from '@api-queries/center-admin/crm/Query'
 import { useFormik } from 'formik'
 import { Checkbox } from '@pages/components/ui/checkbox'
 

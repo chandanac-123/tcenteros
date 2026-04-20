@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import BarChart from '@common/charts/BarChart'
 import PieChart from '@common/charts/PieChart'
-import { useAccountsOverviewQuery } from '@api-queries/accounts/Query'
+import { useAccountsOverviewQuery } from '@api-queries/center-admin/accounts/Query'
 import { formatIndianCurrency } from '@utils/helper'
 
 const Accounts = () => {

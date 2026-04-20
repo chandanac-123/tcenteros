@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { useAllSKUsQuery } from '@api-queries/inventory/Query'
+import { useAllSKUsQuery } from '@api-queries/center-admin/inventory/Query'
 import SlotCard from './components/SlotCard'
 import { Button } from '@pages/components/ui/button'
 import AddProductCategory from './components/AddProductCategory'
-import { useDeleteSKUMutation } from '@api-queries/inventory/Query'
+import { useDeleteSKUMutation } from '@api-queries/center-admin/inventory/Query'
 import DeleteModal from '@common/components/CustomeDelete'
 
 const ProductCategory = () => {

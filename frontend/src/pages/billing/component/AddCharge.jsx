@@ -4,7 +4,7 @@ import CustomeSelect from '@common/components/CustomeSelect'
 import { Button } from '@pages/components/ui/button'
 import { useFormik } from 'formik'
 import { addChargeSchema } from '@utils/validations'
-import { useAddChargeMutation } from '@api-queries/billing/Query'
+import { useAddChargeMutation } from '@api-queries/center-admin/billing/Query'
 
 const paymentTypes = [
   { id: 'cash', label: 'Cash' },

@@ -6,11 +6,11 @@ import {
   useCreateSalaryMutation,
   useSalaryGetByIdQuery,
   useUpdateSalaryMutation
-} from '@api-queries/employee-salary/Query'
+} from '@api-queries/center-admin/employee-salary/Query'
 import { useFormik } from 'formik'
 import { salaryValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
-import { useEmployeesDropdownQuery } from '@api-queries/employee-management/Query'
+import { useEmployeesDropdownQuery } from '@api-queries/center-admin/employee-management/Query'
 
 const payCycleOptions = [
   { id: 'daily', label: 'Daily' },

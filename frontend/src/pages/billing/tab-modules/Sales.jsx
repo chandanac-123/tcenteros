@@ -1,7 +1,7 @@
 import { DataTable } from '@common/components/DataTable'
 import CustomFilter from '@common/components/CustomeFilter'
 import view from '@assets/form-icons/view.svg'
-import { useGetAllSalesQuery } from '@api-queries/billing/Query'
+import { useGetAllSalesQuery } from '@api-queries/center-admin/billing/Query'
 import SaleViewPage from '../component/SaleView'
 import { useState } from 'react'
 import { Badge } from '@pages/components/ui/badge'

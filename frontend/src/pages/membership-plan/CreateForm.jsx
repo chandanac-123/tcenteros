@@ -8,7 +8,7 @@ import {
   useCreatePlanMutation,
   useUpdatePlanMutation,
   usePlanGetByIdQuery
-} from '@api-queries/membership-plan/Query'
+} from '@api-queries/center-admin/membership-plan/Query'
 import { membershipValidationSchema } from '@utils/validations'
 import { Checkbox } from '@pages/components/ui/checkbox'
 

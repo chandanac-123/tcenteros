@@ -8,7 +8,7 @@ import { purchaseValidationSchema } from '@utils/validations'
 import {
   useCreateStockEntryMutation,
   useProductDropdownQuery
-} from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/inventory/Query'
 import { format } from 'date-fns'
 import CustomeSelect from '@common/components/CustomeSelect'
 import AddProductModal from './AddProductModal'

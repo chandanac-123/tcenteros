@@ -13,7 +13,7 @@ import {
   useMembersCountQuery,
   useDeleteMemberMutation,
   useUpdateMemberStatusMutation
-} from '@api-queries/crm/Query'
+} from '@api-queries/center-admin/crm/Query'
 import { useAppPermissions } from '@hooks/permissions'
 const statusVariantMap = { active: 'active', inactive: 'inactive' }
 const paymentVariantMap = { paid: 'future_lead', null: 'inactive' }

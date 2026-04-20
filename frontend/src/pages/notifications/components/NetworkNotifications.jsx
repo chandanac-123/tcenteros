@@ -1,6 +1,6 @@
 import { Button } from '@pages/components/ui/button'
 import React, { useState } from 'react'
-import { useAllPendingNetworkQuery } from '@api-queries/notifictaions/Query'
+import { useAllPendingNetworkQuery } from '@api-queries/center-admin/notifictaions/Query'
 import ApproveModal from '@pages/network/ApproveModal'
 import { Spinner } from '@pages/components/ui/spinner'
 

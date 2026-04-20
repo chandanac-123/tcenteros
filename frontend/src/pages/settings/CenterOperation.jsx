@@ -9,14 +9,14 @@ import {
   useAllSlotQuery,
   useCreateSlotMutation,
   useDeleteSlotMutation
-} from '@api-queries/slot/Query'
+} from '@api-queries/center-admin/slot/Query'
 import { useFormik } from 'formik'
 import DeleteModal from '@common/components/CustomeDelete'
 import {
   useAllCenterTimeQuery,
   useCreateCenterTimeMutation,
   useUpdateCenterTimeMutation
-} from '@api-queries/center-time/Query'
+} from '@api-queries/center-admin/center-time/Query'
 import { convert12To24WithSeconds, convertTo12Hour } from '@utils/helper'
 import {
   centerSlotValidationSchema,

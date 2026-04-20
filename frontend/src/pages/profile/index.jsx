@@ -2,7 +2,7 @@ import ContentLayout from '@common/MasterLayout/ContentLayout'
 import ProfileUpload from './components/ProfileUpload'
 import ProfileCard from './components/ProflieCard'
 import CenterInformation from './components/CenterInformation'
-import { useAllProfileQuery } from '@api-queries/center-profile/Query'
+import { useAllProfileQuery } from '@api-queries/center-admin/center-profile/Query'
 
 const ProfilePage = () => {
   const { data } = useAllProfileQuery()

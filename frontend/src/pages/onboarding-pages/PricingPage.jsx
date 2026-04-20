@@ -3,7 +3,7 @@ import { Button } from '@pages/components/ui/button'
 import check from '@assets/form-icons/check.svg'
 import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
-import { usePricingPageQuery } from '@api-queries/on-boarding/Query'
+import { usePricingPageQuery } from '@api-queries/center-admin/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 
 const PricingPage = () => {

@@ -2,7 +2,7 @@ import profile_bg from '@assets/header-icons/profilebg.svg'
 import { Camera } from 'lucide-react'
 import { useState } from 'react'
 import UpdateProfile from './UpdateProfile'
-import { useGetProfileInfoQuery } from '@api-queries/center-profile/Query'
+import { useGetProfileInfoQuery } from '@api-queries/center-admin/center-profile/Query'
 import defalutUser from '@assets/header-icons/user.svg'
 
 const ProfileUpload = () => {

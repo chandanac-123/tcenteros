@@ -10,8 +10,8 @@ import {
   useCheckoutCartMutation,
   useDeleteCartMutation,
   useUpdateCartMutation
-} from '@api-queries/billing/Query'
-import { useProductDropdownQuery } from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/billing/Query'
+import { useProductDropdownQuery } from '@api-queries/center-admin/inventory/Query'
 import { useFormik } from 'formik'
 import { useCartStore } from '@store/cartStore'
 import AddProductModal from '@pages/iventories/components/AddProductModal'

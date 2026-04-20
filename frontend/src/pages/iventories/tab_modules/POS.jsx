@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { DataTable } from '@common/components/DataTable'
 import view from '@assets/form-icons/view.svg'
-import { useSalesQuery } from '@api-queries/billing/Query'
+import { useSalesQuery } from '@api-queries/center-admin/billing/Query'
 import ViewForm from '../components/View'
 
 const POS = () => {

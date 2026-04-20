@@ -4,7 +4,7 @@ import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import StructureAddEdit from './AddEdit'
 import DeleteModal from '@common/components/CustomeDelete'
-import { useDeleteSalaryMutation } from '@api-queries/employee-salary/Query'
+import { useDeleteSalaryMutation } from '@api-queries/center-admin/employee-salary/Query'
 
 const SalaryStructureTable = ({
   pagination,

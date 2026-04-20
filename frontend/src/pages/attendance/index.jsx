@@ -6,7 +6,7 @@ import EmployeeAttendance from './EmployeeAttendance'
 import { Button } from '@pages/components/ui/button'
 import AddEmployeeAttendance from './AddEmployeeAttendace'
 import CustomFilter from '@common/components/CustomeFilter'
-import { useCategoriesQuery } from '@api-queries/employee-management/Query'
+import { useCategoriesQuery } from '@api-queries/center-admin/employee-management/Query'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { formatRange } from '@utils/helper'
 

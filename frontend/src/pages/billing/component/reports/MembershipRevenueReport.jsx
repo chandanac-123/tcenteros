@@ -1,7 +1,7 @@
 import React from 'react'
 import { DataTable } from '@common/components/DataTable'
 import { Badge } from '@pages/components/ui/badge'
-import { useMembershipReportQuery } from '@api-queries/billing/Query'
+import { useMembershipReportQuery } from '@api-queries/center-admin/billing/Query'
 
 const paymentStatusVariantMap = {
   paid: 'active',

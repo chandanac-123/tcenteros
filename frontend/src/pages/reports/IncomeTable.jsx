@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useConsolidatedIncomeReportQuery } from '@api-queries/report/Query'
+import { useConsolidatedIncomeReportQuery } from '@api-queries/center-admin/report/Query'
 import { formatDate } from '@utils/helper'
 
 const IncomeTable = ({ tableParams, setTableParams }) => {

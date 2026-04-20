@@ -1,5 +1,5 @@
 import CustomeModal from '@common/components/CustomeModal'
-import { useCompleteSettlementMutation } from '@api-queries/billing/Query'
+import { useCompleteSettlementMutation } from '@api-queries/center-admin/billing/Query'
 import { Button } from '@pages/components/ui/button'
 
 const CompleteSettlement = ({ open, setOpen, id }) => {

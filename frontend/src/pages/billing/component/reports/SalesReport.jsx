@@ -2,7 +2,7 @@ import React from 'react'
 import { DataTable } from '@common/components/DataTable'
 import { formatDate } from '@utils/helper'
 import { Badge } from '@pages/components/ui/badge'
-import { useSaleReportQuery } from '@api-queries/billing/Query'
+import { useSaleReportQuery } from '@api-queries/center-admin/billing/Query'
 const statusVariantMap = { paid: 'active', unpaid: 'inactive' }
 
 const SalesReport = ({ tableParams, setTableParams }) => {

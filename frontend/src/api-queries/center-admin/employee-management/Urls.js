@@ -17,7 +17,7 @@ import {
   runPayrollApiCall,
   getPayCycleApiCall,
   createPayCycleApiCall
-} from '../../api'
+} from '../../../api'
 
 export const getAllCategories = async () => {
   try {

@@ -8,7 +8,7 @@ import {
   useNetworkToggleButtonMutation,
   useGetNetworkToggleButtonQuery,
   useGetUserNetworkListQuery
-} from '@api-queries/network/Query'
+} from '@api-queries/center-admin/network/Query'
 import { useNetworkTabStore } from '@store/networkTabstore'
 import { format } from 'date-fns'
 import CustomDatePicker from '@common/components/CustomeDatepicker'

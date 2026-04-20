@@ -8,7 +8,7 @@ import {
   useAllHolidayQuery,
   usecreateHolidayMutation,
   usedeleteHolidayMutation
-} from '@api-queries/holiday/Query'
+} from '@api-queries/center-admin/holiday/Query'
 import { useFormik } from 'formik'
 import { holidayValidationSchema } from '@utils/validations'
 import { format } from 'date-fns'

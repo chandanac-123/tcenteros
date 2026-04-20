@@ -12,7 +12,7 @@ import {
   useDeleteTaxMutation,
   useUpdateTaxMutation,
   useTaxGetByIdQuery
-} from '@api-queries/tax/Query'
+} from '@api-queries/center-admin/tax/Query'
 import { useFormik } from 'formik'
 import { Badge } from '@pages/components/ui/badge'
 import edit from '@assets/form-icons/edit.svg'

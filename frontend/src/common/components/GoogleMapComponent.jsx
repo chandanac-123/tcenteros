@@ -6,7 +6,7 @@ import {
   useJsApiLoader
 } from '@react-google-maps/api'
 import CustomeModal from './CustomeModal'
-import { useFetchCenterLocationMutation } from '@api-queries/center-profile/Query'
+import { useFetchCenterLocationMutation } from '@api-queries/center-admin/center-profile/Query'
 import { useFormik } from 'formik'
 import { Button } from '@pages/components/ui/button'
 import { useAuthStore } from '@store/authStore'

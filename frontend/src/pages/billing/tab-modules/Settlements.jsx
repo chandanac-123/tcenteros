@@ -1,7 +1,7 @@
 import { DataTable } from '@common/components/DataTable'
 import view from '@assets/form-icons/view.svg'
 import { useState } from 'react'
-import { useSettlementsQuery } from '@api-queries/billing/Query'
+import { useSettlementsQuery } from '@api-queries/center-admin/billing/Query'
 import SettlementViewPage from '../component/SettlementView'
 import { Button } from '@pages/components/ui/button'
 import CompleteSettlement from '../component/CompleteSettlement'

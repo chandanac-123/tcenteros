@@ -1,7 +1,7 @@
 import React from 'react'
 import ContentLayout from "@common/MasterLayout/ContentLayout"
 import { Button } from '@pages/components/ui/button'
-import { useGetNetworkingBookingByIdQuery } from '@api-queries/network/Query'
+import { useGetNetworkingBookingByIdQuery } from '@api-queries/center-admin/network/Query'
 import { useNavigate, useParams } from 'react-router-dom'
 import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
 

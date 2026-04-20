@@ -7,11 +7,11 @@ import AddWallet from './AddWallet'
 import {
   useGetWalletSummaryQuery,
   useGetWalletTransactionsQuery
-} from '@api-queries/wallet/Query'
+} from '@api-queries/center-admin/wallet/Query'
 import WalletFilter from './component/WalletFilter'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { format } from 'date-fns'
-import { useGetWalletAmountQuery } from '@api-queries/wallet/Query'
+import { useGetWalletAmountQuery } from '@api-queries/center-admin/wallet/Query'
 import { formatIndianCurrency } from '@utils/helper'
 
 import { useAppPermissions } from "@hooks/permissions"

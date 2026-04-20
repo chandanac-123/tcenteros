@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import single_arrow from '@assets/navigate-icons/single-left-arrow.svg'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
-import { useResetPasswordMutation } from '@api-queries/authentication/Query'
+import { useResetPasswordMutation } from '@api-queries/center-admin/authentication/Query'
 import { toast } from 'sonner'
 import { showError, showSuccess, showWarning } from '@utils/toast'
 

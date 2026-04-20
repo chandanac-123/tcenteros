@@ -12,7 +12,7 @@ import {
   useDeleteEmployeeMutation,
   useUpdateEmployeeStatusMutation,
   useDeleteMultipleEmployeeMutation
-} from '@api-queries/employee-management/Query'
+} from '@api-queries/center-admin/employee-management/Query'
 import useTableSelection from '@common/components/UseTableSelection'
 
 import { useAppPermissions } from '@hooks/permissions'

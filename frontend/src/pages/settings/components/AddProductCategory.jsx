@@ -4,7 +4,7 @@ import { Input } from '@pages/components/ui/input'
 import { Textarea } from '@pages/components/ui/textarea'
 import { productCategorySchema } from '@utils/validations'
 import { useFormik } from 'formik'
-import { useCreateSKUMutation } from '@api-queries/inventory/Query'
+import { useCreateSKUMutation } from '@api-queries/center-admin/inventory/Query'
 
 const AddProductCategory = ({ open, onOpenChange }) => {
   const { mutateAsync: create, isLoading } = useCreateSKUMutation()

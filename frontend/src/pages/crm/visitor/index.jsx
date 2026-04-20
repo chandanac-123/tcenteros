@@ -1,6 +1,6 @@
 import { DataTable } from '@common/components/DataTable'
 import { useState } from 'react'
-import { useVisitorQuery } from '@api-queries/crm/Query'
+import { useVisitorQuery } from '@api-queries/center-admin/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
 import { useAppPermissions } from '@hooks/permissions'

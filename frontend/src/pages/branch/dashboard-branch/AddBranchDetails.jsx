@@ -9,7 +9,7 @@ import {
   useGetPurchasedBranchesQuery,
   useGetBranchCategoriesListQuery,
   useCreateNewBranchMutation
-} from '@api-queries/branch/Query'
+} from '@api-queries/center-admin/branch/Query'
 import { useFormik } from 'formik'
 import { branchValidationSchema } from '@utils/validations'
 import CitySelect from '@common/components/CitySelect'

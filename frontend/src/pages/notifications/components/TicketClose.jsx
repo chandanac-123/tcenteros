@@ -1,7 +1,7 @@
 import React from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
-import { useCloseMessageMutation } from '@api-queries/notifictaions/Query'
+import { useCloseMessageMutation } from '@api-queries/center-admin/notifictaions/Query'
 
 const CloseTicket = ({ open, setOpen, id }) => {
 

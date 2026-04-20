@@ -2,7 +2,7 @@ import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import AuthHeader from './components/AuthHeader'
 import { useState } from 'react'
-import { useRequestOTPforgotPasswordMutation } from '@api-queries/authentication/Query'
+import { useRequestOTPforgotPasswordMutation } from '@api-queries/center-admin/authentication/Query'
 import { useNavigate } from 'react-router-dom'
 
 

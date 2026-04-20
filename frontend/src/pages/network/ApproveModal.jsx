@@ -1,7 +1,7 @@
 import React from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
-import { useEditApproveNetworkMutation } from '@api-queries/network/Query'
+import { useEditApproveNetworkMutation } from '@api-queries/center-admin/network/Query'
 
 const ApproveModal = ({ open, setOpen, data }) => {
 

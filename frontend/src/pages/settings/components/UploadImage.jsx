@@ -1,7 +1,7 @@
 import CustomeModal from '@common/components/CustomeModal'
 import { galleryImageValidationSchema } from '@utils/validations'
 import { useFormik } from 'formik'
-import { useCreateGalleryMutation } from '@api-queries/gallery/Query'
+import { useCreateGalleryMutation } from '@api-queries/center-admin/gallery/Query'
 import InputFile from '@common/components/CustomeFileUpload'
 import { Button } from '@pages/components/ui/button'
 
