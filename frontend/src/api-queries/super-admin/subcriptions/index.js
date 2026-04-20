@@ -5,3 +5,6 @@ export const getSubscriptionApiCall = (data) =>
 export const getSubscriptionByIdApiCall = (id) =>
   axiosInstance.get(`/superadmin/billing/center/${id}/subscription-detail`);
 
+
+export const getRenewalApiCall = () =>
+  axiosInstance.get(`/superadmin/superadmin/billing/renewal-calendar`);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getActiveSubscriptions, getSubscriptionById } from "./Urls";
+import { getActiveSubscriptions, getSubscriptionById ,getRenewalCalendar} from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
 export const useSubscriptionsQuery = (data) => {
@@ -16,6 +16,15 @@ export const useSubscriptionGetByIdQuery = (id) => {
     queryKey: ["subscriptions", id],
     queryFn: () => getSubscriptionById(id),
     enabled: !!id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
+
+export const useRenewalCalendarQuery = () => {
+  return useQuery({
+    queryKey: ["renewalCalendar"],
+    queryFn: () => getRenewalCalendar(),
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });

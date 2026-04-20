@@ -41,15 +41,11 @@ export const formatTo12Hour = isoString => {
 
 export const convert12To24WithSeconds = time => {
   if (!time) return null
-
   const [timePart, period] = time.split(' ')
   const [hours, minutes] = timePart.split(':')
-
   let hour = parseInt(hours, 10)
-
   if (period === 'PM' && hour !== 12) hour += 12
   if (period === 'AM' && hour === 12) hour = 0
-
   return `${hour.toString().padStart(2, '0')}:${minutes}:00`
 }
 
@@ -82,38 +78,30 @@ export const formatToDDMMYYYY = date => {
     const [year, month, day] = parts
     return `${day}-${month}-${year}`
   }
-
   return date // already correct format
 }
 
 export const sidebarPermission = (permissions, key) => {
   if (permissions === null) return true
   if (!permissions || !key) return false
-
   return key in permissions
 }
 
 export const checkPermission = (permissions, path) => {
   // allow all if null (super admin)
   if (permissions === null) return true
-
   // only block if undefined
   if (permissions === undefined) return false
-
   const keys = path?.split('.')
   let current = permissions
-
   for (let key of keys) {
     if (!current[key]) return false
     current = current[key]
   }
-
   if (typeof current === 'boolean') return current
-
   if (typeof current === 'object' && 'enabled' in current) {
     return current.enabled
   }
-
   return false
 }
 
@@ -123,13 +111,11 @@ export const formatIndianCurrency  = (value = 0) => {
 
 export const getChangedFields = (initial, current) => {
   const changed = {};
-
   Object.keys(current).forEach((key) => {
     if (current[key] !== initial[key]) {
       changed[key] = current[key];
     }
   });
-
   return changed;
 };
 
@@ -141,3 +127,9 @@ export const getGreeting = () => {
   if (hour >= 17 && hour < 21) return "Good Evening 🌇💫";
   return "Good Night 🌙⭐";
 };
+
+const today = new Date();// "April 2026"
+export const getTodayFormattedMonthYear = today.toLocaleString("en-US", {
+  month: "long",
+  year: "numeric",
+});
