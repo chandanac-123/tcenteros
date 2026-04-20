@@ -1,4 +1,4 @@
-import { getSubscriptionApiCall, getSubscriptionByIdApiCall,getRenewalApiCall ,getRenewalByIdApiCall} from "./index";
+import { getSubscriptionApiCall, getSubscriptionByIdApiCall,getRenewalApiCall ,getRenewalByIdApiCall,getRenewalExpiringApiCall} from "./index";
 
 export const getActiveSubscriptions = async (data) => {
   try {
@@ -31,6 +31,15 @@ export const getRenewalCalendar = async (data) => {
 export const getRenewalById = async (data) => {
   try {
     const response = await getRenewalByIdApiCall(data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getRenewalExpiring = async (data) => {
+  try {
+    const response = await getRenewalExpiringApiCall(data);
     return response.data;
   } catch (error) {
     throw error;
