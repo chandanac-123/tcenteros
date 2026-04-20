@@ -5,7 +5,7 @@ import CustomeSelect from '@common/components/CustomeSelect'
 import {
   useGetProfileByIdQuery,
   useUpdateProfileMutation
-} from '@api-queries/center-profile/Query'
+} from '@api-queries/center-admin/center-profile/Query'
 import { useEffect, useState } from 'react'
 import { useFormik } from 'formik'
 import DynamicListInput from './DynamicListInput'

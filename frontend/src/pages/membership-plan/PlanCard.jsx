@@ -4,9 +4,9 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
 import { useEffect, useState } from 'react'
 import DeleteModal from '@common/components/CustomeDelete'
-import { useDeletePlanMutation } from '@api-queries/membership-plan/Query'
+import { useDeletePlanMutation } from '@api-queries/center-admin/membership-plan/Query'
 import CreateMembershipForm from './CreateForm'
-import { useUpdatePlanStatusMutation } from '@api-queries/membership-plan/Query'
+import { useUpdatePlanStatusMutation } from '@api-queries/center-admin/membership-plan/Query'
 
 import { useAppPermissions } from '@hooks/permissions'
 

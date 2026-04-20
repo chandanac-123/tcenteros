@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import {
   useCreateInventoryProfitMutation,
   useInventoryProfitValueQuery
-} from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/inventory/Query'
 
 const AddInventoryProfit = ({ open, setOpen }) => {
   const [inventoryProfit, setInventoryProfit] = useState('')

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import {
   useApproveTimeSlotMutation,
   useTimeSlotQuery
-} from '@api-queries/notifictaions/Query'
+} from '@api-queries/center-admin/notifictaions/Query'
 import TimeslotChange from './TimeslotChange'
 import { Spinner } from '@pages/components/ui/spinner'
 

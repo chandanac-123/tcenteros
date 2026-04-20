@@ -1,4 +1,4 @@
-import { useEmployeeQuery } from '@api-queries/employee-management/Query'
+import { useEmployeeQuery } from '@api-queries/center-admin/employee-management/Query'
 import MultiColorProgressBar from '@common/components/MulticolorProgressBar'
 import EmployeeTable from './table'
 

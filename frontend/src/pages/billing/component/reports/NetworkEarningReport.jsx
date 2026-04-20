@@ -1,7 +1,7 @@
 import React from 'react'
 import { DataTable } from '@common/components/DataTable'
 import { Badge } from '@pages/components/ui/badge'
-import { useNetworkReportQuery } from '@api-queries/billing/Query'
+import { useNetworkReportQuery } from '@api-queries/center-admin/billing/Query'
 const statusVariantMap = {
   approved: 'active',
   pending: 'inactive',

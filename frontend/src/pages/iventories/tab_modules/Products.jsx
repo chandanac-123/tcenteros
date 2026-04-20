@@ -5,7 +5,7 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import {
   useAllProductsQuery,
   useDeleteProductMutation,
-} from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/inventory/Query'
 import { Button } from '@pages/components/ui/button'
 import AddProductModal from '../components/AddProductModal'
 import DeleteModal from '@common/components/CustomeDelete'

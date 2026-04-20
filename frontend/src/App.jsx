@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import MasterLayout from "./common/masterLayout";
 import { useBrandingStore } from "@store/brandingStore";
 import { useEffect } from "react";
-import { useAllBrandQuery } from "./api-queries/branding/Query";
+import { useAllBrandQuery } from "./api-queries/center-admin/branding/Query";
 import PageNotFound from "./common/components/PageNotFound";
 import { useJsApiLoader } from "@react-google-maps/api";
 const LIBRARIES = ["places"];

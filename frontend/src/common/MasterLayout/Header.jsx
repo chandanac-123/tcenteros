@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@store/authStore";
 import AddBranchButton from "@pages/branch";
 import { useCrmStore } from "@store/tabStore";
-import { useGetProfileInfoQuery } from "@api-queries/center-profile/Query";
+import { useGetProfileInfoQuery } from "@api-queries/center-admin/center-profile/Query";
 import GoogleMapComponent from "../components/GoogleMapComponent";
 import defalutUser from "@assets/header-icons/user.svg";
 import { useAppPermissions } from "@hooks/permissions";

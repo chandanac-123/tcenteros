@@ -6,7 +6,7 @@ import {
   useUpdateProfileImageMutation,
   useGetProfileByIdQuery,
   useUpdateProfilePicMutation
-} from '@api-queries/center-profile/Query'
+} from '@api-queries/center-admin/center-profile/Query'
 import { imageValidation } from '@utils/validations'
 import * as Yup from 'yup'
 

@@ -4,7 +4,7 @@ import PasswordInput from '@common/components/PasswordInput'
 import logo from '@assets/header-icons/logo_in_auth.svg'
 import dummy from '@assets/images/dummy.png'
 import { useState } from 'react'
-import { useCreateCenterAccountMutation } from '@api-queries/authentication/Query'
+import { useCreateCenterAccountMutation } from '@api-queries/center-admin/authentication/Query'
 import NetworkWalletModal from './components/NetworkWalletModal'
 import { showError, showSuccess } from '@utils/toast'
 

@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useConsolidatedSettlementsReportQuery } from '@api-queries/report/Query'
+import { useConsolidatedSettlementsReportQuery } from '@api-queries/center-admin/report/Query'
 import { formatDate } from '@utils/helper'
 
 const SettlementTable = ({ tableParams, setTableParams }) => {

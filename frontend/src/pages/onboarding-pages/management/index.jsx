@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useOnboardingStore } from '@store/onboardingStore'
 import OnboardProgress from '../components/OnboardProgress'
 import OnboardHeader from '../components/OnboardHeader'
-import { useAllPlatformsQuery } from '@api-queries/on-boarding/Query'
+import { useAllPlatformsQuery } from '@api-queries/center-admin/on-boarding/Query'
 import { useEffect } from 'react'
 import ManagementToolRow from '../components/ManagementToolRow'
 

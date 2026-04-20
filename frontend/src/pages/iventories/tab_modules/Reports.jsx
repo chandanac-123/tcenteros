@@ -11,7 +11,7 @@ import {
   useGenerateStockReportMutation,
   useGenerateInventoryReportMutation,
   useGeneratePurchaseReportMutation
-} from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/inventory/Query'
 import RadioGroup from '@common/components/RadioGroup'
 
 const Reports = () => {

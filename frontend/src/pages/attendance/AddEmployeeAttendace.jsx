@@ -6,7 +6,7 @@ import CustomeSelect from '@common/components/CustomeSelect'
 import {
   useCreateAttendanceMutation,
   useAllEmployeesQuery
-} from '@api-queries/attendance/Query'
+} from '@api-queries/center-admin/attendance/Query'
 import { useFormik } from 'formik'
 import { attendanceValidationSchema } from '@utils/validations'
 import { format } from 'date-fns'

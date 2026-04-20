@@ -1,7 +1,7 @@
 import { DataTable } from '@common/components/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
 import view from '@assets/form-icons/view.svg'
-import { useOutgoingNetworkQuery } from '@api-queries/billing/Query'
+import { useOutgoingNetworkQuery } from '@api-queries/center-admin/billing/Query'
 import { useState } from 'react'
 
 const OutgoingNetwork = () => {

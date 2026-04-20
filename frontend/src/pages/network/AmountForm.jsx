@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
-import { useAddNetworkAmountMutation } from '@api-queries/network/Query'
+import { useAddNetworkAmountMutation } from '@api-queries/center-admin/network/Query'
 
 const AmountForm = ({ open, setOpen }) => {
   const [amount, setAmount] = useState('')

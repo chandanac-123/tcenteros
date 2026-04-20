@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import SalaryStructureTable from './Table'
-import { useAllSalariesQuery } from '@api-queries/employee-salary/Query'
+import { useAllSalariesQuery } from '@api-queries/center-admin/employee-salary/Query'
 
 const SalaryStructure = () => {
   const [tableParams, setTableParams] = useState({

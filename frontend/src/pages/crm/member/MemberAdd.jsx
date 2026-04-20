@@ -11,7 +11,7 @@ import {
   useActiveMembersPlanQuery,
   useVisitorById,
   useGuestById
-} from '@api-queries/crm/Query'
+} from '@api-queries/center-admin/crm/Query'
 import { useFormik } from 'formik'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { useAuthStore } from '@store/authStore'

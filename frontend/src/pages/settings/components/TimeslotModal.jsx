@@ -5,7 +5,7 @@ import { useFormik } from 'formik'
 import React from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import TimePicker from '@common/components/Timepicker'
-import { useCreateSlotMutation } from '@api-queries/slot/Query'
+import { useCreateSlotMutation } from '@api-queries/center-admin/slot/Query'
 
 const TimeslotModal = ({ open, onOpenChange }) => {
   const { mutateAsync: createSlot, isPending: isCreating } =

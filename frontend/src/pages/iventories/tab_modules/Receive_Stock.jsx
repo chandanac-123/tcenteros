@@ -3,7 +3,7 @@ import { DataTable } from '@common/components/DataTable'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Button } from '@pages/components/ui/button'
 import AddStockEntry from '../components/AddStockEntry'
-import { useAllStockQuery } from '@api-queries/inventory/Query'
+import { useAllStockQuery } from '@api-queries/center-admin/inventory/Query'
 
 const Receive_Stock = () => {
   const [tableParams, setTableParams] = useState({ page: 1 })

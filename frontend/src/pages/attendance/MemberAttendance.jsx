@@ -5,7 +5,7 @@ import DeleteModal from '@common/components/CustomeDelete'
 import {
   useAllMemberAttendanceQuery,
   useDeleteAttendanceMutation
-} from '@api-queries/attendance/Query'
+} from '@api-queries/center-admin/attendance/Query'
 import { formatTo12Hour } from '@utils/helper'
 
 const MemberAttendance = ({ dateRange }) => {

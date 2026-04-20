@@ -9,9 +9,9 @@ import AddWallet from '@pages/wallet/AddWallet'
 import {
   useNetworkToggleButtonMutation,
   useGetNetworkToggleButtonQuery
-} from '@api-queries/network/Query'
+} from '@api-queries/center-admin/network/Query'
 import { useNavigate } from 'react-router-dom'
-import { useGetWalletAmountQuery } from '@api-queries/wallet/Query'
+import { useGetWalletAmountQuery } from '@api-queries/center-admin/wallet/Query'
 import SuccessModal from '@pages/branch/message-popup/success'
 import FaledModal from '@pages/branch/message-popup/failed'
 

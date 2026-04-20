@@ -1,7 +1,7 @@
 import { Button } from '@pages/components/ui/button'
 import Chat from './Chat'
 import { useState } from 'react'
-import { useAllTicketsQuery } from '@api-queries/notifictaions/Query'
+import { useAllTicketsQuery } from '@api-queries/center-admin/notifictaions/Query'
 import CloseTicket from './TicketClose'
 import { Spinner } from '@pages/components/ui/spinner'
 

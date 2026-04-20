@@ -4,7 +4,7 @@ import { useFormik } from 'formik'
 import {
   useTicketByIdQuery,
   useSendMessageMutation
-} from '@api-queries/notifictaions/Query'
+} from '@api-queries/center-admin/notifictaions/Query'
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 

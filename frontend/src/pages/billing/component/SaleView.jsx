@@ -1,5 +1,5 @@
 import CustomeModal from '@common/components/CustomeModal'
-import { useGetAllSaleByIdQuery } from '@api-queries/billing/Query'
+import { useGetAllSaleByIdQuery } from '@api-queries/center-admin/billing/Query'
 
 const SaleViewPage = ({ open, setOpen, id }) => {
   const { data, isFetching } = useGetAllSaleByIdQuery(id)

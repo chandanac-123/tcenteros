@@ -1,10 +1,10 @@
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
-import { useCreateCategoryMutation } from '@api-queries/employee-management/Query'
+import { useCreateCategoryMutation } from '@api-queries/center-admin/employee-management/Query'
 import {
   useCategoriesQuery,
   useDeleteCategoryMutation
-} from '@api-queries/employee-management/Query'
+} from '@api-queries/center-admin/employee-management/Query'
 import { useState } from 'react'
 import AddCategory from '@pages/employee-management/category/AddCategory'
 import DeleteModal from '@common/components/CustomeDelete'

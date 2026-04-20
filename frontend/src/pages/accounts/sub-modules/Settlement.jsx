@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useAllSettlementsQuery } from '@api-queries/accounts/Query'
+import { useAllSettlementsQuery } from '@api-queries/center-admin/accounts/Query'
 import { useState } from 'react'
 
 const Settlement = () => {

@@ -5,7 +5,7 @@ import {
   useCreateProductMutation,
   useAllSKUsQuery,
   useInventoryProfitQuery
-} from '@api-queries/inventory/Query'
+} from '@api-queries/center-admin/inventory/Query'
 import { useFormik } from 'formik'
 import { productValidationSchema } from '@utils/validations'
 import CustomeSelect from '@common/components/CustomeSelect'

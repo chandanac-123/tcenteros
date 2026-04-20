@@ -4,7 +4,7 @@ import deleteicon from '@assets/form-icons/delete.svg'
 import {
   useAllEmployeesAttendanceQuery,
   useDeleteAttendanceMutation
-} from '@api-queries/attendance/Query'
+} from '@api-queries/center-admin/attendance/Query'
 import DeleteModal from '@common/components/CustomeDelete'
 import { formatTo12Hour } from '@utils/helper'
 

@@ -13,7 +13,7 @@ import {
   useAllTermsandPrivacyQuery,
   useCreateTermsandPrivacyMutation,
   getUpdatedTermsandPrivacyQuery
-} from '@api-queries/branding/Query'
+} from '@api-queries/center-admin/branding/Query'
 import { useBrandingStore } from '@store/brandingStore'
 import { Input } from '@pages/components/ui/input'
 

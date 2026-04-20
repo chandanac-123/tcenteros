@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useConsolidatedExpensesReportQuery } from '@api-queries/report/Query'
+import { useConsolidatedExpensesReportQuery } from '@api-queries/center-admin/report/Query'
 import { formatDate } from '@utils/helper'
 
 const ExpenseTable = ({ tableParams, setTableParams }) => {

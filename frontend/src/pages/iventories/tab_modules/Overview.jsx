@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import StatusDisplaycard from '../components/StatusDisplaycard'
-import { useInventoryDashboardQuery } from '@api-queries/inventory/Query'
+import { useInventoryDashboardQuery } from '@api-queries/center-admin/inventory/Query'
 import LineChart from '@common/charts/LineChart'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { Card } from '@pages/components/ui/card'

@@ -4,7 +4,7 @@ import {
   getAllEmployeesApiCall,
   getAllMemberAttendanceApiCall,
   deleteAttendanceApiCall
-} from '../../api/index'
+} from '../../../api/index'
 
 export const getAllEmployees = async () => {
   try {

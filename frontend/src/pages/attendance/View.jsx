@@ -1,6 +1,6 @@
 import CustomeModal from '@common/components/CustomeModal'
 import { Badge } from '@pages/components/ui/badge'
-import { useEmployeeGetByIdQuery } from '@api-queries/employee-management/Query'
+import { useEmployeeGetByIdQuery } from '@api-queries/center-admin/employee-management/Query'
 
 const ViewForm = ({ open, setOpen, id }) => {
   const { data: employeeData, isFetching: isEmployeeFetching } =

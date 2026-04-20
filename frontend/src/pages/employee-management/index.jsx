@@ -7,7 +7,7 @@ import SalaryStructure from './salary-structure'
 import Employee from './employee'
 import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
-import { useAllCentersQuery } from '@api-queries/center-profile/Query'
+import { useAllCentersQuery } from '@api-queries/center-admin/center-profile/Query'
 import Payroll from './payroll'
 import { useAppPermissions } from '@hooks/permissions'
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
 import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
-import { useCreateWalletAmountMutation } from '@api-queries/wallet/Query'
+import { useCreateWalletAmountMutation } from '@api-queries/center-admin/wallet/Query'
 import { showError, showSuccess } from '@utils/toast'
 
 const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {

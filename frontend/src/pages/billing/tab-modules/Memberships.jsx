@@ -1,7 +1,7 @@
 import { DataTable } from '@common/components/DataTable'
 import { useState } from 'react'
 import RenewMembership from '../component/RenewMembership'
-import { useGetAllMembershipsQuery } from '@api-queries/billing/Query'
+import { useGetAllMembershipsQuery } from '@api-queries/center-admin/billing/Query'
 import { formatDate } from '@utils/helper'
 
 const Memberships = () => {

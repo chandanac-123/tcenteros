@@ -11,7 +11,7 @@ import {
   useGenerateMembershipReportMutation,
   useGenerateNetworkReportMutation,
   useGenerateSettlementReportMutation
-} from '@api-queries/billing/Query'
+} from '@api-queries/center-admin/billing/Query'
 import SettlementReport from '../component/reports/SettlementReport'
 
 const BillingReports = () => {

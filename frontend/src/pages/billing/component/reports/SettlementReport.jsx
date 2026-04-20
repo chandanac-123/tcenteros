@@ -1,5 +1,5 @@
 import { DataTable } from '@common/components/DataTable'
-import { useSettlementReportQuery } from '@api-queries/billing/Query'
+import { useSettlementReportQuery } from '@api-queries/center-admin/billing/Query'
 import { Badge } from '@pages/components/ui/badge'
 import { formatDate } from '@utils/helper'
 const statusVariantMap = { completed: 'active', pending: 'inactive' }

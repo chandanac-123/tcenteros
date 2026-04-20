@@ -11,7 +11,7 @@ import {
   useGenerateConsolidatedExpensesReport,
   useGenerateConsolidatedIncomeReport,
   useGenerateConsolidatedSettlementsReport
-} from '@api-queries/report/Query'
+} from '@api-queries/center-admin/report/Query'
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('income')

@@ -7,7 +7,7 @@ import AddCategory from '@pages/employee-management/category/AddCategory'
 import {
   useCreatePermissionMutation,
   usePermissionQuery
-} from '@api-queries/role-permissions/Query'
+} from '@api-queries/center-admin/role-permissions/Query'
 import { permissionData } from './PermissionData'
 
 const PermissionTabs = () => {

@@ -6,7 +6,7 @@ import {
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useCategoriesGetByIdQuery
-} from '@api-queries/employee-management/Query'
+} from '@api-queries/center-admin/employee-management/Query'
 import React from 'react'
 import { useFormik } from 'formik'
 import { categoryValidationSchema } from '@utils/validations'
