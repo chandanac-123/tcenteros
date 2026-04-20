@@ -1,4 +1,15 @@
+import CustomFilter from "@common/components/CustomeFilter";
 import { DataTable } from "@common/components/DataTable";
+import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
+import {
+  Briefcase,
+  Building2,
+  Calendar,
+  Clock,
+  Receipt,
+  SignalHigh,
+  UserPlus,
+} from "lucide-react";
 
 const CenterTable = () => {
   const columns = [
@@ -29,8 +40,38 @@ const CenterTable = () => {
       ),
     },
   ];
+
+  const cardsData = [
+    {
+      label: "Total Number Of Centers",
+      value: 0,
+      icon: <Building2 size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Total Number Of Members",
+      value: 0,
+      icon: <UserPlus size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Total Revenue",
+      value: 0,
+      icon: <Briefcase size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Average Growth",
+      value: 0,
+      icon: <SignalHigh size={16} strokeWidth={2.75} />,
+    },
+  ];
   return (
-    <div>
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <HeaderCard cardsData={cardsData} />
+      </div>
+
+      {/* <div className="pe-5 justify-end flex">
+        <CustomFilter filterName="Status" />
+      </div> */}
       <DataTable
         columns={columns}
         data={[]}

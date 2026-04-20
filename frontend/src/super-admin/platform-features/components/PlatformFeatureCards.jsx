@@ -125,9 +125,9 @@ const PlatformFeatureCards = () => {
                                                 setOpenUpdateModal(true);
                                                 setActiveIndex(null); // close dropdown
                                             }}
-                                            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-blue-800 text-sm font-medium hover:bg-blue-700/20 transition"
+                                            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-onboard_primary text-sm font-medium hover:bg-blue-700/20 transition"
                                         >
-                                            <Edit size={18} />
+                                            <Edit size={18} className="text-onboard_primary"/>
                                             Update
                                         </button>
 
@@ -139,9 +139,9 @@ const PlatformFeatureCards = () => {
                                                 setSelectedFeature(item);
                                                 setActiveIndex(null);
                                             }}
-                                            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-red-700 text-sm font-medium hover:bg-red-100 transition"
+                                            className="w-full flex items-center justify-center text-red_text gap-2 py-2 rounded-lg text-red-700 text-sm font-medium hover:bg-red-100 transition"
                                         >
-                                            <Trash size={18} />
+                                            <Trash size={18} className="text-red_text"/>
                                             Delete
                                         </button>
                                     </div>

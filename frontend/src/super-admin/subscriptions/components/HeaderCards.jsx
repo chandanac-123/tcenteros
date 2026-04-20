@@ -1,38 +1,6 @@
-import { Briefcase, Calendar, Clock, Network, Receipt, Split } from "lucide-react";
 
-const HeaderCard = ({ data }) => {
-  const cardsData = [
-    {
-      label: "Total Revenue",
-      value: 0,
-      icon: <Briefcase size={16} strokeWidth={2.75} />,
-    },
-    {
-      label: "Monthly Revenue",
-      value: 0,
-      icon: <Receipt size={16} strokeWidth={2.75} />,
-    },
-    {
-      label: "Renewal Date",
-      value: 0,
-      icon: <Calendar size={16} strokeWidth={2.75} />,
-    },
-    {
-      label: "Days Remaining",
-      value: 0,
-      icon: <Clock size={16} strokeWidth={2.75} />,
-    },
-    {
-      label: "Network commission",
-      value: 0,
-      icon: <Network size={16} strokeWidth={2.75} />,
-    },
-    {
-      label: "Branch Count",
-      value: 0,
-      icon: <Split size={16} strokeWidth={2.75} />,
-    },
-  ];
+const HeaderCard = ({ cardsData }) => {
+
   return (
     <>
       {cardsData?.map((item, index) => (

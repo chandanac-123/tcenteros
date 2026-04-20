@@ -21,9 +21,6 @@ const Centers = () => {
           </div>
         </div>
 
-        <div className="pe-5">
-          <CustomFilter filterName='Status'/>
-        </div>
       </div>
 
       <div>

@@ -7,6 +7,14 @@ import RevenueSummary from "./RevenueSummary";
 import BillingHistory from "./BillingHistory";
 import DeleteModal from "@common/components/CustomeDelete";
 import { Badge } from "@pages/components/ui/badge";
+import {
+  Briefcase,
+  Calendar,
+  Clock,
+  Network,
+  Receipt,
+  Split,
+} from "lucide-react";
 
 const revenueOrBilling = [
   { id: "revenue", name: "Revenue Summaries", component: <RevenueSummary /> },
@@ -17,7 +25,38 @@ const DetailView = () => {
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
   const activeModule = revenueOrBilling.find((item) => item.id === activeTab);
-
+  const cardsData = [
+    {
+      label: "Total Revenue",
+      value: 0,
+      icon: <Briefcase size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Monthly Revenue",
+      value: 0,
+      icon: <Receipt size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Renewal Date",
+      value: 0,
+      icon: <Calendar size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Days Remaining",
+      value: 0,
+      icon: <Clock size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Network commission",
+      value: 0,
+      icon: <Network size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Branch Count",
+      value: 0,
+      icon: <Split size={16} strokeWidth={2.75} />,
+    },
+  ];
   return (
     <ContentLayout>
       {/* Header */}
@@ -54,7 +93,7 @@ const DetailView = () => {
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
-        <HeaderCard />
+        <HeaderCard cardsData={cardsData} />
       </div>
 
       {/* Tabs + Content */}
