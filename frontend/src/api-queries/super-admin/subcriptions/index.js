@@ -25,3 +25,6 @@ export const getBillingHistoryApiCall = (id) =>
   axiosInstance.get(
     `/superadmin/superadmin/billing/centers/subscription-history?center_id=${id}`,
   );
+
+  export const suspendCenterApiCall = (id, details) =>
+  axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`, details);

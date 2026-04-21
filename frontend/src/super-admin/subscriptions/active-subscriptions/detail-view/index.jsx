@@ -19,10 +19,13 @@ import { useParams } from "react-router-dom";
 import {
   useBillingHistoryQuery,
   useSubscriptionGetByIdQuery,
+  useSuspendCenterMutation,
 } from "@api-queries/super-admin/subcriptions/Query";
 
 const DetailView = () => {
   const params = useParams();
+  const { mutateAsync: suspendSubscription, isPending } =
+    useSuspendCenterMutation();
   const { data } = useSubscriptionGetByIdQuery(params.id);
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
     params.id,
@@ -41,6 +44,15 @@ const DetailView = () => {
       component: <BillingHistory data={billing_history} />,
     },
   ];
+
+  const handleSuspend = async () => {
+    try {
+      await suspendSubscription(params.id);
+      setSuspendOpen(false);
+    } catch (err) {
+      return
+    };
+  }
   
   const cardsData = [
     {
@@ -132,6 +144,7 @@ const DetailView = () => {
         open={suspendOpen}
         setOpen={setSuspendOpen}
         suspend={true}
+        onConfirm={handleSuspend}
         header="Are you sure you want to suspend this subscription?"
         description="This Subscription will be removed from your listing the center will lost the full access as per the subscription This action cannot be undone.?"
       />

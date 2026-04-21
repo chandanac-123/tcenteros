@@ -6,6 +6,7 @@ import {
   getRenewalById,
   getRenewalExpiring,
   getBillingHistory,
+  suspendCenter,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -61,5 +62,20 @@ export const useBillingHistoryQuery = (id) => {
     queryFn: () => getBillingHistory(id),
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+  });
+};
+
+export const useSuspendCenterMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, details }) => suspendCenter(id, details),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      showSuccess(data?.detail || "Center suspended successfully");
+    },
+    onError: (err) => {
+      showError(err?.response?.data?.message || "Failed to suspend center");
+      return err;
+    },
   });
 };

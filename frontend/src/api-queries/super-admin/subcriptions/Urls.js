@@ -1,4 +1,12 @@
-import { getSubscriptionApiCall, getSubscriptionByIdApiCall,getRenewalApiCall ,getRenewalByIdApiCall,getRenewalExpiringApiCall, getBillingHistoryApiCall} from "./index";
+import {
+  getSubscriptionApiCall,
+  getSubscriptionByIdApiCall,
+  getRenewalApiCall,
+  getRenewalByIdApiCall,
+  getRenewalExpiringApiCall,
+  getBillingHistoryApiCall,
+  suspendCenterApiCall
+} from "./index";
 
 export const getActiveSubscriptions = async (data) => {
   try {
@@ -17,7 +25,6 @@ export const getSubscriptionById = async (id) => {
     throw error;
   }
 };
-
 
 export const getRenewalCalendar = async (data) => {
   try {
@@ -49,6 +56,15 @@ export const getRenewalExpiring = async (data) => {
 export const getBillingHistory = async (data) => {
   try {
     const response = await getBillingHistoryApiCall(data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const suspendCenter = async (id, details) => {
+  try {
+    const response = await suspendCenterApiCall(id, details);
     return response.data;
   } catch (error) {
     throw error;
