@@ -15,7 +15,7 @@ const CalenderCard = ({
       ) : (
         <div
           onClick={onClick}
-          className={`flex flex-col border rounded-xl p-2 w-40 gap-2 shadow-[0px_5px_15px_rgba(0,0,0,0.15)] cursor-pointer
+          className={`flex  w-full flex-col border rounded-xl p-2 gap-2 shadow-[0px_5px_15px_rgba(0,0,0,0.15)] cursor-pointer
         ${isToday ? "border-onboard_primary bg-blue-50" : "hover:text-onboard_primary hover:border-onboard_primary"}
       `}
         >
