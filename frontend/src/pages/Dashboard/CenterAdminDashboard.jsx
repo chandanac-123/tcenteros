@@ -13,10 +13,13 @@ import { useGetBranchCountQuery } from "@api-queries/center-admin/branch/Query";
 import InstructionPage from "./components/InstructionPage";
 import { getGreeting } from "@utils/helper";
 import { useAppPermissions } from "@hooks/permissions";
+import { Button } from "@pages/components/ui/button";
+import RenewSubcription from "./components/RenewSubcription";
 
 const CenterAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const [instructionOpen, setInstructionOpen] = useState(false);
+  const [renewSubscriptionOpen, setRenewSubscriptionOpen] = useState(false);
   const navigate = useNavigate();
   const firstLogin = useAuthStore((state) => state.firstLogin);
   const setFirstLogin = useAuthStore((state) => state.setFirstLogin);
@@ -94,7 +97,7 @@ const CenterAdminDashboard = () => {
   const attendanceData =
     data?.attendance_chart?.map((i) => i.attendance_percentage) || [];
 
-   useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setGreeting(getGreeting());
     }, 300000); //  every 5 min is enough
@@ -109,11 +112,14 @@ const CenterAdminDashboard = () => {
             <span>{greeting}</span>
             <span className="text-xs">{data?.centeradmin_name}</span>
           </div>
-          <div>
+          <div className="flex gap-2">
             {" "}
             {canCreateBranch && (
               <BranchDetailsButton isLimitReached={isLimitReached} />
             )}
+            <Button size="addbutton" onClick={() => setRenewSubscriptionOpen(true)}>
+              Renew Subscription
+            </Button>
           </div>
         </div>
 
@@ -236,6 +242,7 @@ const CenterAdminDashboard = () => {
         {/* <DashboardTable /> */}
       </div>
       <InstructionPage open={instructionOpen} setOpen={setInstructionOpen} />
+      <RenewSubcription open={renewSubscriptionOpen} setOpen={setRenewSubscriptionOpen} />
     </ContentLayout>
   );
 };
