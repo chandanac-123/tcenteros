@@ -4,12 +4,15 @@ import { Eye, FileText } from "lucide-react";
 import { useState } from "react";
 import Preview from "./Preview";
 import { useCreateGlobalTermsAndPrivacyMutation } from "@api-queries/super-admin/platform-settings/Query";
+import { useAllTermsandPrivacyQuery } from "@api-queries/center-admin/branding/Query";
 
 const LegalDocuments = () => {
   const [open, setOpen] = useState(false);
+  const { data, isFetching } = useAllTermsandPrivacyQuery();
+  console.log("data: ", data);
   const { mutateAsync: createGlobalTermsAndPrivacy, isLoading: isCreating } =
     useCreateGlobalTermsAndPrivacyMutation();
-    
+
   return (
     <div className="flex flex-col p-4 rounded-lg space-y-4 mt-4 shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
       <form>
@@ -38,12 +41,17 @@ const LegalDocuments = () => {
               <Eye />
               Show Preview
             </Button>
-            <Preview open={open} setOpen={setOpen} />
+            <Preview
+              open={open}
+              setOpen={setOpen}
+              data={data}
+              isFetching={isFetching}
+            />
           </div>
         </div>
 
         <div>
-          <Textarea label="Content" rows={10} />
+          <Textarea label="Content" rows={10} value={data?.content || ""} />
         </div>
         <div className="flex justify-end mt-4">
           <Button size="addbutton" type="submit">

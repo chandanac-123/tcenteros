@@ -1,17 +1,14 @@
-import { useAllTermsandPrivacyQuery } from "@api-queries/center-admin/branding/Query";
 import CustomeModal from "@common/components/CustomeModal";
 import { Button } from "@pages/components/ui/button";
 import { Spinner } from "@pages/components/ui/spinner";
 
-const Preview = ({ open, setOpen }) => {
-  const { data, isFetching } = useAllTermsandPrivacyQuery();
-  console.log("data: ", data);
+const Preview = ({ open, setOpen ,data,isFetching}) => {
 
   return (
     <CustomeModal
       open={open}
       onOpenChange={setOpen}
-      header="Terms & Conditions Preview"
+      header={data?.title}
       className="max-w-xl w-full"
     >
       <div className="flex justify-center">
@@ -20,7 +17,7 @@ const Preview = ({ open, setOpen }) => {
         ) : (
           <div>
             <p className="text-sm whitespace-pre-wrap">
-              {data?.terms_and_conditions}
+              {data?.content}
             </p>
           </div>
         )}
