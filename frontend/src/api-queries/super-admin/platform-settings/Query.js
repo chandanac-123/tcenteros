@@ -8,6 +8,7 @@ export const useCreateGlobalTermsAndPrivacyMutation = () => {
     mutationFn: (data) => createGlobalTermsAndPrivacy(data),
     onSuccess: async (data) => {
       query.invalidateQueries("globalTermsAndPrivacy");
+      query.invalidateQueries('termsandprivacy');
       showSuccess("Global Terms and Privacy created successfully");
     },
     onError: (err) => {

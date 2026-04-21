@@ -1,21 +1,49 @@
 import { Button } from "@pages/components/ui/button";
 import { Textarea } from "@pages/components/ui/textarea";
 import { Eye, FileText } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Preview from "./Preview";
 import { useCreateGlobalTermsAndPrivacyMutation } from "@api-queries/super-admin/platform-settings/Query";
 import { useAllTermsandPrivacyQuery } from "@api-queries/center-admin/branding/Query";
 
 const LegalDocuments = () => {
   const [open, setOpen] = useState(false);
+  const [content, setContent] = useState("");
   const { data, isFetching } = useAllTermsandPrivacyQuery();
-  console.log("data: ", data);
   const { mutateAsync: createGlobalTermsAndPrivacy, isLoading: isCreating } =
     useCreateGlobalTermsAndPrivacyMutation();
 
+  useEffect(() => {
+    setContent(data?.content || "");
+  }, [data?.content]);
+
+  const lastUpdatedLabel = useMemo(() => {
+    const rawDate = data?.updated_at || data?.modified_at || data?.created_at;
+    if (!rawDate) {
+      return "Not updated yet";
+    }
+    const parsedDate = new Date(rawDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return rawDate;
+    }
+    return parsedDate.toLocaleDateString("en-CA");
+  }, [data?.created_at, data?.modified_at, data?.updated_at]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      await createGlobalTermsAndPrivacy({
+        title: data?.title || "Terms & Conditions",
+        content,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="flex flex-col p-4 rounded-lg space-y-4 mt-4 shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-      <form>
+      <form onSubmit={handleSubmit}>
         <div className="flex items-center justify-between p-4">
           <div className="flex  gap-4">
             <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
@@ -26,7 +54,7 @@ const LegalDocuments = () => {
                 Terms & Conditions
               </p>
               <p className="text-[#393636] font-inter text-[14px] font-medium">
-                Last updated: 2026-04-18
+                Last updated: {lastUpdatedLabel}
               </p>
             </div>
           </div>
@@ -44,17 +72,27 @@ const LegalDocuments = () => {
             <Preview
               open={open}
               setOpen={setOpen}
-              data={data}
+              data={{
+                ...data,
+                title: data?.title || "Terms & Conditions",
+                content,
+              }}
               isFetching={isFetching}
             />
           </div>
         </div>
 
         <div>
-          <Textarea label="Content" rows={10} value={data?.content || ""} />
+          <Textarea
+            label="Content"
+            rows={10}
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            disabled={isFetching || isCreating}
+          />
         </div>
         <div className="flex justify-end mt-4">
-          <Button size="addbutton" type="submit">
+          <Button size="addbutton" type="submit" disabled={isCreating}>
             Save Terms & Condition
           </Button>
         </div>
