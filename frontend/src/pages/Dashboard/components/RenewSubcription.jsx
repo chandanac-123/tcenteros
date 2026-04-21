@@ -5,7 +5,7 @@ import { Input } from "@pages/components/ui/input";
 import { useFormik } from "formik";
 import { useState } from "react";
 
-const subcriptionType = [
+const subscriptionType = [
   { id: "monthly", label: "Monthly" },
   { id: "yearly", label: "Yearly" },
 ];
@@ -18,29 +18,30 @@ const currentPackageDetails = [
   { label: "Amount Paid", value: "₹24,900.00" },
 ];
 
-const RenewSubcription = ({ open, setOpen }) => {
+const RenewSubscription = ({ open, setOpen }) => {
   const [showUpgradeFields, setShowUpgradeFields] = useState(false);
 
-  const initialValues = {
-    subcription_duration: "",
-    salary: "",
-    salary_type: null,
-    pay_cycle: null,
-  };
-
   const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
+    initialValues: {
+      subscription_duration: "",
+      price: "",
+      plan_type: "",
+    },
     onSubmit: async (values) => {
       try {
-        formik.resetForm();
-        setShowUpgradeFields(false);
+        console.log("FORM VALUES 👉", values);
+
+        // 👉 Call API here
+
         setOpen(false);
+        setShowUpgradeFields(false);
+        formik.resetForm();
       } catch (error) {
         console.error(error);
       }
     },
   });
+
   return (
     <CustomeModal
       open={open}
@@ -48,78 +49,76 @@ const RenewSubcription = ({ open, setOpen }) => {
       header="Renew Subscription"
       className="max-w-xl w-full"
     >
-      <form className="space-y-4" onSubmit={formik.handleSubmit}>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-slate-900">
+      <form className="space-y-5" onSubmit={formik.handleSubmit}>
+        {/* CURRENT PLAN */}
+        <div className="rounded-xl border bg-gray-50 p-4">
+          <h3 className="mb-3 text-sm font-semibold">
             Current Subscription Details
           </h3>
-          <div className="space-y-2 text-sm text-slate-700">
+
+          <div className="space-y-2 text-sm">
             {currentPackageDetails.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-start justify-between gap-4"
-              >
-                <span className="text-slate-500">{item.label}</span>
-                <span className="text-right font-medium text-slate-900">
-                  {item.value}
-                </span>
+              <div key={item.label} className="flex justify-between gap-4">
+                <span className="text-gray-500">{item.label}</span>
+                <span className="font-medium">{item.value}</span>
               </div>
             ))}
           </div>
         </div>
-        <span className="flex text-sm text-onboard_secondary">
-          Continue with current plan or upgrade before paying.
-        </span>
+
+        {/* INFO TEXT */}
+        <p className="text-sm text-gray-500">
+          Continue with your current plan or upgrade before proceeding to
+          payment.
+        </p>
+
+        {/* UPGRADE SECTION */}
         {showUpgradeFields && (
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <CustomeSelect
-                label="Subscription Duration"
-                name="subcription_duration"
-                options={subcriptionType}
-                value={formik.values.subcription_duration}
-                onChange={(value) =>
-                  formik.setFieldValue("subcription_duration", value)
-                }
-                error={
-                  formik.touched.subcription_duration &&
-                  formik.errors.subcription_duration
-                }
-                placeholder="Select Subscription Duration"
-              />
-              <CustomeSelect
-                label="key"
-                name="pay_cycle"
-                //   placeholder="Select Pay Cycle"
-                //   options={payCycleOptions}
-                //   value={formik.values.pay_cycle}
-                //   onChange={(value) => formik.setFieldValue("pay_cycle", value)}
-                //   error={formik.touched.pay_cycle && formik.errors.pay_cycle}
-              />
-            </div>
-            <div className="flex-1">
+          <div className="grid grid-cols-2 gap-4 border p-4 rounded-xl bg-white">
+            <CustomeSelect
+              label="Subscription Duration"
+              name="subscription_duration"
+              options={subscriptionType}
+              value={formik.values.subscription_duration}
+              onChange={(value) =>
+                formik.setFieldValue("subscription_duration", value)
+              }
+              placeholder="Select duration"
+            />
+
+            <Input
+              label="Price"
+              name="price"
+              value={formik.values.price}
+              onChange={formik.handleChange}
+              placeholder="Enter price"
+            />
+
+            <div className="col-span-2">
               <Input
-                label="key"
-                name="salary"
-                //   value={formik.values.salary}
-                //   onChange={formik.handleChange}
-                //   error={formik.touched.salary && formik.errors.salary}
+                label="Plan Type"
+                name="plan_type"
+                value={formik.values.plan_type}
+                onChange={formik.handleChange}
+                placeholder="e.g. Premium / Enterprise"
               />
             </div>
           </div>
         )}
-        <div className="flex justify-end gap-3">
+
+        {/* ACTIONS */}
+        <div className="flex justify-between items-center">
           <Button
             size="addbutton"
             type="button"
-            onClick={() => setShowUpgradeFields(!showUpgradeFields)}
+            variant="button_filter"
+            onClick={() => setShowUpgradeFields((prev) => !prev)}
           >
-            {showUpgradeFields
-              ? "Hide upgrade options"
-              : "Upgrade subscription"}
+            {showUpgradeFields ? "Cancel Upgrade" : "Upgrade Plan"}
           </Button>
-          <Button size="addbutton" type="submit">
-            Proceed to Pay
+
+          <Button type="submit" size="addbutton">
+            {showUpgradeFields ? "Upgrade & Pay" : "Renew & Pay"}
           </Button>
         </div>
       </form>
@@ -127,4 +126,4 @@ const RenewSubcription = ({ open, setOpen }) => {
   );
 };
 
-export default RenewSubcription;
+export default RenewSubscription;
