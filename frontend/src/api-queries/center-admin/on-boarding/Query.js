@@ -6,7 +6,8 @@ import {
   getPricingPage,
   calculateGst,
   finalizeOnboardCenter,
-  getPlatformById
+  getPlatformById,
+  getInvoice
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -102,3 +103,13 @@ export const useFinalizeOnboardCenterMutation = (id) => {
     }
   });
 };
+
+
+export const useInvoiceQuery = id => {
+  return useQuery({
+    queryKey: ['invoice', id],
+    queryFn: () => getInvoice(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}

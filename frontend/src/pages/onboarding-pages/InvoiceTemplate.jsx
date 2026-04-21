@@ -3,14 +3,15 @@ import { useNavigate } from "react-router-dom";
 import OnboardHeader from "./components/OnboardHeader";
 import SecondaryLayout from "@common/onboardlayouts/SecondaryLayout";
 import { Button } from "@pages/components/ui/button";
-import backarrow from "@assets/navigate-icons/backarrow.svg";
-import { Download, FileText, ReceiptIndianRupee } from "lucide-react";
+import { Download } from "lucide-react";
+import { useInvoiceQuery } from "@api-queries/center-admin/on-boarding/Query";
 
 const InvoiceTemplate = () => {
   const navigate = useNavigate();
   const cardRef = useRef(null);
   const centerDetailsRef = useRef(null);
   const billingSummaryRef = useRef(null);
+  const { data, isLoading } = useInvoiceQuery();
 
   const invoiceMeta = {
     invoiceId: "#848904",
@@ -47,10 +48,10 @@ const InvoiceTemplate = () => {
   return (
     <SecondaryLayout>
       <div className="min-h-screen overflow-y-auto px-4 pb-8 pt-6 sm:px-6 print:overflow-visible print:bg-white print:p-0">
-        <div className="mx-auto flex max-w-5xl justify-center print:max-w-none">
+        <div className="mx-auto flex max-w-4xl justify-center print:max-w-none">
           <div
             ref={cardRef}
-            className="w-full max-w-4xl rounded-[28px] bg-white px-5 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] sm:px-8 sm:py-8 print:rounded-none print:shadow-none"
+            className="w-full max-w-3xl rounded-[28px] bg-white px-5 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] sm:px-8 sm:py-8 print:rounded-none print:shadow-none"
           >
             <div className="mb-2 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <OnboardHeader />
