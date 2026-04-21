@@ -3,9 +3,14 @@ import { ClockAlert } from "lucide-react";
 import ExpiringTable from "./ExpiringTable";
 import { useRenewalExpiringQuery } from "@api-queries/super-admin/subcriptions/Query";
 import CustomFilter from "@common/components/CustomeFilter";
+import { useState } from "react";
 
 const ExpiringSoon = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+  });
   const { data, isLoading, isError } = useRenewalExpiringQuery(3);
+  console.log('5555555: ', data);
   return (
     <ContentLayout>
       <div className="flex justify-between">
@@ -30,19 +35,30 @@ const ExpiringSoon = () => {
               className={`flex rounded-full w-6 h-6 border text-xs font-semibold text-red_text justify-center items-center shadow-[0px_5px_15px_rgba(0,0,0,0.15)]
         `}
             >
-             {data?.days_until_expiry}
+              {data?.days_until_expiry}
             </span>
             <span className="flex text-xs text-grey_text"> Days Remaining</span>
           </div>
 
           <div className="flex flex-col justify-center items-center gap-2">
-            <span className="flex text-xs text-red_text font-semibold"> {data?.summary?.total_expiring_count} Centers</span>
-            <span className="flex text-xs text-grey_text"> ₹ {data?.summary?.total_expected_revenue} </span>
+            <span className="flex text-xs text-red_text font-semibold">
+              {" "}
+              {data?.summary?.total_expiring_count} Centers
+            </span>
+            <span className="flex text-xs text-grey_text">
+              {" "}
+              ₹ {data?.summary?.total_expected_revenue}{" "}
+            </span>
           </div>
         </div>
       </div>
 
-      <ExpiringTable />
+      <ExpiringTable
+        data={data?.daily_breakdown}
+        isLoading={isLoading}
+        tableParams={tableParams}
+        setTableParams={setTableParams}
+      />
     </ContentLayout>
   );
 };

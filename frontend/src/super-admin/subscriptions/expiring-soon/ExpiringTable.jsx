@@ -1,11 +1,13 @@
 import CustomFilter from "@common/components/CustomeFilter";
 import { DataTable } from "@common/components/DataTable";
 
-const ExpiringTable = () => {
+const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
+  console.log('data: ', data);
+  const flattenedCenters = data?.flatMap(day => day.centers) || [];
   const columns = [
-    { accessorKey: "full_name", header: "Center Name" },
-    { accessorKey: "billing", header: "Renewal Date" },
-    { accessorKey: "monthly_revenue", header: "Value" },
+    { accessorKey: "center_name", header: "Center Name" },
+    { accessorKey: "renewal_date", header: "Renewal Date" },
+    { accessorKey: "renewal_amount", header: "Value" },
     { accessorKey: "days_left", header: "Days left" },
     { accessorKey: "status", header: "Partner" },
   ];
@@ -15,12 +17,12 @@ const ExpiringTable = () => {
       <CustomFilter />
       <DataTable
         columns={columns}
-        data={[]}
-        // setTableParams={setTableParams}
-        // tableParams={tableParams}
-        // pagination={employees?.total}
-        // loading={isEmployeesLoading}
-        // paginationVisibile={true}
+        data={flattenedCenters || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        pagination={30}
+        loading={isLoading}
+        paginationVisibile={true}
         search={false}
       />
     </div>
