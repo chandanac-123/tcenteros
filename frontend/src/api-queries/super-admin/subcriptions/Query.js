@@ -5,6 +5,7 @@ import {
   getRenewalCalendar,
   getRenewalById,
   getRenewalExpiring,
+  getBillingHistory,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -49,6 +50,15 @@ export const useRenewalExpiringQuery = (data) => {
   return useQuery({
     queryKey: ["renewalExpiring", data],
     queryFn: () => getRenewalExpiring(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
+
+export const useBillingHistoryQuery = (id) => {
+  return useQuery({
+    queryKey: ["billingHistory", id],
+    queryFn: () => getBillingHistory(id),
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });

@@ -16,11 +16,17 @@ import {
   Split,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { useSubscriptionGetByIdQuery } from "@api-queries/super-admin/subcriptions/Query";
+import {
+  useBillingHistoryQuery,
+  useSubscriptionGetByIdQuery,
+} from "@api-queries/super-admin/subcriptions/Query";
 
 const DetailView = () => {
   const params = useParams();
   const { data } = useSubscriptionGetByIdQuery(params.id);
+  const { data: billing_history, isLoading } = useBillingHistoryQuery(
+    params.id,
+  );
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
   const revenueOrBilling = [
@@ -29,8 +35,13 @@ const DetailView = () => {
       name: "Revenue Summaries",
       component: <RevenueSummary data={data} />,
     },
-    { id: "billing", name: "Billing History", component: <BillingHistory /> },
+    {
+      id: "billing",
+      name: "Billing History",
+      component: <BillingHistory data={billing_history} />,
+    },
   ];
+  
   const cardsData = [
     {
       label: "Total Revenue",
