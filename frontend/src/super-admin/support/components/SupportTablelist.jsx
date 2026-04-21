@@ -1,19 +1,92 @@
+import { useAssignTicketMutation, useOpenSupportTicket, useSupportTickets } from '@api-queries/super-admin/support/Query';
 import { DataTable } from '@common/components/DataTable';
 import { Button } from '@pages/components/ui/button';
+import { BadgeCheck } from 'lucide-react';
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 
 const SupportTablelist = () => {
+    const { data, isLoading, error } = useSupportTickets();
+    const { mutate: openTicket } = useOpenSupportTicket();
+    const { mutate, isPending } = useAssignTicketMutation();
+
     const navigate = useNavigate();
 
+    const tickets = data?.tickets || data || [];
+    const ticketsSorted = [...tickets].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+    // console.log("Ticket", tickets);
+
+    const formatCustomDateTime = (dateString) => {
+        if (!dateString) return "-";
+
+        const date = new Date(dateString);
+
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+    };
+
+    const handleOpen = (id, status, allData) => {
+        console.log("Status", status);
+
+        if (status === "pending") {
+
+            openTicket(id, {
+                onSuccess: () => {
+                    console.log("Ticket opened");
+
+                    navigate(`/supportById/${id}`, {
+                        state: allData,
+                    });
+                },
+                onError: (err) => {
+                    console.error(err);
+                }
+            });
+        } else {
+
+            navigate(`/supportById/${id}`, {
+                state: allData,
+            });
+        }
+    };
+
+    console.log("Dattatatat:::", data);
+
+    const handleAssign = (ticketId, centerAdmin_id) => {
+        if (!ticketId || !centerAdmin_id) {
+            console.error("Select a center admin first");
+            return;
+        }
+
+        console.log("TicketId", ticketId);
+
+        mutate({
+            ticket_id: ticketId,   // make sure this exists
+            centeradmin_id: centerAdmin_id,
+        });
+    };
+
+    if (isLoading) return <p>Loading...</p>;
+    if (error) return <p>Error loading tickets</p>;
 
     const columns = [
         {
-            accessorKey: "ticketId",
+            accessorKey: "id",
             header: "Ticket ID",
         },
         {
-            accessorKey: "customerName",
+            accessorKey: "center_name",
             header: "Customer  Name",
         },
         {
@@ -21,8 +94,9 @@ const SupportTablelist = () => {
             header: "Subject",
         },
         {
-            accessorKey: "dateTime",
+            accessorKey: "created_at",
             header: "Ticket Date & Time",
+            cell: ({ row }) => formatCustomDateTime(row.getValue("created_at")),
         },
         {
             accessorKey: "status",
@@ -32,8 +106,9 @@ const SupportTablelist = () => {
 
                 const styles = {
                     pending: "bg-[#FFFED5] text-[#885503]",
-                    closed: "bg-[#D5FFE7] text-[#03881C]",
-                    assigned: "bg-[#E5D3F5] text-[#561290]"
+                    open: "bg-[#D5FFE7] text-[#03881C]",
+                    assigned: "bg-[#E5D3F5] text-[#561290]",
+                    closed: "bg-[#FFD7D5] text-[#880303]"
                 };
 
                 return (
@@ -49,29 +124,54 @@ const SupportTablelist = () => {
             accessorKey: "action",
             header: "Action",
             cell: ({ row }) => {
-                const id = row.original.ticketId;
-                const allData=ticketsData
-                
+                const id = row.original.id;
+                const status = row.original.status
+                const allData = ticketsData
+
                 return (
                     <div className="flex items-center gap-5">
                         <Button
-                        size='notificationbutton'
-                            onClick={() =>
-                                navigate(`/supportById/${id}`, {
-                                    state: allData, 
-                                    
-                                })
-                            }
+                            size='notificationbutton'
+                            onClick={() => handleOpen(
+                                row.original.id,
+                                row.original.status,
+                                ticketsData)}
                             variant="outline_secondary"
-                          
                         >
                             View Ticket
                         </Button>
-                        <Button
-                           size='notificationbutton'
-                        >
-                            Assign CenterAdmin
-                        </Button>
+
+                        {status == "assigned" ? (
+                                <Button
+                                    variant="outline_secondary"
+                                    className="text-[#561290] flex items-center justify-center gap-2"
+                                    size="notificationbutton"
+                                    onClick={() =>
+                                        handleAssign(
+                                            row.original.id,
+                                            row.original.centeradmin_id,
+                                        )
+                                    }
+                                    disabled={isPending}
+                                >
+                                    Assigned
+                                    <BadgeCheck size={16} color='#561290' />
+                                </Button>
+                        ) : (
+                            <Button
+                                size="notificationbutton"
+                                onClick={() =>
+                                    handleAssign(
+                                        row.original.id,
+                                        row.original.centeradmin_id,
+                                    )
+                                }
+                                disabled={isPending}
+                            >
+                                {isPending ? "Assigning..." : "Assign CenterAdmin"}
+                            </Button>
+                        )}
+
                     </div>
 
                 );
@@ -79,79 +179,7 @@ const SupportTablelist = () => {
         },
     ];
 
-    const ticketsData = [
-        {
-            ticketId: "TKT-1246",
-            customerName: "Alexandro Garnacho",
-            subject: "Issue in new time schedule",
-            dateTime: "13-07-2025 10:23 AM",
-            status: "Pending",
-        },
-        {
-            ticketId: "TKT-1247",
-            customerName: "Maya Thompson",
-            subject: "Login problems on mobile app",
-            dateTime: "14-07-2025 09:45 AM",
-            status: "Assigned",
-        },
-        {
-            ticketId: "TKT-1248",
-            customerName: "Carlos Rivera",
-            subject: "Error 500 on checkout page",
-            dateTime: "14-07-2025 11:30 AM",
-            status: "Closed",
-        },
-        {
-            ticketId: "TKT-1249",
-            customerName: "Lena Wu",
-            subject: "Unable to reset password",
-            dateTime: "15-07-2025 08:50 AM",
-            status: "Pending",
-        },
-        {
-            ticketId: "TKT-1250",
-            customerName: "Derek Johnson",
-            subject: "Feature request: Dark mode",
-            dateTime: "15-07-2025 10:15 AM",
-            status: "Closed",
-        },
-        {
-            ticketId: "TKT-1251",
-            customerName: "Nina Patel",
-            subject: "App crashes on startup",
-            dateTime: "16-07-2025 09:00 AM",
-            status: "Closed",
-        },
-        {
-            ticketId: "TKT-1252",
-            customerName: "Omar Ali",
-            subject: "Payment gateway timeout",
-            dateTime: "16-07-2025 11:45 AM",
-            status: "Pending",
-        },
-        {
-            ticketId: "TKT-1253",
-            customerName: "Sophia Martinez",
-            subject: "Incorrect invoice details",
-            dateTime: "17-07-2025 10:05 AM",
-            status: "Closed",
-        },
-        {
-            ticketId: "TKT-1254",
-            customerName: "Ethan Clark",
-            subject: "Slow loading dashboard",
-            dateTime: "17-07-2025 01:20 PM",
-            status: "Assigned",
-        },
-        {
-            ticketId: "TKT-1255",
-            customerName: "Isabella Rossi",
-            subject: "Email notifications not sent",
-            dateTime: "18-07-2025 09:40 AM",
-            status: "Pending",
-        },
-    ];
-
+    const ticketsData = ticketsSorted;
     return (
         <div>
             <div className='shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4'>
