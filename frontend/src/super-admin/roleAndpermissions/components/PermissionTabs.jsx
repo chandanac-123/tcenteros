@@ -20,11 +20,20 @@ const PermissionTabs = () => {
   const [openModules, setOpenModules] = useState({});
   const { data, isFetching } = usePermissionQuery();
   const { mutateAsync: create_permission } = useCreatePermissionMutation();
-  const { mutate: delete_designation } = useDeleteDesignationMutation();
+  const { mutateAsync: delete_designation } = useDeleteDesignationMutation();
 
+  // Deletes a role/designation
   const handleDelete = async (id) => {
     try {
-      await delete_designation(id);
+      await delete_designation(id); // API call to delete role
+      setPermissions((prev) => {
+        // Remove deleted role from local state
+        const updatedPermissions = { ...prev };
+        delete updatedPermissions[id];
+        return updatedPermissions;
+      });
+      // Reset UI
+      setSelectedRole(null);
       setDeleteOpen(false);
     } catch (err) {
       return err;
@@ -32,6 +41,7 @@ const PermissionTabs = () => {
   };
 
   const toggleCollapse = (moduleId) => {
+    // Toggle expand/collapse of a module UI
     setOpenModules((prev) => ({
       ...prev,
       [moduleId]: !prev[moduleId],
@@ -44,13 +54,10 @@ const PermissionTabs = () => {
       try {
         const roleData = permissions[selectedRole] || {};
         const cleanedPermissions = {};
-
         permissionData.forEach((module) => {
           const moduleState = roleData[module.id];
-
           //  ALWAYS include dashboard
           if (module.id !== "dashboard" && !moduleState?.enabled) return;
-
           //  CASE 1: NO SUBMODULES
           if (!module.submodules || module.submodules.length === 0) {
             cleanedPermissions[module.id] = {
@@ -58,7 +65,6 @@ const PermissionTabs = () => {
             };
             return;
           }
-
           //  CASE 2: HAS SUBMODULES
           const modulePayload = {
             enabled: true,
@@ -71,7 +77,6 @@ const PermissionTabs = () => {
               modulePayload.submodules["overview"] = true;
               return;
             }
-
             const subState = moduleState?.submodules?.[sub.id];
             if (!subState?.enabled) return;
 
@@ -132,6 +137,7 @@ const PermissionTabs = () => {
     },
   });
 
+  // Converts API response → UI-friendly structure
   const transformPermissions = (apiPermissions) => {
     const result = {};
 
@@ -163,20 +169,21 @@ const PermissionTabs = () => {
     return result;
   };
 
+  // Enable/Disable entire module
   const toggleModule = (moduleId) => {
     setPermissions((prev) => {
       const currentEnabled = prev[selectedRole]?.[moduleId]?.enabled;
       const module = permissionData.find((m) => m.id === moduleId);
 
       let submodules = {};
-
+      // If enabling → auto-enable all submodules
       if (!currentEnabled) {
         module?.submodules?.forEach((sub) => {
           if (module.id === "dashboard" && sub.id === "overview") {
             submodules[sub.id] = { enabled: true };
             return;
           }
-
+          // If submodule has actions → enable all
           if (module.sub_submodules?.[sub.id]) {
             const actions = {};
             module.sub_submodules[sub.id].forEach((action) => {
@@ -202,13 +209,14 @@ const PermissionTabs = () => {
     });
   };
 
+  // Enable/Disable a submodule
   const toggleSubmodule = (moduleId, subId) => {
     setPermissions((prev) => {
       const moduleState = prev[selectedRole]?.[moduleId] || {};
       const submodules = moduleState.submodules || {};
 
       const current = submodules?.[subId]?.enabled;
-
+      // Toggle submodule
       const updatedSubmodules = {
         ...submodules,
         [subId]: {
@@ -216,6 +224,7 @@ const PermissionTabs = () => {
           actions: submodules?.[subId]?.actions || {},
         },
       };
+      // Check if ANY submodule is enabled
       const anyEnabled = Object.values(updatedSubmodules).some(
         (sub) => sub.enabled,
       );
@@ -232,19 +241,20 @@ const PermissionTabs = () => {
     });
   };
 
+  // Toggle individual action inside a submodule
   const toggleSubSubmodule = (moduleId, subId, actionId) => {
     setPermissions((prev) => {
       const moduleState = prev[selectedRole]?.[moduleId] || {};
       const submodules = moduleState.submodules || {};
       const subState = submodules?.[subId] || {};
-
+      // Toggle action
       const updatedActions = {
         ...subState.actions,
         [actionId]: !subState.actions?.[actionId],
       };
-
+      // Check if any action is enabled
       const anyActionEnabled = Object.values(updatedActions).some((v) => v);
-
+      // Update submodule
       const updatedSubmodules = {
         ...submodules,
         [subId]: {
@@ -252,7 +262,7 @@ const PermissionTabs = () => {
           actions: updatedActions,
         },
       };
-
+      // Check if any submodule is enabled
       const anySubEnabled = Object.values(updatedSubmodules).some(
         (sub) => sub.enabled,
       );
@@ -274,11 +284,17 @@ const PermissionTabs = () => {
   const selectedRoleData = data?.data?.find(
     (role) => role.designation_id === selectedRole,
   );
-
+  // Initialize permissions from API
   useEffect(() => {
     if (data?.data?.length) {
       const firstRole = data.data[0];
-      setSelectedRole((prev) => prev || firstRole.designation_id);
+      setSelectedRole((prev) => {
+        const roleExists = data.data.some(
+          (role) => role.designation_id === prev,
+        );
+        return roleExists ? prev : firstRole.designation_id;
+      });
+      // Transform API permissions → UI state
       const formattedPermissions = {};
       data.data.forEach((role) => {
         formattedPermissions[role.designation_id] = transformPermissions(
@@ -288,7 +304,7 @@ const PermissionTabs = () => {
       setPermissions(formattedPermissions);
     }
   }, [data]);
-
+  // Determines partial checkbox state (some selected but not all)
   const isIndeterminate = (module) => {
     const moduleState = rolePermissions[module.id];
     if (!moduleState?.submodules) return false;
@@ -483,7 +499,7 @@ const PermissionTabs = () => {
           setOpen={setDeleteOpen}
           header="Delete Designation"
           description={`Are you sure you want to delete ${selectedRoleData?.designation_name || "this designation"}?`}
-          onConfirm={handleDelete}
+          onConfirm={() => handleDelete(selectedRole)}
         />
       </div>
     </ContentLayout>

@@ -7,7 +7,7 @@ import {
   getDesignation,
   getEmployee,
   getPermission,
-  deleteDesignation
+  deleteDesignation,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -22,11 +22,11 @@ export const useDesignationQuery = (data) => {
 
 export const useCreateDesignationMutation = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data) => createDesignation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: ["permissions"] });
       showSuccess("Designation created successfully");
     },
     onError: (err) => {
@@ -36,17 +36,19 @@ export const useCreateDesignationMutation = () => {
   });
 };
 
-export const useDeleteDesignationMutation = () => {
+export const useDeleteDesignationMutation = (id) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id) => deleteDesignation(id),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: ["permissions"] });
       showSuccess(data?.detail || "Designation deleted successfully");
     },
     onError: (err) => {
       showError(
-        err?.response?.data?.message || "Failed to delete selected designations"
+        err?.response?.data?.message ||
+          "Failed to delete selected designations",
       );
       return err;
     },
@@ -64,7 +66,6 @@ export const useEmployeeQuery = (data) => {
 
 export const useCreateEmployeeMutation = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data) => createEmployee(data),
     onSuccess: () => {
@@ -89,7 +90,6 @@ export const usePermissionQuery = (data) => {
 
 export const useCreatePermissionMutation = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data) => createPermission(data),
     onSuccess: () => {
@@ -113,7 +113,7 @@ export const useDeleteEmployeeMutation = () => {
     },
     onError: (err) => {
       showError(
-        err?.response?.data?.message || "Failed to delete selected employees"
+        err?.response?.data?.message || "Failed to delete selected employees",
       );
       return err;
     },
