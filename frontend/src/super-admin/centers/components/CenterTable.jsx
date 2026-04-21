@@ -3,42 +3,70 @@ import { DataTable } from "@common/components/DataTable";
 import { Badge } from "@pages/components/ui/badge";
 import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
 import { Briefcase, Building2, SignalHigh, UserPlus } from "lucide-react";
+const billingVariant = { yearly: "follow_up", monthly: "future_lead" };
 const statusVariant = {
-  in: "active",
-  out: "inactive",
+  active: "active",
+  inactive: "inactive",
+  grace: "future_lead",
+  suspended: "suspended",
 };
-const billingVariant = {
-  in: "active",
-  out: "inactive",
-};
-const CenterTable = () => {
+const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
+  console.log("data: ", data);
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     {
-      accessorKey: "billing",
+      accessorKey: "subscription_duration",
       header: "Billing",
       cell: ({ row }) => {
-        const billing = row.original.billing;
+        const billing = row.original.subscription_duration;
         return (
           <Badge
-            label={billing === "in" ? "Incoming" : "Outgoing"}
+            label={
+              billing === "yearly"
+                ? "Yearly"
+                : billing === "monthly"
+                  ? "Monthly"
+                  : "Null"
+            }
             variant={billingVariant[billing]}
           />
         );
       },
     },
-    { accessorKey: "monthly_revenue", header: "Monthly Revenue" },
+    {
+      accessorKey: "current_month_revenue",
+      header: "Monthly Revenue",
+      cell: ({ row }) => {
+        return (
+          <span>
+            {row.original.current_month_revenue
+              ? `$${row.original.current_month_revenue}`
+              : "N/A"}
+          </span>
+        );
+      },
+    },
+    ,
     { accessorKey: "renewal_date", header: "Renewal Date" },
     {
-      accessorKey: "days_left",
-      header: "Days Left",
+      accessorKey: "days_left_for_renewal",
+      header: "Days left",
       cell: ({ row }) => {
-        const billing = row.original.billing;
+        const days = row.original.days_left_for_renewal;
+        let colorClass = "";
+        if (days < 5) {
+          colorClass = "text-red_text border-red_text";
+        } else if (days <= 10) {
+          colorClass = "text-yellow border-yellow-500";
+        } else {
+          colorClass = "text-green_text border-green_text";
+        }
         return (
-          <div className="flex items-center gap-2">
-            label={billing === "in" ? "Incoming" : "Outgoing"}
-            variant={billingVariant[billing]}
-          </div>
+          <span
+            className={`font-medium ${colorClass} text-xs border px-2 rounded-md`}
+          >
+            {days !== null && days !== undefined ? `${days} d` : "N/A"}
+          </span>
         );
       },
     },
@@ -49,7 +77,17 @@ const CenterTable = () => {
         const status = row.original.status;
         return (
           <Badge
-            label={status === "in" ? "Incoming" : "Outgoing"}
+            label={
+              status === "active"
+                ? "Active"
+                : status === "inactive"
+                  ? "Inactive"
+                  : status === "grace"
+                    ? "Grace"
+                    : status === "suspended"
+                      ? "Suspended"
+                      : "Null"
+            }
             variant={statusVariant[status]}
           />
         );
@@ -70,83 +108,25 @@ const CenterTable = () => {
     },
   ];
 
-  const data = [
-    {
-      id: 1,
-      center_name: "FitZone Kochi",
-      billing: "Yearly",
-      monthly_revenue: "₹1,20,000",
-      renewal_date: "2026-05-10",
-      days_left: 20,
-      status: "Active",
-      partner: "Gold",
-      total_revenue: "₹8,50,000",
-    },
-    {
-      id: 2,
-      center_name: "PowerHouse Gym",
-      billing: "Monthly",
-      monthly_revenue: "₹95,000",
-      renewal_date: "2026-04-28",
-      days_left: 8,
-      status: "Grace",
-      partner: "Silver",
-      total_revenue: "₹6,20,000",
-    },
-    {
-      id: 3,
-      center_name: "Muscle Factory",
-      billing: "Yearly",
-      monthly_revenue: "₹80,000",
-      renewal_date: "2026-04-22",
-      days_left: 2,
-      status: "Expiring Soon",
-      partner: "Due",
-      total_revenue: "₹4,75,000",
-    },
-    {
-      id: 4,
-      center_name: "Elite Fitness Club",
-      billing: "Yearly",
-      monthly_revenue: "₹1,50,000",
-      renewal_date: "2026-06-15",
-      days_left: 55,
-      status: "Suspended",
-      partner: "Gold",
-      total_revenue: "₹10,20,000",
-    },
-    {
-      id: 5,
-      center_name: "Iron Paradise",
-      billing: "Monthly",
-      monthly_revenue: "₹60,000",
-      renewal_date: "2026-04-18",
-      days_left: 0,
-      status: "Failed",
-      partner: "Basic",
-      total_revenue: "₹3,10,000",
-    },
-  ];
-
   const cardsData = [
     {
       label: "Total Number Of Centers",
-      value: 0,
+      value: data?.summary?.total_centers,
       icon: <Building2 size={16} strokeWidth={2.75} />,
     },
     {
       label: "Total Number Of Members",
-      value: 0,
+      value: data?.summary?.total_members,
       icon: <UserPlus size={16} strokeWidth={2.75} />,
     },
     {
       label: "Total Revenue",
-      value: 0,
+      value: data?.summary?.total_platform_revenue,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
     },
     {
       label: "Average Growth",
-      value: 0,
+      value: data?.summary?.average_growth_percentage,
       icon: <SignalHigh size={16} strokeWidth={2.75} />,
     },
   ];
@@ -161,12 +141,13 @@ const CenterTable = () => {
       </div> */}
       <DataTable
         columns={columns}
-        data={data}
-        loading={false}
-        // tableParams={tableParams}
-        // setTableParams={setTableParams}
-        pagination={11}
+        data={data?.subscriptions || []}
+        setTableParams={setTableParams}
+        tableParams={tableParams}
+        pagination={data?.pagination?.total}
+        loading={isLoading}
         paginationVisibile={true}
+        search={false}
       />
     </div>
   );

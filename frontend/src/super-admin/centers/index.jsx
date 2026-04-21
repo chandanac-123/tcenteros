@@ -1,10 +1,13 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { CircleArrowDown, UserRoundCog } from "lucide-react";
 import CenterTable from "./components/CenterTable";
-import CustomFilter from "@common/components/CustomeFilter";
 import { Button } from "@pages/components/ui/button";
+import { useState } from "react";
+import { useSubscriptionsQuery } from "@api-queries/super-admin/subcriptions/Query";
 
 const Centers = () => {
+  const [tableParams, setTableParams] = useState({ page: 1 });
+  const { data, isLoading, isError } = useSubscriptionsQuery(tableParams);
   return (
     <ContentLayout>
       <div className="flex items-center justify-between ">
@@ -30,7 +33,12 @@ const Centers = () => {
       </div>
 
       <div>
-        <CenterTable />
+        <CenterTable
+          data={data}
+          tableParams={tableParams}
+          setTableParams={setTableParams}
+          isLoading={isLoading}
+        />
       </div>
     </ContentLayout>
   );
