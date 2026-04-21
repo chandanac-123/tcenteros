@@ -83,6 +83,7 @@ import Networking from '@super-admin/networking'
 import Support from '@super-admin/support'
 import RoleAndPermissions from '@super-admin/roleAndpermissions'
 import SupportById from '@super-admin/support/supportById'
+import InvoiceTemplate from '@pages/onboarding-pages/InvoiceTemplate'
 
 export const routes = [
   //public routes
@@ -96,6 +97,7 @@ export const routes = [
   { key: 8, path: '/contact-details', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: ContactDetails, menubar: false, permissionKey: true },
   { key: 9, path: '/pricing-page', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: PricingPage, menubar: false, permissionKey: true },
   { key: 10, path: '/invoice-summary', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: InvoiceSummary, menubar: false, permissionKey: true },
+  { key: 10, path: '/invoice-download', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: InvoiceTemplate, menubar: false, permissionKey: true },
   { key: 11, path: '/management', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: CenterManagement, menubar: false, permissionKey: true },
   { key: 13, path: '/attendance-tracking', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: AttendanceTracking, menubar: false, permissionKey: true },
   { key: 16, path: '/sellable-item', label: '', privetRoute: false, isSubRoute: false, pageTitle: '', component: SellableItem, menubar: false, permissionKey: true },
