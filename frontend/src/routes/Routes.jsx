@@ -84,8 +84,14 @@ import Support from '@super-admin/support'
 import RoleAndPermissions from '@super-admin/roleAndpermissions'
 import SupportById from '@super-admin/support/supportById'
 import InvoiceTemplate from '@pages/onboarding-pages/InvoiceTemplate'
+import PartnerOnboarding from '@partner/onboarding'
+import Agreement from '@partner/onboarding/Agreement'
+import Payment from '@partner/onboarding/Payment'
+import PaymentSuccessfull from '@partner/onboarding/PaymentSuccessfull'
 import LeadsManagement from '@partner/leads-management'
 import AddnewLeads from '@partner/leads-management/components/AddnewLeads'
+import EarningsAndPayouts from '@partner/earnings-payouts'
+import Renewals from '@partner/renewals'
 
 export const routes = [
   //public routes
@@ -163,10 +169,16 @@ export const routes = [
   { key: 55, path: '/roleandpermission', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
-  //Partner Routes
-  { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 101, path: '/add-newLeads', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: AddnewLeads, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
+  //partner public routes
+   { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
+   { key: 58, path: '/agreement', privetRoute: false, isSubRoute: false, pageTitle: '', component: Agreement, menubar: false, permissionKey: true },
+   { key: 59, path: '/payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: Payment, menubar: false, permissionKey: true },
+   { key: 60, path: '/payment-successful', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentSuccessfull, menubar: false, permissionKey: true },
 
-  { key: 58, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isPartner: true },
-  { key: 59, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isPartner: true },
+  //Partner Routes
+  { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Leads Management', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isPartner: true },
+  { key: 101, path: '/add-newLeads', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: AddnewLeads, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
+
+  { key: 58, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <UserRoundCog />, menubar: true, permissionKey: true, isPartner: true },
+  { key: 59, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <SettingsIcon />, menubar: true, permissionKey: true, isPartner: true },
 ]

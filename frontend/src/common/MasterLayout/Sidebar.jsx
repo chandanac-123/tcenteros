@@ -18,14 +18,16 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
+const isPartner = role === "partner";
 
   const filteredRoutes = useMemo(() => {
     return routes.filter((item) => {
       if (item.alwaysVisible) return true; // Show for all roles
       if (isSuperAdmin) return item.isSuperAdmin === true;
+      if (isPartner) return item.isPartner === true;
       return item.isSuperAdmin !== true;
     });
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, isPartner]);
 
   useEffect(() => {
     const activeMenu = filteredRoutes.find((item) => isSubmenuActive(item));

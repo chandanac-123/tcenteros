@@ -19,7 +19,6 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, 'src/hooks'),
       '@super-admin': path.resolve(__dirname, 'src/super-admin'),
       '@partner': path.resolve(__dirname, 'src/partner'),
-
     },
   },
 });

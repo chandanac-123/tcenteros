@@ -1,6 +1,22 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+const initialPartnerOnboardingDraft = {
+  full_name: '',
+  mobile: '',
+  email: '',
+  address_line_1: '',
+  city: '',
+  state: '',
+  country: '',
+  previous_sales_experience: '',
+  account_holder_name: '',
+  bank_name: '',
+  account_number: '',
+  ifsc_code: '',
+  terms_accepted: false
+}
+
 export const useOnboardingStore = create(
   persist(
     (set, get) => ({
@@ -10,6 +26,19 @@ export const useOnboardingStore = create(
       centerTools: {},
       onboardId: null,
       setOnboardId: id => set({ onboardId: id }),
+      partnerOnboardingResponse: null,
+      setPartnerOnboardingResponse: response =>
+        set({ partnerOnboardingResponse: response }),
+      partnerOnboardingDraft: initialPartnerOnboardingDraft,
+      setPartnerOnboardingDraft: values =>
+        set(state => ({
+          partnerOnboardingDraft: {
+            ...state.partnerOnboardingDraft,
+            ...values
+          }
+        })),
+      resetPartnerOnboardingDraft: () =>
+        set({ partnerOnboardingDraft: initialPartnerOnboardingDraft }),
 
       // UPDATED: store enabled + feature_id
       setTool: (toolKey, enabled, featureId, featureName) =>
@@ -57,6 +86,8 @@ export const useOnboardingStore = create(
           featureIdMap: {},
           centerTools: {},
           onboardId: null,
+          partnerOnboardingResponse: null,
+          partnerOnboardingDraft: initialPartnerOnboardingDraft,
           attendanceType: null,
           sellableItem: 'merchandise',
           typeSelectionId: '',
