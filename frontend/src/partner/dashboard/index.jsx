@@ -1,10 +1,11 @@
+import ContentLayout from '@common/MasterLayout/ContentLayout'
 import React from 'react'
 
 const PartnerDashboard = () => {
   return (
-    <div>
+    <ContentLayout>
       aaaaaaaaaaaa
-    </div>
+    </ContentLayout>
   )
 }
 
