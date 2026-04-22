@@ -4,7 +4,7 @@ export const onboardPartnerDetailApiCall = (details) =>
   axiosInstance.post("/partner/onboarding", details);
 
 export const onboardPaymentFeeApiCall = (data) =>
-  axiosInstance.get("/partner/onboarding/fee", data);
+  axiosInstance.get(`/partner/onboarding/fee?email=${data}`);
 
 export const onboardPartnerPaymentApiCall = (id, details) =>
   axiosInstance.post(`/partner/onboarding/${id}/pay`, details);

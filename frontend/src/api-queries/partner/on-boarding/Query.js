@@ -7,10 +7,10 @@ import {
 } from "./Urls";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export const usePaymentFeeQuery = () => {
+export const usePaymentFeeQuery = (data) => {
   return useQuery({
-    queryKey: ["partnerOnboardingPaymentFee"],
-    queryFn: getPaymentFee,
+    queryKey: ["partnerOnboardingPaymentFee", data],
+    queryFn: () => getPaymentFee(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });

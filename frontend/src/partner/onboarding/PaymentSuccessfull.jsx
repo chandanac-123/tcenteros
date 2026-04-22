@@ -63,7 +63,7 @@ const PaymentSuccessfull = () => {
               onClick={() => navigate("/dashboard")}
               className="w-full justify-center"
             >
-              Go to Dashboard
+              Go to Login
             </Button>
           </div>
         </div>

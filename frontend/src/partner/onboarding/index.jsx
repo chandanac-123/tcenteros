@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 import PartnerLayout from "./components/Layout";
 import HeaderProgress from "./components/HaederProgress";
-import CustomeSelect from "@common/components/CustomeSelect";
 import { Input } from "@pages/components/ui/input";
 import { Button } from "@pages/components/ui/button";
 import { useFormik } from "formik";
@@ -12,18 +11,32 @@ import CountrySelect from "@common/components/CountrySelect";
 import { Textarea } from "@pages/components/ui/textarea";
 import { ChevronDown, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useOnboardingStore } from "@store/onboardingStore";
 
 const PartnerOnboarding = () => {
   const navigate = useNavigate();
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const partnerOnboardingDraft = useOnboardingStore(
+    (state) => state.partnerOnboardingDraft,
+  );
+  const setPartnerOnboardingDraft = useOnboardingStore(
+    (state) => state.setPartnerOnboardingDraft,
+  );
 
   const initialValues = {
-    full_name: "",
-    email: "",
-    mobile: "",
-    country: "",
-    state: "",
-    city: "",
+    full_name: partnerOnboardingDraft?.full_name || "",
+    email: partnerOnboardingDraft?.email || "",
+    mobile: partnerOnboardingDraft?.mobile || "",
+    address_line_1: partnerOnboardingDraft?.address_line_1 || "",
+    country: partnerOnboardingDraft?.country || "",
+    state: partnerOnboardingDraft?.state || "",
+    city: partnerOnboardingDraft?.city || "",
+    previous_sales_experience:
+      partnerOnboardingDraft?.previous_sales_experience || "",
+    account_holder_name: partnerOnboardingDraft?.account_holder_name || "",
+    bank_name: partnerOnboardingDraft?.bank_name || "",
+    account_number: partnerOnboardingDraft?.account_number || "",
+    ifsc_code: partnerOnboardingDraft?.ifsc_code || "",
   };
 
   const formik = useFormik({
@@ -31,6 +44,8 @@ const PartnerOnboarding = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        setPartnerOnboardingDraft(values);
+        navigate("/agreement");
       } catch (error) {}
     },
   });
@@ -41,41 +56,41 @@ const PartnerOnboarding = () => {
         <div className="flex gap-3 flex-col">
           <span className="flex text-md font-semibold">Basic Information</span>
 
-          <form className="grid grid-cols-1 gap-4 md:grid-cols-2 px-4 ">
+          <form
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 px-4 "
+            onSubmit={formik.handleSubmit}
+          >
             <Input
               label="Full Name"
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
+              name="full_name"
+              value={formik.values.full_name}
+              onChange={formik.handleChange}
             />
             <Input
               label="Phone Number"
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
+              name="mobile"
+              value={formik.values.mobile}
+              onChange={formik.handleChange}
             />
             <Input
               label="Email"
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
+              name="email"
+              value={formik.values.email}
+              onChange={formik.handleChange}
             />
 
             <CitySelect
-              country={formik.values.countryCode}
+              country={formik.values.country}
               value={formik.values.city}
               onChange={(data) => {
                 formik.setFieldValue("city", data.city);
-                formik.setFieldValue("state", data.state); // auto-fill
-                formik.setFieldValue("country", data.country); // auto-fill country
+                formik.setFieldValue("state", data.state);
+                formik.setFieldValue("country", data.country);
               }}
               label="City"
             />
             <StateSelect
-              country={formik.values.countryCode}
+              country={formik.values.country}
               value={formik.values.state}
               onChange={(val) => formik.setFieldValue("state", val)}
               label="State"
@@ -89,17 +104,17 @@ const PartnerOnboarding = () => {
             />
             <Textarea
               label="Address"
+              name="address_line_1"
               rows={3}
-              // value={content}
-              // onChange={(event) => setContent(event.target.value)}
-              // disabled={isFetching || isCreating}
+              value={formik.values.address_line_1}
+              onChange={formik.handleChange}
             />
             <Textarea
               label="Previous Sales Experience (Optional)"
+              name="previous_sales_experience"
               rows={3}
-              // value={content}
-              // onChange={(event) => setContent(event.target.value)}
-              // disabled={isFetching || isCreating}
+              value={formik.values.previous_sales_experience}
+              onChange={formik.handleChange}
             />
 
             <button
@@ -119,37 +134,33 @@ const PartnerOnboarding = () => {
                 </span>
                 <Input
                   label="Account Holder Name "
-                  name="salary"
-                  // value={formik.values.salary}
-                  // onChange={formik.handleChange}
-                  // error={formik.touched.salary && formik.errors.salary}
+                  name="account_holder_name"
+                  value={formik.values.account_holder_name}
+                  onChange={formik.handleChange}
                 />
                 <Input
                   label="Bank Name "
-                  name="salary"
-                  // value={formik.values.salary}
-                  // onChange={formik.handleChange}
-                  // error={formik.touched.salary && formik.errors.salary}
+                  name="bank_name"
+                  value={formik.values.bank_name}
+                  onChange={formik.handleChange}
                 />
                 <Input
                   label="Account Number "
-                  name="salary"
-                  // value={formik.values.salary}
-                  // onChange={formik.handleChange}
-                  // error={formik.touched.salary && formik.errors.salary}
+                  name="account_number"
+                  value={formik.values.account_number}
+                  onChange={formik.handleChange}
                 />
                 <Input
                   label="IFSC Code "
-                  name="salary"
-                  // value={formik.values.salary}
-                  // onChange={formik.handleChange}
-                  // error={formik.touched.salary && formik.errors.salary}
+                  name="ifsc_code"
+                  value={formik.values.ifsc_code}
+                  onChange={formik.handleChange}
                 />
               </>
             )}
 
             <div className="flex w-full justify-center md:col-span-2">
-              <Button  onClick={() => navigate('/agreement')} size="addbutton" type="button" className="w-full justify-center">
+              <Button size="addbutton" type="submit" className="w-full justify-center">
                 Continue to Agreement <MoveRight />
               </Button>
             </div>

@@ -4,9 +4,31 @@ import { Card } from "@pages/components/ui/card";
 import { CircleCheck, MoveRight } from "lucide-react";
 import { Button } from "@pages/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import {
+  usePaymentFeeQuery,
+  useCreateOnboardingPaymentMutation,
+} from "@api-queries/partner/on-boarding/Query";
+import { useOnboardingStore } from "@store/onboardingStore";
 
 const Payment = () => {
   const navigate = useNavigate();
+  const partnerEmail = useOnboardingStore(
+    (state) => state.partnerOnboardingDraft?.email,
+  );
+
+  const { data } = usePaymentFeeQuery(partnerEmail);
+  const { mutateAsync: createOnboardingPayment } =
+    useCreateOnboardingPaymentMutation();
+
+  const handlePayment = async () => {
+    try {
+      const response = await createOnboardingPayment();
+      navigate("/payment-successful", { state: { paymentResponse: response } });
+    } catch (error) {
+      console.log("Payment initiation failed: ", error);
+    }
+  };
+
   return (
     <PartnerLayout>
       <div className="flex h-full w-full flex-col gap-2 overflow-y-auto p-4">
@@ -26,7 +48,9 @@ const Payment = () => {
                     One-time registration fee to activate your reseller account
                   </span>
                 </div>
-                <div>2500</div>
+                <div className="flex text-base font-medium text-onboard_primary">
+                  ₹{data?.onboarding_fee}
+                </div>
               </div>
 
               <div className="flex bg-grey/5  items-center p-6 rounded-lg mt-4">
@@ -59,11 +83,11 @@ const Payment = () => {
           <div className="flex w-full justify-center md:col-span-2">
             <Button
               size="addbutton"
-              type="button"
-              onClick={() => navigate("/payment-successful")}
+              type="submit"
+              onClick={handlePayment}
               className="w-full justify-center bg-[#088217] hover:bg-[#088217]"
             >
-              Pay 2,500 & Activate Account
+              Pay ₹ {data?.onboarding_fee} & Activate Account
             </Button>
           </div>
         </div>
