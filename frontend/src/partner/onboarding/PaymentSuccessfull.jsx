@@ -4,15 +4,31 @@ import { Card } from "@pages/components/ui/card";
 import { Button } from "@pages/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Check } from "lucide-react";
+import {
+  usePaymentSuccessQuery,
+} from "@api-queries/partner/on-boarding/Query";
+import { useOnboardingStore } from "@store/onboardingStore";
+import { formatTextDate } from "@utils/helper";
 
 const PaymentSuccessfull = () => {
   const navigate = useNavigate();
+  const onboardId = useOnboardingStore((state) => state.onboardId);
+  const { data: paymentSuccessData } = usePaymentSuccessQuery(onboardId);
 
   const accountDetails = [
-    { label: "Reseller ID", value: "RSL - 2026-4656" },
-    { label: "Territory", value: "Mumbai District" },
-    { label: "Status", value: "Active", valueClassName: "text-[#09A61C]" },
-    { label: "Activation Date", value: "04 - Mar - 2026" },
+    { label: "Reseller ID", value: paymentSuccessData?.reseller_id || "N/A" },
+    { label: "Territory", value: paymentSuccessData?.city || "N/A" },
+    {
+      label: "Status",
+      value: paymentSuccessData?.status
+        ? paymentSuccessData.status.charAt(0).toUpperCase() + paymentSuccessData.status.slice(1).toLowerCase()
+        : "N/A",
+      valueClassName: "text-[#09A61C]",
+    },
+    {
+      label: "Activation Date",
+      value: formatTextDate(paymentSuccessData?.activation_date) || "N/A",
+    },
   ];
 
   return (
@@ -60,7 +76,7 @@ const PaymentSuccessfull = () => {
             <Button
               size="addbutton"
               type="button"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/login")}
               className="w-full justify-center"
             >
               Go to Login

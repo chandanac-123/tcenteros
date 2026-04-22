@@ -81,10 +81,10 @@ const Agreement = () => {
             <br /> <br /> Code of Conduct <br />
             • Represent products accurately and professionally <br />• Maintain
             ethical sales practices <br /> • Respond to assigned leads promptly
-             <br/>• No misrepresentation of pricing or features Refund & Cancellation{" "}
-            <br /> • Onboarding fee of ₹2,500 is non-refundable <br />• Reseller
-            account can be deactivated after 60 days of inactivity <br />• You
-            can reactivate your account anytime
+            <br />• No misrepresentation of pricing or features Refund &
+            Cancellation <br /> • Onboarding fee of ₹2,500 is non-refundable{" "}
+            <br />• Reseller account can be deactivated after 60 days of
+            inactivity <br />• You can reactivate your account anytime
           </span>
           {/* <Textarea
             label=""

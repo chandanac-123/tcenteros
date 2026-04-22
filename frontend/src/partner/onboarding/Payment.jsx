@@ -15,14 +15,14 @@ const Payment = () => {
   const partnerEmail = useOnboardingStore(
     (state) => state.partnerOnboardingDraft?.email,
   );
-
   const { data } = usePaymentFeeQuery(partnerEmail);
+ const onboardId = useOnboardingStore((state) => state.onboardId);
   const { mutateAsync: createOnboardingPayment } =
     useCreateOnboardingPaymentMutation();
 
   const handlePayment = async () => {
     try {
-      const response = await createOnboardingPayment();
+      const response = await createOnboardingPayment(onboardId);
       navigate("/payment-successful", { state: { paymentResponse: response } });
     } catch (error) {
       console.log("Payment initiation failed: ", error);

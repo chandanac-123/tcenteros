@@ -25,9 +25,9 @@ export const getPaymentFee = async (data) => {
   }
 }
 
-export const createOnboardingPayment = async (id, details) => {
+export const createOnboardingPayment = async (id) => {
   try {
-    const response = await onboardPartnerPaymentApiCall(id, details)
+    const response = await onboardPartnerPaymentApiCall(id)
     return response.data
   } catch (error) {
     throw error

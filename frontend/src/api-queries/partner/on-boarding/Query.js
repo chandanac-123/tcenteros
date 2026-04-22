@@ -6,6 +6,7 @@ import {
   getPaymentSuccess,
 } from "./Urls";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOnboardingStore } from "@store/onboardingStore";
 
 export const usePaymentFeeQuery = (data) => {
   return useQuery({
@@ -30,9 +31,15 @@ export const usePaymentSuccessQuery = (id) => {
 
 export const useCreateOnboardCenterMutation = () => {
   const query = useQueryClient();
+  const setPartnerOnboardingResponse = useOnboardingStore(
+    (state) => state.setPartnerOnboardingResponse,
+  );
+  const setOnboardId = useOnboardingStore((state) => state.setOnboardId);
   return useMutation({
     mutationFn: (data) => createOnboardingDetails(data),
     onSuccess: async (data) => {
+      setPartnerOnboardingResponse(data);
+      setOnboardId(data?.id ?? data?.onboarding_id ?? null);
       query.invalidateQueries("pricingPage");
       showSuccess("Onboard center created successfully");
     },
@@ -46,11 +53,11 @@ export const useCreateOnboardCenterMutation = () => {
   });
 };
 
-export const useCreateOnboardingPaymentMutation = (id) => {
+export const useCreateOnboardingPaymentMutation = () => {
   const query = useQueryClient();
   return useMutation({
-    mutationFn: (details) => createOnboardingPayment(id, details),
-    onSuccess: async () => {
+    mutationFn: (id) => createOnboardingPayment(id),
+    onSuccess: async (_, id) => {
       query.invalidateQueries(["partnerOnboardingPaymentSuccess", id]);
       showSuccess("Partner onboarding payment created successfully");
     },

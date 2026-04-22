@@ -26,6 +26,9 @@ export const useOnboardingStore = create(
       centerTools: {},
       onboardId: null,
       setOnboardId: id => set({ onboardId: id }),
+      partnerOnboardingResponse: null,
+      setPartnerOnboardingResponse: response =>
+        set({ partnerOnboardingResponse: response }),
       partnerOnboardingDraft: initialPartnerOnboardingDraft,
       setPartnerOnboardingDraft: values =>
         set(state => ({
@@ -83,6 +86,7 @@ export const useOnboardingStore = create(
           featureIdMap: {},
           centerTools: {},
           onboardId: null,
+          partnerOnboardingResponse: null,
           partnerOnboardingDraft: initialPartnerOnboardingDraft,
           attendanceType: null,
           sellableItem: 'merchandise',
