@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Plus, Send, User, X } from "lucide-react";
 import { Button } from "@pages/components/ui/button";
 import { useParams } from "react-router-dom";
-import { useCloseSupportTicket, useSendSupportMessage, useSupportTicketById } from "@api-queries/super-admin/support/Query";
+import { useAssignTicketMutation, useCloseSupportTicket, useSendSupportMessage, useSupportTicketById } from "@api-queries/super-admin/support/Query";
+import { Spinner } from "@pages/components/ui/spinner";
 
 const MessageBox = () => {
   const { id } = useParams();
@@ -14,6 +15,8 @@ const MessageBox = () => {
   const { data, isLoading, error } = useSupportTicketById(id);
   const { mutate: sendMessage, isPending } = useSendSupportMessage();
   const { mutate: closeTicket, isClosePending } = useCloseSupportTicket();
+  const { mutate, isPendings } = useAssignTicketMutation();
+
 
   const formatCustomDateTime = (dateString) => {
     if (!dateString) return "-";
@@ -62,6 +65,22 @@ const MessageBox = () => {
       }
     );
   };
+
+
+  const handleAssign = (ticketId, centerAdmin_id) => {
+    if (!ticketId || !centerAdmin_id) {
+      console.error("Select a center admin first");
+      return;
+    }
+
+    console.log("TicketId", ticketId);
+
+    mutate({
+      ticket_id: ticketId,   // make sure this exists
+      centeradmin_id: centerAdmin_id,
+    });
+  };
+
   const messages = data?.messages || [];
 
   console.log("Message", data);
@@ -79,7 +98,13 @@ const MessageBox = () => {
   }, [messages]);
 
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center ">
+        <Spinner />
+      </div>
+    )
+  }
   if (error) return (
     <div className="w-full h-full flex items-center justify-center">
       <p> No Tickets</p>
@@ -91,9 +116,19 @@ const MessageBox = () => {
       {/* HEADER */}
       <div className="flex items-center justify-between p-4 border-b border-[#BFB7B7]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center">
-            <User size={18} color="#246C32" />
-          </div>
+          {
+            data.image_url ? (
+              <img
+                className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center"
+                src={data.image_url} 
+                alt="userPic" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center">
+                <User size={24} color="#246C32" />
+              </div>
+            )
+          }
+
 
           <div>
             <p className="text-[#000000] font-semibold">{data.member_name}</p>
@@ -112,9 +147,23 @@ const MessageBox = () => {
               {isClosePending ? "Closing..." : "Close Ticket"}
             </Button>
           )}
-          <Button size='addbutton' className=" bg-[#2A62D8]">
-            Assign Admin
-          </Button>
+
+          {data.status?.toLowerCase() === "assigned" || data.status?.toLowerCase() === "closed" ? null : (
+            <Button
+              onClick={() =>
+                handleAssign(
+                  data.id,
+                  data.centeradmin_id,
+                )
+              }
+              disabled={isPending}
+              size='addbutton'
+              className=" bg-[#2A62D8]"
+            >
+              Assign Admin
+            </Button>
+          )}
+
         </div>
       </div>
 

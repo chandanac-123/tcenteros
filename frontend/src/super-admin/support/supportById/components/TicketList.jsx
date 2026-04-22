@@ -1,6 +1,7 @@
 import { useOpenSupportTicket, useSupportTickets } from '@api-queries/super-admin/support/Query';
 import { DataTable } from '@common/components/DataTable';
 import { Button } from '@pages/components/ui/button';
+import { Spinner } from '@pages/components/ui/spinner';
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 
@@ -12,8 +13,6 @@ const TicketList = () => {
         const dateB = b.created_at ? new Date(b.created_at) : 0;
         return dateB - dateA;
     });
-
-    console.log("Tickets", tickets);
 
 
     const navigate = useNavigate();
@@ -39,7 +38,13 @@ const TicketList = () => {
         }
     };
 
-    if (isLoading) return <p>Loading...</p>;
+    if (isLoading) {
+        return (
+            <div className="w-full h-full flex justify-center items-center ">
+                <Spinner />
+            </div>
+        )
+    }
     if (error) return <p>Error loading tickets</p>;
 
     const columns = [

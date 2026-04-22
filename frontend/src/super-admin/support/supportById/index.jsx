@@ -26,11 +26,11 @@ const SupportById = () => {
                     </div>
                 </div>
 
-                <div className="flex items-stretch gap-10 px-4 h-[80vh]">
-                    <div className="w-[50%] h-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4">
+                <div className="flex flex-col xl:flex-row xl:items-stretch gap-10 px-4 xl:h-[80vh]">
+                    <div className="w-full xl:w-[50%] h-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4">
                         <TicketList data={state} />
                     </div>
-                    <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-lg w-[50%]">
+                    <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-lg w-full xl:w-[50%]">
                         <MessageBox details={state} />
                     </div>
                 </div>
