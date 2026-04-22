@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import PartnerLayout from "./components/Layout";
 import HeaderProgress from "./components/HaederProgress";
@@ -13,6 +13,8 @@ import { Textarea } from "@pages/components/ui/textarea";
 import { ChevronDown, MoveRight } from "lucide-react";
 
 const PartnerOnboarding = () => {
+  const [showBankDetails, setShowBankDetails] = useState(false);
+
   const initialValues = {
     full_name: "",
     email: "",
@@ -98,41 +100,53 @@ const PartnerOnboarding = () => {
               // disabled={isFetching || isCreating}
             />
 
-            <button className="flex text-onboard_primary text-sm gap-1 items-center">
-              Add bank details <ChevronDown />
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm text-onboard_primary md:col-span-2"
+              onClick={() => setShowBankDetails((prev) => !prev)}
+            >
+              {showBankDetails ? "Hide bank details" : "Add bank details"}
+              <ChevronDown
+                className={`transition-transform duration-200 ${showBankDetails ? "rotate-180" : ""}`}
+              />
             </button>
-            <span className="flex text-md  font-semibold">Bank Details</span>
-            <div></div>
-            <Input
-              label="Account Holder Name "
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
-            />
-            <Input
-              label="Bank Name "
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
-            />
-            <Input
-              label="Account Number "
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
-            />
-            <Input
-              label="IFSC Code "
-              name="salary"
-              // value={formik.values.salary}
-              // onChange={formik.handleChange}
-              // error={formik.touched.salary && formik.errors.salary}
-            />
+            {showBankDetails && (
+              <>
+                <span className="flex text-md font-semibold md:col-span-2">
+                  Bank Details
+                </span>
+                <Input
+                  label="Account Holder Name "
+                  name="salary"
+                  // value={formik.values.salary}
+                  // onChange={formik.handleChange}
+                  // error={formik.touched.salary && formik.errors.salary}
+                />
+                <Input
+                  label="Bank Name "
+                  name="salary"
+                  // value={formik.values.salary}
+                  // onChange={formik.handleChange}
+                  // error={formik.touched.salary && formik.errors.salary}
+                />
+                <Input
+                  label="Account Number "
+                  name="salary"
+                  // value={formik.values.salary}
+                  // onChange={formik.handleChange}
+                  // error={formik.touched.salary && formik.errors.salary}
+                />
+                <Input
+                  label="IFSC Code "
+                  name="salary"
+                  // value={formik.values.salary}
+                  // onChange={formik.handleChange}
+                  // error={formik.touched.salary && formik.errors.salary}
+                />
+              </>
+            )}
 
-            <div className="flex w-full justify-center">
+            <div className="flex w-full justify-center md:col-span-2">
               <Button size="addbutton" type="button">
                 Continue to Agreement <MoveRight />
               </Button>
