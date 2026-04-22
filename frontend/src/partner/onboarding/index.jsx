@@ -11,8 +11,10 @@ import StateSelect from "@common/components/StateSelect";
 import CountrySelect from "@common/components/CountrySelect";
 import { Textarea } from "@pages/components/ui/textarea";
 import { ChevronDown, MoveRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const PartnerOnboarding = () => {
+  const navigate = useNavigate();
   const [showBankDetails, setShowBankDetails] = useState(false);
 
   const initialValues = {
@@ -147,7 +149,7 @@ const PartnerOnboarding = () => {
             )}
 
             <div className="flex w-full justify-center md:col-span-2">
-              <Button size="addbutton" type="button" className="w-full justify-center">
+              <Button  onClick={() => navigate('/agreement')} size="addbutton" type="button" className="w-full justify-center">
                 Continue to Agreement <MoveRight />
               </Button>
             </div>

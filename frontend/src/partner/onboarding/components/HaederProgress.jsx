@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, FileCheck2, CreditCard, NotebookText } from "lucide-react";
+import { FileText, CreditCard, NotebookText } from "lucide-react";
 
 const steps = [
   { id: 1, label: "Detail", icon: FileText },
@@ -8,6 +8,9 @@ const steps = [
 ];
 
 const HeaderProgress = ({ currentStep = 1 }) => {
+  const safeStep = Math.min(Math.max(currentStep, 1), steps.length);
+  const progressWidth = `${((safeStep - 1) / (steps.length - 1)) * 80}%`;
+
   return (
     <>
       <span className="flex px-5 text-xl text-onboard_primary font-semibold">
@@ -16,19 +19,19 @@ const HeaderProgress = ({ currentStep = 1 }) => {
 
       <div className="w-full flex items-center justify-center bg-white py-5">
         <div className="relative w-full max-w-5xl px-4 sm:px-8 ">
-          <div className="absolute left-[calc(10%-2px)] right-[calc(10%-2px)] top-8 h-[2px] bg-[#D9D9D9]" />
+          <div className="absolute left-[10%] right-[10%] top-8 h-[2px] bg-[#D9D9D9]" />
           <div
-            className="absolute left-[calc(10%-2px)] top-5 h-[2px] bg-[#1D5FE9] transition-all duration-300"
+            className="absolute left-[10%] top-8 h-[2px] bg-[#1D5FE9] transition-all duration-300"
             style={{
-              width: `calc((100% - 33.333%) * ${Math.max(currentStep - 1, 0) / (steps.length - 1)})`,
+              width: progressWidth,
             }}
           />
 
           <div className="relative z-10 flex items-start justify-between">
             {steps.map((step) => {
               const Icon = step.icon;
-              const isActive = currentStep >= step.id;
-              const isCurrent = currentStep === step.id;
+              const isActive = safeStep >= step.id;
+              const isCurrent = safeStep === step.id;
 
               return (
                 <div
