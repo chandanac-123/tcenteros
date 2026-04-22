@@ -6,9 +6,12 @@ import { Checkbox } from "@pages/components/ui/checkbox";
 import { Button } from "@pages/components/ui/button";
 import { MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCreateOnboardCenterMutation } from "@api-queries/partner/on-boarding/Query";
 
 const Agreement = () => {
   const navigate = useNavigate();
+  const { mutateAsync: createOnboardCenter } = useCreateOnboardCenterMutation();
+  
   return (
     <PartnerLayout>
       <div className="flex h-full w-full flex-col gap-2 overflow-y-auto p-4">
@@ -38,7 +41,7 @@ const Agreement = () => {
             </label>
           </div>
           <Button
-          onClick={() => navigate('/payment')}
+            onClick={() => navigate("/payment")}
             size="addbutton"
             type="button"
             className="w-full justify-center"
