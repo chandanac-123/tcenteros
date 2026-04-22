@@ -144,15 +144,9 @@ const SupportTablelist = () => {
                         {status == "assigned" ? (
                                 <Button
                                     variant="outline_secondary"
-                                    className="text-[#561290] flex items-center justify-center gap-2"
+                                    className="text-[#561290] flex items-center justify-center gap-2 cursor-not-allowed"
                                     size="notificationbutton"
-                                    onClick={() =>
-                                        handleAssign(
-                                            row.original.id,
-                                            row.original.centeradmin_id,
-                                        )
-                                    }
-                                    disabled={isPending}
+                                   
                                 >
                                     Assigned
                                     <BadgeCheck size={16} color='#561290' />

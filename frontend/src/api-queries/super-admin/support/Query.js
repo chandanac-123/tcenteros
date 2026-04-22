@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { assignTicketById_Url, closeTicketById_Url, getSupportTicketById_Url, getSupportTickets_Url, openSupportTicket_Url, sendSupportMessage_Url } from "./Urls";
 import { queryClient } from "@api/queryClient";
+import { showError, showSuccess } from "@utils/toast";
 
 export const useSupportTickets = () => {
     return useQuery({
@@ -22,8 +23,8 @@ export const useOpenSupportTicket = () => {
     return useMutation({
         mutationFn: openSupportTicket_Url,
         onSuccess: () => {
-
             queryClient.invalidateQueries(["support-tickets"]);
+            showSuccess("Ticket Opened...!")
         },
     });
 };
@@ -64,10 +65,16 @@ export const useCloseSupportTicket = () => {
                 "support-ticket",
                 variables.id,
             ]);
+            showSuccess("Ticket Closed")
         },
 
         onError: (error) => {
             console.error("Error closing ticket:", error);
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.detail ||
+                `Can't delete the platform feature`
+            showError(message)
         },
     });
 };
@@ -87,12 +94,16 @@ export const useAssignTicketMutation = () => {
             queryClient.invalidateQueries({
                 queryKey: ["support-ticket", variables.ticket_id],
             });
-            console.log("Hellooooloollo");
-            
+            showSuccess("Ticket Assigned to center-Admin")
         },
 
         onError: (error) => {
             console.error("Assign ticket failed", error);
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.detail ||
+                `Can't delete the platform feature`
+            showError(message)
         },
     });
 };
