@@ -4,13 +4,21 @@ import React, { useState } from 'react'
 import ChangeStatusModal from './ChangeStatusModal';
 import { Eye } from 'lucide-react';
 import ViewLeadModal from './ViewLeadModal';
+import CustomFilter from '@common/components/CustomeFilter';
 
 const LeadsTableList = () => {
     const [openModal, setOpenModal] = useState(false);
     const [viewModal, setViewModal] = useState(false);
-
     const [selectedRow, setSelectedRow] = useState(null);
-    const columns = [
+    const leadsFilter = [
+        { value: "new", label: "New" },
+        { value: "contacted", label: "Contacted" },
+        { value: "interested", label: "Interested" },
+        { value: "converted", label: "Converted" },
+        { value: "closed", label: "Closed" },
+
+
+    ]; const columns = [
         {
             accessorKey: "leadName",
             header: "Lead Name",
@@ -127,6 +135,11 @@ const LeadsTableList = () => {
     return (
         <div>
             <div className='shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4'>
+                <div className="flex items-center justify-between p-2">
+                    <h2 className="text-black font-poppins text-[20px] font-semibold leading-8 tracking-[-0.4px]">All Leads</h2>
+                    <CustomFilter 
+                    options={leadsFilter} />
+                </div>
                 <DataTable
                     columns={columns}
                     data={leadsData}
