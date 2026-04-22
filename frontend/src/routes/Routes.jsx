@@ -87,6 +87,7 @@ import InvoiceTemplate from '@pages/onboarding-pages/InvoiceTemplate'
 import PartnerOnboarding from '@partner/onboarding'
 import Agreement from '@partner/onboarding/Agreement'
 import Payment from '@partner/onboarding/Payment'
+import PaymentSuccessfull from '@partner/onboarding/PaymentSuccessfull'
 
 export const routes = [
   //public routes
@@ -168,6 +169,7 @@ export const routes = [
    { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
    { key: 58, path: '/agreement', privetRoute: false, isSubRoute: false, pageTitle: '', component: Agreement, menubar: false, permissionKey: true },
    { key: 59, path: '/payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: Payment, menubar: false, permissionKey: true },
+   { key: 60, path: '/payment-successful', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentSuccessfull, menubar: false, permissionKey: true },
 
   //Partner Routes
   { key: 57, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
