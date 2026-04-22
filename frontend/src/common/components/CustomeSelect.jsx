@@ -8,12 +8,13 @@ import {
 } from '@pages/components/ui/select'
 import EmployeeTable from '@pages/employee-management/employee/table';
 
-export default function CustomeSelect ({
+export default function CustomeSelect({
   label,
   placeholder,
   options = [],
   value,
   onChange,
+  height,
   error,
   search = false,
   disabled = false
@@ -46,7 +47,7 @@ export default function CustomeSelect ({
         value={value ? String(value) : ''}
         onValueChange={val => onChange(val)}
       >
-        <SelectTrigger className='w-full h-9'>
+        <SelectTrigger className={`w-full ${height ? height:"h-9"}`}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
 
@@ -80,29 +81,28 @@ export default function CustomeSelect ({
                   item?.id ||
                   item?.membership_id ||
                   item?.product_id ||
-                  item?.member_membership_id||
+                  item?.member_membership_id ||
                   item?.designation_id
                 }
                 value={String(
                   item?.id ||
-                    item?.membership_id ||
-                    item?.product_id ||
-                    item?.member_membership_id||
-                    item?.designation_id
+                  item?.membership_id ||
+                  item?.product_id ||
+                  item?.member_membership_id ||
+                  item?.designation_id
                 )}
                 className={`cursor-pointer 
-    ${
-      String(value) ===
-      String(
-        item?.id ||
-          item?.membership_id ||
-          item?.product_id ||
-          item?.member_membership_id||
-          item?.designation_id
-      )
-        ? 'bg-blue-100 text-blue-600 font-medium' // ✅ selected
-        : 'hover:bg-gray-100'
-    }
+    ${String(value) ===
+                    String(
+                      item?.id ||
+                      item?.membership_id ||
+                      item?.product_id ||
+                      item?.member_membership_id ||
+                      item?.designation_id
+                    )
+                    ? 'bg-blue-100 text-blue-600 font-medium' // ✅ selected
+                    : 'hover:bg-gray-100'
+                  }
   `}
               >
                 {searchVal ? (

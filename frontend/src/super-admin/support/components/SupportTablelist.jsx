@@ -1,6 +1,7 @@
 import { useAssignTicketMutation, useOpenSupportTicket, useSupportTickets } from '@api-queries/super-admin/support/Query';
 import { DataTable } from '@common/components/DataTable';
 import { Button } from '@pages/components/ui/button';
+import { Spinner } from '@pages/components/ui/spinner';
 import { BadgeCheck } from 'lucide-react';
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
@@ -77,7 +78,13 @@ const SupportTablelist = () => {
         });
     };
 
-    if (isLoading) return <p>Loading...</p>;
+    if (isLoading) {
+        return (
+            <div className="w-full h-[40vh] flex justify-center items-center ">
+                <Spinner />
+            </div>
+        )
+    }
     if (error) return <p>Error loading tickets</p>;
 
     const columns = [
@@ -142,15 +149,15 @@ const SupportTablelist = () => {
                         </Button>
 
                         {status == "assigned" ? (
-                                <Button
-                                    variant="outline_secondary"
-                                    className="text-[#561290] flex items-center justify-center gap-2 cursor-not-allowed"
-                                    size="notificationbutton"
-                                   
-                                >
-                                    Assigned
-                                    <BadgeCheck size={16} color='#561290' />
-                                </Button>
+                            <Button
+                                variant="outline_secondary"
+                                className="text-[#561290] flex items-center justify-center gap-2 cursor-not-allowed"
+                                size="notificationbutton"
+
+                            >
+                                Assigned
+                                <BadgeCheck size={16} color='#561290' />
+                            </Button>
                         ) : (
                             <Button
                                 size="notificationbutton"

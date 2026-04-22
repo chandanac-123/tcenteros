@@ -28,7 +28,7 @@ const badgeVariants = cva(
   }
 )
 
-function Badge ({ className, label, variant, ...props }) {
+function Badge ({ className, label, variant,selected, ...props }) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props}>
       {label}

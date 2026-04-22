@@ -14,7 +14,7 @@
       "@api/*": ["src/api/*"],
       "@hooks/*": ["src/hooks/*"],
       "@super-admin/*": ["src/super-admin/*"],
-      "@partner/*": ["src/partner/*"]
+       "@partner/*": ["src/partner/*"]
     }
   },
   "include": ["src"]
