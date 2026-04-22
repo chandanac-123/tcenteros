@@ -147,7 +147,7 @@ const PartnerOnboarding = () => {
             )}
 
             <div className="flex w-full justify-center md:col-span-2">
-              <Button size="addbutton" type="button">
+              <Button size="addbutton" type="button" className="w-full justify-center">
                 Continue to Agreement <MoveRight />
               </Button>
             </div>

@@ -8,17 +8,17 @@ const steps = [
 ];
 
 const HeaderProgress = ({ currentStep = 1 }) => {
-  const progressWidth = `${((currentStep - 1) / (steps.length - 1)) * 100}%`;
-
   return (
     <>
-      <span className="flex px-5 text-xl text-onboard_primary font-semibold">Reseller Registration</span>
+      <span className="flex px-5 text-xl text-onboard_primary font-semibold">
+        Reseller Registration
+      </span>
 
       <div className="w-full flex items-center justify-center bg-white py-5">
-        <div className="relative w-full max-w-3xl px-4 sm:px-8">
-          <div className="absolute left-[calc(16.666%-2px)] right-[calc(16.666%-2px)] top-5 h-[2px] bg-[#D9D9D9]" />
+        <div className="relative w-full max-w-5xl px-4 sm:px-8 ">
+          <div className="absolute left-[calc(10%-2px)] right-[calc(10%-2px)] top-8 h-[2px] bg-[#D9D9D9]" />
           <div
-            className="absolute left-[calc(16.666%-2px)] top-5 h-[2px] bg-[#1D5FE9] transition-all duration-300"
+            className="absolute left-[calc(10%-2px)] top-5 h-[2px] bg-[#1D5FE9] transition-all duration-300"
             style={{
               width: `calc((100% - 33.333%) * ${Math.max(currentStep - 1, 0) / (steps.length - 1)})`,
             }}
@@ -36,14 +36,14 @@ const HeaderProgress = ({ currentStep = 1 }) => {
                   className="flex w-20 flex-col items-center text-center sm:w-28"
                 >
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all sm:h-11 sm:w-11
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all sm:h-16 sm:w-16
                 ${
                   isActive
                     ? "border-[#1D5FE9] bg-[#1D5FE9] text-white shadow-[0_4px_10px_rgba(29,95,233,0.18)]"
                     : "border-[#D6D6D6] bg-[#D9D9D9] text-white"
                 }`}
                   >
-                    <Icon size={20} strokeWidth={2.2} />
+                    <Icon size={28} strokeWidth={2.2} />
                   </div>
 
                   <span
