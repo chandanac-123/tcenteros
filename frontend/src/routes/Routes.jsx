@@ -84,6 +84,7 @@ import Support from '@super-admin/support'
 import RoleAndPermissions from '@super-admin/roleAndpermissions'
 import SupportById from '@super-admin/support/supportById'
 import InvoiceTemplate from '@pages/onboarding-pages/InvoiceTemplate'
+import PartnerOnboarding from '@partner/onboarding'
 
 export const routes = [
   //public routes
@@ -160,6 +161,9 @@ export const routes = [
   { key: 54, path: '/partnersbyId/:id', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
   { key: 55, path: '/roleandpermission', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
+
+  //partner public routes
+   { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
 
   //Partner Routes
   { key: 57, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
