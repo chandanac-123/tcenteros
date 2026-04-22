@@ -12,6 +12,7 @@ import { Textarea } from "@pages/components/ui/textarea";
 import { ChevronDown, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOnboardingStore } from "@store/onboardingStore";
+import { partnerOnboardingValidationSchema } from "@utils/validations";
 
 const PartnerOnboarding = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const PartnerOnboarding = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: partnerOnboardingValidationSchema(showBankDetails),
     onSubmit: async (values) => {
       try {
         setPartnerOnboardingDraft(values);
@@ -65,30 +67,41 @@ const PartnerOnboarding = () => {
               name="full_name"
               value={formik.values.full_name}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.full_name && formik.errors.full_name}
             />
             <Input
               label="Phone Number"
               name="mobile"
               value={formik.values.mobile}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.mobile && formik.errors.mobile}
             />
             <Input
               label="Email"
               name="email"
               value={formik.values.email}
               onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.email && formik.errors.email}
             />
 
-            <CitySelect
-              country={formik.values.country}
-              value={formik.values.city}
-              onChange={(data) => {
-                formik.setFieldValue("city", data.city);
-                formik.setFieldValue("state", data.state);
-                formik.setFieldValue("country", data.country);
-              }}
-              label="City"
-            />
+            <div>
+              <CitySelect
+                country={formik.values.country}
+                value={formik.values.city}
+                onChange={(data) => {
+                  formik.setFieldValue("city", data.city);
+                  formik.setFieldValue("state", data.state);
+                  formik.setFieldValue("country", data.country);
+                }}
+                label="City"
+              />
+              {formik.touched.city && formik.errors.city && (
+                <div className="text-xs text-red_text mt-1">{formik.errors.city}</div>
+              )}
+            </div>
             <StateSelect
               country={formik.values.country}
               value={formik.values.state}
@@ -137,24 +150,37 @@ const PartnerOnboarding = () => {
                   name="account_holder_name"
                   value={formik.values.account_holder_name}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.account_holder_name &&
+                    formik.errors.account_holder_name
+                  }
                 />
                 <Input
                   label="Bank Name "
                   name="bank_name"
                   value={formik.values.bank_name}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.bank_name && formik.errors.bank_name}
                 />
                 <Input
                   label="Account Number "
                   name="account_number"
                   value={formik.values.account_number}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.account_number && formik.errors.account_number
+                  }
                 />
                 <Input
                   label="IFSC Code "
                   name="ifsc_code"
                   value={formik.values.ifsc_code}
                   onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.ifsc_code && formik.errors.ifsc_code}
                 />
               </>
             )}

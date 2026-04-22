@@ -20,6 +20,46 @@ export const onboardingValidationSchema = Yup.object().shape({
   )
 })
 
+export const partnerOnboardingValidationSchema = requireBankDetails =>
+  Yup.object().shape({
+    full_name: Yup.string()
+      .trim()
+      .min(3, 'Name must be at least 3 characters')
+      .required('Full name is required'),
+    email: Yup.string()
+      .email('Invalid email format')
+      .required('Email is required'),
+    mobile: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Enter a valid 10 digit mobile number')
+      .required('Mobile number is required'),
+    city: Yup.string().trim().required('City is required'),
+    account_holder_name: requireBankDetails
+      ? Yup.string().trim().required('Account holder name is required')
+      : Yup.string().trim(),
+    bank_name: requireBankDetails
+      ? Yup.string().trim().required('Bank name is required')
+      : Yup.string().trim(),
+    account_number: requireBankDetails
+      ? Yup.string()
+          .trim()
+          .matches(/^[0-9]{9,18}$/, 'Enter a valid account number')
+          .required('Account number is required')
+      : Yup.string().trim(),
+    ifsc_code: requireBankDetails
+      ? Yup.string()
+          .trim()
+          .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, 'Enter a valid IFSC code')
+          .required('IFSC code is required')
+      : Yup.string().trim()
+  })
+
+export const partnerAgreementValidationSchema = Yup.object().shape({
+  terms_accepted: Yup.boolean().oneOf(
+    [true],
+    'You must accept the reseller terms'
+  )
+})
+
 export const invoiceValidationSchema = Yup.object().shape({
   address_line_1: Yup.string().required('Enter address'),
   address_line_2: Yup.string().required('Enter pincode'),

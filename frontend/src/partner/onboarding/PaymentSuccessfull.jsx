@@ -12,6 +12,7 @@ import { formatTextDate } from "@utils/helper";
 
 const PaymentSuccessfull = () => {
   const navigate = useNavigate();
+   const resetStore = useOnboardingStore(state => state.resetStore)
   const onboardId = useOnboardingStore((state) => state.onboardId);
   const { data: paymentSuccessData } = usePaymentSuccessQuery(onboardId);
 
@@ -30,6 +31,11 @@ const PaymentSuccessfull = () => {
       value: formatTextDate(paymentSuccessData?.activation_date) || "N/A",
     },
   ];
+
+  const handleGoToLogin = () => {
+    resetStore()
+    navigate("/login");
+  };
 
   return (
     <PartnerLayout>
@@ -76,7 +82,7 @@ const PaymentSuccessfull = () => {
             <Button
               size="addbutton"
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={handleGoToLogin}
               className="w-full justify-center"
             >
               Go to Login

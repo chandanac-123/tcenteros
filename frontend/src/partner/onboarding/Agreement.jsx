@@ -1,7 +1,6 @@
 import React from "react";
 import HeaderProgress from "./components/HaederProgress";
 import PartnerLayout from "./components/Layout";
-import { Textarea } from "@pages/components/ui/textarea";
 import { Checkbox } from "@pages/components/ui/checkbox";
 import { Button } from "@pages/components/ui/button";
 import { MoveRight } from "lucide-react";
@@ -9,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useCreateOnboardCenterMutation } from "@api-queries/partner/on-boarding/Query";
 import { useFormik } from "formik";
 import { useOnboardingStore } from "@store/onboardingStore";
-import { showError } from "@utils/toast";
+import { partnerAgreementValidationSchema } from "@utils/validations";
 
 const Agreement = () => {
   const navigate = useNavigate();
@@ -28,11 +27,8 @@ const Agreement = () => {
       terms_accepted: Boolean(partnerOnboardingDraft?.terms_accepted),
     },
     enableReinitialize: true,
+    validationSchema: partnerAgreementValidationSchema,
     onSubmit: async (values) => {
-      if (!values.terms_accepted) {
-        showError("Please accept the reseller terms to continue");
-        return;
-      }
       const payload = {
         ...partnerOnboardingDraft,
         terms_accepted: values.terms_accepted,
@@ -86,25 +82,25 @@ const Agreement = () => {
             <br />• Reseller account can be deactivated after 60 days of
             inactivity <br />• You can reactivate your account anytime
           </span>
-          {/* <Textarea
-            label=""
-            rows={8}
-            value="By continuing, you confirm that you understand and accept the reseller terms, commission rules, lead handling policy, and code of conduct."
-            readOnly
-          /> */}
 
-          <div className="flex items-center gap-4">
-            <Checkbox
-              checked={formik.values.terms_accepted}
-              onCheckedChange={(value) =>
-                formik.setFieldValue("terms_accepted", Boolean(value))
-              }
-            />
-            <label className="text-xs font-semibold">
-              I agree to the Reseller Terms & Policies and understand the
-              commission structure, lead policy, and code of conduct.
-            </label>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={formik.values.terms_accepted}
+                onCheckedChange={(value) =>
+                  formik.setFieldValue("terms_accepted", Boolean(value))
+                }
+                error={
+                  formik.touched.terms_accepted && formik.errors.terms_accepted
+                }
+              />
+              <label className="text-xs font-semibold">
+                I agree to the Reseller Terms & Policies and understand the
+                commission structure, lead policy, and code of conduct.
+              </label>
+            </div>
           </div>
+
           <Button
             size="addbutton"
             type="submit"
