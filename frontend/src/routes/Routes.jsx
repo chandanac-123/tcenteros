@@ -84,6 +84,8 @@ import Support from '@super-admin/support'
 import RoleAndPermissions from '@super-admin/roleAndpermissions'
 import SupportById from '@super-admin/support/supportById'
 import InvoiceTemplate from '@pages/onboarding-pages/InvoiceTemplate'
+import LeadsManagement from '@partner/leads-management'
+import AddnewLeads from '@partner/leads-management/components/AddnewLeads'
 
 export const routes = [
   //public routes
@@ -162,7 +164,9 @@ export const routes = [
   { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
   //Partner Routes
-  { key: 57, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
+  { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 101, path: '/add-newLeads', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: AddnewLeads, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
+
   { key: 58, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isPartner: true },
   { key: 59, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isPartner: true },
 ]
