@@ -1,97 +1,45 @@
 import { DataTable } from "@common/components/DataTable";
-import { Button } from "@pages/components/ui/button";
+import { Badge } from "@pages/components/ui/badge";
 import React from "react";
-
-const RenewalTable = () => {
+const statusVariant = { paid: "active", unpaid: "inactive" };
+const RenewalTable = ({ data, isLoading, tableParams, setTableParams }) => {
+  console.log('data: ', data);
   const columns = [
-   
-    {
-      accessorKey: "leadName",
-      header: "Lead Name",
-    },
-    {
-      accessorKey: "contact",
-      header: "Contact",
-    },
-    {
-      accessorKey: "city",
-      header: "Renewal Date",
-    },
-    {
-      accessorKey: "source",
-      header: "Days Left",
-    },
-    {
-      accessorKey: "source",
-      header: "Amount",
-    },
-    {
-      accessorKey: "source",
-      header: "Commission",
-    },
+    { accessorKey: "lead_name", header: "Lead Name" },
+    { accessorKey: "mobile", header: "Contact" },
+    { accessorKey: "center_name", header: "Center Name" },
+    { accessorKey: "subscription_end_date", header: "Subscription End Date" },
+    { accessorKey: "amount", header: "Amount" },
+    { accessorKey: "commission", header: "Commission" },
     {
       accessorKey: "status",
       header: "Status",
+      // cell: ({ row }) => {
+      //   const status = row.getValue("status")?.toLowerCase();
+      //   const styles = {
+      //     contacted: "bg-[#FFFED5] text-[#885503]",
+      //     new: "bg-[#D5FFE7] text-[#03881C]",
+      //     demo: "bg-[#E5D3F5] text-[#561290]",
+      //     lost: "bg-[#FFD7D5] text-[#880303]",
+      //   };
+      //   return (
+      //     <span
+      //       className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}
+      //     >
+      //       {status}
+      //     </span>
+      //   );
+      // },
+
       cell: ({ row }) => {
-        const status = row.getValue("status")?.toLowerCase();
-
-        const styles = {
-          contacted: "bg-[#FFFED5] text-[#885503]",
-          new: "bg-[#D5FFE7] text-[#03881C]",
-          demo: "bg-[#E5D3F5] text-[#561290]",
-          lost: "bg-[#FFD7D5] text-[#880303]",
-        };
-
+        const status = row.original.status;
         return (
-          <span
-            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}
-          >
-            {status}
-          </span>
+          <Badge
+            label={status === "paid" ? "Paid" : "Unpaid"}
+            variant={statusVariant[status]}
+          />
         );
       },
-    },
-  ];
-  const leadsData = [
-    {
-      id: 1,
-      leadName: "John Mathew",
-      contact: "+91 9876543210",
-      city: "Kochi",
-      source: "Website",
-      status: "New",
-    },
-    {
-      id: 2,
-      leadName: "Aisha Rahman",
-      contact: "+91 9123456780",
-      city: "Calicut",
-      source: "Facebook",
-      status: "Contacted",
-    },
-    {
-      id: 3,
-      leadName: "Arun Kumar",
-      contact: "+91 9988776655",
-      city: "Trivandrum",
-      source: "Referral",
-      status: "Demo",
-    },
-    {
-      id: 4,
-      leadName: "Neha Sharma",
-      contact: "+91 9012345678",
-      city: "Bangalore",
-      source: "Instagram",
-      status: "New",
-    },
-    {
-      id: 5,
-      leadName: "Rahul Nair",
-      contact: "+91 9090909090",
-      city: "Kochi",
-      source: "Website",
-      status: "Lost",
     },
   ];
 
@@ -99,11 +47,11 @@ const RenewalTable = () => {
     <div>
       <DataTable
         columns={columns}
-        data={leadsData}
-        loading={false}
-        // tableParams={tableParams}
-        // setTableParams={setTableParams}
-        pagination={11}
+        data={data?.data || []}
+        loading={isLoading}
+        tableParams={tableParams}
+        setTableParams={setTableParams}
+        pagination={data?.total}
         paginationVisibile={true}
         search={true}
       />

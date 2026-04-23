@@ -1,36 +1,48 @@
-import CustomFilter from '@common/components/CustomeFilter';
-import ContentLayout from '@common/MasterLayout/ContentLayout';
-import { Button } from '@pages/components/ui/button';
-import { BadgeDollarSign, Briefcase, CalendarClock, ChartLine, ClipboardClock, Download, NotepadText, UserPlus } from 'lucide-react';
-import React from 'react'
-import RenewalTable from './RenewalTable';
-import HeaderCard from '@super-admin/subscriptions/components/HeaderCards';
+import CustomFilter from "@common/components/CustomeFilter";
+import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { Button } from "@pages/components/ui/button";
+import {
+  Briefcase,
+  CalendarClock,
+  ChartLine,
+  Download,
+  NotepadText,
+} from "lucide-react";
+import React from "react";
+import RenewalTable from "./RenewalTable";
+import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
+import { useRenewalsQuery } from "@api-queries/partner/renewal/Query";
 
 const Renewals = () => {
-    const cardsData = [
+  const [tableParams, setTableParams] = React.useState({
+    page: 1,
+    status: "",
+  });
+  const { data, isLoading } = useRenewalsQuery(tableParams);
+  const cardsData = [
     {
       label: "Renewals Overdue",
-      value: 5,
+      value: data?.summary?.renewals_overdue || 0,
       icon: <CalendarClock />,
-       type:'count' 
+      type: "count",
     },
     {
       label: "Renewal Earnings",
-      value: 4,
+      value: data?.summary?.renewal_earnings || 0,
       icon: <CalendarClock />,
-       type:'amount' 
+      type: "amount",
     },
     {
       label: "Renewal Rate",
-      value: 5,
-      icon:<ChartLine />,
-       type:'percent' 
+      value: data?.summary?.renewal_rate || 0,
+      icon: <ChartLine />,
+      type: "percent",
     },
     {
       label: "Renewal  Commission",
-      value: 5,
+      value: data?.summary?.renewal_commission || 0,
       icon: <Briefcase />,
-       type:'amount' 
+      type: "amount",
     },
   ];
   return (
@@ -42,10 +54,10 @@ const Renewals = () => {
           </div>
           <div className="flex flex-col justify-center gap-3">
             <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
-             Renewals Management
+              Renewals Management
             </p>
             <p className="text-[#393636] font-inter text-[14px] font-medium">
-             Track, remind & retain your clients
+              Track, remind & retain your clients
             </p>
           </div>
         </div>
@@ -60,15 +72,20 @@ const Renewals = () => {
               <CustomFilter filterName="All Status" />
               <Button size="addbutton">
                 <Download />
-               Export
+                Export
               </Button>
             </div>
           </div>
-          <RenewalTable />
+          <RenewalTable
+            data={data}
+            isLoading={isLoading}
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
         </div>
       </div>
     </ContentLayout>
-  )
-}
+  );
+};
 
-export default Renewals
+export default Renewals;

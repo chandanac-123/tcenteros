@@ -15,7 +15,7 @@ const EarningPayoutTable = ({
     { accessorKey: "mobile", header: "Contact" },
     { accessorKey: "transaction_date", header: "Transaction Date" },
     { accessorKey: "amount", header: "Amount" },
-    { accessorKey: "commission", header: "Commission" },
+    { accessorKey: "partner_commission_amount", header: "Commission" },
     {
       accessorKey: "status",
       header: "Status",
