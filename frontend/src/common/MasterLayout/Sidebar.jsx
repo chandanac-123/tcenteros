@@ -18,14 +18,14 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
-const isPartner = role === "partner";
+  const isPartner = role === "partner";
 
   const filteredRoutes = useMemo(() => {
     return routes.filter((item) => {
       if (item.alwaysVisible) return true; // Show for all roles
       if (isSuperAdmin) return item.isSuperAdmin === true;
       if (isPartner) return item.isPartner === true;
-      return item.isSuperAdmin !== true;
+      return item.isSuperAdmin !== true && item.isPartner !== true;
     });
   }, [isSuperAdmin, isPartner]);
 
@@ -71,12 +71,8 @@ const isPartner = role === "partner";
         {filteredRoutes.map((item) => {
           const allowed = sidebarPermission(permissions, item.permissionKey);
           if (!item?.menubar || !allowed) return null;
-
           const hasSubmenu = item.submodules?.length > 0;
-
-          const isActiveMenu = isSubmenuActive(item);
           const isOpen = openMenuKey === item.key;
-
           return (
             <MenuCard
               key={item.key}
@@ -94,13 +90,12 @@ const isPartner = role === "partner";
                 } else {
                   setOpenMenuKey(null);
                 }
-
                 if (isMobile) setOpen(false);
               }}
             >
               {hasSubmenu && isOpen && (
                 <SubmenuCard
-                  submenu={item?.submodules?.filter(sub => sub?.menubar)}
+                  submenu={item?.submodules?.filter((sub) => sub?.menubar)}
                   parentPath={item.path.replace(/^\//, "")}
                   collapsed={collapsed}
                   onClick={() => isMobile && setOpen(false)}
