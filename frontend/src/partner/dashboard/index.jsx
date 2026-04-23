@@ -6,6 +6,7 @@ import { getGreeting } from "@utils/helper";
 import {
   BadgeDollarSign,
   Briefcase,
+  ChevronDown,
   ClipboardClock,
   FileSearchCorner,
   FileSearchCornerIcon,
@@ -15,9 +16,11 @@ import {
 import React, { useEffect, useState } from "react";
 import EarningSnapshot from "./components/EarningSnapshot";
 import RenewalCard from "./components/RenewalCard";
+import { useNavigate } from "react-router-dom";
 
 const PartnerDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
+  const navigate = useNavigate();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,6 +68,14 @@ const PartnerDashboard = () => {
 
         <Card>
           <LeadsTableList dashboarView={true} />
+          <div className="flex justify-center p-2">
+            <button
+              className="flex  text-onboard_primary"
+              onClick={() => navigate("/lead-management")}
+            >
+              Show more <ChevronDown />
+            </button>
+          </div>
         </Card>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

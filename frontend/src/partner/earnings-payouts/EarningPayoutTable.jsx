@@ -32,7 +32,7 @@ const EarningPayoutTable = ({
   ];
 
   return (
-    <div>
+    <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4 mt-4">
       <DataTable
         columns={columns}
         data={data?.data || []}
