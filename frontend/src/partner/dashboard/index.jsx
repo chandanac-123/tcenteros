@@ -31,25 +31,25 @@ const PartnerDashboard = () => {
       label: "Total Earnings",
       value: 5,
       icon: <BadgeDollarSign />,
-      type:'amount' 
+      type: "amount",
     },
     {
       label: "Pending Payouts",
       value: 4,
       icon: <ClipboardClock />,
-      type:'amount' 
+      type: "amount",
     },
     {
       label: "Active Leads",
       value: 5,
       icon: <UserPlus />,
-      type:'count'
+      type: "count",
     },
     {
       label: "Conversion Rate",
       value: 5,
       icon: <Briefcase />,
-      type:'percent' 
+      type: "percent",
     },
   ];
   return (
@@ -62,7 +62,10 @@ const PartnerDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <HeaderCard cardsData={cardsData} />
         </div>
-        {/* <LeadsTableList /> */}
+
+        <Card>
+          <LeadsTableList dashboarView={true} />
+        </Card>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card className="h-full p-5">
@@ -70,18 +73,22 @@ const PartnerDashboard = () => {
               <div className="p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
                 <NotepadText />
               </div>
-                <span className="text-md font-semibold">Earnings Snapshot</span>
+              <span className="text-md font-semibold">Earnings Snapshot</span>
             </div>
-            <div className="mt-4 text-sm text-textgrey"><EarningSnapshot /></div>
+            <div className="mt-4 text-sm text-textgrey">
+              <EarningSnapshot />
+            </div>
           </Card>
           <Card className="h-full p-5">
             <div className="flex items-center gap-4">
               <div className="p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
                 <FileSearchCornerIcon />
               </div>
-                <span className="text-md font-semibold">Upcoming Renewals</span>
+              <span className="text-md font-semibold">Upcoming Renewals</span>
             </div>
-            <div className="mt-4 text-sm text-textgrey"><RenewalCard /></div>
+            <div className="mt-4 text-sm text-textgrey">
+              <RenewalCard />
+            </div>
           </Card>
         </div>
       </div>
