@@ -1,3 +1,4 @@
+import { useRenewSubscriptionQuery } from "@api-queries/center-admin/Dashboard/Query";
 import CustomeModal from "@common/components/CustomeModal";
 import CustomeSelect from "@common/components/CustomeSelect";
 import { Button } from "@pages/components/ui/button";
@@ -10,17 +11,21 @@ const subscriptionType = [
   { id: "yearly", label: "Yearly" },
 ];
 
-const currentPackageDetails = [
-  { label: "Plan Name", value: "White-Label Offline + Live Classes" },
-  { label: "Billing Cycle", value: "Yearly" },
-  { label: "Start Date", value: "22 Jan 2025" },
-  { label: "Expiry Date", value: "21 Jan 2026" },
-  { label: "Amount Paid", value: "₹24,900.00" },
-];
-
 const RenewSubscription = ({ open, setOpen }) => {
   const [showUpgradeFields, setShowUpgradeFields] = useState(false);
-
+  const { data, isLoading } = useRenewSubscriptionQuery();
+  console.log("data: ", data);
+  const currentPackageDetails = [
+    {
+      label: "Billing Cycle",
+      value: data?.pricing_options?.selected_subscription_duration || "N/A",
+    },
+    { label: "Expiry Date", value: data?.expiry_info?.latest_end_date },
+    {
+      label: "Amount Paid",
+      value: data?.pricing_options?.total_amount_payable,
+    },
+  ];
   const formik = useFormik({
     initialValues: {
       subscription_duration: "",
@@ -75,34 +80,8 @@ const RenewSubscription = ({ open, setOpen }) => {
         {/* UPGRADE SECTION */}
         {showUpgradeFields && (
           <div className="grid grid-cols-2 gap-4 border p-4 rounded-xl bg-white">
-            <CustomeSelect
-              label="Subscription Duration"
-              name="subscription_duration"
-              options={subscriptionType}
-              value={formik.values.subscription_duration}
-              onChange={(value) =>
-                formik.setFieldValue("subscription_duration", value)
-              }
-              placeholder="Select duration"
-            />
+           hhj
 
-            <Input
-              label="Price"
-              name="price"
-              value={formik.values.price}
-              onChange={formik.handleChange}
-              placeholder="Enter price"
-            />
-
-            <div className="col-span-2">
-              <Input
-                label="Plan Type"
-                name="plan_type"
-                value={formik.values.plan_type}
-                onChange={formik.handleChange}
-                placeholder="e.g. Premium / Enterprise"
-              />
-            </div>
           </div>
         )}
 
