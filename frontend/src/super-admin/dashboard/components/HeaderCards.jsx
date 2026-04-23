@@ -13,7 +13,7 @@ import {
 import TrendBadge from "@common/components/TrendBadge";
 import { useNavigate } from "react-router-dom";
 
-const HeaderCard = ({ data }) => {
+const DashboardHeaderCard = ({ data }) => {
   const navigate = useNavigate();
   const cardsData = [
     {
@@ -101,4 +101,4 @@ const HeaderCard = ({ data }) => {
   );
 };
 
-export default HeaderCard;
+export default DashboardHeaderCard;

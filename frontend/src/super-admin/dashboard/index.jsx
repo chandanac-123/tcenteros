@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Card } from "@pages/components/ui/card";
 import LineChart from "@common/charts/LineChart";
 import CustomDatePicker from "@common/components/CustomeDatepicker";
-import HeaderCard from "./components/HeaderCards";
 import BaseCard from "./components/BaseCard";
 import MultiRingChart from "@common/charts/MultiRingChart";
 import {
@@ -12,6 +11,7 @@ import {
   Receipt,
   Users,
 } from "lucide-react";
+import DashboardHeaderCard from "./components/HeaderCards";
 
 
 const SuperAdminDashboard = () => {
@@ -93,7 +93,7 @@ const SuperAdminDashboard = () => {
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <HeaderCard dashboardHead={true} />
+          <DashboardHeaderCard dashboardHead={true} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

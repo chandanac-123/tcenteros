@@ -12,7 +12,7 @@ const HeaderCard = ({ cardsData }) => {
             <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
               {item?.icon}
             </div>
-            <span className="text-xs font-medium text-grey">{item?.label}</span>
+            <span className="text-sm font-medium text-grey">{item?.label}</span>
           </div>
           <div className="flex items-end justify-between mt-auto">
             <span className="text-xl font-bold text-textblack">{item?.value}</span>
