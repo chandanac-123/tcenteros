@@ -3,6 +3,7 @@ import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
 import {
   BadgeDollarSign,
   Briefcase,
+  CalendarClock,
   ClipboardClock,
   Download,
   NotepadText,
@@ -23,17 +24,17 @@ const EarningsAndPayouts = () => {
       icon: <BadgeDollarSign />,
     },
     {
-      label: "Pending Payouts",
+      label: "Total Payouts",
       value: 4,
-      icon: <ClipboardClock />,
+      icon: <CalendarClock />,
     },
     {
-      label: "Active Leads",
+      label: "Pending Payouts",
       value: 5,
       icon: <UserPlus />,
     },
     {
-      label: "Conversion Rate",
+      label: "This Month’s Growth",
       value: 5,
       icon: <Briefcase />,
     },
