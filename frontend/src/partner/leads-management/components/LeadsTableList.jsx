@@ -1,22 +1,46 @@
 import { DataTable } from '@common/components/DataTable';
 import { Button } from '@pages/components/ui/button';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ChangeStatusModal from './ChangeStatusModal';
 import { Eye } from 'lucide-react';
 import ViewLeadModal from './ViewLeadModal';
+import CustomFilter from '@common/components/CustomeFilter';
+import { useAllLeads } from '@api-queries/partner/lead-managements/Query';
+import LeadCards from './leadCards';
 
 const LeadsTableList = () => {
     const [openModal, setOpenModal] = useState(false);
     const [viewModal, setViewModal] = useState(false);
-
     const [selectedRow, setSelectedRow] = useState(null);
+    const [tableParams, setTableParams] = useState({
+        page: 1,
+        search: "",
+    });
+    const [filters, setFilters] = useState({
+        lead_status: undefined,
+        source: undefined,
+        skip: 0,
+        limit: 10,
+    });
+    const { data, isLoading } = useAllLeads(filters);
+
+    console.log("Data in Leads", data);
+
+    const leadsFilter = [
+        { value: "new", label: "New" },
+        { value: "contacted", label: "Contacted" },
+        { value: "interested", label: "Interested" },
+        { value: "converted", label: "Converted" },
+        { value: "closed", label: "Closed" },
+    ];
+
     const columns = [
         {
-            accessorKey: "leadName",
+            accessorKey: "contact_person_name",
             header: "Lead Name",
         },
         {
-            accessorKey: "contact",
+            accessorKey: "phone_number",
             header: "Contact",
         },
         {
@@ -28,16 +52,18 @@ const LeadsTableList = () => {
             header: "Source",
         },
         {
-            accessorKey: "status",
+            accessorKey: "lead_status",
             header: "Status",
             cell: ({ row }) => {
-                const status = row.getValue("status")?.toLowerCase();
+                const status = row.getValue("lead_status")?.toLowerCase();
 
                 const styles = {
                     contacted: "bg-[#FFFED5] text-[#885503]",
                     new: "bg-[#D5FFE7] text-[#03881C]",
-                    demo: "bg-[#E5D3F5] text-[#561290]",
-                    lost: "bg-[#FFD7D5] text-[#880303]"
+                    demo_done: "bg-[#E5D3F5] text-[#561290]",
+                    interested: "bg-[#a5dcf0] text-[#083963]",
+                    converted: "bg-[#8b5e0a] text-[#ffff]",
+                    closed: "bg-[#f5c1c1] text-[#bd0909]",
                 };
 
                 return (
@@ -53,24 +79,39 @@ const LeadsTableList = () => {
             accessorKey: "action",
             header: "Action",
             cell: ({ row }) => {
+                const status = row.original?.lead_status?.toLowerCase();
+
                 return (
                     <div className="flex items-center gap-5">
-                        <Button
-                            size='notificationbutton'
-                            onClick={() => {
-                                setSelectedRow(row.original);
-                                setOpenModal(true);
-                            }}
-                            variant=""
-                        >
-                            Change Status
-                        </Button>
+                        {status === "converted" ? (
+                            <Button
+                                variant="outline_secondary"
+                                size='notificationbutton'
+                                className="cursor-not-allowed"
+                            >
+                                Change Status
+                            </Button>
+                        ) : (
+                            <Button
+                                size='notificationbutton'
+                                onClick={() => {
+                                    setSelectedRow(row.original);
+                                    setOpenModal(true);
+                                }}
+                            >
+                                Change Status
+                            </Button>
+                        )}
+
 
                         <Button
                             variant="button_filter"
                             size='icon'
                             className='rounded-full h-8 w-8'
-                            onClick={() => setViewModal(true)}
+                            onClick={() => {
+                                setSelectedRow(row.original);
+                                setViewModal(true)
+                            }}
                         >
                             <Eye />
                         </Button>
@@ -81,68 +122,48 @@ const LeadsTableList = () => {
             },
         },
     ];
-    const leadsData = [
-        {
-            id: 1,
-            leadName: "John Mathew",
-            contact: "+91 9876543210",
-            city: "Kochi",
-            source: "Website",
-            status: "New",
-        },
-        {
-            id: 2,
-            leadName: "Aisha Rahman",
-            contact: "+91 9123456780",
-            city: "Calicut",
-            source: "Facebook",
-            status: "Contacted",
-        },
-        {
-            id: 3,
-            leadName: "Arun Kumar",
-            contact: "+91 9988776655",
-            city: "Trivandrum",
-            source: "Referral",
-            status: "Demo",
-        },
-        {
-            id: 4,
-            leadName: "Neha Sharma",
-            contact: "+91 9012345678",
-            city: "Bangalore",
-            source: "Instagram",
-            status: "New",
-        },
-        {
-            id: 5,
-            leadName: "Rahul Nair",
-            contact: "+91 9090909090",
-            city: "Kochi",
-            source: "Website",
-            status: "Lost",
-        },
-    ];
 
+    useEffect(() => {
+        setFilters((prev) => ({
+            ...prev,
+            skip: (tableParams.page - 1) * prev.limit,
+        }));
+    }, [tableParams.page]);
+
+    const leadsData = data?.data || [];
     return (
-        <div>
+        <div className='flex flex-col gap-3'>
+            <LeadCards data={data?.counts} />
             <div className='shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4'>
+                <div className="flex items-center justify-between p-2">
+                    <h2 className="text-black font-poppins text-[20px] font-semibold leading-8 tracking-[-0.4px]">All Leads</h2>
+                    <CustomFilter
+                        options={leadsFilter}
+                        onApply={(value) =>
+                            setFilters((prev) => ({
+                                ...prev,
+                                lead_status: value || undefined,
+                                skip: 0,
+                            }))
+                        }
+                    />
+                </div>
                 <DataTable
                     columns={columns}
                     data={leadsData}
-                    loading={false}
-                    // tableParams={tableParams}
-                    // setTableParams={setTableParams}
-                    pagination={11}
+                    loading={isLoading}
+                    tableParams={tableParams}
+                    setTableParams={setTableParams}
+                    pagination={data?.counts?.total_leads}
                     paginationVisibile={true}
-                    search={true}
+                    search={false}
 
                 />
             </div>
             <ChangeStatusModal
                 open={openModal}
                 setOpen={setOpenModal}
-                data={selectedRow?.status?.toLowerCase()}
+                data={selectedRow}
             />
             <ViewLeadModal
                 open={viewModal}

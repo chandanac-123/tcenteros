@@ -1,3 +1,4 @@
+import { useChangeLeadStatus } from '@api-queries/partner/lead-managements/Query';
 import CustomeModal from '@common/components/CustomeModal'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input';
@@ -5,34 +6,66 @@ import React, { useEffect, useState } from 'react'
 
 const ChangeStatusModal = ({ open, setOpen, onSubmit, data }) => {
     const [selectedStatus, setSelectedStatus] = useState(null);
-
+    const { mutate: changeStatus, isPending } = useChangeLeadStatus();
+    const [remarks, setRemarks] = useState("");
 
     useEffect(() => {
         if (data) {
-            setSelectedStatus(data.toLowerCase());
+            setSelectedStatus(data?.lead_status?.toLowerCase());
         }
     }, [data]);
+
     const styles = [
-        { label: "contacted", bg: "bg-[#FFFED5]", text: "text-[#885503]", border: "border-[#885503]" },
         { label: "new", bg: "bg-[#D5FFE7]", text: "text-[#03881C]", border: "border-[#03881C]" },
-        { label: "demo", bg: "bg-[#E5D3F5]", text: "text-[#561290]", border: "border-[#561290]" },
-        { label: "lost", bg: "bg-[#FFD7D5]", text: "text-[#880303]", border: "border-[#880303]" }
+        { label: "contacted", bg: "bg-[#FFFED5]", text: "text-[#885503]", border: "border-[#885503]" },
+        { label: "interested", bg: "bg-[#a5dcf0]", text: "text-[#083963]", border: "border-[#083963]" },
+        { label: "demo_done", bg: "bg-[#E5D3F5]", text: "text-[#561290]", border: "border-[#561290]" },
+        { label: "closed", bg: "bg-[#FFD7D5]", text: "text-[#880303]", border: "border-[#880303]" }
     ]
 
+    const statusFlow = {
+        new: ["new", "contacted", "interested", "demo_done", "closed"],
+        contacted: ["contacted", "interested", "demo_done", "closed"],
+        interested: ["interested", "demo_done", "closed"],
+        demo_done: ["demo_done", "closed"],
+        closed: ["closed"],
+    };
+
+    const currentStatus = data?.lead_status?.toLowerCase();
+    const filteredStyles = styles.filter((item) =>
+        statusFlow[currentStatus]?.includes(item.label)
+    );
 
     const handleSubmit = () => {
-        if (!selectedStatus) return
-
-        onSubmit?.(selectedStatus)
-        setOpen(false)
-    }
+        if (!selectedStatus) {
+            alert("Please select a status");
+            return;
+        }
+        changeStatus(
+            {
+                id: data?.id,
+                data: {
+                    lead_status: selectedStatus, // ✅ FIXED
+                    remarks: remarks,
+                },
+            },
+            {
+                onSuccess: () => {
+                    setOpen(false);
+                },
+                onError: (err) => {
+                    console.error("Error updating status", err);
+                }
+            }
+        );
+    };
 
     return (
-        <CustomeModal open={open} onOpenChange={setOpen} className='w-[500px]' header="Change Status">
+        <CustomeModal open={open} onOpenChange={setOpen} className='min-w-[600px]' header="Change Status">
             <div className="flex flex-col gap-5">
-              
-                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-                    {styles.map((item) => {
+
+                <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+                    {filteredStyles.map((item) => {
                         const isSelected = selectedStatus === item.label;
 
                         return (
@@ -53,19 +86,20 @@ const ChangeStatusModal = ({ open, setOpen, onSubmit, data }) => {
                     <Input
                         label='Add Remark For the Lead'
                         name="remarks"
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
                         placeholder="Enter Your Remark"
                     />
                 </div>
 
                 <div className="w-full flex items-center justify-end gap-4">
-              
+
                     <Button
                         size="addbutton"
-                        className=" mt-4"
-                        onClick={()=>setOpen(false)}
-                        // disabled={!selectedStatus}
+                        onClick={handleSubmit}
+                        disabled={isPending}
                     >
-                        Save
+                        {isPending ? "Saving..." : "Save"}
                     </Button>
                 </div>
             </div>

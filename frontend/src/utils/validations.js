@@ -41,15 +41,15 @@ export const partnerOnboardingValidationSchema = requireBankDetails =>
       : Yup.string().trim(),
     account_number: requireBankDetails
       ? Yup.string()
-          .trim()
-          .matches(/^[0-9]{9,18}$/, 'Enter a valid account number')
-          .required('Account number is required')
+        .trim()
+        .matches(/^[0-9]{9,18}$/, 'Enter a valid account number')
+        .required('Account number is required')
       : Yup.string().trim(),
     ifsc_code: requireBankDetails
       ? Yup.string()
-          .trim()
-          .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, 'Enter a valid IFSC code')
-          .required('IFSC code is required')
+        .trim()
+        .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, 'Enter a valid IFSC code')
+        .required('IFSC code is required')
       : Yup.string().trim()
   })
 
@@ -265,17 +265,17 @@ export const memberValidationSchema = (isEdit = false) =>
     payment_method: isEdit
       ? Yup.string().nullable().notRequired()
       : Yup.string().when('payment_status', {
-          is: 'paid',
-          then: schema => schema.required('Select payment method'),
-          otherwise: schema => schema.nullable()
-        }),
+        is: 'paid',
+        then: schema => schema.required('Select payment method'),
+        otherwise: schema => schema.nullable()
+      }),
     password: isEdit
       ? Yup.string().nullable().notRequired()
       : Yup.string().when('payment_status', {
-          is: 'paid',
-          then: schema => schema.required('Password is required'),
-          otherwise: schema => schema.notRequired()
-        })
+        is: 'paid',
+        then: schema => schema.required('Password is required'),
+        otherwise: schema => schema.notRequired()
+      })
   })
 
 export const productValidationSchema = Yup.object().shape({
@@ -408,3 +408,27 @@ export const taxValidationSchema = Yup.object({
   tax_type: Yup.string().required('Tax type is required'),
   tax_scope: Yup.string().required('Tax scope is required')
 })
+
+
+export const leadValidationSchema = Yup.object({
+  center_name: Yup.string().required("Center name is required"),
+
+  center_type: Yup.string().required("Center type is required"),
+
+  contact_person_name: Yup.string().required("Contact person is required"),
+
+  phone_number: Yup.string()
+    .matches(/^[0-9]+$/, "Only numbers allowed")
+    .length(10, "Must be 10 digits")
+    .required("Phone number is required"),
+
+  email: Yup.string()
+    .email("Invalid email")
+    .required("Email is required"),
+
+  whatsapp_number: Yup.string()
+    .matches(/^[0-9]*$/, "Only numbers allowed")
+    .test("len", "Must be 10 digits", val => !val || val.length === 10),
+
+  city: Yup.string().required("City is required"),
+});
