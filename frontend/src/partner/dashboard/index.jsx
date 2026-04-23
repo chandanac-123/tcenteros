@@ -7,6 +7,9 @@ import {
   BadgeDollarSign,
   Briefcase,
   ClipboardClock,
+  FileSearchCorner,
+  FileSearchCornerIcon,
+  NotepadText,
   UserPlus,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -61,7 +64,7 @@ const PartnerDashboard = () => {
           <Card className="h-full p-5">
             <div className="flex items-center gap-4">
               <div className="p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
-                <BadgeDollarSign />
+                <NotepadText />
               </div>
                 <span className="text-md font-semibold">Earnings Snapshot</span>
             </div>
@@ -70,7 +73,7 @@ const PartnerDashboard = () => {
           <Card className="h-full p-5">
             <div className="flex items-center gap-4">
               <div className="p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
-                <BadgeDollarSign />
+                <FileSearchCornerIcon />
               </div>
                 <span className="text-md font-semibold">Upcoming Renewals</span>
             </div>

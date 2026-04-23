@@ -96,7 +96,8 @@ export default {
         light_green:'#D5FFE7',
         danger:'#B2321F',
         partner_green:'#008B00',
-        partner_red:'#C74A31'
+        partner_red:'#C74A31',
+        partner_yellow:'#D6A309',
       }
     }
   },

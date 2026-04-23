@@ -1,5 +1,5 @@
 import { Progress } from "@pages/components/ui/progress";
-import { BadgeDollarSign } from "lucide-react";
+import { BadgeDollarSign, CalendarClock, CalendarPlus2 } from "lucide-react";
 import React from "react";
 
 const earningColorClasses = {
@@ -24,6 +24,7 @@ const EarningSnapshot = () => {
       title: "Total Earnings",
       amount: "₹ 5,00,000",
       progress: 70,
+      icon: <BadgeDollarSign />,    
       color: "onboard_primary",
     },
     {
@@ -31,12 +32,14 @@ const EarningSnapshot = () => {
       title: "Earnings This Month",
       amount: "₹ 80,000",
       progress: 45,
+      icon: <CalendarPlus2 />,
       color: "partner_green",
     },
     {
       id: 3,
       title: "Earnings Payouts",
       amount: "₹ 1,20,000",
+      icon: <CalendarClock />,
       progress: 30,
       color: "partner_red",
     },
@@ -53,7 +56,7 @@ const EarningSnapshot = () => {
             <div className="flex justify-between items-center">
               <div className="flex gap-2 items-center">
                 <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
-                  <BadgeDollarSign />
+                 {earning.icon}
                 </div>
                 <span className="text-sm">{earning.title}</span>
               </div>

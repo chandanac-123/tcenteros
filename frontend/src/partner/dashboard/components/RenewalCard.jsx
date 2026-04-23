@@ -6,9 +6,9 @@ const renewalColorClasses = {
     card: "border-partner_red bg-partner_red/10",
     text: "text-partner_red",
   },
-  yellow: {
-    card: "border-yellow bg-yellow/10",
-    text: "text-yellow",
+  partner_yellow: {
+    card: "border-partner_yellow bg-partner_yellow/10",
+    text: "text-partner_yellow",
   },
   onboard_primary: {
     card: "border-onboard_primary bg-onboard_primary/10",
@@ -32,7 +32,7 @@ const RenewalCard = () => {
       amount: "₹ 80,000",
       day_left: "5 days Left",
       date: "15 Mar 26",
-      color: "yellow",
+      color: "partner_yellow",
     },
     {
       id: 3,
@@ -55,8 +55,8 @@ const RenewalCard = () => {
             key={renewal.id}
             className={`flex flex-col rounded-lg border p-3 gap-4 ${colorClass.card}`}
           >
-            <div className="flex justify-between">
-              <div>{renewal.title}</div>
+            <div className="flex justify-between ">
+              <div className="text-textblack">{renewal.title}</div>
             </div>
             <div className="flex justify-between">
               <div className="flex gap-2">
