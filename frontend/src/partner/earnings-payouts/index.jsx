@@ -4,38 +4,46 @@ import {
   BadgeDollarSign,
   Briefcase,
   CalendarClock,
-  ClipboardClock,
   Download,
   NotepadText,
   UserPlus,
-  UserRoundCog,
 } from "lucide-react";
 import React from "react";
 import EarningPayoutTable from "./EarningPayoutTable";
 import { Button } from "@pages/components/ui/button";
-import CustomDatePicker from "@common/components/CustomeDatepicker";
-import CustomFilter from "@common/components/CustomeFilter";
+import {
+  useEarningsAndPayoutsQuery,
+  useExportEarningsAndPayoutsMutation,
+} from "@api-queries/partner/earnings-payouts/Query";
 
 const EarningsAndPayouts = () => {
+  const [tableParams, setTableParams] = React.useState({
+    page: 1,
+    status: "",
+  });
+  const { data, isLoading } = useEarningsAndPayoutsQuery(tableParams);
+  const { mutate: exportEarningsAndPayouts } =
+    useExportEarningsAndPayoutsMutation();
+
   const cardsData = [
     {
       label: "Total Earnings",
-      value: 5,
+      value: data?.summary?.total_earnings || 0,
       icon: <BadgeDollarSign />,
     },
     {
       label: "Total Payouts",
-      value: 4,
+      value: data?.summary?.total_payouts || 0,
       icon: <CalendarClock />,
     },
     {
       label: "Pending Payouts",
-      value: 5,
+      value: data?.summary?.pending_payouts || 0,
       icon: <UserPlus />,
     },
     {
       label: "This Month’s Growth",
-      value: 5,
+      value: data?.summary?.this_month_growth || 0,
       icon: <Briefcase />,
     },
   ];
@@ -63,14 +71,18 @@ const EarningsAndPayouts = () => {
           <div className="flex justify-between">
             <span className="text-lg font-semibold">Transactions</span>
             <div className="flex gap-3">
-              <CustomFilter filterName="All Status" />
-              <Button size="addbutton">
+              <Button size="addbutton" onClick={() => exportEarningsAndPayouts()}>
                 <Download />
-               Export
+                Export
               </Button>
             </div>
           </div>
-          <EarningPayoutTable />
+          <EarningPayoutTable
+            data={data}
+            isLoading={isLoading}
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
         </div>
       </div>
     </ContentLayout>

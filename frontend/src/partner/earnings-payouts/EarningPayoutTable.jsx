@@ -1,27 +1,31 @@
 import { DataTable } from "@common/components/DataTable";
-import { Button } from "@pages/components/ui/button";
 import React from "react";
 
-const EarningPayoutTable = () => {
+const EarningPayoutTable = ({
+  data,
+  tableParams,
+  setTableParams,
+  isLoading,
+}) => {
   const columns = [
     {
-      accessorKey: "id",
+      accessorKey: "transaction_id",
       header: "TR ID",
     },
     {
-      accessorKey: "leadName",
+      accessorKey: "lead_name",
       header: "Lead Name",
     },
     {
-      accessorKey: "contact",
+      accessorKey: "mobile",
       header: "Contact",
     },
     {
-      accessorKey: "city",
+      accessorKey: "transaction_date",
       header: "Transaction Date",
     },
     {
-      accessorKey: "source",
+      accessorKey: "amount",
       header: "Amount",
     },
     {
@@ -47,58 +51,16 @@ const EarningPayoutTable = () => {
       },
     },
   ];
-  const leadsData = [
-    {
-      id: 1,
-      leadName: "John Mathew",
-      contact: "+91 9876543210",
-      city: "Kochi",
-      source: "Website",
-      status: "New",
-    },
-    {
-      id: 2,
-      leadName: "Aisha Rahman",
-      contact: "+91 9123456780",
-      city: "Calicut",
-      source: "Facebook",
-      status: "Contacted",
-    },
-    {
-      id: 3,
-      leadName: "Arun Kumar",
-      contact: "+91 9988776655",
-      city: "Trivandrum",
-      source: "Referral",
-      status: "Demo",
-    },
-    {
-      id: 4,
-      leadName: "Neha Sharma",
-      contact: "+91 9012345678",
-      city: "Bangalore",
-      source: "Instagram",
-      status: "New",
-    },
-    {
-      id: 5,
-      leadName: "Rahul Nair",
-      contact: "+91 9090909090",
-      city: "Kochi",
-      source: "Website",
-      status: "Lost",
-    },
-  ];
 
   return (
     <div>
       <DataTable
         columns={columns}
-        data={leadsData}
-        loading={false}
-        // tableParams={tableParams}
-        // setTableParams={setTableParams}
-        pagination={11}
+        data={data?.data || []}
+        loading={isLoading}
+        tableParams={tableParams}
+        setTableParams={setTableParams}
+        pagination={data?.total}
         paginationVisibile={true}
         search={true}
       />
