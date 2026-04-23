@@ -29,6 +29,8 @@ import AdminProfileModal from "@super-admin/admin-profile";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const role = useAuthStore((state) => state.auth?.role);
+  const isSuperAdmin = role === "superadmin";
+  const isPartner = role === "partner";
   const { hydrated, canAddMember } = useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
@@ -37,7 +39,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const { data } = useGetProfileInfoQuery();
   const navigate = useNavigate();
   const [locationOpen, setLocationOpen] = useState(false);
-  const [openAdminProfile, setOpemAdminProfile] = useState(false)
+  const [openAdminProfile, setOpemAdminProfile] = useState(false);
 
   const handleLogout = () => {
     const state = useAuthStore.getState();
@@ -53,7 +55,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
         </button>
       </div>
       <div className="flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200">
-        {role != "superadmin" && (
+        {!isSuperAdmin && !isPartner && (
           <div className="flex w-full justify-end gap-2 items-center">
             <button onClick={() => setLocationOpen(true)}>
               <span className="flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md">
@@ -79,123 +81,73 @@ const Header = ({ toggleSidebar, collapsed }) => {
             </Button>
           </div>
         )}
-        <button onClick={() => navigate("/notifications")}>
-          <img src={bell_active} alt="logo" className="mr-2" />
-        </button>
+        {!isPartner && (
+          <button onClick={() => navigate("/notifications")}>
+            <img src={bell_active} alt="logo" className="mr-2" />
+          </button>
+        )}
 
-        {
-          role !== "superadmin" ? (
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
-                <div className="flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer">
-                  <div className="flex items-center">
-                    <div className="flex items-center gap-0">
-                      <img
-                        src={data?.profile_photo || defalutUser}
-                        alt="logo"
-                        className="w-8 h-8 mr-2 rounded-full"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-textwhite text-xs font-normal whitespace-nowrap">
-                          {data?.full_name || "-"}
-                        </span>
-                        <span className="text-textwhite/50 text-xs font-light">
-                          {data?.role
-                            ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
-                            : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronDown className="w-5 h-5 text-textwhite  ml-10" />
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
+            <div className="flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer">
+              <div className="flex items-center">
+                <div className="flex items-center gap-0">
+                  <img
+                    src={data?.profile_photo || defalutUser}
+                    alt="logo"
+                    className="w-8 h-8 mr-2 rounded-full"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-textwhite text-xs font-normal whitespace-nowrap">
+                      {data?.full_name || "-"}
+                    </span>
+                    <span className="text-textwhite/50 text-xs font-light">
+                      {data?.role
+                        ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
+                        : "-"}
+                    </span>
                   </div>
                 </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto">
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => {
-                      navigate("/profile");
-                      setPopoverOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
-                  >
-                    <UserRound className="w-5 h-5 text-primary" />
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/settings");
-                      setPopoverOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
-                  >
-                    <Settings className="w-5 h-5 text-primary" />
-                    Settings
-                  </button>
-                  <button
-                    onClick={() => setLogoutOpen(true)}
-                    className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
-                  >
-                    <LogOut className="w-5 h-5 text-primary" />
-                    Logout
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
-                <div className="flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer">
-                  <div className="flex items-center">
-                    <div className="flex items-center gap-0">
-                      <img
-                        src={data?.profile_photo || defalutUser}
-                        alt="logo"
-                        className="w-8 h-8 mr-2 rounded-full"
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-textwhite text-xs font-normal whitespace-nowrap">
-                          {data?.full_name || "-"}
-                        </span>
-                        <span className="text-textwhite/50 text-xs font-light">
-                          {data?.role
-                            ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
-                            : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronDown className="w-5 h-5 text-textwhite  ml-10" />
-                  </div>
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto">
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => {
-                      setOpemAdminProfile(true)
-                      setPopoverOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
-                  >
-                    <UserRound className="w-5 h-5 text-primary" />
-                    Profile
-                  </button>
-
-                  <button
-                    onClick={() => setLogoutOpen(true)}
-                    className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
-                  >
-                    <LogOut className="w-5 h-5 text-primary" />
-                    Logout
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-          )
-        }
-
-
+                <ChevronDown className="w-5 h-5 text-textwhite  ml-10" />
+              </div>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto">
+            <div className="flex flex-col gap-2">
+              {!isPartner && (
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setPopoverOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
+                >
+                  <UserRound className="w-5 h-5 text-primary" />
+                  Profile
+                </button>
+              )}
+              {!isSuperAdmin && !isPartner && (
+                <button
+                  onClick={() => {
+                    navigate("/settings");
+                    setPopoverOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
+                >
+                  <Settings className="w-5 h-5 text-primary" />
+                  Settings
+                </button>
+              )}
+              <button
+                onClick={() => setLogoutOpen(true)}
+                className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
+              >
+                <LogOut className="w-5 h-5 text-primary" />
+                Logout
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <CustomeModal
         open={logoutOpen}
@@ -225,7 +177,8 @@ const Header = ({ toggleSidebar, collapsed }) => {
 
       <AdminProfileModal
         open={openAdminProfile}
-        setOpen={setOpemAdminProfile} />
+        setOpen={setOpemAdminProfile}
+      />
     </header>
   );
 };
