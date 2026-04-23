@@ -22,7 +22,7 @@ const EarningsAndPayouts = () => {
     status: "",
   });
   const { data, isLoading } = useEarningsAndPayoutsQuery(tableParams);
-  const { mutate: exportEarningsAndPayouts } =
+  const { mutate: exportEarningsAndPayouts, isPending: isExporting } =
     useExportEarningsAndPayoutsMutation();
 
   const cardsData = [
@@ -71,7 +71,11 @@ const EarningsAndPayouts = () => {
           <div className="flex justify-between">
             <span className="text-lg font-semibold">Transactions</span>
             <div className="flex gap-3">
-              <Button size="addbutton" onClick={() => exportEarningsAndPayouts()}>
+              <Button
+                size="addbutton"
+                disabled={isExporting}
+                onClick={() => exportEarningsAndPayouts()}
+              >
                 <Download />
                 Export
               </Button>
