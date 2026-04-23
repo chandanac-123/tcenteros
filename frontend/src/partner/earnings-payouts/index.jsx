@@ -30,21 +30,25 @@ const EarningsAndPayouts = () => {
       label: "Total Earnings",
       value: data?.summary?.total_earnings || 0,
       icon: <BadgeDollarSign />,
+       type:'amount' 
     },
     {
       label: "Total Payouts",
       value: data?.summary?.total_payouts || 0,
       icon: <CalendarClock />,
+       type:'amount' 
     },
     {
       label: "Pending Payouts",
       value: data?.summary?.pending_payouts || 0,
       icon: <UserPlus />,
+       type:'count' 
     },
     {
       label: "This Month’s Growth",
       value: data?.summary?.this_month_growth || 0,
       icon: <Briefcase />,
+       type:'percent' 
     },
   ];
   return (

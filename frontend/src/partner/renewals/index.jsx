@@ -12,21 +12,25 @@ const Renewals = () => {
       label: "Renewals Overdue",
       value: 5,
       icon: <CalendarClock />,
+       type:'count' 
     },
     {
       label: "Renewal Earnings",
       value: 4,
       icon: <CalendarClock />,
+       type:'amount' 
     },
     {
       label: "Renewal Rate",
       value: 5,
       icon:<ChartLine />,
+       type:'percent' 
     },
     {
       label: "Renewal  Commission",
       value: 5,
       icon: <Briefcase />,
+       type:'amount' 
     },
   ];
   return (

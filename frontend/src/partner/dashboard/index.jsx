@@ -31,21 +31,25 @@ const PartnerDashboard = () => {
       label: "Total Earnings",
       value: 5,
       icon: <BadgeDollarSign />,
+      type:'amount' 
     },
     {
       label: "Pending Payouts",
       value: 4,
       icon: <ClipboardClock />,
+      type:'amount' 
     },
     {
       label: "Active Leads",
       value: 5,
       icon: <UserPlus />,
+      type:'count'
     },
     {
       label: "Conversion Rate",
       value: 5,
       icon: <Briefcase />,
+      type:'percent' 
     },
   ];
   return (
