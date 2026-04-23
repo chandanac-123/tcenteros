@@ -11,11 +11,13 @@ import {
     CircleX,
 } from "lucide-react";
 
-const LeadCards = () => {
+const LeadCards = ({data}) => {
+    console.log("DataCounts",data);
+    
     return (
-        <div className="flex items-stretch gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-stretch gap-3">
 
-            <div className="w-[40%] grid grid-cols-2 gap-3">
+            <div className="w-full lg:w-[40%] grid grid-cols-2 gap-3">
 
                 <div className="p-4 rounded-2xl flex flex-col justify-evenly bg-[#FFFFFF] border border-[#E0DDD8] shadow-[0px_4px_15px_rgba(0,0,0,0.09)]">
                     <div className="flex items-center gap-3">
@@ -31,7 +33,7 @@ const LeadCards = () => {
 
 
                     <h2 className="text-4xl sm:text-5xl font-semibold text-[#000000]">
-                        19
+                        {data?.total_leads}
                     </h2>
 
                     <div className="h-1.5 rounded-full w-full bg-[#bc4cdf]" />
@@ -51,14 +53,14 @@ const LeadCards = () => {
 
 
                     <h2 className="text-4xl sm:text-5xl font-semibold text-[#000000]">
-                        4
+                        {data?.today_leads}
                     </h2>
 
                     <div className="h-1.5 rounded-full w-full bg-[#1452D4]" />
                 </div>
             </div>
 
-            <div className="w-[60%] grid grid-cols-3 gap-3">
+            <div className="w-full lg:w-[60%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
                 <div className="p-4 rounded-2xl flex flex-col gap-2 bg-[#FFFFFF] border border-[#E0DDD8] shadow-[0px_4px_15px_rgba(0,0,0,0.09)]">
                     <div className="flex items-center justify-between ">
@@ -72,7 +74,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            27
+                           {data?.new}
                         </h2>
 
                     </div>
@@ -93,7 +95,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            4
+                            {data?.contacted}
                         </h2>
 
                     </div>
@@ -114,7 +116,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            13
+                           {data?.interested}
                         </h2>
 
                     </div>
@@ -135,7 +137,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            33
+                           {data?.demo_done}
                         </h2>
 
                     </div>
@@ -156,7 +158,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            8
+                            {data?.converted}
                         </h2>
 
                     </div>
@@ -177,7 +179,7 @@ const LeadCards = () => {
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl font-semibold text-[#000000]">
-                            4
+                            {data?.closed}
                         </h2>
 
                     </div>

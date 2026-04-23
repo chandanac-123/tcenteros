@@ -3,30 +3,47 @@ import { Calendar, Mail, MapPin, Phone, Shapes, Tag, User } from 'lucide-react'
 import React from 'react'
 
 const ViewLeadModal = ({ open, setOpen, data }) => {
+    console.log("Data", data);
+    const styles = [
+        { label: "new", bg: "bg-[#D5FFE7]", text: "text-[#03881C]", border: "border-[#03881C]" },
+        { label: "contacted", bg: "bg-[#FFFED5]", text: "text-[#885503]", border: "border-[#885503]" },
+        { label: "interested", bg: "bg-[#a5dcf0]", text: "text-[#083963]", border: "border-[#083963]" },
+        { label: "demo_done", bg: "bg-[#E5D3F5]", text: "text-[#561290]", border: "border-[#561290]" },
+        { label: "closed", bg: "bg-[#FFD7D5]", text: "text-[#880303]", border: "border-[#880303]" },
+         { label: "converted", bg: "bg-[#8b5e0a]", text: "text-[#ffff]", border: "border-[#8b5e0a]" }
+    ]
+    const currentStatus = data?.lead_status?.toLowerCase();
+
+    const statusStyle =
+        styles.find((item) => item.label === currentStatus) || {};
+
     return (
-        <CustomeModal open={open} onOpenChange={setOpen} className='p-10' header="">
+        <CustomeModal open={open} onOpenChange={setOpen} className='lg:p-10' header="">
             <div className="w-full flex flex-col gap-4 bg-[#FFFFFF] rounded-xl p-4 md:p-8 shadow-[0px_2px_15px_rgba(0,0,0,0.15)]">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
                     <div>
                         <h2 className="text-xl md:text-2xl font-semibold text-[#222121]">
-                            Fit Fury Fitness
+                            {data?.center_name}
                         </h2>
-                        <p className="text-sm md:text-base text-[#7F7F7F]">
+                        {/* <p className="text-sm md:text-base text-[#7F7F7F]">
                             LD#3324 • Mumbai
-                        </p>
+                        </p> */}
                     </div>
 
                     {/* Status */}
-                    <div className="flex items-center gap-2 px-4 py-1 rounded-lg bg-[#6A1FA9] text-white text-sm font-semibold">
-                        Demo Done
+                    <div
+                        className={`flex justify-center items-center gap-2 px-4 py-1 rounded-lg text-sm font-semibold capitalize
+    ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                    >
+                        {currentStatus?.replace("_", " ")}
                     </div>
                 </div>
 
                 {/* Info */}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
                     {/* Item */}
                     <div className="flex items-start gap-3 px-4 py-2">
@@ -36,7 +53,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         <div className="flex flex-col gap-1 min-w-0">
                             <p className="text-sm text-[#555555]">Contact Person</p>
                             <p className="text-sm font-semibold text-[#2C2C2C] truncate">
-                                PepePortugal
+                                {data?.contact_person_name}
                             </p>
                         </div>
                     </div>
@@ -48,7 +65,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         </div>
                         <div>
                             <p className="text-sm text-[#555555]">Phone number</p>
-                            <p className="text-sm font-semibold text-[#2C2C2C]">7533189023</p>
+                            <p className="text-sm font-semibold text-[#2C2C2C]">{data?.phone_number}</p>
                         </div>
                     </div>
 
@@ -72,7 +89,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         </div>
                         <div>
                             <p className="text-sm text-[#555555]">Lead Source</p>
-                            <p className="text-sm font-semibold text-[#2C2C2C]">Meta Ads</p>
+                            <p className="text-sm font-semibold text-[#2C2C2C]">{data?.source}</p>
                         </div>
                     </div>
 
@@ -84,7 +101,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         <div className="min-w-0">
                             <p className="text-sm text-[#555555]">Email</p>
                             <p className="text-sm font-semibold text-[#2C2C2C] truncate">
-                                pepeportugal3@gmail.com
+                                {data?.email}
                             </p>
                         </div>
                     </div>
@@ -96,7 +113,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         </div>
                         <div>
                             <p className="text-sm text-[#555555]">Business Type</p>
-                            <p className="text-sm font-semibold text-[#2C2C2C]">Yoga Center</p>
+                            <p className="text-sm font-semibold text-[#2C2C2C]">{data?.center_type}</p>
                         </div>
                     </div>
 
@@ -121,7 +138,7 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         <div className="min-w-0">
                             <p className="text-sm text-[#555555]">Address</p>
                             <p className="text-sm font-semibold text-[#2C2C2C] break-words">
-                                Shop 12, Building A, Andheri West, Mumbai - 400058
+                                {data?.address_line_1},{data?.country},{data?.state},{data?.city},{data?.postal_code}
                             </p>
                         </div>
                     </div>
@@ -133,7 +150,9 @@ const ViewLeadModal = ({ open, setOpen, data }) => {
                         Remarks
                     </h2>
                     <div className="px-4">
-                         <p className="text-sm md:text-base text-[#7F7F7F] p-3 border rounded-lg">Eager to connect and explore potential synergies.</p>
+                        <p className="text-sm md:text-base text-[#7F7F7F] p-3 border rounded-lg">
+                            {data?.latest_remarks}
+                        </p>
                     </div>
                 </div>
 

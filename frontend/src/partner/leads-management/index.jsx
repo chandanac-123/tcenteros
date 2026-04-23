@@ -2,7 +2,6 @@ import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { Button } from '@pages/components/ui/button'
 import { Plus, UserRoundCog } from 'lucide-react'
 import React from 'react'
-import LeadCards from './components/leadCards'
 import LeadsTableList from './components/LeadsTableList'
 import { useNavigate } from 'react-router-dom'
 
@@ -12,7 +11,7 @@ const LeadsManagement = () => {
   return (
     <ContentLayout>
       <div className="flex flex-col gap-4 px-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row items-center lg:justify-between">
           <div className="flex items-center gap-4 p-4">
             <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
               <UserRoundCog size={30} className="text-onboard_primary" />
@@ -29,14 +28,14 @@ const LeadsManagement = () => {
 
           <div className="pe-5">
             <Button size="addbutton"
-              onClick={() => navigate("/add-newLeads")}
+              onClick={() => navigate("/lead-management/add-newLeads")}
             >
               <Plus />
               Add Manual Lead
             </Button>
           </div>
         </div>
-        <LeadCards />
+      
         <div className="">
           <LeadsTableList />
         </div>
