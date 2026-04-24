@@ -1,4 +1,5 @@
 import { DataTable } from "@common/components/DataTable";
+import { useAppPermissions } from "@hooks/permissions";
 import { Badge } from "@pages/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
@@ -17,6 +18,8 @@ const ActiveSubcriptionTable = ({
   isLoading,
 }) => {
   const navigate = useNavigate();
+  const { hydrated, canActiveSubscriptionView } = useAppPermissions();
+  if (!hydrated) return null;
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     {
@@ -68,7 +71,7 @@ const ActiveSubcriptionTable = ({
           <span
             className={`font-medium ${colorClass} text-xs border px-2 rounded-md`}
           >
-          {days !== null && days !== undefined ? `${days} d` : "N/A"}
+            {days !== null && days !== undefined ? `${days} d` : "N/A"}
           </span>
         );
       },
@@ -104,6 +107,7 @@ const ActiveSubcriptionTable = ({
       cell: ({ row }) => (
         <div className="flex">
           <button
+            disabled={!canActiveSubscriptionView}
             className="px-3 py-1 text-xs  items-center justify-center rounded-xl border"
             onClick={() =>
               navigate(
