@@ -88,7 +88,7 @@ export const sidebarPermission = (permissions, key) => {
 }
 
 export const checkPermission = (permissions, path) => {
-  // allow all if null (super admin)
+  // allow all if null (centeradmin, centeradmin)
   if (permissions === null) return true
   // only block if undefined
   if (permissions === undefined) return false

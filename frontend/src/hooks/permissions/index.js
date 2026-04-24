@@ -1,7 +1,4 @@
 import { usePermission } from "@hooks/PermissionHook";
-import { PERMISSIONS } from "@utils/permissions";
-import { SUPERADMINPERMISSIONS } from "@utils/superadmin-permission";
-import { ca } from "date-fns/locale";
 
 export const useAppPermissions = () => {
   const { hasPermission, hydrated } = usePermission();
@@ -10,83 +7,83 @@ export const useAppPermissions = () => {
     hydrated,
 
     // Dashboard
-    canOverview: hasPermission(PERMISSIONS.DASHBOARD.OVERVIEW),
-    canAddBranch: hasPermission(PERMISSIONS.DASHBOARD.ADD_BRANCH),
-    canCreateBranch: hasPermission(PERMISSIONS.DASHBOARD.CREATE_BRANCH),
+    canOverview: hasPermission('dashboard.submodules.overview'),
+    canAddBranch: hasPermission('dashboard.submodules.add_branch'),
+    canCreateBranch: hasPermission('dashboard.submodules.create_branch'),
 
     // Profile
-    canEditProfile: hasPermission(PERMISSIONS.PROFILE.EDIT_PROFILE),
+    canEditProfile: hasPermission('profile.submodules.edit_profile'),
 
     // CRM
-    canViewMember: hasPermission(PERMISSIONS.CRM.MEMBER_LIST),
-    canAddMember: hasPermission(PERMISSIONS.CRM.MEMBER_ADD),
-    canEditMember: hasPermission(PERMISSIONS.CRM.MEMBER_EDIT),
-    canDeleteMember: hasPermission(PERMISSIONS.CRM.MEMBER_DELETE),
-    canEnableMember: hasPermission(PERMISSIONS.CRM.MEMBER_ENABLE_DISABLE),
-    canViewLeads: hasPermission(PERMISSIONS.CRM.LEADS),
-    canConvertGuest: hasPermission(PERMISSIONS.CRM.GUEST_CONVERT),
-    canAddVisitor: hasPermission(PERMISSIONS.CRM.VISITOR_ADD),
-    canConvertVisitor: hasPermission(PERMISSIONS.CRM.VISITOR_CONVERT),
+    canViewMember: hasPermission('crm.submodules.member.list'),
+    canAddMember: hasPermission('crm.submodules.member.add'),
+    canEditMember: hasPermission('crm.submodules.member.edit'),
+    canDeleteMember: hasPermission('crm.submodules.member.delete'),
+    canEnableMember: hasPermission('crm.submodules.member.enable_disable'),
+    canViewLeads: hasPermission('crm.submodules.leads'),
+    canConvertGuest: hasPermission('crm.submodules.guest.convert_to_member'),
+    canAddVisitor: hasPermission('crm.submodules.visitor.add'),
+    canConvertVisitor: hasPermission('crm.submodules.visitor.convert_to_member'),
 
     // Employee Management
-    canEmployee: hasPermission(PERMISSIONS.EMPLOYEE.LIST),
-    canSalary: hasPermission(PERMISSIONS.SALARY.LIST),
-    canPayroll: hasPermission(PERMISSIONS.PAYROLL.LIST),
-    canAddEmployee: hasPermission(PERMISSIONS.EMPLOYEE.ADD),
-    canViewEmployee: hasPermission(PERMISSIONS.EMPLOYEE.VIEW),
-    canEditEmployee: hasPermission(PERMISSIONS.EMPLOYEE.EDIT),
-    canDeleteEmployee: hasPermission(PERMISSIONS.EMPLOYEE.DELETE),
-    canEnableEmployee: hasPermission(PERMISSIONS.EMPLOYEE.ENABLE_DISABLE),
+    canEmployee: hasPermission('employee_management.submodules.employee.list'),
+    canSalary: hasPermission('employee_management.submodules.salary_structure'),
+    canPayroll: hasPermission('employee_management.submodules.payroll'),
+    canAddEmployee: hasPermission('employee_management.submodules.employee.add'),
+    canViewEmployee: hasPermission('employee_management.submodules.employee.view'),
+    canEditEmployee: hasPermission('employee_management.submodules.employee.edit'),
+    canDeleteEmployee: hasPermission('employee_management.submodules.employee.delete'),
+    canEnableEmployee: hasPermission('employee_management.submodules.employee.enable_disable'),
 
     //Membership
-    canListMembership: hasPermission(PERMISSIONS.MEMBERSHIP.LIST),
-    canAddMembership: hasPermission(PERMISSIONS.MEMBERSHIP.ADD),
-    canEditMembership: hasPermission(PERMISSIONS.MEMBERSHIP.EDIT),
-    canDeleteMembership: hasPermission(PERMISSIONS.MEMBERSHIP.DELETE),
-    canEnableMembership: hasPermission(PERMISSIONS.MEMBERSHIP.ENABLE_DISABLE),
+    canListMembership: hasPermission('membership_plan.submodules.list'),
+    canAddMembership: hasPermission('membership_plan.submodules.add'),
+    canEditMembership: hasPermission('membership_plan.submodules.edit'),
+    canDeleteMembership: hasPermission('membership_plan.submodules.delete'),
+    canEnableMembership: hasPermission('membership_plan.submodules.enable_disable'),
 
     // Network
-    canViewNetwork: hasPermission(PERMISSIONS.NETWORK.LIST),
-    canApproveNetwork: hasPermission(PERMISSIONS.NETWORK.APPROVE),
-    canAddAmount: hasPermission(PERMISSIONS.NETWORK.ADD_AMOUNT),
-    canEnableNetwork: hasPermission(PERMISSIONS.NETWORK.ENABLE_DISABLE),
+    canViewNetwork: hasPermission('network.submodules.list'),
+    canApproveNetwork: hasPermission('network.submodules.netwrok_request_approve'),
+    canAddAmount: hasPermission('network.submodules.add_network_amount'),
+    canEnableNetwork: hasPermission('network.submodules.enable_disable'),
 
     // Wallet
-    canAddTopup: hasPermission(PERMISSIONS.WALLET.ADD_TOPUP),
+    canAddTopup: hasPermission( 'wallet.submodules.add_topup'),
 
     //superadmin
     //Subscription
-    canActiveSubscriptionList: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.ACTIVE_SUBCRIPTION_LIST),
-    canActiveSubscriptionView: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.ACTIVE_SUBCRIPTION_VIEW),
-    canRenewalCalender: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.RENEWAL_CALENDER),
-    canRenwalView: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.RENEWAL_CALENDER_VIEW),
-    canExpiringList: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.EXPIRING_SOON_LIST),
-    canSendReminderExpiring: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.EXPIRING_SOON_SEND_REMINDER),
-    canAddGraceExpiring: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.EXPIRING_SOON_ADD_GRACE),
-    canListFailedPayment: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.FAILED_PAYMENT_LIST),
-    canSuspendFailedPayment: hasPermission(SUPERADMINPERMISSIONS.SUBSCRIPTION.FAILED_PAYMENT_SUSPEND),
+    canActiveSubscriptionList: hasPermission("subscription.submodules.active_subcription.list"),
+    canActiveSubscriptionView: hasPermission("subscription.submodules.active_subcription.view"),
+    canRenewalCalender: hasPermission("subscription.submodules.renewal_calender.list"),
+    canRenwalView: hasPermission("subscription.submodules.renewal_calender.view"),
+    canExpiringList: hasPermission("subscription.submodules.expiring_soon.list"),
+    canSendReminderExpiring: hasPermission("subscription.submodules.expiring_soon.send_reminder"),
+    canAddGraceExpiring: hasPermission("subscription.submodules.expiring_soon.add_grace"),
+    canListFailedPayment: hasPermission("subscription.submodules.failed_payments.list"),
+    canSuspendFailedPayment: hasPermission("subscription.submodules.failed_payments.suspend"),
 
     //Plateform Feature
-    canFeatureList: hasPermission(SUPERADMINPERMISSIONS.PLATEFORM_FEATURE.LIST),
-    canFeatureAdd: hasPermission(SUPERADMINPERMISSIONS.PLATEFORM_FEATURE.ADD),
-    canFeatureUpdate: hasPermission(SUPERADMINPERMISSIONS.PLATEFORM_FEATURE.UPADTE),
-    canFeatureDelete: hasPermission(SUPERADMINPERMISSIONS.PLATEFORM_FEATURE.DELETE),
+    canFeatureList: hasPermission("plateform_feature.submodules.list"),
+    canFeatureAdd: hasPermission("plateform_feature.submodules.add"),
+    canFeatureUpdate: hasPermission("plateform_feature.submodules.edit"),
+    canFeatureDelete: hasPermission("plateform_feature.submodules.delete"),
 
     //Partner
-    canPartnerList: hasPermission(SUPERADMINPERMISSIONS.PARTNER.LIST),
-    canPartnerView: hasPermission(SUPERADMINPERMISSIONS.PARTNER.VIEW),
+    canPartnerList: hasPermission("partner.submodules.list"),
+    canPartnerView: hasPermission("partner.submodules.view"),
 
     //Branching
-    canBranchingList: hasPermission(SUPERADMINPERMISSIONS.BRANCHING.LIST),
-    canBranchingAdd: hasPermission(SUPERADMINPERMISSIONS.BRANCHING.ADD),
+    canBranchingList: hasPermission("partner.submodules.list"),
+    canBranchingAdd: hasPermission("partner.submodules.add"),
 
     //Revenue Billing
-    canSasRevenueOverview: hasPermission(SUPERADMINPERMISSIONS.REVENUE_BILLING.SAS_REVENUE_OVERVIEW),
-    canPartnerCommisionList: hasPermission(SUPERADMINPERMISSIONS.REVENUE_BILLING.PARTNER_COMMISTION_LIST),
+    canSasRevenueOverview: hasPermission("revenue_billing.submodules.sas_revenue"),
+    canPartnerCommisionList: hasPermission("revenue_billing.submodules.partner_commision"),
 
     //Support
-    canSupportList: hasPermission(SUPERADMINPERMISSIONS.SUPPORT.LIST),
-    canOpenTicket: hasPermission(SUPERADMINPERMISSIONS.SUPPORT.OPEN_TICKET),
-    canAssignCenterAdmin: hasPermission(SUPERADMINPERMISSIONS.SUPPORT.ASSIGN_CENTER_ADMIN),
+    canSupportList: hasPermission("support.submodules.list"),
+    canOpenTicket: hasPermission("support.submodules.open_ticket"),
+    canAssignCenterAdmin: hasPermission("support.submodules.assign_center_admin"),
   };
 };
