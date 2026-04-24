@@ -31,6 +31,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
   const isPartner = role === "partner";
+  const isCenterAdmin = role === "centeradmin";
   const { hydrated, canAddMember } = useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
@@ -126,7 +127,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
                   Profile
                 </button>
               )}
-              {!isSuperAdmin && !isPartner && (
+              {isCenterAdmin && (
                 <button
                   onClick={() => {
                     navigate("/settings");
