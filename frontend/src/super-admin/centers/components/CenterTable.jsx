@@ -57,7 +57,7 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
         if (days < 5) {
           colorClass = "text-red_text border-red_text";
         } else if (days <= 10) {
-          colorClass = "text-yellow border-yellow-500";
+          colorClass = "text-partner_yellow border-partner_yellow";
         } else {
           colorClass = "text-green_text border-green_text";
         }

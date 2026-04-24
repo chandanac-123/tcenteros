@@ -15,15 +15,17 @@ import {
   Receipt,
   Split,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useBillingHistoryQuery,
   useSubscriptionGetByIdQuery,
   useSuspendCenterMutation,
 } from "@api-queries/super-admin/subcriptions/Query";
+import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
 
 const DetailView = () => {
   const params = useParams();
+  const navigate = useNavigate();
   const { mutateAsync: suspendSubscription, isPending } =
     useSuspendCenterMutation();
   const { data } = useSubscriptionGetByIdQuery(params.id);
@@ -50,10 +52,10 @@ const DetailView = () => {
       await suspendSubscription(params.id);
       setSuspendOpen(false);
     } catch (err) {
-      return
-    };
-  }
-  
+      return;
+    }
+  };
+
   const cardsData = [
     {
       label: "Total Revenue",
@@ -110,6 +112,11 @@ const DetailView = () => {
               label="Yearly"
             />
           </div>
+          <CustomeBreadcrumb
+            goBack={() => navigate("/subscriptions/active-subscriptions")}
+            buttonName="Active subscriptions list"
+            currentPageName="Active subscriptions Details"
+          />
         </div>
 
         <Button
