@@ -193,7 +193,7 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
               disabled={isUpdatingCart || isRemovingCart}
               onClick={() => handleRemoveItem(product?.cart_item_id)}
             >
-              <img src={deleteicon} alt='delete' className='w-6' />
+              <img src={deleteicon} loading="lazy" alt='delete' className='w-6' />
             </button>
           </div>
         )

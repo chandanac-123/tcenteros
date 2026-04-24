@@ -113,7 +113,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#F3E8FF] text-primary rounded-md hover:bg-primary/10 transition'
                 >
-                  <img src={edit} alt='edit' />
+                  <img src={edit} alt='edit' loading="lazy"/>
                 </button>
                 <button
                   type='button'
@@ -123,7 +123,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#FFE4E6] text-red_text  rounded-md hover:bg-red-100 transition'
                 >
-                  <img src={deleteicon} alt='delete' />
+                  <img src={deleteicon} alt='delete' loading="lazy"/>
                 </button>
               </div>
             </div>

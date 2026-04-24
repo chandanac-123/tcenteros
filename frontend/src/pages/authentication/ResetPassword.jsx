@@ -77,6 +77,7 @@ const ResetPassword = () => {
             <img
               src={single_arrow}
               alt='Go Back'
+              loading="lazy"
               className='inline-block mr-2 w-3'
             />
             Go Back

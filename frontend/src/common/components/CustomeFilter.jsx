@@ -51,7 +51,7 @@ const CustomFilter = ({ onApply, options = [], filterName = 'Filter' }) => {
         className='flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 cursor-pointer bg-white'
       >
         <div className='flex items-center gap-2'>
-          <img src={filter} alt='Filter' className='w-4 h-4' />
+          <img src={filter} alt='Filter' className='w-4 h-4' loading="lazy"/>
           <span className='text-sm truncate'>{selectedLabel}</span>
         </div>
 

@@ -120,7 +120,7 @@ const EmployeeTable = ({
               setViewOpen(true)
             }}
           >
-            <img src={view} alt='view' className='w-6 h-6' />
+            <img src={view} alt='view' loading="lazy"  className='w-6 h-6' />
           </button>
           <button
             disabled={!canEditEmployee}
@@ -129,7 +129,7 @@ const EmployeeTable = ({
               setEditOpen(true)
             }}
           >
-            <img src={edit} alt='edit' className='w-6 h-6' />
+            <img src={edit} alt='edit' loading="lazy" className='w-6 h-6' />
           </button>
           <button
             disabled={!canDeleteEmployee}
@@ -138,7 +138,7 @@ const EmployeeTable = ({
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
+            <img src={deleteicon} loading="lazy" alt='delete' className='w-6 h-6' />
           </button>
           <Switch
             checked={row.original.status === 'active'}

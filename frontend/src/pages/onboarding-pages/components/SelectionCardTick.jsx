@@ -14,7 +14,7 @@ const SelectionCardTick = ({ item, selected, onSelect }) => {
       <div className='flex gap-4 justify-items-start items-center'>
         <div className='flex'>
           {' '}
-          <img src={item?.image} alt={item?.label} className='w-8' />
+          <img src={item?.image} alt={item?.label} loading="lazy" className='w-8' />
         </div>
 
         <div className='flex flex-col'>
@@ -27,6 +27,7 @@ const SelectionCardTick = ({ item, selected, onSelect }) => {
         <img
           src={selected ? selection : elipes}
           alt='status'
+          loading="lazy"
           className='w-6 h-6'
         />
       </div>

@@ -60,6 +60,7 @@ const StatusDisplaycard = ({ data }) => {
                             className={`${card.iconBg} ${card.iconColor} p-3 rounded-xl`}
                         >
                             <img
+                            loading="lazy"
                                 src={card.icon}
                                 alt={card.title}
                                 className="w-8 h-8"

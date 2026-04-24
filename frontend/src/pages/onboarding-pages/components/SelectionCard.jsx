@@ -23,6 +23,7 @@ const SelectionCard = ({ item, selected, onSelect }) => {
         <img
           src={selected ? selection : elipes}
           alt='status'
+          loading="lazy"
           className='w-6 h-6'
         />
       </div>

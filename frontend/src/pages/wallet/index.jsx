@@ -163,6 +163,7 @@ const Wallet = () => {
                 <img
                   src={filters}
                   alt='filter'
+                  loading="lazy"
                   className='border h-9 w-12 p-1 border-gray-300  rounded-[9px]'
                 />
               </button>

@@ -85,7 +85,7 @@ const PlanCard = ({ data, colors }) => {
           <div className='mt-3 space-y-1'>
             {data?.membership_features?.map((item, index) => (
               <div key={index} className='flex items-center gap-2'>
-                <img src={colors?.tick} className='w-3 h-3' />
+                <img src={colors?.tick} className='w-3 h-3' loading="lazy" />
                 <span className='text-sm text-textblack break-words'>
                   {item?.feature_name}
                 </span>
@@ -120,7 +120,7 @@ const PlanCard = ({ data, colors }) => {
                 disabled={!canDeleteMembership}
                 onClick={() => setDeleteOpen(true)}
               >
-                <img src={deleteicon} alt='delete' />
+                <img src={deleteicon} alt='delete' loading="lazy" />
               </button>
             </div>
           </div>

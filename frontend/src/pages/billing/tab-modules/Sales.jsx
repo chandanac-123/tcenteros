@@ -57,7 +57,7 @@ const Sales = () => {
               setViewId(row?.original.payment_order_id)
             }}
           >
-            <img src={view} alt='view' className='w-6 h-6' />
+            <img src={view} alt='view' className='w-6 h-6' loading="lazy" />
           </button>
         </div>
       )

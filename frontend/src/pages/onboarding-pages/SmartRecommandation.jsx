@@ -67,6 +67,7 @@ const SmartRecommandation = () => {
                 src={best_fit_img}
                 alt='Best fit'
                 className='w-40 sm:w-48 md:w-56'
+                loading="lazy"
               />
             </div>
 
@@ -101,7 +102,7 @@ const SmartRecommandation = () => {
 
               {/* Highlight */}
               <div className='mt-3 flex items-center bg-secondary_light gap-2 border border-onboard_secondary rounded-2xl p-3 text-onboard_secondary text-sm font-medium'>
-                <img src={tick} alt='tick' className='w-5' />
+                <img src={tick} alt='tick' className='w-5' loading="lazy" />
                 White-Label Offline + Live Classes
               </div>
             </div>

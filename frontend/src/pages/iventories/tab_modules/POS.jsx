@@ -55,7 +55,7 @@ const POS = () => {
               setViewOpen(true)
             }}
           >
-            <img src={view} alt='view' className='w-6 h-6' />
+            <img src={view} alt='view' loading="lazy" className='w-6 h-6' />
           </button>
         </div>
       )

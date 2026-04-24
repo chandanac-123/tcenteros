@@ -99,13 +99,13 @@ const Members = ({ onView, onEdit }) => {
             disabled={!canViewMember}
             onClick={() => onView(row.original.id)}
           >
-            <img src={view} alt='view' />
+            <img src={view} alt='view' loading="lazy"/>
           </button>
           <button
             disabled={!canEditMember}
             onClick={() => onEdit(row.original.id)}
           >
-            <img src={edit} alt='edit' />
+            <img src={edit} alt='edit' loading="lazy"/>
           </button>
           <button
             disabled={!canDeleteMember}
@@ -114,7 +114,7 @@ const Members = ({ onView, onEdit }) => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' />
+            <img src={deleteicon} loading="lazy" alt='delete' />
           </button>
           <Switch
             disabled={!canEnableMember}

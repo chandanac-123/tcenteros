@@ -16,7 +16,7 @@ const Header = () => {
   return (
     <header className='flex items-center justify-between px-4 sm:px-10 py-4'>
       {/* Logo */}
-      <img src={logo} alt='Logo' className='w-28 sm:w-32 h-auto' />
+      <img src={logo} alt='Logo' loading="lazy" className='w-28 sm:w-32 h-auto' />
 
       {/* Desktop Nav */}
       <nav className='hidden md:flex items-center gap-6 text-grey font-roboto text-md'>

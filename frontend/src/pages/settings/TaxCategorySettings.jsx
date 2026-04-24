@@ -129,7 +129,7 @@ const TaxCategorySettings = () => {
               setEditId(row.original.id)
             }}
           >
-            <img src={edit} alt='edit' />
+            <img src={edit} alt='edit' loading="lazy" />
           </button>
           <button
             onClick={() => {
@@ -137,7 +137,7 @@ const TaxCategorySettings = () => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' />
+            <img src={deleteicon} alt='delete' loading="lazy"/>
           </button>
           <Switch />
         </span>

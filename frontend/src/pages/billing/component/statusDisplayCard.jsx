@@ -39,6 +39,7 @@ const StatusDisplayCard = ({ data }) => {
           <img
             src={card.image}
             alt={card.title}
+            loading="lazy"
             className='w-10 h-10 object-contain'
           />
           <div className='flex flex-col'>

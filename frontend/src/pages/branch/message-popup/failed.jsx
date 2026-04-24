@@ -8,7 +8,7 @@ const FaledModal = ({ open, onOpenChange }) => {
     return (
         <CustomeModal open={open} onOpenChange={onOpenChange}  >
             <div className="flex flex-col items-center justify-center gap-2">
-                <img src={failed} alt="view" />
+                <img src={failed} alt="view"  loading="lazy"/>
                 <h3 className='font-semibold'>Payment Failed</h3>
                 <button
                     onClick={() => onOpenChange(false)}

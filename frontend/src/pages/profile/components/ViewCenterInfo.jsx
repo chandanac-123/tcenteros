@@ -21,6 +21,7 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
             <img
               src={data?.center_image_url || profile}
               alt='Center'
+              loading="lazy"
               className='w-40 h-40 rounded-lg object-cover border'
             />
           </div>

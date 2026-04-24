@@ -43,7 +43,7 @@ const SalaryStructureTable = ({
               setEditId(row.original.id)
             }}
           >
-            <img src={edit} alt='edit' className='w-6 h-6' />
+            <img src={edit} loading="lazy" alt='edit' className='w-6 h-6' />
           </button>
 
           <button
@@ -51,7 +51,7 @@ const SalaryStructureTable = ({
               setDeleteId(row.original.id)
             }}
           >
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
+            <img src={deleteicon} loading="lazy" alt='delete' className='w-6 h-6' />
           </button>
         </div>
       )

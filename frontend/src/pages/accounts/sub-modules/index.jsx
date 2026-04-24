@@ -44,6 +44,7 @@ const AccountsSubModules = () => {
                 <img
                   src={isActive ? item.image_active : item.image}
                   alt={item.title}
+                  loading="lazy"
                   className='w-8 h-8 mb-2'
                 />
 

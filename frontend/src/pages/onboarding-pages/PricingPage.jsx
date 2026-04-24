@@ -63,7 +63,7 @@ const PricingPage = () => {
                     key={item}
                     className='flex items-center gap-3 text-sm text-gray-600'
                   >
-                    <img src={check} alt='check' className='w-4 h-4' />
+                    <img  loading="lazy" src={check} alt='check' className='w-4 h-4' />
                     {item.feature_name}
                   </li>
                 ))}

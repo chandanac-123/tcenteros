@@ -44,7 +44,7 @@ const CenterInformation = ({ data }) => {
             setViewId(center?.id)
           }}
         >
-          <img src={view} alt='view' className='w-8 h-8' />
+          <img src={view} alt='view' className='w-8 h-8' loading="lazy" />
         </button>
       </div>
 
@@ -54,6 +54,7 @@ const CenterInformation = ({ data }) => {
           <img
             src={center.center_image_url || defalutUser}
             alt='User'
+            loading="lazy"
             className='w-20 h-20 rounded-md object-cover'
           />
           <button

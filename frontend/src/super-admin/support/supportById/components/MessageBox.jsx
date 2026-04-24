@@ -2,7 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { Plus, Send, User, X } from "lucide-react";
 import { Button } from "@pages/components/ui/button";
 import { useParams } from "react-router-dom";
-import { useAssignTicketMutation, useCloseSupportTicket, useSendSupportMessage, useSupportTicketById } from "@api-queries/super-admin/support/Query";
+import {
+  useAssignTicketMutation,
+  useCloseSupportTicket,
+  useSendSupportMessage,
+  useSupportTicketById,
+} from "@api-queries/super-admin/support/Query";
 import { Spinner } from "@pages/components/ui/spinner";
 
 const MessageBox = () => {
@@ -17,7 +22,6 @@ const MessageBox = () => {
   const { mutate: closeTicket, isClosePending } = useCloseSupportTicket();
   const { mutate, isPendings } = useAssignTicketMutation();
 
-
   const formatCustomDateTime = (dateString) => {
     if (!dateString) return "-";
 
@@ -31,8 +35,6 @@ const MessageBox = () => {
 
     return `${hours}:${minutes} ${ampm}`;
   };
-
-
 
   const handleSend = () => {
     if (!message && !file) return;
@@ -62,10 +64,9 @@ const MessageBox = () => {
             fileRef.current.value = "";
           }
         },
-      }
+      },
     );
   };
-
 
   const handleAssign = (ticketId, centerAdmin_id) => {
     if (!ticketId || !centerAdmin_id) {
@@ -76,7 +77,7 @@ const MessageBox = () => {
     console.log("TicketId", ticketId);
 
     mutate({
-      ticket_id: ticketId,   // make sure this exists
+      ticket_id: ticketId, // make sure this exists
       centeradmin_id: centerAdmin_id,
     });
   };
@@ -84,8 +85,6 @@ const MessageBox = () => {
   const messages = data?.messages || [];
 
   console.log("Message", data);
-
-
 
   useEffect(() => {
     const el = chatRef.current;
@@ -97,38 +96,36 @@ const MessageBox = () => {
     });
   }, [messages]);
 
-
   if (isLoading) {
     return (
       <div className="w-full h-full flex justify-center items-center ">
         <Spinner />
       </div>
-    )
+    );
   }
-  if (error) return (
-    <div className="w-full h-full flex items-center justify-center">
-      <p> No Tickets</p>
-    </div>
-  )
+  if (error)
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <p> No Tickets</p>
+      </div>
+    );
   return (
     <div className="w-full h-full flex flex-col bg-[#FFFFFF] rounded-xl shadow-md overflow-hidden">
-
       {/* HEADER */}
       <div className="flex items-center justify-between p-4 border-b border-[#BFB7B7]">
         <div className="flex items-center gap-3">
-          {
-            data.image_url ? (
-              <img
-                className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center"
-                src={data.image_url} 
-                alt="userPic" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center">
-                <User size={24} color="#246C32" />
-              </div>
-            )
-          }
-
+          {data.image_url ? (
+            <img
+              loading="lazy"
+              className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center"
+              src={data.image_url}
+              alt="userPic"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[#D5FFE6] flex items-center justify-center">
+              <User size={24} color="#246C32" />
+            </div>
+          )}
 
           <div>
             <p className="text-[#000000] font-semibold">{data.member_name}</p>
@@ -148,78 +145,71 @@ const MessageBox = () => {
             </Button>
           )}
 
-          {data.status?.toLowerCase() === "assigned" || data.status?.toLowerCase() === "closed" ? null : (
+          {data.status?.toLowerCase() === "assigned" ||
+          data.status?.toLowerCase() === "closed" ? null : (
             <Button
-              onClick={() =>
-                handleAssign(
-                  data.id,
-                  data.centeradmin_id,
-                )
-              }
+              onClick={() => handleAssign(data.id, data.centeradmin_id)}
               disabled={isPending}
-              size='addbutton'
+              size="addbutton"
               className=" bg-[#2A62D8]"
             >
               Assign Admin
             </Button>
           )}
-
         </div>
       </div>
 
       {/* CHAT BODY */}
       <div
         ref={chatRef}
-        className="flex-1 overflow-y-auto  p-4 flex flex-col gap-4 ">
+        className="flex-1 overflow-y-auto  p-4 flex flex-col gap-4 "
+      >
+        {messages.map((msg) => {
+          const isUser = msg.sender_role === "superadmin"; // or change logic if needed
 
-        {
-          messages.map((msg) => {
-            const isUser = msg.sender_role === "superadmin"; // or change logic if needed
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-              >
-                <div className="flex flex-col max-w-[70%]">
-
-                  <div
-                    className={`p-3 rounded-xl text-[14px] ${isUser
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+            >
+              <div className="flex flex-col max-w-[70%]">
+                <div
+                  className={`p-3 rounded-xl text-[14px] ${
+                    isUser
                       ? "bg-[#2A62D8] text-white"
                       : "bg-[#FFFFFF] border border-[#BFB7B7] text-[#000000]"
-                      }`}
-                  >
-                    {/* text */}
+                  }`}
+                >
+                  {/* text */}
 
-                    {/* image */}
-                    {msg.image_url && (
-                      <img
-                        src={msg.image_url}
-                        alt="attachment"
-                        className="mt-2 max-w-[250px] rounded-lg border bg-white"
-                      />
-                    )}
-                    {msg.message && <p>{msg.message}</p>}
-                  </div>
-
-                  <span className="text-[10px] text-[#7F7F7F] mt-1">
-                    {formatCustomDateTime(msg.created_at)}
-                  </span>
+                  {/* image */}
+                  {msg.image_url && (
+                    <img
+                      src={msg.image_url}
+                      alt="attachment"
+                      loading="lazy"
+                      className="mt-2 max-w-[250px] rounded-lg border bg-white"
+                    />
+                  )}
+                  {msg.message && <p>{msg.message}</p>}
                 </div>
-              </div>
-            );
-          })
-        }
 
+                <span className="text-[10px] text-[#7F7F7F] mt-1">
+                  {formatCustomDateTime(msg.created_at)}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {preview && (
         <div className="p-2">
           <div className="relative w-24 h-24">
-
             <img
               src={preview}
               alt="preview"
+              loading="lazy"
               className="w-full h-full object-cover rounded-lg border border-[#BFB7B7] "
             />
 
@@ -233,20 +223,20 @@ const MessageBox = () => {
             >
               <X size={12} />
             </button>
-
           </div>
         </div>
       )}
       {/* INPUT */}
-      {data.status == "closed" ?
+      {data.status == "closed" ? (
         <div className="p-3">
           <div className=" text-[#CF8600] rounded-full p-1  flex items-center justify-center">
-            <p className="font-poppins text-sm border-b border-[#F7F1BB] italic " >This ticket was closed</p>
+            <p className="font-poppins text-sm border-b border-[#F7F1BB] italic ">
+              This ticket was closed
+            </p>
           </div>
         </div>
-        : <div className="p-4 border-t border-[#BFB7B7] flex gap-3 items-center">
-
-
+      ) : (
+        <div className="p-4 border-t border-[#BFB7B7] flex gap-3 items-center">
           {/* Hidden file input */}
           <input
             ref={fileRef}
@@ -283,16 +273,13 @@ const MessageBox = () => {
           {/* Send button */}
           <button
             onClick={handleSend}
-            className="px-4 py-2 flex items-center gap-2 bg-[#2A62D8] text-white rounded-lg">
+            className="px-4 py-2 flex items-center gap-2 bg-[#2A62D8] text-white rounded-lg"
+          >
             <Send size={16} />
-            {
-              isPending ? "Sending" : "Send"
-            }
-
+            {isPending ? "Sending" : "Send"}
           </button>
         </div>
-      }
-
+      )}
     </div>
   );
 };

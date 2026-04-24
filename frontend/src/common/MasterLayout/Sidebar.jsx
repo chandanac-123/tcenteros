@@ -63,7 +63,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
     >
       {/* LOGO */}
       <div className="flex justify-center items-center">
-        <img src={branding.logo_url || logo} className="w-28 h-28 mt-3" />
+        <img src={branding.logo_url || logo} className="w-28 h-28 mt-3" loading="lazy" />
       </div>
 
       {/* MENU */}

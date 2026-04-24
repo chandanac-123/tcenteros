@@ -7,7 +7,7 @@ const ResetSuccess = () => {
   return (
     <AuthHeader title='' description='' logoTrue={false}>
       <div className='flex justify-center'>
-        <img src={reset_success} alt='Reset Success' />
+        <img src={reset_success} alt='Reset Success' loading="lazy" />
       </div>
       <div className='flex flex-col justify-center gap-2 items-center text-center'>
         <span className='flex  font-semibold text-lg'>Password Changed</span>
@@ -18,6 +18,7 @@ const ResetSuccess = () => {
       <div className='flex justify-center mt-2'>
         <Link to='/login' className='text-sm text-primary'>
           <img
+          loading="lazy"
             src={single_arrow}
             alt='Go Back'
             className='inline-block mr-2 w-3 '

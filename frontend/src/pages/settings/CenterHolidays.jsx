@@ -53,7 +53,7 @@ const CenterHolidays = () => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' />
+            <img src={deleteicon} alt='delete' loading="lazy" />
           </button>
         </span>
       )

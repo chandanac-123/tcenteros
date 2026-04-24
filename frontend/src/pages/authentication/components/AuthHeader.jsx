@@ -19,6 +19,7 @@ const AuthHeader = ({ title, description, children, logoTrue = true }) => {
         {logoTrue && (
           <div className='flex justify-center'>
             <img
+            loading="lazy"
               src={branding.logo_url || logo}
               alt='Logo'
               className='w-28 h-28'

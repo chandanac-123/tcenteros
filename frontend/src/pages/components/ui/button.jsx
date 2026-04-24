@@ -67,9 +67,9 @@ const Button = React.forwardRef(
         onClick={onClick}
         {...props}
       >
-        {leftIcon && <img src={leftIcon} alt='' className='flex items-center w-8' />}
+        {leftIcon && <img src={leftIcon} alt='' loading="lazy" className='flex items-center w-8' />}
         {children}
-        {rightIcon && <img src={rightIcon} alt='' className='flex items-center w-8' />}
+        {rightIcon && <img src={rightIcon} alt='' loading="lazy" className='flex items-center w-8' />}
       </button>
     )
   }

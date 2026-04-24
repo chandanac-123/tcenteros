@@ -19,7 +19,7 @@ const DisplayActionCard = ({ onActionClick }) => {
           onClick={() => onActionClick(card.title)}
           className='flex w-full border-2 items-center gap-2 rounded-lg py-2 px-4 cursor-pointer shadow-md hover:shadow-primary-shadow transition-all duration-200'
         >
-          <img src={card.image} alt={card.title} />
+          <img src={card.image} alt={card.title} loading="lazy"/>
           <span className='text-base font-normal whitespace-nowrap'>
             {card.title}
           </span>

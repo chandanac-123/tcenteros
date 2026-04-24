@@ -57,7 +57,7 @@ const Products = () => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' className='w-6 h-6' />
+            <img src={deleteicon} loading="lazy" alt='delete' className='w-6 h-6' />
           </button>
         </div>
       )

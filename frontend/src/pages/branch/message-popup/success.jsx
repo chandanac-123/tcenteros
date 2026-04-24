@@ -9,7 +9,7 @@ const SuccessModal = ({ open, onOpenChange, count }) => {
     return (
         <CustomeModal open={open} onOpenChange={onOpenChange}  >
             <div className="flex flex-col items-center justify-center gap-2">
-                <img src={success} alt="view" />
+                <img src={success} alt="view" loading="lazy"/>
                 <h3 className='font-semibold'>Payment Successful</h3>
                 <button
                     type="button"

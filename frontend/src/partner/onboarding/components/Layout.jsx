@@ -4,7 +4,7 @@ const PartnerLayout = ({ children }) => {
   return (
     <div className="relative flex h-screen w-full bg-textblack pt-24 pb-16 px-16">
       <div className="absolute left-3 top-3">
-        <img src={logo} alt="Logo" />
+        <img src={logo} alt="Logo" loading="lazy"/>
       </div>
       <div className="flex h-full w-full overflow-hidden rounded-lg bg-white">
         {children}

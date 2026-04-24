@@ -8,10 +8,10 @@ const DocumentCard = ({ title, onView, onEdit }) => {
 
       <div className='flex items-center gap-3'>
         <button onClick={onEdit}>
-          <img src={edit} alt='edit' className='w-5 h-5' />
+          <img src={edit} alt='edit' className='w-5 h-5' loading="lazy" />
         </button>
         <button onClick={onView}>
-          <img src={view} alt='view' className='w-5 h-5' />
+          <img src={view} alt='view' className='w-5 h-5' loading="lazy" />
         </button>
       </div>
     </div>

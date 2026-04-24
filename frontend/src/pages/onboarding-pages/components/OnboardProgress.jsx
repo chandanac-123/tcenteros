@@ -14,7 +14,7 @@ const OnboardProgress = ({
         <span className='text-textgrey font-semibold'>
           Step {step} of {total}
         </span>
-        <img src={moveicon} alt='icon' className='w-5' />
+        <img src={moveicon} alt='icon' className='w-5' loading="lazy" />
       </div>
 
       <div className='w-full sm:w-2/3 lg:w-1/3 flex flex-col gap-3'>

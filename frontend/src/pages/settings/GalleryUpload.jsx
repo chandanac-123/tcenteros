@@ -60,7 +60,7 @@ const GalleryUpload = () => {
               onClick={() => handleDelete(image?.id)}
               className='absolute bottom-3 right-3'
             >
-              <img src={deleteicon} alt='delete' className='w-6 h-6' />
+              <img src={deleteicon} alt='delete' loading="lazy" className='w-6 h-6' />
             </button>
           </div>
         ))}

@@ -106,7 +106,7 @@ const Leads = () => {
           <span>{date}</span>
         ) : (
           <button onClick={()=>setEditOpen(true)}>
-            <img src={edit} alt='edit' />
+            <img src={edit} alt='edit' loading="lazy"/>
           </button>
         )
       }

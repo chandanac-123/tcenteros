@@ -12,6 +12,7 @@ const ToolOption = ({ tool, selected, onToggle }) => {
       <img
         src={selected ? tool.light : tool.dark}
         alt={tool.label}
+        loading="lazy"
         className='w-6 h-6 mr-3'
       />
 

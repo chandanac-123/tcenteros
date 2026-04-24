@@ -135,6 +135,7 @@ const InputFile = ({
           <img
             src={preview}
             alt='Preview'
+            loading="lazy"
             className='w-full h-full object-cover'
           />
           <button
@@ -158,7 +159,7 @@ const InputFile = ({
           '
         >
           <span>Upload image</span>
-          <img src={file} alt='file icon' className='w-4 h-4 object-cover' />
+          <img src={file} alt='file icon' className='w-4 h-4 object-cover' loading="lazy" />
         </button>
       )}
 

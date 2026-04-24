@@ -36,6 +36,7 @@ const AdminProfileModal = ({ open, setOpen }) => {
                     <img
                         src={image}
                         alt='User'
+                        loading="lazy"
                         className='w-32 h-32 rounded-full border-2 border-bordergreylight'
                     />
 

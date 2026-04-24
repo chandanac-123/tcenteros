@@ -7,7 +7,7 @@ const SelectionWithoutCheckbox = ({ item, selected, onSelect }) => {
         ${selected ? 'border-onboard_primary bg-onboard_primary/5' : 'border-bordergreylight'}
       `}
     >
-      <img src={item?.image} alt={item?.label} className='w-6 h-6 mr-3' />
+      <img src={item?.image} alt={item?.label} loading="lazy" className='w-6 h-6 mr-3' />
 
       <span className='flex-1'>{item?.label}</span>
     </label>

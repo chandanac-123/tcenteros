@@ -13,6 +13,7 @@ const ProfileUpload = () => {
       {/* Background Image */}
       <img
         src={profile_bg}
+        loading="lazy"
         alt='Profile Background'
         className='w-full h-28 object-cover rounded-2xl'
       />
@@ -23,6 +24,7 @@ const ProfileUpload = () => {
         <img
           src={data?.profile_photo || defalutUser }
           alt='User'
+          loading="lazy"
           className='w-28 h-28 rounded-full border-2 border-bordergreylight'
         />
 

@@ -70,7 +70,7 @@ const NetworkTables = ({
                 }
                 className=''
               >
-                <img src={view} alt='view' />
+                <img src={view} alt='view' loading="lazy"/>
               </button>
               <Button
                 onClick={() => {
@@ -97,7 +97,7 @@ const NetworkTables = ({
                 }
                 className=''
               >
-                <img src={view} alt='view' />
+                <img src={view} alt='view' loading="lazy" />
               </button>
 
               <Button size='addbutton' variant='outline_primary' type='button'>
@@ -117,7 +117,7 @@ const NetworkTables = ({
                 }
                 className=''
               >
-                <img src={view} alt='view' />
+                <img src={view} alt='view' loading="lazy" />
               </button>
 
               <Button size='addbutton' variant='outline_primary' type='button'>
@@ -138,7 +138,7 @@ const NetworkTables = ({
                 navigate(`/network/${data.network_membership_id}`)
               }
             >
-              <img src={view} alt='view' />
+              <img src={view} alt='view' loading="lazy" />
             </button>
             {/* <button
               onClick={() => {

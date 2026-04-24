@@ -21,7 +21,7 @@ const SlotCard = ({ startTime, endTime, capacity, onDelete, sku_name }) => {
         onClick={onDelete}
         className='p-1 rounded hover:bg-red-50 transition'
       >
-        <img src={deleteicon} alt='delete' />
+        <img src={deleteicon} alt='delete' loading="lazy"/>
       </button>
     </div>
   )

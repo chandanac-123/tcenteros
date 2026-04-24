@@ -60,7 +60,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
           <div className="flex w-full justify-end gap-2 items-center">
             <button onClick={() => setLocationOpen(true)}>
               <span className="flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md">
-                <img src={map} alt="" className="w-5 h-5 mr-2" />
+                <img src={map} alt="" className="w-5 h-5 mr-2" loading="lazy" />
                 Fitness center
               </span>
             </button>
@@ -84,7 +84,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
         )}
         {!isPartner && (
           <button onClick={() => navigate("/notifications")}>
-            <img src={bell_active} alt="logo" className="mr-2" />
+            <img src={bell_active} alt="logo" className="mr-2" loading="lazy"/>
           </button>
         )}
 
@@ -94,6 +94,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
               <div className="flex items-center">
                 <div className="flex items-center gap-0">
                   <img
+                  loading="lazy"
                     src={data?.profile_photo || defalutUser}
                     alt="logo"
                     className="w-8 h-8 mr-2 rounded-full"
