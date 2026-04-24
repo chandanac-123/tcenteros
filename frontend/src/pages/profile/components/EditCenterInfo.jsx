@@ -39,7 +39,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     center_phone: data?.center_phone || '',
     gst_number: data?.gst_number || '',
     center_email: data?.center_email || '',
-    live_class_enable: data?.live_class_enable || true,
+    live_class_enable: data?.live_class_enable ?? true,
     country: data?.address?.country || '',
     state: data?.address?.state || '',
     city: data?.address?.city || '',
@@ -181,9 +181,9 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
               ]}
               label='Live Class'
               name='live_class_enable'
-              value={formik.values.live_class_enable}
+              value={String(formik.values.live_class_enable)}
               onChange={option =>
-                formik.setFieldValue('live_class_enable', option)
+                formik.setFieldValue('live_class_enable', option === 'true')
               }
             />
           </div>
