@@ -17,12 +17,13 @@ const earningColorClasses = {
   },
 };
 
-const EarningSnapshot = () => {
+const EarningSnapshot = ({ data }) => {
+  console.log('data: ', data);
   const earningsData = [
     {
       id: 1,
       title: "Total Earnings",
-      amount: "₹ 5,00,000",
+      amount:data?.total_earnings,
       progress: 70,
       icon: <BadgeDollarSign />,    
       color: "onboard_primary",
@@ -30,7 +31,7 @@ const EarningSnapshot = () => {
     {
       id: 2,
       title: "Earnings This Month",
-      amount: "₹ 80,000",
+      amount: data?.this_month_earnings,
       progress: 45,
       icon: <CalendarPlus2 />,
       color: "partner_green",
@@ -38,7 +39,7 @@ const EarningSnapshot = () => {
     {
       id: 3,
       title: "Earnings Payouts",
-      amount: "₹ 1,20,000",
+      amount:data?.pending_payout,
       icon: <CalendarClock />,
       progress: 30,
       color: "partner_red",

@@ -17,9 +17,12 @@ import React, { useEffect, useState } from "react";
 import EarningSnapshot from "./components/EarningSnapshot";
 import RenewalCard from "./components/RenewalCard";
 import { useNavigate } from "react-router-dom";
+import { usePartnerDashboardQuery } from "@api-queries/partner/dashboard/Query";
 
 const PartnerDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
+  const { data: partnerData } = usePartnerDashboardQuery();
+  console.log('partnerData: ', partnerData);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,7 +90,7 @@ const PartnerDashboard = () => {
               <span className="text-md font-semibold">Earnings Snapshot</span>
             </div>
             <div className="mt-4 text-sm text-textgrey">
-              <EarningSnapshot />
+              <EarningSnapshot data={partnerData?.earnings_snapshot} />
             </div>
           </Card>
           <Card className="h-full p-5">
