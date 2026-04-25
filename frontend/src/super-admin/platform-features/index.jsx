@@ -1,12 +1,16 @@
-import ContentLayout from "@common/MasterLayout/ContentLayout"
-import { Boxes, Plus } from "lucide-react"
-import PlatformFeatureCards from "./components/platformFeatureCards"
-import { Button } from "@pages/components/ui/button"
-import AddplatformFeature from "./components/modals/AddplatformFeature"
-import { useState } from "react"
+import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { Boxes, Plus } from "lucide-react";
+import PlatformFeatureCards from "./components/platformFeatureCards";
+import { Button } from "@pages/components/ui/button";
+import AddplatformFeature from "./components/modals/AddplatformFeature";
+import { useState } from "react";
+import { useAppPermissions } from "@hooks/index";
 
 const PlatformFeatures = () => {
-const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { hydrated, canFeatureAdd } = useAppPermissions();
+  if (!hydrated) return null;
+
   return (
     <ContentLayout>
       <div className="">
@@ -26,7 +30,11 @@ const [open, setOpen] = useState(false);
           </div>
 
           <div className="pe-5">
-            <Button size="addbutton"  onClick={() => setOpen(true)}>
+            <Button
+              disabled={!canFeatureAdd}
+              size="addbutton"
+              onClick={() => setOpen(true)}
+            >
               <Plus />
               Add Feature
             </Button>
@@ -37,7 +45,7 @@ const [open, setOpen] = useState(false);
         <PlatformFeatureCards />
       </div>
     </ContentLayout>
-  )
-}
+  );
+};
 
-export default PlatformFeatures
+export default PlatformFeatures;

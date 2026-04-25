@@ -1,11 +1,15 @@
 import DeleteModal from "@common/components/CustomeDelete";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { useAppPermissions } from "@hooks/index";
 import { Button } from "@pages/components/ui/button";
 import { BanknoteX, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 
 const FailedPayments = () => {
   const [suspendOpen, setSuspendOpen] = useState(false);
+  const { hydrated, canSuspendFailedPayment } = useAppPermissions();
+  if (!hydrated) return null;
+  
   return (
     <ContentLayout>
       <div className="flex items-center justify-between p-4">
@@ -90,6 +94,7 @@ const FailedPayments = () => {
         {/* Right Section */}
         <div className="flex justify-end sm:justify-center">
           <Button
+            disabled={!canSuspendFailedPayment}
             variant="danger"
             size="addbutton"
             className="w-full sm:w-auto"
