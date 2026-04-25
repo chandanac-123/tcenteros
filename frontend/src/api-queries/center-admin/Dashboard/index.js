@@ -5,3 +5,6 @@ export const dashboardApiCall = data =>
 
 export const renewSubscriptionApiCall = data =>
   axiosInstance.get(`/center/billing/subscription/renew/options`, data)
+
+export const changeSubscriptionApiCall = data =>
+  axiosInstance.post(`/center/billing/subscription/renew`, data)

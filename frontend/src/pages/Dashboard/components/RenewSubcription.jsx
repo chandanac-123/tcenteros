@@ -1,24 +1,31 @@
-import { useRenewSubscriptionQuery } from "@api-queries/center-admin/Dashboard/Query";
+import {
+  useRenewSubscriptionQuery,
+  useChangeSubscriptionMutation,
+} from "@api-queries/center-admin/Dashboard/Query";
 import CustomeModal from "@common/components/CustomeModal";
-import CustomeSelect from "@common/components/CustomeSelect";
 import { Button } from "@pages/components/ui/button";
-import { Input } from "@pages/components/ui/input";
 import { useFormik } from "formik";
 import { useState } from "react";
-
-const subscriptionType = [
-  { id: "monthly", label: "Monthly" },
-  { id: "yearly", label: "Yearly" },
-];
 
 const RenewSubscription = ({ open, setOpen }) => {
   const [showUpgradeFields, setShowUpgradeFields] = useState(false);
   const { data, isLoading } = useRenewSubscriptionQuery();
-  console.log("data: ", data);
+  const { mutateAsync: changeSubscription } = useChangeSubscriptionMutation();
+
+  const currentSubscriptionDuration =
+    data?.pricing_options?.selected_subscription_duration || "";
+
+  const upgradedSubscriptionDuration =
+    currentSubscriptionDuration === "yearly"
+      ? "monthly"
+      : currentSubscriptionDuration === "monthly"
+        ? "yearly"
+        : "";
+
   const currentPackageDetails = [
     {
       label: "Billing Cycle",
-      value: data?.pricing_options?.selected_subscription_duration || "N/A",
+      value: currentSubscriptionDuration || "N/A",
     },
     { label: "Expiry Date", value: data?.expiry_info?.latest_end_date },
     {
@@ -26,17 +33,19 @@ const RenewSubscription = ({ open, setOpen }) => {
       value: data?.pricing_options?.total_amount_payable,
     },
   ];
+
+  const initialValues = {
+    subscription_duration: "",
+  };
+
   const formik = useFormik({
-    initialValues: {
-      subscription_duration: "",
-      price: "",
-      plan_type: "",
-    },
+    initialValues,
     onSubmit: async (values) => {
       try {
-        console.log("FORM VALUES 👉", values);
-
-        // 👉 Call API here
+        console.log("FORM subscription_duration 👉", values);
+        await changeSubscription({
+          subscription_duration: values.subscription_duration,
+        });
 
         setOpen(false);
         setShowUpgradeFields(false);
@@ -64,24 +73,30 @@ const RenewSubscription = ({ open, setOpen }) => {
           <div className="space-y-2 text-sm">
             {currentPackageDetails.map((item) => (
               <div key={item.label} className="flex justify-between gap-4">
-                <span className="text-gray-500">{item.label}</span>
-                <span className="font-medium">{item.value}</span>
+                <span className="text-gray-500 ">{item.label}</span>
+                <span className="font-medium capitalize">{item.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* INFO TEXT */}
+        {/* INFO TEXT
         <p className="text-sm text-gray-500">
           Continue with your current plan or upgrade before proceeding to
           payment.
-        </p>
+        </p> */}
 
         {/* UPGRADE SECTION */}
         {showUpgradeFields && (
           <div className="grid grid-cols-2 gap-4 border p-4 rounded-xl bg-white">
-           hhj
-
+            <div className="col-span-2 flex items-center justify-between gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3">
+              <span className="text-sm text-gray-500">
+                Upgrade billing cycle
+              </span>
+              <span className="text-sm font-medium capitalize text-onboard_primary">
+                {upgradedSubscriptionDuration || "N/A"}
+              </span>
+            </div>
           </div>
         )}
 
