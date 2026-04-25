@@ -13,7 +13,7 @@ import { useNetworkTabStore } from '@store/networkTabstore'
 import { format } from 'date-fns'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 
-import { useAppPermissions } from "@hooks/permissions"
+import { useAppPermissions } from "@hooks/index"
 
 const Network = () => {
   const { hydrated, canEnableNetwork, canAddAmount } = useAppPermissions()

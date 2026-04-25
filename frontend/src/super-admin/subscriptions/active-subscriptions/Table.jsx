@@ -1,5 +1,5 @@
 import { DataTable } from "@common/components/DataTable";
-import { useAppPermissions } from "@hooks/permissions";
+import { useAppPermissions } from "@hooks/index";
 import { Badge } from "@pages/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 

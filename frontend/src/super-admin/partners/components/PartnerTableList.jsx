@@ -1,5 +1,5 @@
 import { DataTable } from "@common/components/DataTable";
-import { useAppPermissions } from "@hooks/permissions";
+import { useAppPermissions } from "@hooks/index";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 

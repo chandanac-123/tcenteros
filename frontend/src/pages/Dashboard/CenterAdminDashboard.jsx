@@ -12,7 +12,7 @@ import { useAuthStore } from "@store/authStore";
 import { useGetBranchCountQuery } from "@api-queries/center-admin/branch/Query";
 import InstructionPage from "./components/InstructionPage";
 import { getGreeting } from "@utils/helper";
-import { useAppPermissions } from "@hooks/permissions";
+import { useAppPermissions } from "@hooks/index";
 import { Button } from "@pages/components/ui/button";
 import RenewSubcription from "./components/RenewSubcription";
 

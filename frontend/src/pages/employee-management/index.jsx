@@ -9,7 +9,7 @@ import AddEditForm from './employee/AddEditForm'
 import StructureAddEdit from './salary-structure/AddEdit'
 import { useAllCentersQuery } from '@api-queries/center-admin/center-profile/Query'
 import Payroll from './payroll'
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 
 const EmployeeManagement = () => {
   const { hydrated, canEmployee, canSalary, canPayroll, canAddEmployee } =

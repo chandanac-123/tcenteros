@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 import { useGetWalletAmountQuery } from '@api-queries/center-admin/wallet/Query'
 import { formatIndianCurrency } from '@utils/helper'
 
-import { useAppPermissions } from "@hooks/permissions"
+import { useAppPermissions } from "@hooks/index"
 
 const Wallet = () => {
   const [open, setOpen] = useState(false)

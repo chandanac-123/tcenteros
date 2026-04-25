@@ -8,7 +8,7 @@ import { useDeletePlanMutation } from '@api-queries/center-admin/membership-plan
 import CreateMembershipForm from './CreateForm'
 import { useUpdatePlanStatusMutation } from '@api-queries/center-admin/membership-plan/Query'
 
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 
 const PlanCard = ({ data, colors }) => {
   const [open, setOpen] = useState(false)

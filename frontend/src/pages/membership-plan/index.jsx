@@ -9,7 +9,7 @@ import { membershipPlanColorPalette } from '@constants/membership-color-palette'
 import { usePlansQuery } from '@api-queries/center-admin/membership-plan/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useLocation } from 'react-router-dom'
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 
 const MembershipPlan = () => {
   const location = useLocation()

@@ -24,7 +24,7 @@ import { useCrmStore } from "@store/tabStore";
 import { useGetProfileInfoQuery } from "@api-queries/center-admin/center-profile/Query";
 import GoogleMapComponent from "../components/GoogleMapComponent";
 import defalutUser from "@assets/header-icons/user.svg";
-import { useAppPermissions } from "@hooks/permissions";
+import { useAppPermissions } from "@hooks/index";
 import AdminProfileModal from "@super-admin/admin-profile";
 
 const Header = ({ toggleSidebar, collapsed }) => {

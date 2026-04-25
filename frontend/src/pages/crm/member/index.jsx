@@ -14,7 +14,7 @@ import {
   useDeleteMemberMutation,
   useUpdateMemberStatusMutation
 } from '@api-queries/center-admin/crm/Query'
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 const statusVariantMap = { active: 'active', inactive: 'inactive' }
 const paymentVariantMap = { paid: 'future_lead', null: 'inactive' }
 

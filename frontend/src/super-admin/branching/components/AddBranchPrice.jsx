@@ -1,4 +1,4 @@
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 import { Button } from '@pages/components/ui/button'
 import { Input } from '@pages/components/ui/input'
 import { Plus } from 'lucide-react'

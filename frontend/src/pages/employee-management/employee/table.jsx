@@ -15,7 +15,7 @@ import {
 } from '@api-queries/center-admin/employee-management/Query'
 import useTableSelection from '@common/components/UseTableSelection'
 
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 
 const EmployeeTable = ({
   data,

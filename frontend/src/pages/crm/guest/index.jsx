@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useGuestQuery } from '@api-queries/center-admin/crm/Query'
 import { Button } from '@pages/components/ui/button'
 import { useCrmStore } from '@store/tabStore'
-import { useAppPermissions } from '@hooks/permissions'
+import { useAppPermissions } from '@hooks/index'
 
 const Guest = () => {
   const { hydrated, canConvertGuest } = useAppPermissions()
