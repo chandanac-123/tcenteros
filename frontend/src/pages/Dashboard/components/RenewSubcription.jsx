@@ -40,11 +40,15 @@ const RenewSubscription = ({ open, setOpen }) => {
 
   const formik = useFormik({
     initialValues,
-    onSubmit: async (values) => {
+    onSubmit: async () => {
       try {
-        console.log("FORM subscription_duration 👉", values);
+        const subscriptionDuration = showUpgradeFields
+          ? upgradedSubscriptionDuration
+          : currentSubscriptionDuration;
+
+        console.log("FORM subscription_duration 👉", subscriptionDuration);
         await changeSubscription({
-          subscription_duration: values.subscription_duration,
+          subscription_duration: subscriptionDuration,
         });
 
         setOpen(false);
