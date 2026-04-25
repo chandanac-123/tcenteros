@@ -1,12 +1,14 @@
 import { applyTheme } from '@utils/helper'
 import { create } from 'zustand'
 
+const defaultBranding = {
+  logo_url: null,
+  primary_color: '#1452D4',
+  secondary_color: '#100F0F'
+}
+
 export const useBrandingStore = create(set => ({
-  branding: {
-    logo_url: null,
-    primary_color: '#1452D4',
-    secondary_color: '#100F0F'
-  },
+  branding: defaultBranding,
 
   setBranding: data => {
     const merged = { ...data }
@@ -25,11 +27,11 @@ export const useBrandingStore = create(set => ({
   },
 
   loadBrandingFromAPI: apiData => {
-    if (!apiData) return
     const brandingData = {
-      logo_url: apiData?.logo_url || null,
-      primary_color: apiData?.primary_color || '#1452D4',
-      secondary_color: apiData?.secondary_color || '#100F0F'
+      logo_url: apiData?.logo_url || defaultBranding.logo_url,
+      primary_color: apiData?.primary_color || defaultBranding.primary_color,
+      secondary_color:
+        apiData?.secondary_color || defaultBranding.secondary_color
     }
 
     applyTheme(brandingData)

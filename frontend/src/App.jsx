@@ -12,7 +12,7 @@ import { useJsApiLoader } from "@react-google-maps/api";
 const LIBRARIES = ["places"];
 
 const App = () => {
-  const { data } = useAllBrandQuery();
+  const { data, isFetched } = useAllBrandQuery();
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAP_API_KEY,
@@ -31,10 +31,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (data?.centers?.[0]?.branding) {
-      loadBrandingFromAPI(data.centers[0].branding);
-    }
-  }, [data]);
+    if (!isFetched) return;
+    loadBrandingFromAPI(data?.centers?.[0]?.branding ?? null);
+  }, [data, isFetched, loadBrandingFromAPI]);
 
   if (!isLoaded) {
     return <p></p>;
