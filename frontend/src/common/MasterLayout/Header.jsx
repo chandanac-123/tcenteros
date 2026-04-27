@@ -119,7 +119,11 @@ const Header = ({ toggleSidebar, collapsed }) => {
               {!isPartner && (
                 <button
                   onClick={() => {
-                    navigate("/profile");
+                    if (isSuperAdmin) {
+                      setOpemAdminProfile(true);
+                    } else {
+                      navigate("/profile");
+                    }
                     setPopoverOpen(false);
                   }}
                   className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
