@@ -1,48 +1,31 @@
 import { DataTable } from "@common/components/DataTable";
 import { useAppPermissions } from "@hooks/index";
-import React, { useState } from "react";
+import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
 import { useNavigate } from "react-router-dom";
-
-const PartnerTableList = () => {
+import { Building2, IndianRupee, Users, Wallet } from "lucide-react";
+const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
   const { hydrated, canPartnerView } = useAppPermissions();
   if (!hydrated) return null;
-  const [tableParams, setTableParams] = useState({
-    page: 1,
-  });
   const navigate = useNavigate();
 
   const columns = [
+    { accessorKey: "partner_name", header: "Partner Name" },
     {
-      accessorKey: "partner_name",
-      header: "Partner Name",
-    },
-    {
-      accessorKey: "region",
+      accessorKey: "city",
       header: "Region",
-      cell: ({ row }) => {
-        return (
-          <span className="px-2 py-1 rounded-md bg-blue-700/10 text-blue-700 text-xs">
-            {row.getValue("region")}
-          </span>
-        );
-      },
+      // cell: ({ row }) => {
+      //   return (
+      //     <span className="px-2 py-1 rounded-md bg-blue-700/10 text-blue-700 text-xs">
+      //       {row.getValue("city")}
+      //     </span>
+      //   );
+      // },
     },
-    {
-      accessorKey: "center",
-      header: "Center",
-    },
-    {
-      accessorKey: "active_centers",
-      header: "Active Centers",
-    },
-    {
-      accessorKey: "revenue",
-      header: "Revenue",
-    },
-    {
-      accessorKey: "payout",
-      header: "Payout",
-    },
+    { accessorKey: "number_of_centers", header: "Number of Centers" },
+    { accessorKey: "active_centers", header: "Active Centers" },
+    { accessorKey: "commission_earned", header: "Commission Earned" },
+    { accessorKey: "total_revenue", header: "Total Revenue" },
+    { accessorKey: "pending_payout", header: "Pending Payout" },
     {
       accessorKey: "status",
       header: "Status",
@@ -71,7 +54,7 @@ const PartnerTableList = () => {
         const id = row.original.id;
         return (
           <button
-          disabled={!canPartnerView}
+            disabled={!canPartnerView}
             onClick={() => navigate(`/partnersbyId/${id}`)}
             className="px-3 py-1 text-xs border border-[#DAD9D9] rounded-full hover:bg-gray-100"
           >
@@ -82,110 +65,46 @@ const PartnerTableList = () => {
     },
   ];
 
-  const data = [
+  const cardsData = [
     {
-      id: 1,
-      partner_name: "Anil Kumar S",
-      region: "West",
-      center: 13,
-      active_centers: 18,
-      revenue: "₹40,856",
-      payout: "₹5,339",
-      status: "Active",
+      label: "Total Number Of Partner",
+      value: data?.summary?.total_partners,
+      icon: <Users />,
     },
     {
-      id: 2,
-      partner_name: "Harsh Varma",
-      region: "South",
-      center: 13,
-      active_centers: 18,
-      revenue: "₹20,856",
-      payout: "₹5,339",
-      status: "Active",
+      label: "Total Number Of Centers",
+      value: data?.summary?.total_centers,
+      icon: <Building2 />,
     },
     {
-      id: 3,
-      partner_name: "Meera Joshi",
-      region: "North",
-      center: 15,
-      active_centers: 22,
-      revenue: "₹30,500",
-      payout: "₹6,120",
-      status: "Inactive",
+      label: "Total Revenue",
+      value: data?.summary?.total_revenue,
+      icon: <IndianRupee />,
+      type: "amount",
     },
     {
-      id: 4,
-      partner_name: "Ravi Patel",
-      region: "East",
-      center: 12,
-      active_centers: 20,
-      revenue: "₹25,000",
-      payout: "₹4,800",
-      status: "Active",
-    },
-    {
-      id: 5,
-      partner_name: "Sonia Agarwal",
-      region: "West",
-      center: 11,
-      active_centers: 19,
-      revenue: "₹18,750",
-      payout: "₹5,000",
-      status: "Active",
-    },
-    {
-      id: 6,
-      partner_name: "Karan Singh",
-      region: "South",
-      center: 14,
-      active_centers: 21,
-      revenue: "₹22,300",
-      payout: "₹5,450",
-      status: "Inactive",
-    },
-    {
-      id: 7,
-      partner_name: "Neha Sharma",
-      region: "North",
-      center: 16,
-      active_centers: 23,
-      revenue: "₹35,000",
-      payout: "₹6,700",
-      status: "Active",
-    },
-    {
-      id: 8,
-      partner_name: "Vikram Joshi",
-      region: "East",
-      center: 13,
-      active_centers: 17,
-      revenue: "₹28,700",
-      payout: "₹4,900",
-      status: "Active",
-    },
-    {
-      id: 9,
-      partner_name: "Anita Desai",
-      region: "South",
-      center: 12,
-      active_centers: 18,
-      revenue: "₹24,100",
-      payout: "₹5,200",
-      status: "Inactive",
+      label: "Pending Payout",
+      value: data?.summary?.pending_payout,
+      icon: <Wallet />,
+      type: "amount",
     },
   ];
-
   return (
-    <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4">
-      <DataTable
-        columns={columns}
-        data={data}
-        loading={false}
-        tableParams={tableParams}
-        setTableParams={setTableParams}
-        pagination={11}
-        paginationVisibile={true}
-      />
+    <div className="flex flex-col space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <HeaderCard cardsData={cardsData} />
+      </div>
+      <div className="shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-md p-4 gap-4">
+        <DataTable
+          columns={columns}
+          data={data?.partners || []}
+          loading={isLoading}
+          tableParams={tableParams}
+          setTableParams={setTableParams}
+          pagination={11}
+          paginationVisibile={true}
+        />
+      </div>
     </div>
   );
 };

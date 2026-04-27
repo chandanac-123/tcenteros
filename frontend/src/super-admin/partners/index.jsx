@@ -1,10 +1,17 @@
-import ContentLayout from "@common/MasterLayout/ContentLayout"
-import { Button } from "@pages/components/ui/button"
-import { CircleArrowDown, Handshake } from "lucide-react"
-import PartnerCards from "./components/PartnerCards"
-import PartnerTableList from "./components/partnerTableList"
+import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { Button } from "@pages/components/ui/button";
+import { CircleArrowDown, Handshake } from "lucide-react";
+import PartnerTableList from "./components/partnerTableList";
+import { useGetPartnersOverviewQuery } from "@api-queries/super-admin/partners/Query";
+import { useState } from "react";
 
 const Partners = () => {
+  const [tableParams, setTableParams] = useState({
+    page: 1,
+  });
+  const { data, isLoading } = useGetPartnersOverviewQuery(tableParams);
+  console.log("data: ", data);
+
   return (
     <ContentLayout>
       <div className="flex flex-col space-y-4">
@@ -30,16 +37,18 @@ const Partners = () => {
             </Button>
           </div>
         </div>
-        <div className="px-4">
-          <PartnerCards />
-        </div>
+
         <div className="px-4 py-3 ">
-          <PartnerTableList />
+          <PartnerTableList
+            isLoading={isLoading}
+            data={data}
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
         </div>
       </div>
-
     </ContentLayout>
-  )
-}
+  );
+};
 
-export default Partners
+export default Partners;
