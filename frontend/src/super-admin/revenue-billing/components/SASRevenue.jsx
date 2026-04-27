@@ -12,7 +12,7 @@ import {
 import React from "react";
 import LineChart from "@common/charts/LineChart";
 import DoughnutChart from "@common/charts/DoughnutChart";
-import LineBarChart from "../components/LineBarChart";
+import LineBarChart from "./LineBarChart";
 import { useRevenueBillingOverviewQuery } from "@api-queries/super-admin/revenue-billing/Query";
 import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
 
