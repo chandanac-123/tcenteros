@@ -19,31 +19,23 @@ import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
 const SASRevenue = () => {
   const { data, isLoading } = useRevenueBillingOverviewQuery();
   console.log("data: ", data);
+  // Line chart data from API
   const datasets = [
     {
       label: "Revenue",
-      data: [10, 100, 150, 50, 150, 40, 280, 40, 160, 410, 80, 210],
+      data: data?.mrr_trend?.map((item) => item.value) || [],
       borderColor: "#03881B",
       backgroundColor: "#03881B",
     },
   ];
 
-  const doughnutData = [
-    { label: "Subscription", value: 44, color: "#344BFD", amount: 1411 },
-    {
-      label: "Subscription Renewal ",
-      value: 28,
-      color: "#FFD200",
-      amount: 12323,
-    },
-    { label: "Via Partners", value: 12, color: "#F68D2B", amount: 23211 },
-    { label: "Branch Purchase", value: 10, color: "#8B24E2", amount: 54221 },
-    { label: "Network Commission", value: 6, color: "#F4A79D", amount: 54221 },
-  ];
-  
+  // Doughnut and bar chart data from API
+  const doughnutData = data?.revenue_breakdown || [];
   const values = doughnutData.map((item) => item.value);
   const labels = doughnutData.map((item) => item.label);
-  const colors = doughnutData.map((item) => item.color);
+  // Assign colors for up to 4 segments, fallback to default if more
+  const defaultColors = ["#344BFD", "#FFD200", "#8B24E2", "#F4A79D", "#F68D2B"];
+  const colors = doughnutData.map((item, idx) => defaultColors[idx % defaultColors.length]);
 
   const cardsData = [
     {
@@ -104,7 +96,7 @@ const SASRevenue = () => {
       </div>
 
       <div className="px-4 gap-3 flex flex-col">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols- gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <DashboardHeaderCard dashboardHead={true} cardsData={cardsData} />
         </div>
         <div className="px-4 py-5 shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-lg">
