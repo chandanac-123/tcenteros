@@ -1,7 +1,7 @@
 import { CircleArrowDown, CircleDollarSign } from 'lucide-react'
 import React from 'react'
-import CommissionCards from './components/commissionCards'
-import CommissionTable from './components/CommissionTable'
+import CommissionCards from '../components/CommissionCards'
+import CommissionTable from '../components/CommissionTable'
 import { Button } from '@pages/components/ui/button'
 
 const PartnerCommision = () => {

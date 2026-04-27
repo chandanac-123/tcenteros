@@ -10,12 +10,10 @@ import {
   Lock,
 } from "lucide-react";
 import React from "react";
-import RevenueCards from "./components/RevenueCards";
 import LineChart from "@common/charts/LineChart";
 import DoughnutChart from "@common/charts/DoughnutChart";
-import LineBarChart from "./components/LineBarChart";
+import LineBarChart from "../components/LineBarChart";
 import { useRevenueBillingOverviewQuery } from "@api-queries/super-admin/revenue-billing/Query";
-import BaseCard from "@super-admin/dashboard/components/BaseCard";
 import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
 
 const SASRevenue = () => {
@@ -42,6 +40,7 @@ const SASRevenue = () => {
     { label: "Branch Purchase", value: 10, color: "#8B24E2", amount: 54221 },
     { label: "Network Commission", value: 6, color: "#F4A79D", amount: 54221 },
   ];
+  
   const values = doughnutData.map((item) => item.value);
   const labels = doughnutData.map((item) => item.label);
   const colors = doughnutData.map((item) => item.color);
