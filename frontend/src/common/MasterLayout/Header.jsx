@@ -26,6 +26,7 @@ import GoogleMapComponent from "../components/GoogleMapComponent";
 import defalutUser from "@assets/header-icons/user.svg";
 import { useAppPermissions } from "@hooks/index";
 import AdminProfileModal from "@super-admin/admin-profile";
+import { useSuperadminProfileQuery } from "@api-queries/super-admin/profile/Query";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const role = useAuthStore((state) => state.auth?.role);
@@ -38,6 +39,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const { data } = useGetProfileInfoQuery();
+  const { data: superadminData, isFetching } = useSuperadminProfileQuery();
   const navigate = useNavigate();
   const [locationOpen, setLocationOpen] = useState(false);
   const [openAdminProfile, setOpemAdminProfile] = useState(false);
@@ -84,7 +86,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
         )}
         {!isPartner && (
           <button onClick={() => navigate("/notifications")}>
-            <img src={bell_active} alt="logo" className="mr-2" loading="lazy"/>
+            <img src={bell_active} alt="logo" className="mr-2" loading="lazy" />
           </button>
         )}
 
@@ -94,19 +96,17 @@ const Header = ({ toggleSidebar, collapsed }) => {
               <div className="flex items-center">
                 <div className="flex items-center gap-0">
                   <img
-                  loading="lazy"
-                    src={data?.profile_photo || defalutUser}
+                    loading="lazy"
+                    src={data?.profile_photo || superadminData?.profile_photo || defalutUser}
                     alt="logo"
                     className="w-8 h-8 mr-2 rounded-full"
                   />
                   <div className="flex flex-col">
-                    <span className="text-textwhite text-xs font-normal whitespace-nowrap">
-                      {data?.full_name || "-"}
+                    <span className="text-textwhite text-xs font-normal whitespace-nowrap capitalize">
+                      {data?.full_name || superadminData?.fullname || "-"}
                     </span>
-                    <span className="text-textwhite/50 text-xs font-light">
-                      {data?.role
-                        ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
-                        : "-"}
+                    <span className="text-textwhite/50 text-xs font-light capitalize">
+                      {data?.role || superadminData?.role || "-"}
                     </span>
                   </div>
                 </div>
