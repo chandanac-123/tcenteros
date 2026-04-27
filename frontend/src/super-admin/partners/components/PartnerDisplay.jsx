@@ -1,7 +1,7 @@
 import { MapPin } from 'lucide-react'
 import React from 'react'
 
-const PartnerDisplay = () => {
+const PartnerDisplay = ({ data }) => {
     return (
         <div>
             <div className="w-full bg-white rounded-xl shadow-md border border-[#E0DDD8] p-4 flex flex-col sm:flex-row sm:items-center gap-4">
@@ -19,19 +19,19 @@ const PartnerDisplay = () => {
 
                     {/* Top Row */}
                     <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg font-semibold text-[#313030]">
-                            Anil Kumar S
+                        <h2 className="text-lg font-semibold text-[#313030] capitalize">
+                           {data?.partner_name}
                         </h2>
 
                         {/* Status */}
-                        <span className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#D5FFE6] text-[#03881C] text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#03881C]" />
-                            Active
+                        <span className="flex items-center gap-1 px-2 py-[2px] rounded-full capitalize bg-[#D5FFE6] text-[#03881C] text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#03881C] " />
+                           {data?.status}
                         </span>
 
                         {/* Region */}
-                        <span className="px-2 py-[2px] rounded-md bg-[#E3ECFF] text-[#1452D4] text-xs">
-                            West
+                        <span className="px-2 py-[2px] rounded-md bg-[#E3ECFF] text-[#1452D4] text-xs capitalize">
+                           {data?.city}
                         </span>
                     </div>
 

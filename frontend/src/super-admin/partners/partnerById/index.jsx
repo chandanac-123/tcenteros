@@ -1,36 +1,37 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import { Handshake } from "lucide-react";
-import React, { useState } from "react";
-import PartnerDisplay from "./components/PartnerDisplay";
-import PartnerCards from "./components/PartnerCards";
-import CustomeTab from "@common/components/CustomeTab";
-import AssiginedCenters from "./components/AssignedCenters/AssiginedCenters";
-import CommissionLedger from "./components/CommissionLedger/CommissionLedger";
-import CustomFilter from "@common/components/CustomeFilter";
+import { Building2, Handshake, IndianRupee, Users } from "lucide-react";
+import React, { use, useState } from "react";
+import PartnerDisplay from "../components/PartnerDisplay";
 import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useGetPartnerDetailsQuery } from "@api-queries/super-admin/partners/Query";
+import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
+import AssignedCenterTable from "../components/AssignedCenterTable";
 
 const PartnerById = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("center_assigned");
-  const partnerTabs = [
-    {
-      id: "center_assigned",
-      name: "Center Assigned",
-      component: <AssiginedCenters />,
-    },
-    {
-      id: "commission_ledger",
-      name: "Commission Ledger",
-      component: <CommissionLedger />,
-    },
-  ];
-  const activeModule = partnerTabs.find((item) => item.id === activeTab);
-  const assignedCenterFilter = [
-    { key: "active", label: "Active" },
-    { key: "inactive", label: "Inactive" },
-  ];
+  const { id } = useParams();
+  const { data } = useGetPartnerDetailsQuery(id);
 
+  const cardsData = [
+    {
+      label: "Total Commission Earned",
+      value: data?.total_commission_earned || "0",
+      icon: <Users />,
+      type: "amount",
+    },
+    {
+      label: "Total Active Centers",
+      value: data?.total_centers,
+      icon: <Building2 />,
+    },
+    {
+      label: "Pending Payout",
+      value: data?.pending_payouts,
+      icon: <IndianRupee />,
+      type: "amount",
+    },
+  ];
   return (
     <ContentLayout>
       <div>
@@ -63,25 +64,12 @@ const PartnerById = () => {
         </div>
 
         <div className="px-5 flex flex-col gap-5">
-          <PartnerDisplay />
-          <PartnerCards />
-        </div>
+          <PartnerDisplay data={data} />
 
-        <div className="px-5 py-5">
-          <div className=" flex items-center justify-between">
-            <CustomeTab
-              tabList={partnerTabs}
-              value={activeTab}
-              defaultVal="center_assigned"
-              onChange={setActiveTab}
-              tabsClass={"w-[50%]"}
-            />
-            {activeTab === "center_assigned" && (
-              <CustomFilter options={assignedCenterFilter} />
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <HeaderCard cardsData={cardsData} />
           </div>
-
-          <div className="mt-4">{activeModule?.component}</div>
+          <AssignedCenterTable data={data?.centers?.data} />
         </div>
       </div>
     </ContentLayout>

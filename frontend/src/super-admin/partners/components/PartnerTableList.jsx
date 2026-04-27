@@ -51,7 +51,7 @@ const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
       accessorKey: "action",
       header: "Action",
       cell: ({ row }) => {
-        const id = row.original.id;
+        const id = row.original.partner_id;
         return (
           <button
             disabled={!canPartnerView}
