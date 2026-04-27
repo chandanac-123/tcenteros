@@ -91,7 +91,7 @@ const DashboardHeaderCard = ({ cardsData }) => {
             <span className="text-xs font-medium text-grey">{item?.label}</span>
           </div>
           <div className="flex items-end justify-between mt-auto">
-            <span className="text-xl font-bold text-textblack">1,247</span>
+            <span className="text-xl font-bold text-textblack">{item?.value}</span>
             <TrendBadge value={12} />
           </div>
         </div>

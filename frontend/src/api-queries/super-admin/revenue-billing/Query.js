@@ -4,7 +4,7 @@ import { showError, showSuccess } from "@utils/toast";
 
 export const useRevenueBillingOverviewQuery = () => {
   return useQuery({
-    queryKey: ["superadminProfile"],
+    queryKey: ["revenueBillingOverview"],
     queryFn: () => getRevenueBillingOverview(),
     refetchOnWindowFocus: true,
     refetchOnMount: true,
