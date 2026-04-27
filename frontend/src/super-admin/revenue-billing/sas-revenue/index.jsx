@@ -126,7 +126,7 @@ const SASRevenue = () => {
           </div>
 
           <div className="w-[70%] p-5 rounded-lg flex items-center justify-center">
-            <LineBarChart data={doughnutData} />
+            <LineBarChart data={doughnutData}colors={colors} />
           </div>
         </div>
       </div>
