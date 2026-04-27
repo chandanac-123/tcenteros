@@ -1,32 +1,93 @@
-import { CircleDollarSign } from 'lucide-react'
-import React from 'react'
-import RevenueCards from './components/RevenueCards'
-import LineChart from '@common/charts/LineChart'
-import DoughnutChart from '@common/charts/DoughnutChart'
-import LineBarChart from './components/LineBarChart'
+import {
+  Book,
+  CircleDollarSign,
+  FileBadge,
+  FolderSync,
+  HandCoins,
+  RefreshCcw,
+  Network,
+  Split,
+  Lock,
+} from "lucide-react";
+import React from "react";
+import RevenueCards from "./components/RevenueCards";
+import LineChart from "@common/charts/LineChart";
+import DoughnutChart from "@common/charts/DoughnutChart";
+import LineBarChart from "./components/LineBarChart";
+import { useRevenueBillingOverviewQuery } from "@api-queries/super-admin/revenue-billing/Query";
+import BaseCard from "@super-admin/dashboard/components/BaseCard";
+import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
 
 const SASRevenue = () => {
+  const { data, isLoading } = useRevenueBillingOverviewQuery();
+  console.log("data: ", data);
   const datasets = [
     {
       label: "Revenue",
       data: [10, 100, 150, 50, 150, 40, 280, 40, 160, 410, 80, 210],
       borderColor: "#03881B",
-      backgroundColor: "#03881B"
+      backgroundColor: "#03881B",
     },
-
-  ]
+  ];
 
   const doughnutData = [
     { label: "Subscription", value: 44, color: "#344BFD", amount: 1411 },
-    { label: "Subscription Renewal ", value: 28, color: "#FFD200", amount: 12323 },
+    {
+      label: "Subscription Renewal ",
+      value: 28,
+      color: "#FFD200",
+      amount: 12323,
+    },
     { label: "Via Partners", value: 12, color: "#F68D2B", amount: 23211 },
     { label: "Branch Purchase", value: 10, color: "#8B24E2", amount: 54221 },
-    { label: "Network Commission", value: 6, color: "#F4A79D", amount: 54221 }
+    { label: "Network Commission", value: 6, color: "#F4A79D", amount: 54221 },
+  ];
+  const values = doughnutData.map((item) => item.value);
+  const labels = doughnutData.map((item) => item.label);
+  const colors = doughnutData.map((item) => item.color);
 
-  ]
-  const values = doughnutData.map(item => item.value);
-  const labels = doughnutData.map(item => item.label);
-  const colors = doughnutData.map(item => item.color);
+  const cardsData = [
+    {
+      label: " Monthly Recurring Revenue (MRR)",
+      value: data?.monthly_recurring_revenue || 0,
+      icon: <HandCoins size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: " Yearly Locked Revenue (ARR)",
+      value: data?.yearly_recognized_revenue || 0,
+      icon: <Lock size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: " 30 Days Renewal Forecast",
+      value: data?.renewal_forecast_30_days || 0,
+      icon: <RefreshCcw size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Pending Commission Payout",
+      value: data?.pending_commission_payout || 0,
+      icon: <Book size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: " Subscriptions",
+      value: data?.center_subscriptions_income || 0,
+      icon: <FileBadge size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Subscription Renewals",
+      value: data?.center_subscription_renewal_income || 0,
+      icon: <FolderSync size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: "Branch Purchases",
+      value: data?.branch_purchase_income || 0,
+      icon: <Split size={16} strokeWidth={2.75} />,
+    },
+    {
+      label: " Network Commission",
+      value: data?.network_commission_income || 0,
+      icon: <Network size={16} strokeWidth={2.75} />,
+    },
+  ];
   return (
     <div>
       <div className="flex items-center gap-4 p-4">
@@ -43,14 +104,14 @@ const SASRevenue = () => {
         </div>
       </div>
 
-      <div className="p-4">
-        <RevenueCards />
-      </div>
-
-
-      <div className="px-4">
+      <div className="px-4 gap-3 flex flex-col">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols- gap-4">
+          <DashboardHeaderCard dashboardHead={true} cardsData={cardsData} />
+        </div>
         <div className="px-4 py-5 shadow-[0px_5px_15px_rgba(0,0,0,0.35)] rounded-lg">
-          <h2 className="text-[#3A3A3A] font-poppins text-[18px] font-semibold pb-3">Monthly Recurring Revenue Trend</h2>
+          <h2 className="text-[#3A3A3A] font-poppins text-[18px] font-semibold pb-3">
+            Monthly Recurring Revenue Trend
+          </h2>
           <LineChart
             datasets={datasets}
             yMin={0}
@@ -70,7 +131,6 @@ const SASRevenue = () => {
                 colors={colors}
                 cutout="80%"
               />
-
             </div>
           </div>
 
@@ -80,7 +140,7 @@ const SASRevenue = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SASRevenue
+export default SASRevenue;

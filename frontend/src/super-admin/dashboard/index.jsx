@@ -6,13 +6,21 @@ import LineChart from "@common/charts/LineChart";
 import CustomDatePicker from "@common/components/CustomeDatepicker";
 import BaseCard from "./components/BaseCard";
 import MultiRingChart from "@common/charts/MultiRingChart";
-import {
-  NotebookPen,
-  Receipt,
-  Users,
-} from "lucide-react";
 import DashboardHeaderCard from "./components/HeaderCards";
-
+import {
+  Briefcase,
+  Building,
+  Building2,
+  NotebookPen,
+  Users,
+  CalendarSearch,
+  CircleAlert,
+  Handshake,
+  Network,
+  Receipt,
+  Split,
+  TriangleAlert,
+} from "lucide-react";
 
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
@@ -83,6 +91,68 @@ const SuperAdminDashboard = () => {
     { label: "Branching", value: 12, color: "#7E57C2" },
   ];
 
+  const cardsData = [
+    {
+      label: "Total Active Centers",
+      value: 0,
+      icon: <Building2 size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/employee-management"),
+    },
+    {
+      label: "New Centers This Month",
+      value: 0,
+      icon: <Building size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/crm/members"),
+    },
+    {
+      label: "Monthly Recurring Revenue",
+      value: 0,
+      icon: <Receipt size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/membership-plan?tab=active"),
+    },
+    {
+      label: "Yearly Locked Revenue",
+      value: 0,
+      icon: <Briefcase size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/crm?tab=leads"),
+    },
+    {
+      label: "Branching Earning",
+      value: 0,
+      icon: <Split size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/crm?tab=guests"),
+    },
+    {
+      label: "Partner Earning",
+      value: 0,
+      icon: <Handshake size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/crm?tab=guests"),
+    },
+    {
+      label: "Network Earning",
+      value: 0,
+      icon: <Network size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/attendance"),
+    },
+    {
+      label: "Upcoming Renewal Value",
+      value: 0,
+      icon: <CalendarSearch size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/accounts"),
+    },
+    {
+      label: "Churn Rate",
+      value: 0,
+      icon: <CircleAlert size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/accounts"),
+    },
+    {
+      label: "Failed Payments Value",
+      value: 0,
+      icon: <TriangleAlert size={16} strokeWidth={2.75} />,
+      onClick: () => navigate("/accounts"),
+    },
+  ];
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col">
@@ -93,7 +163,7 @@ const SuperAdminDashboard = () => {
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <DashboardHeaderCard dashboardHead={true} />
+          <DashboardHeaderCard dashboardHead={true} cardsData={cardsData} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
