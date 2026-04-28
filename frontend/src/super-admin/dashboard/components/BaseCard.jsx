@@ -1,6 +1,20 @@
 import TrendBadge from "@common/components/TrendBadge";
 
+const formatCardValue = (value, type) => {
+  if (value === null || value === undefined) return "-";
+
+  if (type === "amount") {
+    return `₹${value}`;
+  }
+
+  if (type === "percent") {
+    return `${value}%`;
+  }
+
+  return value;
+};
 const BaseCard = ({ data, growingCenter = false }) => {
+  const currentType = data?.type;
   return (
     <div className="w-full h-20 border cursor-pointer flex flex-col justify-center p-3 bg-textwhite rounded-xl shadow-primary-shadow">
       <div className="flex items-center justify-between w-full">
@@ -22,7 +36,7 @@ const BaseCard = ({ data, growingCenter = false }) => {
           <TrendBadge value={data?.value} />
         ) : (
           <span className="text-xl font-bold text-textblack">
-            {data?.value}
+            {formatCardValue(data?.value, currentType)}
           </span>
         )}
       </div>

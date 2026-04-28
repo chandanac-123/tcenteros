@@ -35,28 +35,34 @@ const SASRevenue = () => {
   const labels = doughnutData.map((item) => item.label);
   // Assign colors for up to 4 segments, fallback to default if more
   const defaultColors = ["#344BFD", "#FFD200", "#8B24E2", "#F4A79D", "#F68D2B"];
-  const colors = doughnutData.map((item, idx) => defaultColors[idx % defaultColors.length]);
+  const colors = doughnutData.map(
+    (item, idx) => defaultColors[idx % defaultColors.length],
+  );
 
   const cardsData = [
     {
       label: " Monthly Recurring Revenue (MRR)",
       value: data?.monthly_recurring_revenue || 0,
       icon: <HandCoins size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: " Yearly Locked Revenue (ARR)",
       value: data?.yearly_recognized_revenue || 0,
       icon: <Lock size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: " 30 Days Renewal Forecast",
       value: data?.renewal_forecast_30_days || 0,
       icon: <RefreshCcw size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: "Pending Commission Payout",
       value: data?.pending_commission_payout || 0,
       icon: <Book size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: " Subscriptions",
@@ -77,6 +83,7 @@ const SASRevenue = () => {
       label: " Network Commission",
       value: data?.network_commission_income || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
   ];
   return (
@@ -126,7 +133,7 @@ const SASRevenue = () => {
           </div>
 
           <div className="w-[70%] p-5 rounded-lg flex items-center justify-center">
-            <LineBarChart data={doughnutData}colors={colors} />
+            <LineBarChart data={doughnutData} colors={colors} />
           </div>
         </div>
       </div>

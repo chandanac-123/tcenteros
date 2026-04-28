@@ -1,10 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {  useQuery } from "@tanstack/react-query";
 import { getDashboardOverview } from "./Urls";
-import { showError, showSuccess } from "@utils/toast";
 
 export const useDashboardOverviewQuery = () => {
   return useQuery({
-    queryKey: ["dashbaordOverview"],
+    queryKey: ["superadmin-dashboard"],
     queryFn: () => getDashboardOverview(),
     refetchOnWindowFocus: true,
     refetchOnMount: true,

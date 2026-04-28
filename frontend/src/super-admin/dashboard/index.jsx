@@ -26,7 +26,9 @@ import { useDashboardOverviewQuery } from "@api-queries/super-admin/superadmin-d
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const { data, isLoading } = useDashboardOverviewQuery();
-  console.log("data: ", data);
+  const revenueTrend = data?.saas_revenue_trend || [];
+  const revenueSplit = data?.revenue_split || [];
+  const colors = ["#4DB6AC", "#B57CC2", "#E6A57A", "#3BA3C9", "#7E57C2"];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,8 +36,6 @@ const SuperAdminDashboard = () => {
     }, 300000); //  every 5 min is enough
     return () => clearInterval(interval);
   }, []);
-
-  const revenueTrend = data?.saas_revenue_trend || [];
 
   const linechartData = revenueTrend.map((item) => item.value);
   const chartLabels = revenueTrend.map((item) => item.label);
@@ -45,16 +45,19 @@ const SuperAdminDashboard = () => {
       label: "Active Partners",
       value: data?.partner_snapshot?.active_partners,
       icon: <Users size={16} strokeWidth={2.75} />,
+      type: "count",
     },
     {
       label: "Revenue via Partners",
       value: data?.partner_snapshot?.revenue_via_partners,
       icon: <Receipt size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: "Commission Payable",
       value: data?.partner_snapshot?.commission_payable,
       icon: <NotebookPen size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
   ];
 
@@ -91,13 +94,11 @@ const SuperAdminDashboard = () => {
     },
   ];
 
-  const chartData = [
-    { label: "Monthly Subscriptions", value: 62, color: "#4DB6AC" },
-    { label: "Yearly Subscriptions", value: 29, color: "#B57CC2" },
-    { label: "Network Subscriptions", value: 26, color: "#E6A57A" },
-    { label: "Via Partners", value: 12, color: "#3BA3C9" },
-    { label: "Branching", value: 12, color: "#7E57C2" },
-  ];
+  const chartData = revenueSplit.map((item, index) => ({
+    label: item.label,
+    value: item.percent, // 👈 IMPORTANT: use percent for doughnut
+    color: colors[index % colors.length],
+  }));
 
   const cardsData = [
     {
@@ -117,30 +118,35 @@ const SuperAdminDashboard = () => {
       value: data?.revenue?.monthly_recurring_revenue,
       icon: <Receipt size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/membership-plan?tab=active"),
+      type: "amount",
     },
     {
       label: "Yearly Locked Revenue",
       value: data?.revenue?.yearly_locked_revenue,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=leads"),
+      type: "amount",
     },
     {
       label: "Branching Earning",
       value: data?.revenue?.branching_earnings,
       icon: <Split size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
+      type: "amount",
     },
     {
       label: "Partner Earning",
       value: data?.revenue?.partner_commission,
       icon: <Handshake size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
+      type: "amount",
     },
     {
       label: "Network Earning",
       value: data?.revenue?.network_earnings,
       icon: <Network size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/attendance"),
+      type: "amount",
     },
     {
       label: "Upcoming Renewal Value",
@@ -153,6 +159,7 @@ const SuperAdminDashboard = () => {
       value: data?.revenue?.churn_rate_percent,
       icon: <CircleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
+      type: "percent",
     },
     {
       label: "Failed Payments Value",
