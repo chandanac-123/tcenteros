@@ -92,6 +92,7 @@ import LeadsManagement from '@partner/leads-management'
 import AddnewLeads from '@partner/leads-management/components/AddnewLeads'
 import EarningsAndPayouts from '@partner/earnings-payouts'
 import Renewals from '@partner/renewals'
+import BlogPage from '@pages/onboarding-pages/header-components/blogs'
 
 export const routes = [
   //public routes
@@ -116,6 +117,7 @@ export const routes = [
   { key: 23, path: '/otp-verification', privetRoute: false, isSubRoute: false, pageTitle: '', component: OTPVerification, menubar: false, permissionKey: true },
   { key: 24, path: '/reset-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
   { key: 25, path: '/reset-success', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permissionKey: true },
+  { key: 61, path: '/blog', privetRoute: false, isSubRoute: false, pageTitle: '', component: BlogPage, menubar: false, permissionKey: true },
 
   //private routes
   { key: 26, path: '/dashboard', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permissionKey: 'dashboard', alwaysVisible: true },
