@@ -1,9 +1,9 @@
 import { createNewPaymentOrder, verifyPayment } from "."
 
 
-export const createNewPaymentOrder_Url = async (paymentDetails) => {
+export const createNewPaymentOrder_Url = async (payment_id) => {
     try {
-        const response = await createNewPaymentOrder(paymentDetails);
+        const response = await createNewPaymentOrder(payment_id);
         console.log("Payment Response:", response);
 
         return response
@@ -13,9 +13,9 @@ export const createNewPaymentOrder_Url = async (paymentDetails) => {
     }
 }
 
-export const verifyPayment_Urls = async (details) => {
+export const verifyPayment_Urls = async (params) => {
     try {
-        const response = await verifyPayment(details);
+        const response = await verifyPayment(params);
         console.log("Payment Response:", response);
         return response
     } catch (err) {

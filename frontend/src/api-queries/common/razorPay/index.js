@@ -1,15 +1,19 @@
 import axiosInstance from "@api/axiosInstance"
 
 
-export const createNewPaymentOrder = async (paymentDetails) => {
-    const res = await axiosInstance.post(
-        `/center/billing/onboarding/create-order/${paymentDetails.reference_id}`,
+export const createNewPaymentOrder = async (payment_id) => {
+    const response = await axiosInstance.post(
+        `/auth/create-order/${payment_id}`
     );
-    console.log("API raw response:", res);
 
-    return res.data;
+    return response;
 };
 
-export const verifyPayment =async(details)=>{
-    axiosInstance.post(`/center/billing/onboarding/finalize/${details.reference_id}`)
-}
+export const verifyPayment = async (params) => {
+    const response = await axiosInstance.post(
+        `/auth/verify`,null,
+        { params }
+    );
+
+    return response;
+};

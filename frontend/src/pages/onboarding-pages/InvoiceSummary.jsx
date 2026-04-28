@@ -5,8 +5,7 @@ import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import {
   useCalculateGstQuery,
-  useFinalizeOnboardCenterMutation,
-  usePricingPageQuery
+  useFinalizeOnboardCenterMutation
 } from '@api-queries/center-admin/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { Input } from '@pages/components/ui/input'
@@ -14,7 +13,7 @@ import { useFormik } from 'formik'
 import { invoiceValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useState } from 'react'
-import { useCreatePaymentOrder } from '@api-queries/common/razorPay/query'
+import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
@@ -24,11 +23,10 @@ const InvoiceSummary = () => {
   const { data, isFetching } = useCalculateGstQuery(store?.onboardId)
   const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
     store?.onboardId
-  );
-  const { data: pricingData, isFetching: pricingLoading } = usePricingPageQuery(store?.onboardId);
-  const { mutateAsync: createOrder, isPending } = useCreatePaymentOrder();
+  )
+  const { mutate: create_Order, isPending } = useCreatePaymentOrder();
+  const { mutateAsync: verifyPayment } = useVerifyPayment();
 
-  console.log("Dataa", pricingData);
 
   const initialValues = {
     address_line_1: '',
@@ -36,53 +34,89 @@ const InvoiceSummary = () => {
     gst_number: ''
   }
 
-
-
-
-
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
     validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
       try {
-        const order = await createOrder({
-          reference_id: pricingData?.id,
-          // payment_type: "",
-        });
-        console.log("Order Response:", order);
+        const response = await finalize(values);
+        console.log("Response", response);
 
-        const options = {
-          key: order?.key_id,
-          amount: order?.amount_paise,
-          currency: order?.currency,
-          name: "Kerala Astro",
-          order_id: order?.razorpay_order_id,
+        const payment_id = response?.payment?.payment_order_id;
 
-          handler: async function (response) {
-            try {
-              console.log("Payment Response:",response);
-              
-
-              setTimeout(() => {
-                navigate('/primary-login');
-              }, 1500);
-
-            } catch (err) {
-              console.error("Finalize error:", err);
-            }
-          }
+        if (!payment_id) {
+          throw new Error("Payment ID not found from finalize response");
         }
 
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+        console.log("Payment ID:", payment_id);
+
+        create_Order(payment_id, {
+          onSuccess: (res) => {
+            console.log("Order ID:", res);
+            const orderData = res?.data;
+            openRazorpay(orderData);
+          },
+          onError: (err) => {
+            console.log(err);
+          },
+        });
 
 
+
+
+        // setSuccess(true)
+        // resetStore()
+        // setTimeout(() => {
+        //   navigate('/primary-login')
+        // }, 1500)
       } catch (error) {
         console.log('error: ', error)
       }
     }
-  })
+  });
+
+  const openRazorpay = async (orderData) => {
+    try {
+      const options = {
+        key: orderData.key_id, // from backend
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "TcenterOS",
+        description: "Center Subscription Payment",
+        order_id: orderData.order_id,
+
+        handler: async function (response) {
+          console.log("Payment Success:", response);
+          const result = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          setSuccess(true)
+          resetStore();
+          navigate('/primary-login')
+          console.log("Verified Result:", result);
+        },
+
+        // prefill: {
+        //   name: "Customer Name",
+        //   email: "customer@email.com",
+        // },
+
+        // theme: {
+        //   color: "#6D28D9",
+        // },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.log("Error at opening razor Pay checkOut");
+    }
+
+  };
 
   const yearlyPrice = data?.total_amount
     ? (data.total_amount * 12).toFixed(2)
