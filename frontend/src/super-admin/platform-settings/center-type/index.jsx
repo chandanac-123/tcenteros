@@ -47,42 +47,49 @@ const CenterType = () => {
       <div className="flex flex-col p-4 rounded-lg space-y-4 shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
         <span className="text-grey font-semibold">Add Center Type</span>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Set Center Type Name"
-            name="name"
-            type="text"
-            placeholder="Enter center type name"
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.name && formik.errors.name}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* LEFT COLUMN */}
+          <div className="flex flex-col gap-4">
+            <Input
+              label="Center Type Name"
+              name="name"
+              type="text"
+              placeholder="Enter center type name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.name && formik.errors.name}
+            />
 
-          <InputFile
-            label="Upload Image Of Center Type"
-            name="image"
-            value={formik.values.image}
-            onChange={(e) => {
-              formik.setFieldValue("image", e.target.value); // 👈 important
-              formik.setFieldTouched("image", true, false);
-            }}
-            onRemove={() => {
-              formik.setFieldValue("image", null);
-              formik.setFieldTouched("image", true, false);
-            }}
-             error={formik.touched.image && formik.errors.image}
-          />
-          <Input
-            label="Set Center Type Name"
-            name="code"
-            type="text"
-            placeholder="Enter center type name"
-            value={formik.values.code}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.code && formik.errors.code}
-          />
+            <Input
+              label="Center Code"
+              name="code"
+              type="text"
+              placeholder="Enter center code"
+              value={formik.values.code}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.code && formik.errors.code}
+            />
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div>
+            <InputFile
+              label="Upload Image Of Center Type"
+              name="image"
+              value={formik.values.image}
+              onChange={(e) => {
+                formik.setFieldValue("image", e.target.value);
+                formik.setFieldTouched("image", true, false);
+              }}
+              onRemove={() => {
+                formik.setFieldValue("image", null);
+                formik.setFieldTouched("image", true, false);
+              }}
+              error={formik.touched.image && formik.errors.image}
+            />
+          </div>
         </div>
 
         <div className="flex justify-end">
