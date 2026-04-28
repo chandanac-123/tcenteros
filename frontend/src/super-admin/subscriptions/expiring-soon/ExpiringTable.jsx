@@ -1,8 +1,10 @@
-import CustomFilter from "@common/components/CustomeFilter";
 import { DataTable } from "@common/components/DataTable";
+import { Button } from "@pages/components/ui/button";
+import { useState } from "react";
+import AddGrace from "./AddGrace";
 
 const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
-  console.log("data: ", data);
+  const [graceOpen, setGraceOpen] = useState(false);
   const flattenedCenters = data?.flatMap((day) => day.centers) || [];
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
@@ -10,13 +12,27 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
     { accessorKey: "renewal_amount", header: "Value" },
     { accessorKey: "days_left", header: "Days left" },
     { accessorKey: "status", header: "Partner" },
+    {
+      accessorKey: "status",
+      header: "Action",
+      cell: ({ row }) => (
+        <span className="flex  gap-2">
+          <Button size="notificationbutton">Send Reminder</Button>
+          <Button
+            onClick={() => setGraceOpen(true)}
+            size="notificationbutton"
+            className="bg-plan_purple hover:bg-plan_purple"
+          >
+            Add Grace
+          </Button>
+          <AddGrace graceOpen={graceOpen} setGraceOpen={setGraceOpen}/>
+        </span>
+      ),
+    },
   ];
-
-
 
   return (
     <>
-    
       <DataTable
         columns={columns}
         data={flattenedCenters || []}
