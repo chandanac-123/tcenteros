@@ -2,8 +2,6 @@ const ManagementToolRow = ({
   tool,
   checked,
   onToggle,
-  onNavigate,
-  route,
   isMandatory
 }) => {
   return (
@@ -21,9 +19,9 @@ const ManagementToolRow = ({
         className={`flex-1 ${
           isMandatory ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
         }`}
-        onClick={() =>
-          !isMandatory && onNavigate && onNavigate(route, tool)
-        }
+        // onClick={() =>
+        //   !isMandatory && onNavigate && onNavigate(route, tool)
+        // }
       >
         {tool.feature_name}
         {isMandatory && (
