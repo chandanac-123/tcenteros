@@ -26,7 +26,7 @@ import { useDashboardOverviewQuery } from "@api-queries/super-admin/superadmin-d
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const { data, isLoading } = useDashboardOverviewQuery();
-  console.log('data: ', data);
+  console.log("data: ", data);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,6 +34,11 @@ const SuperAdminDashboard = () => {
     }, 300000); //  every 5 min is enough
     return () => clearInterval(interval);
   }, []);
+
+  const revenueTrend = data?.saas_revenue_trend || [];
+
+  const linechartData = revenueTrend.map((item) => item.value);
+  const chartLabels = revenueTrend.map((item) => item.label);
 
   const PartnerData = [
     {
@@ -94,7 +99,6 @@ const SuperAdminDashboard = () => {
     { label: "Branching", value: 12, color: "#7E57C2" },
   ];
 
-
   const cardsData = [
     {
       label: "Total Active Centers",
@@ -140,7 +144,7 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Upcoming Renewal Value",
-      value:  data?.revenue?.upcoming_renewal_value,
+      value: data?.revenue?.upcoming_renewal_value,
       icon: <CalendarSearch size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
@@ -183,15 +187,17 @@ const SuperAdminDashboard = () => {
                 </span>
               </div>
               <LineChart
+                labels={chartLabels} // if your component supports labels
                 datasets={[
                   {
-                    label: "New Leads",
-                    data: [500, 200, 3000, 1500, 800, 1200],
+                    label: "SaaS Revenue",
+                    data: linechartData,
                     borderColor: "#3B82F6",
                   },
                 ]}
                 yMin={0}
-                yMax={10000}
+                yMax={Math.max(...linechartData, 1000)}
+                yStep={500} //  ADD THIS
                 tickFormat={(v) => (v >= 1000 ? v / 1000 + "k" : v)}
               />
             </Card>
