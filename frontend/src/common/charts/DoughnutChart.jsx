@@ -10,18 +10,32 @@ const DoughnutChart = ({
   colors = [],
   cutout = "70%",
 }) => {
-  const data = {
-    labels: labels,
-    datasets: [
-      {
-        data: values,
-        backgroundColor: colors,
-        borderWidth: 0,
-        borderRadius: 25,
-        spacing: 2,
-      },
-    ],
-  };
+  const hasData =
+    values && values.length > 0 && values.some((v) => Number(v) > 0);
+
+  const data = hasData
+    ? {
+        labels: labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 0,
+            borderRadius: 25,
+            spacing: 2,
+          },
+        ],
+      }
+    : {
+        labels: ["No Data"],
+        datasets: [
+          {
+            data: [100],
+            backgroundColor: ["#E5E7EB"], // grey
+            borderWidth: 0,
+          },
+        ],
+      };
 
   const options = {
     responsive: true,
