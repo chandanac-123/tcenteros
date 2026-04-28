@@ -21,9 +21,12 @@ import {
   Split,
   TriangleAlert,
 } from "lucide-react";
+import { useDashboardOverviewQuery } from "@api-queries/super-admin/superadmin-dashboard/Query";
 
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
+  const { data, isLoading } = useDashboardOverviewQuery();
+  console.log('data: ', data);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -90,6 +93,7 @@ const SuperAdminDashboard = () => {
     { label: "Via Partners", value: 12, color: "#3BA3C9" },
     { label: "Branching", value: 12, color: "#7E57C2" },
   ];
+
 
   const cardsData = [
     {
