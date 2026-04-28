@@ -5,7 +5,8 @@ import OnboardHeader from './components/OnboardHeader'
 import { useNavigate } from 'react-router-dom'
 import {
   useCalculateGstQuery,
-  useFinalizeOnboardCenterMutation
+  useFinalizeOnboardCenterMutation,
+  usePricingPageQuery
 } from '@api-queries/center-admin/on-boarding/Query'
 import { useOnboardingStore } from '@store/onboardingStore'
 import { Input } from '@pages/components/ui/input'
@@ -13,6 +14,7 @@ import { useFormik } from 'formik'
 import { invoiceValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useState } from 'react'
+import { useCreatePaymentOrder } from '@api-queries/common/razorPay/query'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
@@ -22,7 +24,11 @@ const InvoiceSummary = () => {
   const { data, isFetching } = useCalculateGstQuery(store?.onboardId)
   const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
     store?.onboardId
-  )
+  );
+  const { data: pricingData, isFetching: pricingLoading } = usePricingPageQuery(store?.onboardId);
+  const { mutateAsync: createOrder, isPending } = useCreatePaymentOrder();
+
+  console.log("Dataa", pricingData);
 
   const initialValues = {
     address_line_1: '',
@@ -30,18 +36,48 @@ const InvoiceSummary = () => {
     gst_number: ''
   }
 
+
+
+
+
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
     validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
       try {
-        const response = await finalize(values)
-        setSuccess(true)
-        resetStore()
-        setTimeout(() => {
-          navigate('/primary-login')
-        }, 1500)
+        const order = await createOrder({
+          reference_id: pricingData?.id,
+          // payment_type: "",
+        });
+        console.log("Order Response:", order);
+
+        const options = {
+          key: order?.key_id,
+          amount: order?.amount_paise,
+          currency: order?.currency,
+          name: "Kerala Astro",
+          order_id: order?.razorpay_order_id,
+
+          handler: async function (response) {
+            try {
+              console.log("Payment Response:",response);
+              
+
+              setTimeout(() => {
+                navigate('/primary-login');
+              }, 1500);
+
+            } catch (err) {
+              console.error("Finalize error:", err);
+            }
+          }
+        }
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+
       } catch (error) {
         console.log('error: ', error)
       }

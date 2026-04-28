@@ -11,6 +11,7 @@ const PricingPage = () => {
   const store = useOnboardingStore()
   const { data, isFetching } = usePricingPageQuery(store?.onboardId)
 
+
   const amount = data?.calculated_amount || 0
   const isYearly = data?.subscription_duration === 'yearly'
   const monthlyPrice = isYearly ? amount / 12 : amount
