@@ -15,6 +15,8 @@ export const getPlatformSettingsApiCall = (data) =>
 export const getCenterTypeApiCall = () =>
   axiosInstance.get(`/settings/superadmin/center-categories/`);
 export const createCenterTypeApiCall = (data) =>
-  axiosInstance.post(`/settings/superadmin/center-categories/`, data);
+  axiosInstance.post(`/settings/superadmin/center-categories/`, data, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+  });
 export const deleteCenterTypeApiCall = (id) =>
   axiosInstance.delete(`/settings/superadmin/center-categories/${id}`);

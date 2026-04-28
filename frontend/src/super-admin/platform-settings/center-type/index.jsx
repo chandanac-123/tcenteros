@@ -21,11 +21,13 @@ const CenterType = () => {
     initialValues: {
       name: "",
       image: null,
+      code: "",
     },
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
         formData.append("name", values.name);
+        formData.append("code", values.code);
         if (values.image) {
           formData.append("image", values.image);
         }
@@ -58,10 +60,23 @@ const CenterType = () => {
             label="Upload Image Of Center Type"
             name="image"
             value={formik.values.image}
-            onChange={(file) => formik.setFieldValue("image", file)}
+            onChange={(e) => {
+              formik.setFieldValue("image", e.target.value); // 👈 important
+              formik.setFieldTouched("image", true, false);
+            }}
             onRemove={() => {
               formik.setFieldValue("image", null);
+              formik.setFieldTouched("image", true, false);
             }}
+          />
+          <Input
+            label="Set Center Type Name"
+            name="code"
+            type="text"
+            placeholder="Enter center type name"
+            value={formik.values.code}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
           />
         </div>
 

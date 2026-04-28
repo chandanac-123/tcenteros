@@ -164,7 +164,7 @@ export const routes = [
       { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
     ]
   },
-  { key: 51, path: '/analytics', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  // { key: 51, path: '/analytics', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 52, path: '/support', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: true, isSuperAdmin: true },
   { key: 53, path: '/supportById/:id', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: SupportById, icon: <Headset />, menubar: false, permissionKey: true, isSuperAdmin: true },
   { key: 54, path: '/partnersbyId/:id', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
