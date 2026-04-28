@@ -18,7 +18,7 @@ export const getRenewalByIdApiCall = (data) =>
 
 export const getRenewalExpiringApiCall = (data) =>
   axiosInstance.get(
-    `/superadmin/superadmin/billing/renewal-calendar/expiring-soon?days_until_expiry=${30}`,
+    `/superadmin/superadmin/billing/renewal-calendar/expiring-soon?days_until_expiry=${data?.expiry}`,
   );
 
 export const getBillingHistoryApiCall = (id) =>

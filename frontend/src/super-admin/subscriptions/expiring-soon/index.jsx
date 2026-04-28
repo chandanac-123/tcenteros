@@ -4,13 +4,27 @@ import ExpiringTable from "./ExpiringTable";
 import { useRenewalExpiringQuery } from "@api-queries/super-admin/subcriptions/Query";
 import CustomFilter from "@common/components/CustomeFilter";
 import { useState } from "react";
-
+const filterVlaue = [
+  { value: 3, label: "Expiring in 3 days" },
+  { value: 7, label: "Expiring in 7 days" },
+  { value: 15, label: "Expiring in 15 days" },
+  { value: 30, label: "Expiring in 30 days" },
+];
 const ExpiringSoon = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
+    expiry: 30,
   });
-  const { data, isLoading, isError } = useRenewalExpiringQuery(3);
-  console.log('5555555: ', data);
+  const { data, isLoading, isError } = useRenewalExpiringQuery(tableParams);
+
+  const updateFilter = (key, value) => {
+    setTableParams((prev) => ({
+      ...prev,
+      page: 1,
+      [key]: value,
+    }));
+  };
+
   return (
     <ContentLayout>
       <div className="flex justify-between">
@@ -23,7 +37,8 @@ const ExpiringSoon = () => {
               Expiring Soon
             </p>
             <p className="text-[#393636] font-inter text-[14px] font-medium">
-              14 centres require renewal attention
+              {data?.summary?.total_expiring_count} centres require renewal
+              attention
             </p>
           </div>
         </div>
@@ -52,13 +67,21 @@ const ExpiringSoon = () => {
           </div>
         </div>
       </div>
+      <div className="flex flex-col gap-3">
+        <CustomFilter
+          filterName="Expire days"
+          options={filterVlaue}
+          value={tableParams.expiry}
+          onApply={(value) => updateFilter("expiry", value)}
+        />
 
-      <ExpiringTable
-        data={data?.daily_breakdown}
-        isLoading={isLoading}
-        tableParams={tableParams}
-        setTableParams={setTableParams}
-      />
+        <ExpiringTable
+          data={data?.daily_breakdown}
+          isLoading={isLoading}
+          tableParams={tableParams}
+          setTableParams={setTableParams}
+        />
+      </div>
     </ContentLayout>
   );
 };
