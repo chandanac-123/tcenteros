@@ -37,18 +37,18 @@ const SuperAdminDashboard = () => {
 
   const PartnerData = [
     {
-      label: "Total Active Centers",
-      value: 0,
+      label: "Active Partners",
+      value: data?.partner_snapshot?.active_partners,
       icon: <Users size={16} strokeWidth={2.75} />,
     },
     {
-      label: "New Centers This Month",
-      value: 0,
+      label: "Revenue via Partners",
+      value: data?.partner_snapshot?.revenue_via_partners,
       icon: <Receipt size={16} strokeWidth={2.75} />,
     },
     {
       label: "Commission Payable",
-      value: 0,
+      value: data?.partner_snapshot?.commission_payable,
       icon: <NotebookPen size={16} strokeWidth={2.75} />,
     },
   ];
@@ -98,61 +98,61 @@ const SuperAdminDashboard = () => {
   const cardsData = [
     {
       label: "Total Active Centers",
-      value: 0,
+      value: data?.counts?.total_active_centers,
       icon: <Building2 size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/employee-management"),
     },
     {
       label: "New Centers This Month",
-      value: 0,
+      value: data?.counts?.new_centers_this_month,
       icon: <Building size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm/members"),
     },
     {
       label: "Monthly Recurring Revenue",
-      value: 0,
+      value: data?.revenue?.monthly_recurring_revenue,
       icon: <Receipt size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/membership-plan?tab=active"),
     },
     {
       label: "Yearly Locked Revenue",
-      value: 0,
+      value: data?.revenue?.yearly_locked_revenue,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=leads"),
     },
     {
       label: "Branching Earning",
-      value: 0,
+      value: data?.revenue?.branching_earnings,
       icon: <Split size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
     },
     {
       label: "Partner Earning",
-      value: 0,
+      value: data?.revenue?.partner_commission,
       icon: <Handshake size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
     },
     {
       label: "Network Earning",
-      value: 0,
+      value: data?.revenue?.network_earnings,
       icon: <Network size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/attendance"),
     },
     {
       label: "Upcoming Renewal Value",
-      value: 0,
+      value:  data?.revenue?.upcoming_renewal_value,
       icon: <CalendarSearch size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Churn Rate",
-      value: 0,
+      value: data?.revenue?.churn_rate_percent,
       icon: <CircleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Failed Payments Value",
-      value: 0,
+      value: data?.revenue?.failed_payment_value,
       icon: <TriangleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },
