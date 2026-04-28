@@ -9,6 +9,7 @@ import {
 import { useFormik } from "formik";
 import InputFile from "@common/components/CustomeFileUpload";
 import CenterTypeCard from "./CenterTypeCard";
+import { centerTypeValidationSchema } from "@utils/validations";
 
 const CenterType = () => {
   const { data, isLoading } = useGetCenterTypeQuery();
@@ -23,6 +24,7 @@ const CenterType = () => {
       image: null,
       code: "",
     },
+    validationSchema: centerTypeValidationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
@@ -54,6 +56,7 @@ const CenterType = () => {
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
+            error={formik.touched.name && formik.errors.name}
           />
 
           <InputFile
@@ -68,6 +71,7 @@ const CenterType = () => {
               formik.setFieldValue("image", null);
               formik.setFieldTouched("image", true, false);
             }}
+             error={formik.touched.image && formik.errors.image}
           />
           <Input
             label="Set Center Type Name"
@@ -77,6 +81,7 @@ const CenterType = () => {
             value={formik.values.code}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
+            error={formik.touched.code && formik.errors.code}
           />
         </div>
 

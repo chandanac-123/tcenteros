@@ -439,3 +439,9 @@ export const superadminValidationSchema = Yup.object({
     .required("Whatsapp number is required"),
   profile_photo: Yup.mixed().nullable(),
 });
+
+export const centerTypeValidationSchema = Yup.object({
+  name: Yup.string().required("Center type name is required"),
+  code: Yup.string().required("Code is required"),
+  image: Yup.mixed().required("Image is required"),
+});
