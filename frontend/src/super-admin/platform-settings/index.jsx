@@ -4,9 +4,11 @@ import { Settings } from "lucide-react";
 import { useState } from "react";
 import GeneralSettings from "./general-settings";
 import LegalDocuments from "./legal-documents";
+import CenterType from "./center-type";
 
 const settingType = [
   { id: "general", name: "General Settings", component: GeneralSettings },
+  { id: "type", name: "Center Type", component: CenterType },
   { id: "legal", name: "Legal Documents", component: LegalDocuments },
 ];
 

@@ -11,3 +11,10 @@ export const updatePlatformSettingsApiCall = (data) =>
   axiosInstance.put(`/platforms/platform/settings`, data);
 export const getPlatformSettingsApiCall = (data) =>
   axiosInstance.get(`/platforms/platform/settings`, data);
+
+export const getCenterTypeApiCall = () =>
+  axiosInstance.get(`/settings/superadmin/center-categories/`);
+export const createCenterTypeApiCall = (data) =>
+  axiosInstance.post(`/settings/superadmin/center-categories/`, data);
+export const deleteCenterTypeApiCall = (id) =>
+  axiosInstance.delete(`/settings/superadmin/center-categories/${id}`);
