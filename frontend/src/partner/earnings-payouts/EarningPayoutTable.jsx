@@ -10,10 +10,10 @@ const EarningPayoutTable = ({
   isLoading,
 }) => {
   const columns = [
-    { accessorKey: "transaction_id", header: "TR ID" },
     { accessorKey: "lead_name", header: "Lead Name" },
     { accessorKey: "mobile", header: "Contact" },
     { accessorKey: "transaction_date", header: "Transaction Date" },
+    { accessorKey: "renewal", header: "Renewal Date" },
     { accessorKey: "amount", header: "Amount" },
     { accessorKey: "partner_commission_amount", header: "Commission" },
     {

@@ -35,16 +35,10 @@ const LeadsTableList = ({ dashboarView = false }) => {
   ];
 
   const columns = [
-    {
-      accessorKey: "contact_person_name",
-      header: "Lead Name",
+    { accessorKey: "center_name", header: "Lead Name" },
+    {  accessorKey: "phone_number",  header: "Contact",
     },
-    {
-      accessorKey: "phone_number",
-      header: "Contact",
-    },
-    {
-      accessorKey: "city",
+    {  accessorKey: "city",
       header: "City",
     },
     {
