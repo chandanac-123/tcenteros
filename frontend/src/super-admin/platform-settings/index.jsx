@@ -5,10 +5,12 @@ import { useState } from "react";
 import GeneralSettings from "./general-settings";
 import LegalDocuments from "./legal-documents";
 import CenterType from "./center-type";
+import TaxCategorySettings from "@pages/settings/TaxCategorySettings";
 
 const settingType = [
   { id: "general", name: "General Settings", component: GeneralSettings },
   { id: "type", name: "Center Type", component: CenterType },
+  { id: "tax-settings", name: "Tax Settings", component: TaxCategorySettings },
   { id: "legal", name: "Legal Documents", component: LegalDocuments },
 ];
 
