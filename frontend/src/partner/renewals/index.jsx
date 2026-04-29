@@ -68,13 +68,13 @@ const Renewals = () => {
         <div className="flex flex-col gap-1">
           <div className="flex justify-between">
             <span className="text-lg font-semibold">Transactions</span>
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <CustomFilter filterName="All Status" />
               <Button size="addbutton">
                 <Download />
                 Export
               </Button>
-            </div>
+            </div> */}
           </div>
           <RenewalTable
             data={data}
