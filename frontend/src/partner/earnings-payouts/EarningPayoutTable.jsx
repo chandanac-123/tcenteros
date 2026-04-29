@@ -1,5 +1,6 @@
 import { DataTable } from "@common/components/DataTable";
 import { Badge } from "@pages/components/ui/badge";
+import { formatTextDate } from "@utils/helper";
 import React from "react";
 const statusVariant = { paid: "active", unpaid: "inactive" };
 
@@ -12,8 +13,22 @@ const EarningPayoutTable = ({
   const columns = [
     { accessorKey: "lead_name", header: "Lead Name" },
     { accessorKey: "mobile", header: "Contact" },
-    { accessorKey: "transaction_date", header: "Transaction Date" },
-    { accessorKey: "renewal", header: "Renewal Date" },
+    {
+      accessorKey: "transaction_date",
+      header: "Transaction Date",
+      cell: ({ row }) => {
+        const transactionDate = row.original.transaction_date;
+        return transactionDate ? formatTextDate(transactionDate) : "N/A";
+      },
+    },
+    {
+      accessorKey: "renewal_date",
+      header: "Renewal Date",
+      cell: ({ row }) => {
+        const renewalDate = row.original.renewal_date;
+        return renewalDate ? formatTextDate(renewalDate) : "N/A";
+      },
+    },
     { accessorKey: "amount", header: "Amount" },
     { accessorKey: "partner_commission_amount", header: "Commission" },
     {
