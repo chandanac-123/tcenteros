@@ -1,7 +1,5 @@
 import { DataTable } from "@common/components/DataTable";
-import { Badge } from "@pages/components/ui/badge";
 import React from "react";
-const statusVariant = { paid: "active", unpaid: "inactive" };
 
 const RenewalTable = ({ data, isLoading, tableParams, setTableParams }) => {
   const columns = [
@@ -35,30 +33,20 @@ const RenewalTable = ({ data, isLoading, tableParams, setTableParams }) => {
     {
       accessorKey: "status",
       header: "Status",
-      // cell: ({ row }) => {
-      //   const status = row.getValue("status")?.toLowerCase();
-      //   const styles = {
-      //     contacted: "bg-[#FFFED5] text-[#885503]",
-      //     new: "bg-[#D5FFE7] text-[#03881C]",
-      //     demo: "bg-[#E5D3F5] text-[#561290]",
-      //     lost: "bg-[#FFD7D5] text-[#880303]",
-      //   };
-      //   return (
-      //     <span
-      //       className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}
-      //     >
-      //       {status}
-      //     </span>
-      //   );
-      // },
-
       cell: ({ row }) => {
-        const status = row.original.status;
+        const status = row.original.commission_status;
+        const styles = {
+          commission_status: "bg-[#FFFED5] text-[#885503]",
+          paid: "bg-[#D5FFE7] text-[#03881C]",
+          completed: "bg-[#E5D3F5] text-[#561290]",
+          unpaid: "bg-[#FFD7D5] text-[#880303]",
+        };
         return (
-          <Badge
-            label={status === "paid" ? "Paid" : "Unpaid"}
-            variant={statusVariant[status]}
-          />
+          <span
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[status]}`}
+          >
+            {status}
+          </span>
         );
       },
     },
