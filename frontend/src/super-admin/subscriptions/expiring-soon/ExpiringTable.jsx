@@ -10,7 +10,28 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
     { accessorKey: "center_name", header: "Center Name" },
     { accessorKey: "renewal_date", header: "Renewal Date" },
     { accessorKey: "renewal_amount", header: "Value" },
-    { accessorKey: "days_left", header: "Days left" },
+    {
+      accessorKey: "days_left",
+      header: "Days left",
+      cell: ({ row }) => {
+        const days = row.original.days_left;
+        let colorClass = "";
+        if (days < 5) {
+          colorClass = "text-red_text border-red_text";
+        } else if (days <= 10) {
+          colorClass = "text-partner_yellow border-partner_yellow";
+        } else {
+          colorClass = "text-green_text border-green_text";
+        }
+        return (
+          <span
+            className={`font-medium ${colorClass} text-xs border px-2 rounded-md`}
+          >
+            {days !== null && days !== undefined ? `${days} d` : "N/A"}
+          </span>
+        );
+      },
+    },
     { accessorKey: "status", header: "Partner" },
     {
       accessorKey: "status",
@@ -25,7 +46,7 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
           >
             Add Grace
           </Button>
-          <AddGrace graceOpen={graceOpen} setGraceOpen={setGraceOpen}/>
+          <AddGrace graceOpen={graceOpen} setGraceOpen={setGraceOpen} />
         </span>
       ),
     },
