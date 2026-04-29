@@ -35,25 +35,25 @@ const PartnerDashboard = () => {
   const cardsData = [
     {
       label: "Total Earnings",
-      value: 5,
+      value: partnerData?.earnings_snapshot?.total_earnings || 0,
       icon: <BadgeDollarSign />,
       type: "amount",
     },
     {
       label: "Pending Payouts",
-      value: 4,
+      value: partnerData?.earnings_snapshot?.pending_payout || 0,
       icon: <ClipboardClock />,
       type: "amount",
     },
     {
       label: "Active Leads",
-      value: 5,
+      value: partnerData?.summary?.active_leads_count || 0,
       icon: <UserPlus />,
       type: "count",
     },
     {
       label: "Conversion Rate",
-      value: 5,
+      value: partnerData?.summary?.conversion_rate_percent || 0,
       icon: <Briefcase />,
       type: "percent",
     },
