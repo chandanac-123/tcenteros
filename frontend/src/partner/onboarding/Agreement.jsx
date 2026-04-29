@@ -59,29 +59,61 @@ const Agreement = () => {
           <span className="flex text-md font-semibold">
             Resseller Esstential
           </span>
-          <span className="flex border rounded-md p-4 text-sm font-medium h-44 overflow-auto">
-            • 15% commission on new sales <br />
-            • 3% commission on renewals <br />
-            • Commission calculated automatically on payment success
-            <br />
-            <br />
-            Lead Policy <br />
-            • Platform provides qualified leads based on your district <br />
-            • You can also generate and manage your own leads <br />
-            • Response SLA: 2 hours for platform-assigned leads <br /> • Lead
-            expiry: 48 hours without status update <br />
-            • Leads may be auto-reassigned if no response <br />
-            <br /> Payout Cycle <br />
-            • Weekly or monthly payout cycles <br />• Commissions tracked in
-            real-time in your dashboard <br />• Minimum payout threshold: ₹1,000{" "}
-            <br /> <br /> Code of Conduct <br />
-            • Represent products accurately and professionally <br />• Maintain
-            ethical sales practices <br /> • Respond to assigned leads promptly
-            <br />• No misrepresentation of pricing or features Refund &
-            Cancellation <br /> • Onboarding fee of ₹2,500 is non-refundable{" "}
-            <br />• Reseller account can be deactivated after 60 days of
-            inactivity <br />• You can reactivate your account anytime
-          </span>
+          <div className="flex flex-col border rounded-md p-4 text-sm h-44 overflow-auto gap-4">
+            {/* Commission Structure */}
+            <div>
+              <span className="font-bold text-sm">Commission Structure</span>
+              <div className="mt-1">
+                • • 15% commission on new sales <br />
+                • • 3% commission on renewals <br />• • Commission calculated
+                automatically on payment success
+              </div>
+            </div>
+
+            {/* Lead Policy */}
+            <div>
+              <span className="font-bold text-sm">Lead Policy</span>
+              <div className="mt-1">
+                • • Platform provides qualified leads based on your district{" "}
+                <br />
+                • • You can also generate and manage your own leads <br />
+                • • Response SLA: 2 hours for platform-assigned leads <br />
+                • • Lead expiry: 48 hours without status update <br />• • Leads
+                may be auto-reassigned if no response
+              </div>
+            </div>
+
+            {/* Payout Cycle */}
+            <div>
+              <span className="font-bold text-sm">Payout Cycle</span>
+              <div className="mt-1">
+                • • Weekly or monthly payout cycles <br />
+                • • Commissions tracked in real-time in your dashboard <br />• •
+                • Minimum payout threshold: ₹1,000
+              </div>
+            </div>
+
+            {/* Code of Conduct */}
+            <div>
+              <span className="font-bold text-sm">Code of Conduct</span>
+              <div className="mt-1">
+                • • Represent products accurately and professionally <br />
+                • • Maintain ethical sales practices <br />
+                • • Respond to assigned leads promptly <br />• • No
+                misrepresentation of pricing or features
+              </div>
+            </div>
+
+            {/* Refund & Cancellation */}
+            <div>
+              <span className="font-bold text-sm">Refund & Cancellation</span>
+              <div className="mt-1">
+                • • Onboarding fee of ₹2,500 is non-refundable <br />
+                • • Reseller account can be deactivated after 60 days of
+                inactivity <br />• • You can reactivate your account anytime
+              </div>
+            </div>
+          </div>
 
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -99,6 +131,11 @@ const Agreement = () => {
                 commission structure, lead policy, and code of conduct.
               </label>
             </div>
+            {formik.touched.terms_accepted && formik.errors.terms_accepted && (
+              <span className="text-xs text-red_text mt-1 ml-6">
+                {formik.errors.terms_accepted}
+              </span>
+            )}
           </div>
 
           <Button
