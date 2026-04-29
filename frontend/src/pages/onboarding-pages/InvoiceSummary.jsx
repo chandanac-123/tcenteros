@@ -13,6 +13,7 @@ import { useFormik } from 'formik'
 import { invoiceValidationSchema } from '@utils/validations'
 import { Spinner } from '@pages/components/ui/spinner'
 import { useState } from 'react'
+import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
 
 const InvoiceSummary = () => {
   const navigate = useNavigate()
@@ -23,6 +24,9 @@ const InvoiceSummary = () => {
   const { mutateAsync: finalize, isLoading } = useFinalizeOnboardCenterMutation(
     store?.onboardId
   )
+  const { mutate: create_Order, isPending } = useCreatePaymentOrder();
+  const { mutateAsync: verifyPayment } = useVerifyPayment();
+
 
   const initialValues = {
     address_line_1: '',
@@ -36,17 +40,83 @@ const InvoiceSummary = () => {
     validationSchema: invoiceValidationSchema,
     onSubmit: async values => {
       try {
-        const response = await finalize(values)
-        setSuccess(true)
-        resetStore()
-        setTimeout(() => {
-          navigate('/primary-login')
-        }, 1500)
+        const response = await finalize(values);
+        console.log("Response", response);
+
+        const payment_id = response?.payment?.payment_order_id;
+
+        if (!payment_id) {
+          throw new Error("Payment ID not found from finalize response");
+        }
+
+        console.log("Payment ID:", payment_id);
+
+        create_Order(payment_id, {
+          onSuccess: (res) => {
+            console.log("Order ID:", res);
+            const orderData = res?.data;
+            openRazorpay(orderData);
+          },
+          onError: (err) => {
+            console.log(err);
+          },
+        });
+
+
+
+
+        // setSuccess(true)
+        // resetStore()
+        // setTimeout(() => {
+        //   navigate('/primary-login')
+        // }, 1500)
       } catch (error) {
         console.log('error: ', error)
       }
     }
-  })
+  });
+
+  const openRazorpay = async (orderData) => {
+    try {
+      const options = {
+        key: orderData.key_id, // from backend
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "TcenterOS",
+        description: "Center Subscription Payment",
+        order_id: orderData.order_id,
+
+        handler: async function (response) {
+          console.log("Payment Success:", response);
+          const result = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          setSuccess(true)
+          resetStore();
+          navigate('/primary-login')
+          console.log("Verified Result:", result);
+        },
+
+        // prefill: {
+        //   name: "Customer Name",
+        //   email: "customer@email.com",
+        // },
+
+        // theme: {
+        //   color: "#6D28D9",
+        // },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.log("Error at opening razor Pay checkOut");
+    }
+
+  };
 
   const yearlyPrice = data?.total_amount
     ? (data.total_amount * 12).toFixed(2)
