@@ -181,6 +181,6 @@ export const routes = [
   { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Leads Management', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isPartner: true },
   { key: 101, path: '/lead-management/add-newLeads', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: AddnewLeads, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
 
-  { key: 58, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <UserRoundCog />, menubar: true, permissionKey: true, isPartner: true },
-  { key: 59, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <SettingsIcon />, menubar: true, permissionKey: true, isPartner: true },
+  { key: 60, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <UserRoundCog />, menubar: true, permissionKey: true, isPartner: true },
+  { key: 61, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <SettingsIcon />, menubar: true, permissionKey: true, isPartner: true },
 ]
