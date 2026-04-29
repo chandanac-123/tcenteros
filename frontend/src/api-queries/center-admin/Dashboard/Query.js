@@ -33,7 +33,7 @@ export const useChangeSubscriptionMutation = () => {
       showSuccess("Subscription changed successfully");
     },
     onError: (error) => {
-      showError(error.message || "Failed to change subscription");
+      showError(error?.response?.data?.detail || "Failed to change subscription");
     },
   });
 };
