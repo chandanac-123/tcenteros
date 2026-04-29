@@ -95,10 +95,6 @@ export const modulesData = [
     name: 'Account'
   },
   {
-    id: 'branding',
-    name: 'Branding'
-  },
-  {
     id: 'report',
     name: 'Report'
   },
