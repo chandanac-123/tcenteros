@@ -73,27 +73,40 @@ const Chat = ({ ticketId }) => {
               )}
 
               <div className="max-w-[70%]">
+                {/* ✅ Show name ONLY for left side */}
+                {isLeft && (
+                  <div className="text-xs font-semibold text-gray-600 mb-1 ml-1">
+                    {msg.sender_role === "superadmin"
+                      ? "Super Admin"
+                      : msg.sender_role === "member"
+                        ? "Member"
+                        : ""}
+                  </div>
+                )}
+
                 {/* Message Bubble */}
                 <div
-                  className={`px-4 py-3 rounded-2xl text-sm ${
+                  className={`rounded-2xl text-sm ${
                     isRight
                       ? "bg-gradient-to-r from-primary to-secondary text-white"
                       : "bg-white text-gray-800"
                   }`}
                 >
-                  {msg.message && <p>{msg.message}</p>}
+                  <div className="px-4 py-2">
+                    {msg.message && <p>{msg.message}</p>}
 
-                  {/* Show Image */}
-                  {msg.image_url && (
-                    <Zoom>
-                      <img
-                        loading="lazy"
-                        src={msg.image_url}
-                        alt="attachment"
-                        className="mt-2 rounded-lg max-h-48"
-                      />
-                    </Zoom>
-                  )}
+                    {/* Image */}
+                    {msg.image_url && (
+                      <Zoom>
+                        <img
+                          loading="lazy"
+                          src={msg.image_url}
+                          alt="attachment"
+                          className="mt-2 rounded-lg max-h-48"
+                        />
+                      </Zoom>
+                    )}
+                  </div>
                 </div>
 
                 {/* Time */}
