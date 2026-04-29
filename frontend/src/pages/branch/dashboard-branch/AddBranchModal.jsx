@@ -9,18 +9,24 @@ import FaledModal from '../message-popup/failed'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
 import RazorpayButton from '@common/Razorpay/RazorpayButton'
+import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
+import { showError } from '@utils/toast'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
   const navigate = useNavigate()
   const { setSelectedTab } = useSettingsTabStore()
   const [count, setCount] = useState(0)
   const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
-  const { data, isLoading ,refetch} = useGetBranchPricesAndTaxQuery()
+  const { data, isLoading, refetch } = useGetBranchPricesAndTaxQuery()
   const [openSuccess, setOpenSuccess] = useState(false)
-  const [openFailed, setOpenFailed] = useState(false)
+  const [openFailed, setOpenFailed] = useState(false);
+  const { mutate: create_Order, isPendings } = useCreatePaymentOrder();
+  const { mutateAsync: verifyPayment } = useVerifyPayment();
+
 
   const branchingPrice = data?.branching_price || 0
   const taxPercentage = data?.tax_percentage || 0
+  console.log("LogData", data);
 
   // subtotal for selected branches
   const subtotal = count * branchingPrice
@@ -49,23 +55,82 @@ const AddBranchModal = ({ open, onOpenChange }) => {
       const payload = {
         branch_count: count
       }
-      const response = await addCount(payload)
-      console.log('Purchase success:', response)
-      setOpenSuccess(true)
+      const response = await addCount(payload);
+      console.log('count success:', response)
+      const payment_id = response?.payment_order_id;
+      console.log("Pay", payment_id);
+
+      if (!payment_id) {
+        throw new Error("Payment ID not found .");
+      }
+      create_Order(payment_id, {
+        onSuccess: (res) => {
+          console.log("Order ID:", res);
+          const orderData = res?.data;
+          openRazorpay(orderData);
+        },
+        onError: (err) => {
+          console.error(err?.response?.data?.detail);
+          const message=err?.response?.data?.detail
+          showError(message)
+        },
+      });
+
+
+
     } catch (error) {
       console.error('Purchase failed:', error)
       setOpenFailed(true)
     }
   }
 
-   const handleSuccess = (response) => {
-    alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
-    // Optionally, send response to your backend for verification
+  const openRazorpay = async (orderData) => {
+    try {
+      const options = {
+        key: orderData.key_id, // from backend
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "TcenterOS",
+        description: "Center Subscription Payment",
+        order_id: orderData.order_id,
+
+        handler: async function (response) {
+          console.log("Payment Success:", response);
+          const result = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          setOpenSuccess(true)
+          console.log("Verified Result:", result);
+        },
+
+        // prefill: {
+        //   name: "Customer Name",
+        //   email: "customer@email.com",
+        // },
+
+        // theme: {
+        //   color: "#6D28D9",
+        // },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.log("Error at opening razor Pay checkOut");
+    }
   };
 
-  const handleFailure = () => {
-    alert("Payment Cancelled or Failed");
-  };
+  // const handleSuccess = (response) => {
+  //   alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
+  //   // Optionally, send response to your backend for verification
+  // };
+
+  // const handleFailure = () => {
+  //   alert("Payment Cancelled or Failed");
+  // };
 
   return (
     <CustomeModal open={open} onOpenChange={onOpenChange}>
@@ -151,7 +216,7 @@ const AddBranchModal = ({ open, onOpenChange }) => {
             >
               {isPending ? 'Processing...' : 'Proceed to Payment'}
             </Button>
-               {/* <RazorpayButton
+            {/* <RazorpayButton
                 amount={50000} // ₹500
                 onSuccess={handleSuccess}
                 onFailure={handleFailure}

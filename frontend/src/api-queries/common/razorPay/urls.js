@@ -2,7 +2,9 @@ import { createNewPaymentOrder, verifyPayment } from "."
 
 
 export const createNewPaymentOrder_Url = async (payment_id) => {
+    console.log("PAPA", payment_id);
     try {
+
         const response = await createNewPaymentOrder(payment_id);
         console.log("Payment Response:", response);
 

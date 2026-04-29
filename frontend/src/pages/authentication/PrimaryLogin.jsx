@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useCreateCenterAccountMutation } from '@api-queries/center-admin/authentication/Query'
 import NetworkWalletModal from './components/NetworkWalletModal'
 import { showError, showSuccess } from '@utils/toast'
+import { useNavigate } from 'react-router-dom'
 
 const PrimaryLogin = () => {
   const [formData, setFormData] = useState({
@@ -15,10 +16,11 @@ const PrimaryLogin = () => {
     confirmPassword: ''
   })
   const [errors, setErrors] = useState({})
-  const [showOptionWallet, setOptionWalletModal] = useState(false)
+  // const [showOptionWallet, setOptionWalletModal] = useState(false)
   const [walletStep, setWalletStep] = useState(null)
 
   const { mutateAsync, isPending } = useCreateCenterAccountMutation()
+  const navigate = useNavigate()
 
   // ::::: Functions ::::: //
 
@@ -70,8 +72,9 @@ const PrimaryLogin = () => {
         password: formData.password,
         confirm_password: formData.confirmPassword
       })
-      setOptionWalletModal(true)
-      setWalletStep('networkWalletModal')
+      // setOptionWalletModal(true)
+      // setWalletStep('networkWalletModal')
+      navigate("/dashboard")
       showSuccess('Password set successfully')
       setErrors({})
     } catch (error) {
@@ -154,7 +157,7 @@ const PrimaryLogin = () => {
           </div>
         </div>
       )}
-      {walletStep === 'networkWalletModal' && (
+      {/* {walletStep === 'networkWalletModal' && (
         <NetworkWalletModal
           open={showOptionWallet}
           setOpen={value => {
@@ -166,7 +169,7 @@ const PrimaryLogin = () => {
             }
           }}
         />
-      )}
+      )} */}
     </>
   )
 }

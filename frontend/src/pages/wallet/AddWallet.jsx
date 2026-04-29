@@ -19,7 +19,7 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
       return
     }
     //  Only when topUp is FALSE
-    if (!topUp && numericAmount !== 20000) {
+    if (!topUp && numericAmount  < 20000) {
       showError('Deposit amount must be exactly ₹20,000')
       return
     }

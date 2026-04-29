@@ -1,27 +1,21 @@
-import SecondaryLayout from "@common/onboardlayouts/SecondaryLayout";
-import { Button } from "@pages/components/ui/button";
-import rightcolorarrow from "@assets/navigate-icons/rightcolorarrow.svg";
-import backarrow from "@assets/navigate-icons/backarrow.svg";
-import OnboardHeader from "./components/OnboardHeader";
-import { Input } from "@pages/components/ui/input";
-import { Checkbox } from "@pages/components/ui/checkbox";
-import {
-  Mail,
-  User,
-  Phone,
-  MapPinCheck,
-  CalendarClock,
-  MapPinCheckIcon,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useFormik } from "formik";
-import { useState } from "react";
-import { useCreateOnboardCenterMutation } from "@api-queries/center-admin/on-boarding/Query";
-import { useOnboardingStore } from "@store/onboardingStore";
-import { onboardingValidationSchema } from "@utils/validations";
-import people_icon from "@assets/form-icons/people.svg";
-import CustomeSelect from "@common/components/CustomeSelect";
-import CitySelect from "@common/components/CitySelect";
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
+import { Button } from '@pages/components/ui/button'
+import rightcolorarrow from '@assets/navigate-icons/rightcolorarrow.svg'
+import backarrow from '@assets/navigate-icons/backarrow.svg'
+import OnboardHeader from './components/OnboardHeader'
+import { Input } from '@pages/components/ui/input'
+import { Checkbox } from '@pages/components/ui/checkbox'
+import { Mail, User, Phone, MapPinCheck, CalendarClock, MapPinCheckIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useFormik } from 'formik'
+import { useState } from 'react'
+import { useCreateOnboardCenterMutation } from '@api-queries/center-admin/on-boarding/Query'
+import { useOnboardingStore } from '@store/onboardingStore'
+import { onboardingValidationSchema } from '@utils/validations'
+import people_icon from '@assets/form-icons/people.svg'
+import CustomeSelect from '@common/components/CustomeSelect'
+import CitySelect from '@common/components/CitySelect'
+import { useAuthStore } from '@store/authStore'
 
 const packageOptions = [
   { id: "monthly", name: "Monthly" },
@@ -29,10 +23,11 @@ const packageOptions = [
 ];
 
 const ContactDetails = () => {
-  const navigate = useNavigate();
-  const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation();
-  const store = useOnboardingStore();
-  const setOnboardId = useOnboardingStore((state) => state.setOnboardId);
+  const navigate = useNavigate()
+  const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
+  const store = useOnboardingStore()
+  const setOnboardId = useOnboardingStore(state => state.setOnboardId)
+  const setUserNumber = useAuthStore(state => state.setUserNumber)
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter((tool) => tool?.enabled === true)
@@ -75,7 +70,8 @@ const ContactDetails = () => {
     validationSchema: onboardingValidationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await create(values);
+        const response = await create(values)
+        setUserNumber(values.center_phone)
         if (response?.id) {
           setOnboardId(response.id);
         }
@@ -164,9 +160,7 @@ const ContactDetails = () => {
                 />
 
                 <CitySelect
-                  icon={
-                    <MapPinCheckIcon className="w-5 h-5 mr-2 text-onboard_primary" />
-                  }
+                  icon={<MapPinCheckIcon className='w-5 h-5 mr-2 text-onboard_primary' />}
                   country={formik.values.countryCode}
                   value={formik.values.city}
                   onChange={(data) => {
