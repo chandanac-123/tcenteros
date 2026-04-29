@@ -1,10 +1,12 @@
-import { CircleArrowDown, CircleDollarSign } from 'lucide-react'
-import React from 'react'
-import CommissionCards from './CommissionCards'
-import CommissionTable from './CommissionTable'
-import { Button } from '@pages/components/ui/button'
+import { CircleArrowDown, CircleDollarSign, RefreshCcw } from "lucide-react";
+import React from "react";
+import CommissionCards from "./CommissionCards";
+import CommissionTable from "./CommissionTable";
+import { Button } from "@pages/components/ui/button";
+import { useRunAllCommissionsMutation } from "@api-queries/super-admin/revenue-billing/Query";
 
 const PartnerCommision = () => {
+  const { mutateAsync: runAllCommissions } = useRunAllCommissionsMutation();
   return (
     <div>
       <div className="flex flex-col gap-4">
@@ -18,14 +20,19 @@ const PartnerCommision = () => {
                 Revenue & Billing
               </p>
               <p className="text-[#393636] font-inter text-[14px] font-medium">
-                Track SaaS revenue and partner commissions              </p>
+                Track SaaS revenue and partner commissions{" "}
+              </p>
             </div>
           </div>
 
-          <div className="pe-5">
+          <div className="pe-5 gap-2 flex">
             <Button size="addbutton" onClick={() => setOpen(true)}>
               <CircleArrowDown />
               Export Report
+            </Button>
+            <Button size="addbutton" onClick={() => runAllCommissions()}>
+              <RefreshCcw />
+              Commision Run
             </Button>
           </div>
         </div>
@@ -34,16 +41,12 @@ const PartnerCommision = () => {
           <CommissionCards />
         </div>
 
-
         <div className="px-4">
           <CommissionTable />
         </div>
-
-
       </div>
-
     </div>
-  )
-}
+  );
+};
 
-export default PartnerCommision
+export default PartnerCommision;

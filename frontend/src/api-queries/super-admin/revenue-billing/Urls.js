@@ -1,8 +1,17 @@
-import { getRevenueBillingOverviewApiCall } from "./index";
+import { getRevenueBillingOverviewApiCall, commisionRunApiCall } from "./index";
 
 export const getRevenueBillingOverview = async () => {
   try {
     const response = await getRevenueBillingOverviewApiCall();
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const runAllCommissions = async () => {
+  try {
+    const response = await commisionRunApiCall();
     return response.data;
   } catch (error) {
     throw error;
