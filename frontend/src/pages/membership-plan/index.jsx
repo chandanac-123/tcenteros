@@ -19,6 +19,9 @@ const MembershipPlan = () => {
   const [open, setOpen] = useState(false)
   const { data, isFetching } = usePlansQuery(activeTab)
   const { hydrated, canAddMembership } = useAppPermissions()
+
+  console.log("Data in Index", data);
+
   if (!hydrated) return null
 
   const Status = [
@@ -26,6 +29,61 @@ const MembershipPlan = () => {
     { id: 'active', name: 'Active' },
     { id: 'inactive', name: 'Inactive' }
   ]
+
+  const defaultPlans = [
+    {
+      membership_name: "Basic Plan",
+      default_price: 0,
+      duration_count: 1,
+      duration_unit: "Month",
+      membership_code: "N/A",
+      description: "Start with a simple plan. Click edit to customize.",
+      membership_features: [
+        { feature_name: "Basic access" },
+        { feature_name: "Limited features" },
+
+      ],
+      status: "inactive",
+      membership_id: null,
+      isDefault: true
+    },
+    {
+      membership_name: "Standard Plan",
+      default_price: 0,
+      duration_count: 3,
+      duration_unit: "Months",
+      membership_code: "N/A",
+      description: "A standard plan for a standard training.",
+      membership_features: [
+        { feature_name: "More features" },
+        { feature_name: "Better flexibility" },
+        { feature_name: "Persomnal Trainer" },
+      ],
+      status: "inactive",
+      membership_id: null,
+      isDefault: true
+    },
+    {
+      membership_name: "Premium Plan",
+      default_price: 0,
+      duration_count: 3,
+      duration_unit: "Months",
+      membership_code: "N/A",
+      description: "Enjoy more features with premium",
+      membership_features: [
+        { feature_name: "More features" },
+        { feature_name: "Persomnal Trainer" },
+        { feature_name: "Medical Support" },
+        { feature_name: "24x7 Service Support" },
+        { feature_name: "Better flexibility" },
+      
+      ],
+      status: "inactive",
+      membership_id: null,
+      isDefault: true
+    },
+
+  ];
 
   return (
     <ContentLayout>
@@ -50,9 +108,22 @@ const MembershipPlan = () => {
         )}
       </div>
       {data?.length === 0 && (
-        <p className='flex justify-center items-center font-semibold font-poppins'>
-          NO MORE PLANS AVAILABLE
-        </p>
+        <div className="flex items-center justify-center pt-10">
+          <CarouselSize >
+            {defaultPlans.map((plan, index) => (
+              <PlanCard
+                key={index}
+                data={plan}
+                colors={
+                  membershipPlanColorPalette[
+                  index % membershipPlanColorPalette.length
+                  ]
+                }
+              />
+            ))}
+          </CarouselSize>
+        </div>
+
       )}
       {data?.length > 0 && (
         <div>
@@ -68,7 +139,7 @@ const MembershipPlan = () => {
                   data={plan}
                   colors={
                     membershipPlanColorPalette[
-                      index % membershipPlanColorPalette.length
+                    index % membershipPlanColorPalette.length
                     ]
                   }
                 />

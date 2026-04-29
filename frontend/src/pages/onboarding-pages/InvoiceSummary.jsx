@@ -26,7 +26,7 @@ const InvoiceSummary = () => {
   )
   const { mutate: create_Order, isPending } = useCreatePaymentOrder();
   const { mutateAsync: verifyPayment } = useVerifyPayment();
-
+  const phoneNumber = data?.center_phone;
 
   const initialValues = {
     address_line_1: '',
@@ -100,11 +100,9 @@ const InvoiceSummary = () => {
           console.log("Verified Result:", result);
         },
 
-        // prefill: {
-        //   name: "Customer Name",
-        //   email: "customer@email.com",
-        // },
-
+        prefill: {
+          contact: phoneNumber
+        }
         // theme: {
         //   color: "#6D28D9",
         // },

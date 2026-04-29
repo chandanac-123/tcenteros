@@ -15,6 +15,7 @@ import { onboardingValidationSchema } from '@utils/validations'
 import people_icon from '@assets/form-icons/people.svg'
 import CustomeSelect from '@common/components/CustomeSelect'
 import CitySelect from '@common/components/CitySelect'
+import { useAuthStore } from '@store/authStore'
 
 const packageOptions = [
   { id: 'monthly', name: 'Monthly' },
@@ -26,6 +27,7 @@ const ContactDetails = () => {
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
+  const setUserNumber = useAuthStore(state => state.setUserNumber)
 
   const enabledFeatureIds = Object.values(store?.centerTools || {})
     .filter(tool => tool?.enabled === true)
@@ -44,14 +46,14 @@ const ContactDetails = () => {
       store.memberCount === '500+'
         ? 525
         : store.memberCount?.split('-')[1]
-        ? parseInt(store.memberCount.split('-')[1], 10)
-        : 50,
+          ? parseInt(store.memberCount.split('-')[1], 10)
+          : 50,
     trainer_count:
       store.trainerCount === '10+'
         ? 21
         : store.trainerCount?.split('-')[1]
-        ? parseInt(store.trainerCount.split('-')[1], 10)
-        : 5,
+          ? parseInt(store.trainerCount.split('-')[1], 10)
+          : 5,
     currently_using_digital_tool: store.digitalToolsSelected || [],
     marketing_platform: store.marketingSupportType
       ? store.marketingSupportType
@@ -69,6 +71,7 @@ const ContactDetails = () => {
     onSubmit: async values => {
       try {
         const response = await create(values)
+        setUserNumber(values.center_phone)
         if (response?.id) {
           setOnboardId(response.id)
         }
@@ -150,7 +153,7 @@ const ContactDetails = () => {
                 />
 
                 <CitySelect
-                icon={<MapPinCheckIcon className='w-5 h-5 mr-2 text-onboard_primary' />}
+                  icon={<MapPinCheckIcon className='w-5 h-5 mr-2 text-onboard_primary' />}
                   country={formik.values.countryCode}
                   value={formik.values.city}
                   onChange={data => {

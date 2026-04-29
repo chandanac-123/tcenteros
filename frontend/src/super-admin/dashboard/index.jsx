@@ -48,7 +48,7 @@ const SuperAdminDashboard = () => {
       type: "count",
     },
     {
-      label: "Revenue via Partners",
+      label: "Sales via Partners",
       value: data?.partner_snapshot?.revenue_via_partners,
       icon: <Receipt size={16} strokeWidth={2.75} />,
       type: "amount",

@@ -1,4 +1,4 @@
-import { CircleCheck } from 'lucide-react'
+import { CheckCircle, CircleCheck, Edit, Trash } from 'lucide-react'
 import edit from '@assets/form-icons/edit.svg'
 import deleteicon from '@assets/form-icons/delete.svg'
 import { Switch } from '@pages/components/ui/switch'
@@ -20,6 +20,9 @@ const PlanCard = ({ data, colors }) => {
   const { mutateAsync: delete_plan, isPending } = useDeletePlanMutation(
     data?.membership_id
   )
+
+  console.log("Data", data);
+
   const {
     hydrated,
     canEditMembership,
@@ -53,9 +56,9 @@ const PlanCard = ({ data, colors }) => {
   }
 
   return (
-    <div className='rounded-2xl border border-gray-300 relative overflow-hidden shadow-sm bg-white flex flex-col h-[480px]'>
+    <div className={`rounded-2xl border border-gray-300 relative overflow-hidden shadow-sm  ${colors.bg} flex flex-col h-[450px] lg:h-[650px]`}>
       <div
-        className={`absolute top-0 left-1/2 -translate-x-1/2 ${colors.bg} text-gray-800 px-6 py-1 rounded-b-xl font-semibold whitespace-nowrap`}
+        className={`absolute top-0 left-1/2 -translate-x-1/2 ${colors.bg_head} ${colors.head} px-6 py-1 rounded-b-xl font-semibold whitespace-nowrap`}
       >
         {data?.membership_name}
       </div>
@@ -65,28 +68,28 @@ const PlanCard = ({ data, colors }) => {
           <span className={`text-3xl font-bold ${colors.text}`}>
             ₹{data?.default_price} /
           </span>
-          <span className='text-base font-semibold text-textblack'>
+          <span className={`text-base font-semibold ${colors.content_text}`}>
             {data?.duration_count} {data?.duration_unit}
           </span>
         </div>
 
-        <p className='mt-2 text-sm text-textblack'>
+        {/* <p className='mt-2 text-sm text-textblack'>
           Membership ID -
           <span className={`${colors.text} font-medium ml-1`}>
             {data?.membership_code}
           </span>
-        </p>
+        </p> */}
 
         <hr className='my-4 border-textgrey' />
         <div className='mt-2 flex-1 overflow-y-auto'>
-          <p className='text-sm text-grey_text leading-relaxed'>
+          <p className='text-sm text-white leading-relaxed'>
             {data?.description}
           </p>
-          <div className='mt-3 space-y-1'>
+          <div className='mt-3 ps-10 space-y-3'>
             {data?.membership_features?.map((item, index) => (
-              <div key={index} className='flex items-center gap-2'>
-                <img src={colors?.tick} className='w-3 h-3' loading="lazy" />
-                <span className='text-sm text-textblack break-words'>
+              <div key={index} className='flex items-center gap-4'>
+                <CheckCircle size={25} className={` ${colors?.text} `} />
+                <span className={`text-sm lg:text-lg font-poppins ${colors.content_text}  break-words`}>
                   {item?.feature_name}
                 </span>
               </div>
@@ -99,7 +102,7 @@ const PlanCard = ({ data, colors }) => {
           <hr className='my-5 border-gray-300' />
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <span className='text-primary font-medium'>Activate</span>
+              <span className={`font-medium ${colors.content_text}`} >Activate</span>
               <Switch
                 checked={isActive}
                 disabled={isStatusUpdating || !canEnableMembership}
@@ -113,14 +116,18 @@ const PlanCard = ({ data, colors }) => {
                   setEditId(data?.membership_id)
                   setOpen(true)
                 }}
+                className={`rounded ${colors.bg_head} ${colors.head} p-1`}
               >
-                <img src={edit} alt='edit' />
+                <Edit />
+                {/* <img src={edit} alt='edit' /> */}
               </button>
               <button
                 disabled={!canDeleteMembership}
                 onClick={() => setDeleteOpen(true)}
+                className=' rounded text-red bg-white p-1'
               >
-                <img src={deleteicon} alt='delete' loading="lazy" />
+                <Trash />
+                {/* <img src={deleteicon} alt='delete' loading="lazy" /> */}
               </button>
             </div>
           </div>
