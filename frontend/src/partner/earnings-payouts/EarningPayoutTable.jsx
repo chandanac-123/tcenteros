@@ -12,7 +12,7 @@ const EarningPayoutTable = ({
 }) => {
   const columns = [
     { accessorKey: "lead_name", header: "Lead Name" },
-    { accessorKey: "mobile", header: "Contact" },
+    { accessorKey: "mobile", header: "Contact Number" },
     {
       accessorKey: "transaction_date",
       header: "Transaction Date",
