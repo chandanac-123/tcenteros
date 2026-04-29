@@ -34,7 +34,7 @@ const PaymentSuccessfull = () => {
 
   const handleGoToLogin = () => {
     resetStore()
-    navigate("/login");
+    navigate("/primary-login");
   };
 
   return (
