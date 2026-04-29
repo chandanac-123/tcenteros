@@ -16,12 +16,12 @@ export const useCreateBranchPriceMutation = () => {
   return useMutation({
     mutationFn: (data) => createBranchPrice(data),
     onSuccess: (data) => {
-      showSuccess(data?.message || "Branch price created successfully");
+      showSuccess(data?.detail || "Branch price created successfully");
       queryClient.invalidateQueries({ queryKey: ["branch"] });
     },
     onError: (error) => {
       showError(
-        error?.response?.data?.message || "Failed to create branch price",
+        error?.response?.data?.detail || "Failed to create branch price",
       );
     },
   });

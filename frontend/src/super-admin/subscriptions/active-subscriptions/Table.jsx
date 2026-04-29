@@ -48,7 +48,7 @@ const ActiveSubcriptionTable = ({
         return (
           <span>
             {row.original.current_month_revenue
-              ? `$${row.original.current_month_revenue}`
+              ? `${row.original.current_month_revenue}`
               : "N/A"}
           </span>
         );

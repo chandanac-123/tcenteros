@@ -30,7 +30,7 @@ export const useCreateDesignationMutation = () => {
       showSuccess("Designation created successfully");
     },
     onError: (err) => {
-      showError(err?.response?.data?.message || "Failed to create designation");
+      showError(err?.response?.data?.detail || "Failed to create designation");
       return err;
     },
   });
@@ -47,7 +47,7 @@ export const useDeleteDesignationMutation = (id) => {
     },
     onError: (err) => {
       showError(
-        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
           "Failed to delete selected designations",
       );
       return err;
@@ -73,7 +73,7 @@ export const useCreateEmployeeMutation = () => {
       showSuccess("Employee created successfully");
     },
     onError: (err) => {
-      showError(err?.response?.data?.message || "Failed to create employee");
+      showError(err?.response?.data?.detail || "Failed to create employee");
       return err;
     },
   });
@@ -97,7 +97,7 @@ export const useCreatePermissionMutation = () => {
       showSuccess("Permission created successfully");
     },
     onError: (err) => {
-      showError(err?.response?.data?.message || "Failed to create permission");
+      showError(err?.response?.data?.detail || "Failed to create permission");
       return err;
     },
   });
@@ -113,7 +113,7 @@ export const useDeleteEmployeeMutation = () => {
     },
     onError: (err) => {
       showError(
-        err?.response?.data?.message || "Failed to delete selected employees",
+        err?.response?.data?.detail || "Failed to delete selected employees",
       );
       return err;
     },

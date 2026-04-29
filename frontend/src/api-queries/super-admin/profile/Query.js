@@ -21,7 +21,7 @@ export const useUpdateSuperadminProfileMutation = () => {
     },
     onError: (error) => {
       showError(
-        error?.response?.data?.message || "Failed to update superadmin profile",
+        error?.response?.data?.detail || "Failed to update superadmin profile",
       );
     },
   });

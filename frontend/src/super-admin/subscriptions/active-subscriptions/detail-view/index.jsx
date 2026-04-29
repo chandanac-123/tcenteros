@@ -24,13 +24,13 @@ import {
 import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
 
 const DetailView = () => {
-  const params = useParams();
+  const {id} = useParams();
   const navigate = useNavigate();
   const { mutateAsync: suspendSubscription, isPending } =
     useSuspendCenterMutation();
-  const { data } = useSubscriptionGetByIdQuery(params.id);
+  const { data } = useSubscriptionGetByIdQuery(id);
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
-    params.id,
+    id
   );
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
@@ -49,7 +49,7 @@ const DetailView = () => {
 
   const handleSuspend = async () => {
     try {
-      await suspendSubscription(params.id);
+      await suspendSubscription(id);
       setSuspendOpen(false);
     } catch (err) {
       return;

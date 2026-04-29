@@ -74,7 +74,7 @@ export const useSuspendCenterMutation = () => {
       showSuccess(data?.detail || "Center suspended successfully");
     },
     onError: (err) => {
-      showError(err?.response?.data?.message || "Failed to suspend center");
+      showError(err?.response?.data?.detail || "Failed to suspend center");
       return err;
     },
   });
