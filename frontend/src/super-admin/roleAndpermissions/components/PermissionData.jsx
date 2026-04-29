@@ -76,10 +76,6 @@ export const permissionData = [
     ]
   },
   {
-    id: "analitics",
-    name: "Analitics",
-  },
-  {
     id: "support",
     name: "Support",
     submodules: [
