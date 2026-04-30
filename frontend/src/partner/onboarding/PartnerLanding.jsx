@@ -26,8 +26,11 @@ import whatyouget4 from "@partner/onboarding/assets/whatyouget4.svg";
 import whatyouget5 from "@partner/onboarding/assets/whatyouget5.svg";
 import whatyouget6 from "@partner/onboarding/assets/whatyouget6.svg";
 import growthimage from "@partner/onboarding/assets/growthimg.svg";
+import { useNavigate } from "react-router-dom";
 
 const PartnerLanding = () => {
+  const navigate = useNavigate();
+
   const features = [
     {
       icon: ShieldCheck,
@@ -58,8 +61,9 @@ const PartnerLanding = () => {
           <img src={logo} alt="Logo" className="w-28 md:w-32 object-contain" />
 
           <Button
+            onClick={() => navigate("/partner-onboard")}
             size="addbutton"
-            className="bg-white text-onboard_primary font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+            className="bg-white hover:bg-white/80 text-onboard_primary font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
           >
             Join Now <ArrowRight size={16} />
           </Button>
@@ -87,7 +91,10 @@ const PartnerLanding = () => {
             </p>
 
             <div>
-              <Button className="bg-onboard_primary  text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg">
+              <Button
+                onClick={() => navigate("/partner-onboard")}
+                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg"
+              >
                 Become a Partner today <ArrowRight size={18} />
               </Button>
             </div>
@@ -361,14 +368,15 @@ const PartnerLanding = () => {
         }}
       >
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center justify-center">
           {/* LEFT */}
           <div className="flex flex-col gap-6">
             <h1 className="text-3xl md:text-5xl font-bold leading-tight">
               Start Building Your
               <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
-                Passive Income Today
+                Passive Income 
               </span>
+              Today
             </h1>
 
             <p className="text-[#DBE7FF] text-base md:text-lg  font-semibold leading-relaxed">
@@ -391,21 +399,12 @@ const PartnerLanding = () => {
           </div>
 
           {/* RIGHT */}
-          <div className="flex justify-center md:justify-end ">
+          <div className="flex justify-cente">
             <img
               src={growthimage}
               alt="Partner Landing"
               className="max-w-lg object-contain"
             />
-          </div>
-        </div>
-
-        {/* CARDS */}
-        <div className="flex justify-center">
-          <div className="flex flex-wrap justify-center gap-8">
-            <img src={instant} alt="Card 1" className=" object-contain" />
-            <img src={resurring} alt="Card 2" className=" object-contain" />
-            <img src={unlimited} alt="Card 3" className=" object-contain" />
           </div>
         </div>
       </section>
