@@ -89,9 +89,9 @@ export const employeeValidationSchema = (isEdit) =>
     password: isEdit
       ? Yup.string()
       : Yup.string().required("Password is required"),
-    profile_photo: isEdit
-      ? Yup.mixed()
-      : Yup.mixed().required("Image is required"),
+    // profile_photo: isEdit
+    //   ? Yup.mixed()
+    //   : Yup.mixed().required("Image is required"),
     joining_date: isEdit
       ? Yup.string()
       : Yup.string().required("Joining date is required"),

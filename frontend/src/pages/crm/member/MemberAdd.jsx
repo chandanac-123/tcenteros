@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react'
 import { formatToDDMMYYYY, getChangedFields } from '@utils/helper'
 import CreateMembershipForm from '@pages/membership-plan/CreateForm'
 import TimeslotModal from '@pages/settings/components/TimeslotModal'
+import { Eye, EyeOff } from 'lucide-react'
 
 const paidStatus = [
   { id: 'unpaid', name: 'Unpaid' },
@@ -43,6 +44,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const [planOpen, setPlanOpen] = useState(false)
   const [timeslotOpen, setTimeslotOpen] = useState(false)
   const { selectedVisitorId, selectedGuestId, clearSelectedIds } = useCrmStore()
+  const [showPassword, setShowPassword] = useState(false);
   const { data: visitorData, isFetching: isVisitorFetching } =
     useVisitorById(selectedVisitorId)
   const { data: guestData, isFetching: isGuestFetching } =
@@ -57,15 +59,38 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   const { data: memberData, isFetching: isMemberFetching } =
     useMembersGetByIdQuery(memberId)
   const { data: memberPlan } = useActiveMembersPlanQuery()
+
   const isFormLoading = isVisitorFetching || isGuestFetching || isMemberFetching
 
   const sourceData = isEdit
     ? memberData
     : selectedVisitorId
-    ? visitorData
-    : selectedGuestId
-    ? guestData
-    : null
+      ? visitorData
+      : selectedGuestId
+        ? guestData
+        : null
+
+  const generateStrongPassword = (length = 12) => {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const number = "0123456789";
+    const special = "!@#$%^&*";
+
+    const all = upper + lower + number + special;
+
+    let password =
+      upper[Math.floor(Math.random() * upper.length)] +
+      lower[Math.floor(Math.random() * lower.length)] +
+      number[Math.floor(Math.random() * number.length)] +
+      special[Math.floor(Math.random() * special.length)];
+
+    for (let i = password.length; i < length; i++) {
+      password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    return password.split("").sort(() => Math.random() - 0.5).join("");
+  };
+
 
   useEffect(() => {
     if (memberPlan?.length === 0) {
@@ -73,7 +98,14 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     } else if (memberTimeSlot?.length === 0) {
       setTimeslotOpen(true)
     }
-  }, [memberPlan, memberTimeSlot])
+  }, [memberPlan, memberTimeSlot]);
+
+  useEffect(() => {
+    if (!formik.values.password) {
+      const autoPassword = generateStrongPassword();
+      formik.setFieldValue('password', autoPassword);
+    }
+  }, []);
 
   const initialValues = {
     center_id: state?.auth?.center_id,
@@ -102,73 +134,73 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     enableReinitialize: true,
     validationSchema: memberValidationSchema(isEdit),
     onSubmit: async (values) => {
-  try {
-    let payload = { ...values };
+      try {
+        let payload = { ...values };
 
-    const isVisitorOrGuest = selectedVisitorId || selectedGuestId;
+        const isVisitorOrGuest = selectedVisitorId || selectedGuestId;
 
-    //  1. Visitor / Guest case
-    if (isVisitorOrGuest && !isEdit) {
-      payload = {
-        membership_id: values.membership_id,
-        time_slot_id: values.time_slot_id,
-        member_status: 'member',
-        payment_method: values.payment_method || 'cash',
-        payment_status: values.payment_status || 'unpaid',
-        password: values.password || ''
-      };
-    }
+        //  1. Visitor / Guest case
+        if (isVisitorOrGuest && !isEdit) {
+          payload = {
+            membership_id: values.membership_id,
+            time_slot_id: values.time_slot_id,
+            member_status: 'member',
+            payment_method: values.payment_method || 'cash',
+            payment_status: values.payment_status || 'unpaid',
+            password: values.password || ''
+          };
+        }
 
-    //  2. Edit case → ONLY changed fields
-    if (isEdit) {
-      payload = getChangedFields(initialValues, values);
+        //  2. Edit case → ONLY changed fields
+        if (isEdit) {
+          payload = getChangedFields(initialValues, values);
 
-      // ❗ If nothing changed → stop API call
-      if (Object.keys(payload).length === 0) {
-        console.log('No changes detected');
-        return;
+          // ❗ If nothing changed → stop API call
+          if (Object.keys(payload).length === 0) {
+            console.log('No changes detected');
+            return;
+          }
+        }
+
+        //  Date format (only if exists in payload)
+        if (payload.date_of_birth) {
+          const [day, month, year] = payload.date_of_birth.split('-');
+          payload.date_of_birth = `${year}-${month}-${day}`;
+        }
+
+        //  Edit cleanup rules
+        if (isEdit && sourceData?.payment_status != null) {
+          delete payload.membership_id;
+          delete payload.payment_method;
+          delete payload.password;
+          delete payload.payment_status;
+        }
+
+        //  Payment logic
+        if (payload.payment_status === 'unpaid') {
+          delete payload.password;
+          delete payload.payment_method;
+        }
+
+        //  API call
+        if (isEdit || isVisitorOrGuest) {
+          await updateMember({
+            data: payload,
+            id: memberId || selectedVisitorId || selectedGuestId
+          });
+          clearSelectedIds();
+          goBack();
+        } else {
+          await createMember(payload);
+          clearSelectedIds();
+          formik.resetForm();
+          goBack();
+        }
+
+      } catch (error) {
+        console.error(error);
       }
     }
-
-    //  Date format (only if exists in payload)
-    if (payload.date_of_birth) {
-      const [day, month, year] = payload.date_of_birth.split('-');
-      payload.date_of_birth = `${year}-${month}-${day}`;
-    }
-
-    //  Edit cleanup rules
-    if (isEdit && sourceData?.payment_status != null) {
-      delete payload.membership_id;
-      delete payload.payment_method;
-      delete payload.password;
-      delete payload.payment_status;
-    }
-
-    //  Payment logic
-    if (payload.payment_status === 'unpaid') {
-      delete payload.password;
-      delete payload.payment_method;
-    }
-
-    //  API call
-    if (isEdit || isVisitorOrGuest) {
-      await updateMember({
-        data: payload,
-        id: memberId || selectedVisitorId || selectedGuestId
-      });
-      clearSelectedIds();
-      goBack();
-    } else {
-      await createMember(payload);
-      clearSelectedIds();
-      formik.resetForm();
-      goBack();
-    }
-
-  } catch (error) {
-    console.error(error);
-  }
-}
   })
 
   // if (isFormLoading) {
@@ -353,14 +385,23 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
                   }
                 />
               </div>
-              <div className='flex-1'>
+              <div className='flex-1 relative '>
                 <Input
-                  label='Set Password'
+                  type={showPassword ? 'text' : 'password'}
+                  label='Password'
                   name='password'
                   value={formik.values.password}
                   onChange={formik.handleChange}
+                  // onBlur={formik.handleBlur}
                   error={formik.touched.password && formik.errors.password}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-3 top-9 cursor-pointer text-gray-500"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
           )}

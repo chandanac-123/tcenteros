@@ -47,11 +47,11 @@ const BlogCards = () => {
     return (
         <>
             <div className="w-full flex items-center justify-center">
-                <div className="w-[80%] flex flex-col gap-5 ">
-                    <div className="ps-12">
+                <div className="w-[80%] flex flex-col gap-5  ">
+                    <div className="">
                         <h2 className="text-[#0C0B0C] font-roboto text-[24px] font-semibold leading-[137.546%]">Tecenteros Blogs</h2>
                     </div>
-                    <div className="ps-12 grid grid-cols-12 gap-4">
+                    <div className=" grid grid-cols-3  sm:grid-cols-4 2xl:grid-cols-10 gap-4">
                         <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
                             <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
                                 All Category
@@ -59,7 +59,7 @@ const BlogCards = () => {
                         </button>
                         <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
                             <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
-                                Workouts 
+                                Workouts
                             </p>
 
                         </button>
@@ -77,35 +77,35 @@ const BlogCards = () => {
                         </button>
                         <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
                             <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
-                               Lifestyle
+                                Lifestyle
+                            </p>
+
+                        </button>
+                        <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
+                            <p className="text-black text-xs sm:text-sm font-medium leading-5 text-center break-words">
+                                Fitness Equipment
                             </p>
 
                         </button>
                         <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
                             <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
-                               Fitness Equipment
+                                Health Tips
                             </p>
 
                         </button>
                         <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
                             <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
-                               Health Tips
-                            </p>
-
-                        </button>
-                        <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl border border-black flex items-center justify-center gap-2">
-                            <p className="text-black text-xs sm:text-sm font-medium leading-5 whitespace-nowrap">
-                               Mental Health
+                                Mental Health
                             </p>
 
                         </button>
 
                     </div>
-                    <div className="flex flex-wrap gap-6 justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-6 place-items-center ">
                         {blogCards.map((card, index) => (
                             <div
                                 key={index}
-                                className="w-full max-w-sm p-4 bg-white rounded-2xl shadow-md border border-zinc-300 flex flex-col gap-4"
+                               className="w-full h-full p-4 bg-white rounded-2xl shadow-md border border-zinc-300 flex flex-col gap-4"
                             >
                                 {/* Image */}
                                 <img
