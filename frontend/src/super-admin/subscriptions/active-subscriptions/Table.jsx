@@ -6,9 +6,9 @@ import { useNavigate } from "react-router-dom";
 const billingVariant = { yearly: "follow_up", monthly: "future_lead" };
 const statusVariant = {
   active: "active",
-  inactive: "inactive",
-  grace: "future_lead",
-  suspended: "suspended",
+  due: "inactive",
+  // grace: "future_lead",
+  overdue: "suspended",
 };
 
 const ActiveSubcriptionTable = ({
@@ -22,38 +22,13 @@ const ActiveSubcriptionTable = ({
   if (!hydrated) return null;
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
+    { accessorKey: "center_phone", header: "Phone" },
     {
-      accessorKey: "subscription_duration",
-      header: "Billing",
-      cell: ({ row }) => {
-        const billing = row.original.subscription_duration;
-        return (
-          <Badge
-            label={
-              billing === "yearly"
-                ? "Yearly"
-                : billing === "monthly"
-                  ? "Monthly"
-                  : "Null"
-            }
-            variant={billingVariant[billing]}
-          />
-        );
-      },
+      accessorKey: "partner_name",
+      header: "Partner Name",
+      cell: ({ row }) => row.original.partner_name || "_ _",
     },
-    {
-      accessorKey: "current_month_revenue",
-      header: "Monthly Revenue",
-      cell: ({ row }) => {
-        return (
-          <span>
-            {row.original.current_month_revenue
-              ? `${row.original.current_month_revenue}`
-              : "N/A"}
-          </span>
-        );
-      },
-    },
+    { accessorKey: "renewal_date", header: "Renewal Date" },
     {
       accessorKey: "days_left_for_renewal",
       header: "Days left",
@@ -77,30 +52,40 @@ const ActiveSubcriptionTable = ({
       },
     },
     {
-      accessorKey: "status",
-      header: "Status",
+      accessorKey: "subscription_duration",
+      header: "Subscription Billing",
       cell: ({ row }) => {
-        const status = row.original.status;
+        const billing = row.original.subscription_duration;
         return (
           <Badge
             label={
-              status === "active"
-                ? "Active"
-                : status === "inactive"
-                  ? "Inactive"
-                  : status === "grace"
-                    ? "Grace"
-                    : status === "suspended"
-                      ? "Suspended"
-                      : "Null"
+              billing === "yearly"
+                ? "Yearly"
+                : billing === "monthly"
+                  ? "Monthly"
+                  : "Null"
             }
-            variant={statusVariant[status]}
+            variant={billingVariant[billing]}
           />
         );
       },
     },
-    { accessorKey: "partner", header: "Partner" },
-    { accessorKey: "total_revenue", header: "Total Revenue" },
+    // {
+    //   accessorKey: "current_month_revenue",
+    //   header: "Monthly Revenue",
+    //   cell: ({ row }) => {
+    //     return (
+    //       <span>
+    //         {row.original.current_month_revenue
+    //           ? `${row.original.current_month_revenue}`
+    //           : "N/A"}
+    //       </span>
+    //     );
+    //   },
+    // },
+
+
+    // { accessorKey: "total_revenue", header: "Total Revenue" },
     {
       accessorKey: "action",
       header: "Action",
@@ -119,6 +104,27 @@ const ActiveSubcriptionTable = ({
           </button>
         </div>
       ),
+    },
+    {
+      accessorKey: "status",
+      header: "Subscription Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge
+            label={
+              status === "active"
+                ? "Active"
+                : status === "due"
+                  ? "Due"
+                  : status === "overdue"
+                    ? "Over Due"
+                    : "_ _"
+            }
+            variant={statusVariant[status]}
+          />
+        );
+      },
     },
   ];
 

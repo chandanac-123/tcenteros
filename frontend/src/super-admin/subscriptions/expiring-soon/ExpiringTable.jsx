@@ -5,7 +5,6 @@ import AddGrace from "./AddGrace";
 
 const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
   const [graceOpen, setGraceOpen] = useState(false);
-  const flattenedCenters = data?.flatMap((day) => day.centers) || [];
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     { accessorKey: "renewal_date", header: "Renewal Date" },
@@ -56,7 +55,7 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
     <>
       <DataTable
         columns={columns}
-        data={flattenedCenters || []}
+        data={data}
         setTableParams={setTableParams}
         tableParams={tableParams}
         pagination={30}
