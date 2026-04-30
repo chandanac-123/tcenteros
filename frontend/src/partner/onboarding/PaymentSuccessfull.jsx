@@ -83,7 +83,7 @@ const PaymentSuccessfull = () => {
               size="addbutton"
               type="button"
               onClick={handleGoToLogin}
-              className="w-full justify-center"
+              className="w-full bg-onboard_primary hover:bg-onboard_primary  justify-center"
             >
               Go to Login
             </Button>

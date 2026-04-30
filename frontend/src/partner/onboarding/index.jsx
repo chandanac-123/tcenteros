@@ -186,7 +186,7 @@ const PartnerOnboarding = () => {
             )}
 
             <div className="flex w-full justify-center md:col-span-2">
-              <Button size="addbutton" type="submit" className="w-full justify-center">
+              <Button size="addbutton" type="submit" className="w-full bg-onboard_primary hover:bg-onboard_primary  justify-center">
                 Continue to Agreement <MoveRight />
               </Button>
             </div>
