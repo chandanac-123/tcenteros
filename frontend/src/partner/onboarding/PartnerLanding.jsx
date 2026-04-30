@@ -1,5 +1,11 @@
 import React from "react";
-import { ArrowRight, BarChart3, ShieldCheck, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  CircleCheck,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
 import partnerlanding from "@partner/onboarding/assets/partner-landing.svg";
 import partnerbg from "@partner/onboarding/assets/partner-bg.png";
 import instant from "@partner/onboarding/assets/instant.svg";
@@ -46,6 +52,21 @@ const PartnerLanding = () => {
       icon: BarChart3,
       title: "Scalable & Future-Ready",
       desc: "A model that compounds — the more you build, the more you earn.",
+    },
+  ];
+
+  const growthValue = [
+    {
+      value: 555,
+      title: "Active Clients on Platform",
+    },
+    {
+      value: 8,
+      title: "Partner Resellers",
+    },
+    {
+      value: 520,
+      title: "Earning Ceiling",
     },
   ];
   return (
@@ -360,38 +381,48 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
-
       <section
-        className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center min-h-[90vh]"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center justify-center">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center h-full">
           {/* LEFT */}
           <div className="flex flex-col gap-6">
             <h1 className="text-3xl md:text-5xl font-bold leading-tight">
-              Start Building Your
+              Start Building Your{" "}
               <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
-                Passive Income 
-              </span>
+                Passive Income
+              </span>{" "}
               Today
             </h1>
-
-            <p className="text-[#DBE7FF] text-base md:text-lg  font-semibold leading-relaxed">
-              Earn from every sale. <br />
-              Earn from every renewal. <br />
-              Earn as long as your clients stay.
-            </p>
+            <div className="text-[#DBE7FF] text-base gap-4  leading-relaxed">
+              <span className="flex items-center gap-2">
+                <CircleCheck className="text-onboard_primary"/>
+                Join now and start earning from your first client
+              </span>
+              <span className="flex items-center gap-2">
+                <CircleCheck className="text-onboard_primary"/>
+                Build a long-term income stream with zero limits
+              </span>
+              <span className="flex items-center gap-2">
+                <CircleCheck className="text-onboard_primary"/>
+                Your clients' renewals pay you — forever
+              </span>
+            </div>
 
             <div>
-              <Button className="bg-onboard_primary  text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg">
+              <Button
+                onClick={() => navigate("/partner-onboard")}
+                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg"
+              >
                 Become a Partner today <ArrowRight size={18} />
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-sm  mt-2">
+            <div className="flex flex-wrap gap-4 text-sm mt-2">
               <p>No limits.</p>
               <p>No targets.</p>
               <p>Pure earning potential.</p>
@@ -399,12 +430,39 @@ const PartnerLanding = () => {
           </div>
 
           {/* RIGHT */}
-          <div className="flex justify-cente">
+          <div className="flex justify-center md:justify-end">
             <img
               src={growthimage}
               alt="Partner Landing"
               className="max-w-lg object-contain"
             />
+          </div>
+        </div>
+
+        {/* 🔥 OVERLAY CONTENT */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
+          <div className="flex flex-col items-center text-center gap-4  backdrop-blur-md rounded-2xl py-6 px-4">
+            <div className="text-sm text-gray-300">
+              One-time onboarding · ₹2,500 setup fee · Lifetime earning
+              potential
+            </div>
+
+            <div className="grid grid-cols-3 justify-center">
+              {growthValue?.map((item, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <span className="text-2xl md:text-3xl font-bold text-white">
+                    {item.value}
+                  </span>
+                  <span className="text-sm text-gray-300 text-center">
+                    {item.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-sm text-gray-400">
+              © 2026 Tcenteros. All rights reserved.
+            </div>
           </div>
         </div>
       </section>
