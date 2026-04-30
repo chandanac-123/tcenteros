@@ -1,24 +1,27 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
-import partnerlanding from "@partner/onboarding/assets/partner-landing.png";
+import partnerlanding from "@partner/onboarding/assets/partner-landing.svg";
 import partnerbg from "@partner/onboarding/assets/partner-bg.png";
-import instant from "@partner/onboarding/assets/instant.png";
-import resurring from "@partner/onboarding/assets/recurring.png";
-import unlimited from "@partner/onboarding/assets/unlimited.png";
+import instant from "@partner/onboarding/assets/instant.svg";
+import resurring from "@partner/onboarding/assets/recurring.svg";
+import unlimited from "@partner/onboarding/assets/unlimited.svg";
 import logo from "@assets/header-icons/logo.svg";
 import { Button } from "@pages/components/ui/button";
-import revenu1 from "@partner/onboarding/assets/revenue1.png";
-import revenu2 from "@partner/onboarding/assets/revenue2.png";
-import revenu3 from "@partner/onboarding/assets/revenue3.png";
-import revenu4 from "@partner/onboarding/assets/revenue4.png";
-
+import revenu1 from "@partner/onboarding/assets/revenue1.svg";
+import revenu2 from "@partner/onboarding/assets/revenue2.svg";
+import revenu3 from "@partner/onboarding/assets/revenue3.svg";
+import revenu4 from "@partner/onboarding/assets/revenue4.svg";
+import stream1 from "@partner/onboarding/assets/incomestream1.svg";
+import stream2 from "@partner/onboarding/assets/incomestream1.svg";
+import stream3 from "@partner/onboarding/assets/incomestream1.svg";
+import quoteimg from "@partner/onboarding/assets/quote.svg";
 
 const PartnerLanding = () => {
   return (
     <div className="font-sans">
       {/* HERO */}
       <section
-        className="text-white px-6 md:px-20 py-6  relative overflow-hidden bg-cover bg-center"
+        className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
@@ -36,7 +39,7 @@ const PartnerLanding = () => {
         </div>
 
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center gap-10 mt-5">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center">
           {/* LEFT */}
           <div className="flex flex-col gap-6">
             <h1 className="text-3xl md:text-5xl font-bold leading-tight">
@@ -74,7 +77,7 @@ const PartnerLanding = () => {
             <img
               src={partnerlanding}
               alt="Partner Landing"
-              className=" max-w-lg object-contain"
+              className="max-w-lg object-contain"
             />
           </div>
         </div>
@@ -105,82 +108,45 @@ const PartnerLanding = () => {
             </h2>
           }
           <div className="grid md:grid-cols-2 gap-6 mt-10 text-left">
-           <img src={revenu1} alt="Card 1" className=" object-contain" />
+            <img src={revenu1} alt="Card 1" className=" object-contain" />
             <img src={revenu2} alt="Card 2" className=" object-contain" />
             <img src={revenu3} alt="Card 3" className=" object-contain" />
             <img src={revenu4} alt="Card 4" className=" object-contain" />
           </div>
         </div>
       </section>
-         <section
-        className="text-white px-6 md:px-20 py-6  relative overflow-hidden bg-cover bg-center"
+
+      <section
+        className="text-white px-6 md:px-20 py-6 gap-4  relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
-        {/* HEADER */}
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <img src={logo} alt="Logo" className="w-28 md:w-32 object-contain" />
-
-          <Button
-            size="addbutton"
-            className="bg-white text-onboard_primary font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
-          >
-            Join Now <ArrowRight size={16} />
-          </Button>
-        </div>
-
-        {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center gap-10 mt-5">
-          {/* LEFT */}
-          <div className="flex flex-col gap-6">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight">
-              Build Your{" "}
-              <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
-                Recurring
-              </span>{" "}
-              <span className="bg-gradient-to-r from-[#8daec6] to-[#1AA0FF] bg-clip-text text-transparent">
-                Income
-              </span>{" "}
-              Business with Us
-            </h1>
-
-            <p className="text-[#DBE7FF] text-base md:text-lg  font-semibold leading-relaxed">
-              Earn from every sale. <br />
-              Earn from every renewal. <br />
-              Earn as long as your clients stay.
-            </p>
-
-            <div>
-              <Button className="bg-onboard_primary  text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg">
-                Become a Partner today <ArrowRight size={18} />
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-4 text-sm  mt-2">
-              <p>No limits.</p>
-              <p>No targets.</p>
-              <p>Pure earning potential.</p>
-            </div>
+        <div className="justify-center items-center flex flex-col ">
+          <div className="inline-block bg-onboard_primary/5 text-onboard_primary text-sm px-4 py-1 rounded-full mb-6">
+            How You Earn
           </div>
 
-          {/* RIGHT */}
-          <div className="flex justify-center md:justify-end ">
-            <img
-              src={partnerlanding}
-              alt="Partner Landing"
-              className=" max-w-lg object-contain"
-            />
-          </div>
+          <h2 className="text-3xl md:text-5xl font-semibold mb-4">
+            Three Powerful Income Streams
+          </h2>
+
+          <p className="text-gray-300 text-base md:text-lg">
+            Every stream works together to build income that grows while you
+            sleep.
+          </p>
         </div>
 
-        {/* CARDS */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-8">
           <div className="flex flex-wrap justify-center gap-8">
-            <img src={instant} alt="Card 1" className=" object-contain" />
-            <img src={resurring} alt="Card 2" className=" object-contain" />
-            <img src={unlimited} alt="Card 3" className=" object-contain" />
+            <img src={stream1} alt="Card 1" className=" object-contain " />
+            <img src={stream2} alt="Card 2" className=" object-contain" />
+            <img src={stream3} alt="Card 3" className=" object-contain" />
           </div>
+        </div>
+
+        <div className="flex justify-center mt-12">
+          <img src={quoteimg} alt="qquoteimg" />
         </div>
       </section>
     </div>
