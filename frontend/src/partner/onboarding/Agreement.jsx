@@ -142,7 +142,7 @@ const Agreement = () => {
             size="addbutton"
             type="submit"
             disabled={isPending}
-            className="w-full justify-center"
+            className="w-full bg-onboard_primary hover:bg-onboard_primary justify-center"
           >
             submit <MoveRight />
           </Button>
