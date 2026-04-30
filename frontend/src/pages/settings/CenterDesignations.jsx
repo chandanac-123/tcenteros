@@ -13,6 +13,7 @@ import InputFile from '@common/components/CustomeFileUpload'
 import { useFormik } from 'formik'
 import { categoryValidationSchema } from '@utils/validations'
 import { Input } from '@pages/components/ui/input'
+import defaultUser from '@assets/dummy/defaultUser.svg'
 
 const CenterDesignations = () => {
   const [categoryOpen, setCategoryOpen] = useState(false)
@@ -96,7 +97,7 @@ const CenterDesignations = () => {
             className='rounded-xl border justify-center border-gray-300 gap-3 bg-white shadow-sm flex items-center p-2 min-w-[200px] max-w-xs mx-auto'
           >
             <img
-              src={d.image_url}
+              src={d?.image_url || defaultUser}
               alt={d.name}
               className='w-16 h-16 object-cover rounded-xl mb-2'
             />
@@ -113,7 +114,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#F3E8FF] text-primary rounded-md hover:bg-primary/10 transition'
                 >
-                  <img src={edit} alt='edit' loading="lazy"/>
+                  <img src={edit} alt='edit' loading="lazy" />
                 </button>
                 <button
                   type='button'
@@ -123,7 +124,7 @@ const CenterDesignations = () => {
                   }}
                   className='bg-[#FFE4E6] text-red_text  rounded-md hover:bg-red-100 transition'
                 >
-                  <img src={deleteicon} alt='delete' loading="lazy"/>
+                  <img src={deleteicon} alt='delete' loading="lazy" />
                 </button>
               </div>
             </div>

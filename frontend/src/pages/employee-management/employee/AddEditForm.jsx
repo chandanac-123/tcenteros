@@ -1,9 +1,9 @@
 import { Input } from '@pages/components/ui/input'
 import SelectCategory from '@common/components/SelectCategory'
 import { Button } from '@pages/components/ui/button'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CustomeModal from '@common/components/CustomeModal'
-import { Plus } from 'lucide-react'
+import { Eye, EyeOff, Plus } from 'lucide-react'
 import {
   useCategoriesQuery,
   useCreateEmployeeMutation,
@@ -27,7 +27,30 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
   const { mutateAsync: createEmployee, isPending } = useCreateEmployeeMutation()
   const { mutateAsync: updateEmployee, isPending: updatePending } =
     useUpdateEmployeeMutation()
-  const [categoryOpen, setCategoryOpen] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+
+  const generateStrongPassword = (length = 12) => {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const number = "0123456789";
+    const special = "!@#$%^&*";
+
+    const all = upper + lower + number + special;
+
+    let password =
+      upper[Math.floor(Math.random() * upper.length)] +
+      lower[Math.floor(Math.random() * lower.length)] +
+      number[Math.floor(Math.random() * number.length)] +
+      special[Math.floor(Math.random() * special.length)];
+
+    for (let i = password.length; i < length; i++) {
+      password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    return password.split("").sort(() => Math.random() - 0.5).join("");
+  };
 
   const initialValues = {
     full_name: employeeData?.full_name || '',
@@ -46,6 +69,8 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
     joining_date: employeeData?.joining_date || '',
     profile_photo: employeeData?.profile_photo || null
   }
+
+
 
   const formik = useFormik({
     initialValues,
@@ -102,6 +127,13 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
       }
     }
   })
+
+  useEffect(() => {
+    if (!id && !formik.values.password) {
+      const autoPassword = generateStrongPassword();
+      formik.setFieldValue('password', autoPassword);
+    }
+  }, [id]);
 
   const handleSelect = id => {
     formik.setFieldValue('designation_id', id, true)
@@ -263,19 +295,28 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
           {!id && (
             <>
               <div className='flex gap-4 '>
-                <div className='flex-1'>
-                  <Input
-                    label='Password'
-                    name='password'
-                    value={formik.values.password}
-                    onChange={formik.handleChange}
-                    // onBlur={formik.handleBlur}
-                    error={formik.touched.password && formik.errors.password}
-                  />
+                  <div className='flex-1 relative '>
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      label='Password'
+                      name='password'
+                      value={formik.values.password}
+                      onChange={formik.handleChange}
+                      // onBlur={formik.handleBlur}
+                      error={formik.touched.password && formik.errors.password}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute right-3 top-9 cursor-pointer text-gray-500"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                 </div>
+
                 <div className='flex-1'>
                   <CustomDatePicker
-                   disableFuture={true}
+                    disableFuture={true}
                     label='Joining Date'
                     name='joining_date'
                     value={

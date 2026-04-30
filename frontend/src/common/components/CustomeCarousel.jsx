@@ -14,7 +14,7 @@ export function CarouselSize ({ children }) {
         {React.Children.map(children, (child, index) => (
           <CarouselItem
             key={index}
-            className='basis-full sm:basis-1/2 lg:basis-1/4'
+            className='basis-full sm:basis-1/2  2xl:basis-1/4'
           >
             <div className='p-2'>{child}</div>
           </CarouselItem>
