@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
     const state = useAuthStore.getState();
 
     // handle no response (network error)
-    if (!error.response || error.response.status !== 401) {
+    if ( error.response.status !== 401) {
       return Promise.reject(error);
     }
 
