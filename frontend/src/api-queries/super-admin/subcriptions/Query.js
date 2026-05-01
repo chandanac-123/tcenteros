@@ -7,6 +7,7 @@ import {
   getRenewalExpiring,
   getBillingHistory,
   suspendCenter,
+  sendReminder,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -76,6 +77,23 @@ export const useSuspendCenterMutation = () => {
     onError: (err) => {
       showError(err?.response?.data?.detail || "Failed to suspend center");
       return err;
+    },
+  });
+};
+
+
+export const useSendReminder = () => {
+  return useMutation({
+    mutationFn: (id) => sendReminder(id),
+
+    onSuccess: () => {
+      console.log("Reminder sent successfully");
+     showSuccess("Send the reminder to the center")
+    },
+
+    onError: (error) => {
+      console.error("Failed to send reminder", error);
+      showError(error?.response?.data?.detail || "Failed to send reminder to center");
     },
   });
 };

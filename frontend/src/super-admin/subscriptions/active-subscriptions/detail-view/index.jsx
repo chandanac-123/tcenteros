@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useBillingHistoryQuery,
+  useSendReminder,
   useSubscriptionGetByIdQuery,
   useSuspendCenterMutation,
 } from "@api-queries/super-admin/subcriptions/Query";
@@ -35,6 +36,7 @@ const DetailView = () => {
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
     id
   );
+  const { mutate: sendReminder, isPending: reminderLoad } = useSendReminder();
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("revenue");
   const revenueOrBilling = [
@@ -57,6 +59,25 @@ const DetailView = () => {
     } catch (err) {
       return;
     }
+  };
+
+  const status = data?.status?.toLowerCase()?.trim();
+  const duration=data?.subscription_duration?.toLowerCase()?.trim();
+
+  const statusStyles = {
+    active: "bg-badge_bg_green text-green_text ",
+    grace: "bg-plan_bg_purple  text-plan_purple",
+    yearly: "bg-plan_bg_purple  text-plan_purple",
+    due: "bg-red_bg text-red_text border-red",
+    monthly:"bg-badge_blue_bg text-badge_blue border border-badge_blue"
+  };
+
+  const statusLabels = {
+    active: "Active",
+    grace: "In Grace",
+    yearly: "Yearly",
+    monthly:"Monthly",
+    due: "Due",
   };
 
   const cardsData = [
@@ -97,24 +118,62 @@ const DetailView = () => {
     <ContentLayout>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-base font-semibold">{data?.center_name}</span>
-            <Badge
-              className="bg-badge_bg_green border-none text-green_text rounded-xl w-auto"
-              variant="future_lead"
-              label="Active"
-            />
+        <div className="flex flex-col gap-2">
+
+          {/* Name + City */}
+          <div className="flex flex-wrap items-center">
+            <span className="text-base font-semibold capitalize border-r-2 border-[#999999] pr-2">
+              {isLoading ? (
+                <span className="inline-block h-4 w-32 animate-pulse bg-gray-100 rounded" />
+              ) : (
+                data?.center_name || "_ _"
+              )}
+            </span>
+
+            <span className="font-medium text-sm capitalize pl-2">
+              {isLoading ? (
+                <span className="inline-block h-3 w-20 animate-pulse bg-gray-100 rounded" />
+              ) : (
+                data?.city || "_ _"
+              )}
+            </span>
           </div>
 
-          <div className="flex flex-wrap text-xs gap-2 items-center">
-            <span className="font-medium">Bangalore</span>
-            <Badge
-              className="bg-plan_bg_purple border-none text-plan_purple rounded-lg w-auto h-4"
-              variant="future_lead"
-              label="Yearly"
-            />
+          {/* Duration + Status */}
+          <div className="flex">
+            {/* Duration */}
+            <div className="flex items-center gap-2 border-r-2 border-[#999] pr-2">
+              <p className="text-[13px]">Duration</p> -
+              {isLoading ? (
+                <span className="inline-block h-5 w-20 animate-pulse bg-gray-100 rounded-full" />
+              ) : (
+                <div
+                  className={`px-3 rounded-full text-[13px] ${statusStyles[duration] || "bg-gray-100 text-gray-500"
+                    }`}
+                >
+                  {statusLabels[duration] || "_ _"}
+                </div>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center gap-2 pl-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[13px]">Status</p> -
+                {isLoading ? (
+                  <span className="inline-block h-5 w-20 animate-pulse bg-gray-200 rounded-full" />
+                ) : (
+                  <div
+                    className={`px-3 rounded-full text-[13px] ${statusStyles[status] || "bg-gray-100 text-gray-500"
+                      }`}
+                  >
+                    {statusLabels[status] || "_ _"}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
           <CustomeBreadcrumb
             goBack={() => navigate("/subscriptions/active-subscriptions")}
             buttonName="Active subscriptions list"
@@ -122,19 +181,16 @@ const DetailView = () => {
           />
         </div>
 
-        <Button size="addbutton" className="w-full sm:w-auto">
-          <BellRing />
-          Send Reminder
-        </Button>
-
-        {/* <Button
-          variant="danger"
+        {/* Button */}
+        <Button
+          onClick={() => sendReminder(id)}
+          disabled={reminderLoad || isLoading}
           size="addbutton"
           className="w-full sm:w-auto"
-          onClick={() => setSuspendOpen(true)}
         >
-          Suspend
-        </Button> */}
+          <BellRing />
+          {isLoading ? "Loading..." : reminderLoad ? "Sending..." : "Send Reminder"}
+        </Button>
       </div>
 
       {/* Cards */}

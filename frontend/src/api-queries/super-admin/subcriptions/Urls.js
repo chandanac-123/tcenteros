@@ -5,7 +5,8 @@ import {
   getRenewalByIdApiCall,
   getRenewalExpiringApiCall,
   getBillingHistoryApiCall,
-  suspendCenterApiCall
+  suspendCenterApiCall,
+  sendReminderApiCall
 } from "./index";
 
 export const getActiveSubscriptions = async (data) => {
@@ -70,3 +71,13 @@ export const suspendCenter = async (id, details) => {
     throw error;
   }
 };
+
+export const sendReminder = async (id) => {
+  try {
+    const response = await sendReminderApiCall(id);
+    return response;
+  } catch (err) {
+    console.error("Erroe at sending Reminder", err);
+    throw err
+  }
+}
