@@ -22,3 +22,4 @@ export const getPendingNetworkApiCall = () =>
 export const getTimeSlotApiCall = () => axiosInstance.get('/membership/admin/time-slot-change-requests')
 export const approveTimeSlotApiCall = (data, id) =>
   axiosInstance.post(`/membership/admin/approve-time-slot-change/${id}`, data)
+export const getCenterRemindersApiCall = () => axiosInstance.get('/center/centeradmin/reminders')

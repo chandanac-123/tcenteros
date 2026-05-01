@@ -3,7 +3,8 @@ import { Button } from '@pages/components/ui/button'
 import React, { useState } from 'react'
 import {
   useApproveTimeSlotMutation,
-  useTimeSlotQuery
+  useTimeSlotQuery,
+  useCenterRemindersQuery
 } from '@api-queries/center-admin/notifictaions/Query'
 import TimeslotChange from './TimeslotChange'
 import { Spinner } from '@pages/components/ui/spinner'
@@ -20,6 +21,8 @@ const CenterNotifications = () => {
   const [selectedId, setSelectedId] = useState(null)
 
   const { data: timeSlotData, isLoading } = useTimeSlotQuery()
+  const { data: centerRemindersData, isLoading: isRemindersLoading } = useCenterRemindersQuery()
+  console.log('centerRemindersData: ', centerRemindersData);
   const { mutateAsync: approveTimeSlot } = useApproveTimeSlotMutation()
 
   const requests = timeSlotData?.requests || []
