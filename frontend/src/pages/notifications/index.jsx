@@ -6,15 +6,16 @@ import CenterNotifications from './components/CenterNotifications'
 import Tickets from './components/Tickets'
 import { useAuthStore } from '@store/authStore'
 
-const notificationsTabs = [
+const tabs = [
   { id: 'network', name: 'Network' },
   { id: 'center', name: 'Center' },
   { id: 'tickets', name: 'Tickets' }
 ]
 
 const Notifications = () => {
-  const role = useAuthStore((state) => state.auth?.role);
-   const isSuperAdmin = role === "superadmin";
+  const role = useAuthStore((state) => state.auth?.role)
+  const isSuperAdmin = role === "superadmin"
+
   const [activeTab, setActiveTab] = useState('network')
 
   return (
@@ -27,22 +28,28 @@ const Notifications = () => {
           </span>
         </div>
 
-        <div className='flex w-auto'>
-          <CustomeTab
-            tabList={notificationsTabs}
-            defaultVal='network'
-            tabsListClass=' w-[400px] p-[1px]'
-            onChange={value => setActiveTab(value)}
-          />
-        </div>
+        {/*  Show tabs ONLY if not superadmin */}
+        {!isSuperAdmin && (
+          <div className='flex w-auto'>
+            <CustomeTab
+              tabList={tabs}
+              defaultVal='network'
+              tabsListClass=' w-[400px] p-[1px]'
+              onChange={(value) => setActiveTab(value)}
+            />
+          </div>
+        )}
 
-        {/* Tab Content */}
-
-        {activeTab === 'network' && <NetworkNotifications />}
-
-        {activeTab === 'center' && <CenterNotifications />}
-
-        {activeTab === 'tickets' && <Tickets />}
+        {/*  Superadmin: Directly show Tickets */}
+        {isSuperAdmin ? (
+          <Tickets />
+        ) : (
+          <>
+            {activeTab === 'network' && <NetworkNotifications />}
+            {activeTab === 'center' && <CenterNotifications />}
+            {activeTab === 'tickets' && <Tickets />}
+          </>
+        )}
       </div>
     </ContentLayout>
   )
