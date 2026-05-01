@@ -85,7 +85,7 @@ const PartnerLanding = () => {
         }}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center justify-between w-full">
           <img src={logo} alt="Logo" className="w-28 md:w-32 object-contain" />
 
           <Button
@@ -98,9 +98,9 @@ const PartnerLanding = () => {
         </div>
 
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center">
+        <div className="w-full grid md:grid-cols-2 items-center">
           {/* LEFT */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 md:justify-start justify-center">
             <h1 className="text-3xl md:text-5xl font-bold leading-tight">
               Build Your{" "}
               <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
@@ -145,8 +145,8 @@ const PartnerLanding = () => {
         </div>
 
         {/* CARDS */}
-        <div className="flex justify-center">
-          <div className="flex flex-wrap justify-center gap-8">
+        <div className="flex justify-center ">
+          <div className="grid md:grid-cols-3 justify-center gap-8">
             <img src={instant} alt="Card 1" className=" object-contain" />
             <img src={resurring} alt="Card 2" className=" object-contain" />
             <img src={unlimited} alt="Card 3" className=" object-contain" />
@@ -155,24 +155,24 @@ const PartnerLanding = () => {
       </section>
 
       <section className="bg-gray-100 py-16 px-6 md:px-16">
-        <div className="max-w-6xl mx-auto text-center">
+        <div className="text-center">
           <div className="text-onboard_primary text-2xl font-semibold">
             WHY THIS OPPORTUNITY?
           </div>
-
           {
-            /* FEATURES */ <h2 className="text-2xl md:text-4xl font-semibold mt-3">
+            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
               Turn Your Network into a{" "}
               <span className="bg-gradient-to-r from-[#981d84] to-[#FF00D4] bg-clip-text text-transparent">
                 Revenue Machine
               </span>
             </h2>
           }
-          <div className="grid md:grid-cols-2 gap-6 mt-10 text-left">
-            <img src={revenu1} alt="Card 1" className=" object-contain" />
-            <img src={revenu2} alt="Card 2" className=" object-contain" />
-            <img src={revenu3} alt="Card 3" className=" object-contain" />
-            <img src={revenu4} alt="Card 4" className=" object-contain" />
+          <div className="grid md:grid-cols-2 gap-6 mt-10">
+            {[revenu1, revenu2, revenu3, revenu4].map((img, i) => (
+              <div key={i} className="flex justify-center">
+                <img src={img} className="w-full object-contain" />
+              </div>
+            ))}
           </div>
         </div>
       </section>
