@@ -153,6 +153,7 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
+
       <section className="bg-gray-100 py-16 px-6 md:px-16">
         <div className="max-w-6xl mx-auto text-center">
           <div className="text-onboard_primary text-2xl font-semibold">
@@ -175,6 +176,7 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
+
       <section
         className="text-white px-6 md:px-20 py-6 gap-4 relative overflow-hidden bg-cover bg-center"
         style={{
@@ -226,7 +228,7 @@ const PartnerLanding = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 mt-10 text-left">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center items-center mt-10 text-left">
           <img src={step1} alt="Card 1" className=" object-contain" />
           <img src={step2} alt="Card 2" className=" object-contain" />
           <img src={step3} alt="Card 3" className=" object-contain" />
@@ -361,7 +363,7 @@ const PartnerLanding = () => {
         </div>
       </section>
 
-      <section className="bg-gray-100 px-4 md:px-8">
+      <section className="bg-gray-100 px-4 md:px-8 flex flex-col justify-center items-center ">
         <div className="justify-center items-center flex flex-col">
           <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
             What you Get
