@@ -17,9 +17,9 @@ const ExpiringSoon = () => {
   });
   const { data, isLoading, isError } = useRenewalExpiringQuery(tableParams);
 
+console.log("Expire Data",data);
 
 
-console.log("Data",data);
 
 
   return (
@@ -44,7 +44,7 @@ console.log("Data",data);
       <div className="flex flex-col gap-3">
       
         <ExpiringTable
-          data={data}
+          data={data?.expired_centers}
           isLoading={isLoading}
           tableParams={tableParams}
           setTableParams={setTableParams}
