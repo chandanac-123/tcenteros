@@ -2,6 +2,7 @@ import React from "react";
 import {
   ArrowRight,
   BarChart3,
+  ChartNoAxesCombined,
   CircleCheck,
   ShieldCheck,
   TrendingUp,
@@ -233,18 +234,19 @@ const PartnerLanding = () => {
             Who Can Join
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-semibold mb-4">
+          <h2 className="text-base md:text-4xl font-semibold mb-4">
             If You Can Connect People,
           </h2>
 
-          <p className="text-textgrey text-base md:text-lg">You Can Earn.</p>
+          <p className="text-textgrey text-base md:text-4xl">You Can Earn.</p>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between gap-10 py-16 px-6 md:px-16 bg-gray-100">
+        {/* MAIN FLEX */}
+        <div className="flex flex-col md:flex-row gap-10 py-16 px-6 md:px-16 items-stretch">
           {/* LEFT SIDE */}
-          <div className="flex-1">
-            <h2 className="text-2xl md:text-2xl font-semibold leading-snug">
-              <span className="text-blue-600">
+          <div className="flex-1 flex flex-col h-full">
+            <h2 className="text-2xl font-semibold leading-snug">
+              <span className="text-onboard_primary">
                 No experience required. No technical background needed.
               </span>{" "}
               <span className="text-gray-700">
@@ -253,7 +255,7 @@ const PartnerLanding = () => {
             </h2>
 
             {/* CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 flex-grow">
               {[
                 "Freelancer",
                 "Digital Marketers",
@@ -264,10 +266,9 @@ const PartnerLanding = () => {
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border"
+                  className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border h-full"
                 >
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    {/* placeholder icon */}
                     <div className="w-6 h-6 bg-blue-500 rounded" />
                   </div>
                   <p className="font-medium text-gray-800">{item}</p>
@@ -277,59 +278,64 @@ const PartnerLanding = () => {
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="flex-1">
-            <div className="bg-gradient-to-br from-[#1a005c] to-[#3b0a91] text-white p-6 rounded-2xl shadow-lg">
+          <div className="flex-1 flex h-full">
+            <div className="bg-gradient-to-br from-[#1a005c] to-[#3b0a91] text-white p-6 rounded-2xl shadow-lg w-full flex flex-col justify-between">
               {/* HEADER */}
               <div className="flex justify-between items-center mb-6">
-                <span className="bg-white/10 text-yellow-300 text-sm px-4 py-1 rounded-full">
+                <span className="bg-white/10 text-[#C59504] text-sm px-4 py-1 rounded-full">
                   Earning Potential
                 </span>
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                  📈
+                <div className="w-10 h-10 bg-white/10 text-[#C59504] rounded-full flex items-center justify-center">
+                  <ChartNoAxesCombined />
                 </div>
               </div>
 
               {/* PROGRESS ITEMS */}
-              {[
-                {
-                  title: "10 Clients",
-                  desc: "Monthly Recurring Income",
-                  width: "30%",
-                  color: "bg-purple-400",
-                },
-                {
-                  title: "50 Clients",
-                  desc: "Strong Passive Income",
-                  width: "70%",
-                  color: "bg-cyan-400",
-                },
-                {
-                  title: "+100 Clients",
-                  desc: "Full-Time Business Income",
-                  width: "100%",
-                  color: "bg-green-400",
-                },
-              ].map((item, i) => (
-                <div key={i} className="mb-6 last:mb-0">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>{item.title}</span>
-                    <span className="text-gray-300">{item.desc}</span>
-                  </div>
+              <div className="flex flex-col justify-between flex-grow">
+                {[
+                  {
+                    title: "10 Clients",
+                    desc: "Monthly Recurring Income",
+                    width: "30%",
+                    color: "bg-[#8477F8]",
+                  },
+                  {
+                    title: "50 Clients",
+                    desc: "Strong Passive Income",
+                    width: "70%",
+                    color: "bg-cyan-400",
+                  },
+                  {
+                    title: "+100 Clients",
+                    desc: "Full-Time Business Income",
+                    width: "100%",
+                    color: "bg-[#BEFF81]",
+                  },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="border p-4 rounded-lg bg-white/10 mb-4 last:mb-0"
+                  >
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>{item.title}</span>
+                      <span className="text-gray-300">{item.desc}</span>
+                    </div>
 
-                  <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${item.color}`}
-                      style={{ width: item.width }}
-                    />
+                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${item.color}`}
+                        style={{ width: item.width }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-gray-100 py-8 px-4 md:px-8">
+      <section className="bg-gray-100 px-4 md:px-8">
         <div className="justify-center items-center flex flex-col">
           <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
             What you Get
@@ -400,15 +406,15 @@ const PartnerLanding = () => {
             </h1>
             <div className="text-[#DBE7FF] text-base gap-4  leading-relaxed">
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary"/>
+                <CircleCheck className="text-onboard_primary" />
                 Join now and start earning from your first client
               </span>
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary"/>
+                <CircleCheck className="text-onboard_primary" />
                 Build a long-term income stream with zero limits
               </span>
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary"/>
+                <CircleCheck className="text-onboard_primary" />
                 Your clients' renewals pay you — forever
               </span>
             </div>
@@ -420,12 +426,6 @@ const PartnerLanding = () => {
               >
                 Become a Partner today <ArrowRight size={18} />
               </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-4 text-sm mt-2">
-              <p>No limits.</p>
-              <p>No targets.</p>
-              <p>Pure earning potential.</p>
             </div>
           </div>
 
