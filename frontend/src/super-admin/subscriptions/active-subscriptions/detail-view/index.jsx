@@ -29,6 +29,8 @@ const DetailView = () => {
   const { mutateAsync: suspendSubscription, isPending } =
     useSuspendCenterMutation();
   const { data } = useSubscriptionGetByIdQuery(id);
+  console.log("View Details: Data:",data);
+  
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
     id
   );
