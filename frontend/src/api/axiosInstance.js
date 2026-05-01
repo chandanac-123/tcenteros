@@ -37,6 +37,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.log('error: ', error);
     const originalRequest = error.config;
     const state = useAuthStore.getState();
 
