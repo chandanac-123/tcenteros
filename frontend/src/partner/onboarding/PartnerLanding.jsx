@@ -214,7 +214,7 @@ const PartnerLanding = () => {
       </section>
 
       <section className="bg-gray-100 py-8 px-4 md:px-8">
-        <div className="justify-center items-center flex flex-col ">
+        <div className="flex flex-col items-center text-center">
           <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
             How It Works
           </div>
@@ -228,11 +228,14 @@ const PartnerLanding = () => {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center items-center mt-10 text-left">
-          <img src={step1} alt="Card 1" className=" object-contain" />
-          <img src={step2} alt="Card 2" className=" object-contain" />
-          <img src={step3} alt="Card 3" className=" object-contain" />
-          <img src={step4} alt="Card 4" className=" object-contain" />
+        {/* ✅ CENTERED GRID */}
+        <div className="max-w-full mx-auto mt-10">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 place-items-center">
+            <img src={step1} alt="Card 1" className="object-contain" />
+            <img src={step2} alt="Card 2" className="object-contain" />
+            <img src={step3} alt="Card 3" className="object-contain" />
+            <img src={step4} alt="Card 4" className="object-contain" />
+          </div>
         </div>
       </section>
 
@@ -378,12 +381,12 @@ const PartnerLanding = () => {
             one.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 mt-10 text-left">
-          <img src={whatyouget1} alt="Card 1" className=" object-contain" />
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 justify-center gap-2 mt-10 text-left">
           <img src={whatyouget2} alt="Card 2" className=" object-contain" />
-          <img src={whatyouget3} alt="Card 3" className=" object-contain" />
           <img src={whatyouget4} alt="Card 4" className=" object-contain" />
           <img src={whatyouget5} alt="Card 5" className=" object-contain" />
+          <img src={whatyouget1} alt="Card 1" className=" object-contain" />
+          <img src={whatyouget3} alt="Card 3" className=" object-contain" />
           <img src={whatyouget6} alt="Card 6" className=" object-contain" />
         </div>
 
