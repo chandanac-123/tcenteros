@@ -8,6 +8,7 @@ import BillingHistory from "./BillingHistory";
 import DeleteModal from "@common/components/CustomeDelete";
 import { Badge } from "@pages/components/ui/badge";
 import {
+  BellRing,
   Briefcase,
   Calendar,
   Clock,
@@ -24,13 +25,13 @@ import {
 import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
 
 const DetailView = () => {
-  const {id} = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { mutateAsync: suspendSubscription, isPending } =
     useSuspendCenterMutation();
   const { data } = useSubscriptionGetByIdQuery(id);
-  console.log("View Details: Data:",data);
-  
+  console.log("View Details: Data:", data);
+
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
     id
   );
@@ -98,7 +99,7 @@ const DetailView = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-base font-semibold">Golds Fitness</span>
+            <span className="text-base font-semibold">{data?.center_name}</span>
             <Badge
               className="bg-badge_bg_green border-none text-green_text rounded-xl w-auto"
               variant="future_lead"
@@ -121,14 +122,19 @@ const DetailView = () => {
           />
         </div>
 
-        <Button
+        <Button size="addbutton" className="w-full sm:w-auto">
+          <BellRing />
+          Send Reminder
+        </Button>
+
+        {/* <Button
           variant="danger"
           size="addbutton"
           className="w-full sm:w-auto"
           onClick={() => setSuspendOpen(true)}
         >
           Suspend
-        </Button>
+        </Button> */}
       </div>
 
       {/* Cards */}

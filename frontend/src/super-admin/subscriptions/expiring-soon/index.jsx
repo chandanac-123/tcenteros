@@ -31,7 +31,7 @@ console.log("Expire Data",data);
           </div>
           <div className="flex flex-col justify-center gap-2">
             <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
-              Expiring Soon
+              Expired Subscriptions
             </p>
             <p className="text-[#393636] font-inter text-[14px] font-medium">
               {data?.summary?.total_expiring_count} centres require renewal
