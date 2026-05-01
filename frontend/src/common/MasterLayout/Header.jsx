@@ -33,7 +33,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const isSuperAdmin = role === "superadmin";
   const isPartner = role === "partner";
   const isCenterAdmin = role === "centeradmin";
-  const { hydrated, canAddMember } = useAppPermissions();
+  const { hydrated, canAddMember,canViewNotifications } = useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -84,7 +84,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
             </Button>
           </div>
         )}
-        {!isPartner && (
+        {!isPartner && canViewNotifications && (
           <button onClick={() => navigate("/notifications")}>
             <img src={bell_active} alt="logo" className="mr-2" loading="lazy" />
           </button>

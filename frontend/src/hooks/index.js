@@ -51,6 +51,9 @@ export const useAppPermissions = () => {
     // Wallet
     canAddTopup: hasPermission( 'wallet.submodules.add_topup'),
 
+    // Notifications
+    canViewNotifications: hasPermission('notification.enabled'),
+
     //superadmin
     //Subscription
     canActiveSubscriptionList: hasPermission("subscription.submodules.active_subcription.list"),
