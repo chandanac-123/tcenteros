@@ -54,23 +54,23 @@ axiosInstance.interceptors.response.use(
     }
 
     //  FIX 3: skip refresh for auth endpoints (login, refresh itself)
-    if (originalRequest.url.includes("/auth")) {
+    if (originalRequest?.url?.includes("/auth")) {
       return Promise.reject(error);
     }
 
     //  FIX 4: prevent infinite loop (BUT DON'T CLEAR HERE)
-    if (originalRequest._retry) {
+    if (originalRequest?._retry) {
       return Promise.reject(error);
     }
 
-    originalRequest._retry = true;
+    originalRequest?._retry = true;
 
     const refreshToken = state.refreshToken;
 
     //  ONLY logout if refresh token missing
     if (!refreshToken) {
       state.clearAuth();
-      window.location.href = "/login";
+      window.location.replace("/login");
       return Promise.reject(error);
     }
 
@@ -94,6 +94,7 @@ axiosInstance.interceptors.response.use(
         { refresh_token: refreshToken },
       );
 
+      console.log("AUTH AFTER REFRESH:", useAuthStore.getState().auth);
       const newAccess = response.data.access_token;
       const newRefresh = response.data.refresh_token;
 
@@ -112,7 +113,7 @@ axiosInstance.interceptors.response.use(
       //  ONLY HERE we logout
       processQueue(err, null);
       state.clearAuth();
-      window.location.href = "/login";
+      window.location.replace("/login");
       return Promise.reject(err);
     } finally {
       isRefreshing = false;
