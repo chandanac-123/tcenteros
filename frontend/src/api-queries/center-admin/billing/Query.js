@@ -128,7 +128,7 @@ export const useCheckoutCartMutation = () => {
       showSuccess('Cart checked out successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to checkout cart')
+      showError(err?.response?.data?.detail || 'Failed to checkout cart')
       return err
     }
   })
