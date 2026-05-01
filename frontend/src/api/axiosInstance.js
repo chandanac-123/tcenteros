@@ -59,11 +59,11 @@ axiosInstance.interceptors.response.use(
     }
 
     //  FIX 4: prevent infinite loop (BUT DON'T CLEAR HERE)
-    if (originalRequest?._retry) {
+    if (originalRequest._retry) {
       return Promise.reject(error);
     }
 
-    originalRequest?._retry = true;
+    originalRequest._retry = true;
 
     const refreshToken = state.refreshToken;
 
@@ -94,10 +94,9 @@ axiosInstance.interceptors.response.use(
         { refresh_token: refreshToken },
       );
 
-      console.log("AUTH AFTER REFRESH:", useAuthStore.getState().auth);
       const newAccess = response.data.access_token;
       const newRefresh = response.data.refresh_token;
-
+console.log("AUTH AFTER REFRESH:", useAuthStore.getState().auth);
       state.setAuth({
         access_token: newAccess,
         refresh_token: newRefresh,
