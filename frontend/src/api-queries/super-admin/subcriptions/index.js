@@ -28,3 +28,7 @@ export const getBillingHistoryApiCall = (id) =>
 
   export const suspendCenterApiCall = (id, details) =>
   axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`, details);
+
+  export const sendReminderApiCall=(id)=>{
+    axiosInstance.post(`/superadmin/superadmin/billing/renewal-calendar/send-reminder/${id}`);
+  }
