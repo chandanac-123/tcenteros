@@ -1,15 +1,18 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Button } from "@pages/components/ui/button";
-import { CircleArrowDown, Handshake } from "lucide-react";
+import { CircleArrowDown, Handshake, RefreshCcw } from "lucide-react";
 import PartnerTableList from "./components/partnerTableList";
 import { useGetPartnersOverviewQuery } from "@api-queries/super-admin/partners/Query";
 import { useState } from "react";
+import { useRunAllCommissionsMutation } from "@api-queries/super-admin/revenue-billing/Query";
 
 const Partners = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
   });
   const { data, isLoading } = useGetPartnersOverviewQuery(tableParams);
+  const { mutateAsync: runAllCommissions } = useRunAllCommissionsMutation();
+
   console.log("data: ", data);
 
   return (
@@ -30,10 +33,15 @@ const Partners = () => {
             </div>
           </div>
 
-          <div className="pe-5">
+          <div className="pe-5 flex items-center gap-4">
             <Button size="addbutton" onClick={() => setOpen(true)}>
               <CircleArrowDown />
               Export Report
+            </Button>
+
+            <Button size="addbutton" onClick={() => runAllCommissions()}>
+              <RefreshCcw />
+              Commision Run
             </Button>
           </div>
         </div>

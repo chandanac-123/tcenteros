@@ -148,7 +148,7 @@ export const routes = [
       { key: 'active-subscriptions-detail', title: 'Active Subscriptions Detail', path: 'active-subscriptions/detail/:id', component: DetailView, menubar: false, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
       { key: 'renewal-calender-detail', title: 'Renewal Calender Detail', path: 'renewal-calender/detail/:id', component: RenewalDetailView, menubar: false, permissionKey: true },
-      { key: 'expiring-soon', title: 'Expiring Soon', path: 'expiring-soon', component: ExpiringSoon, menubar: true, permissionKey: true },
+      { key: 'expiring-soon', title: 'Expired', path: 'expired', component: ExpiringSoon, menubar: true, permissionKey: true },
       { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },
     ]
   },
@@ -161,7 +161,7 @@ export const routes = [
   {
     key: 50, path: '/revenue-billing', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign />, menubar: true, permissionKey: true, isSuperAdmin: true,
     submodules: [
-      { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: true, permissionKey: true },
+      { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: false, permissionKey: true },
       { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
     ]
   },

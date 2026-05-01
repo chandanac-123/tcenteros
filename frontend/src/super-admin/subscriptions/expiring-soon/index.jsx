@@ -17,13 +17,10 @@ const ExpiringSoon = () => {
   });
   const { data, isLoading, isError } = useRenewalExpiringQuery(tableParams);
 
-  const updateFilter = (key, value) => {
-    setTableParams((prev) => ({
-      ...prev,
-      page: 1,
-      [key]: value,
-    }));
-  };
+console.log("Expire Data",data);
+
+
+
 
   return (
     <ContentLayout>
@@ -42,41 +39,12 @@ const ExpiringSoon = () => {
             </p>
           </div>
         </div>
-        <div
-          className={`flex flex-col border rounded-xl p-2 w-40 gap-2 shadow-[0px_5px_15px_rgba(0,0,0,0.15)] cursor-pointer`}
-        >
-          <div className="flex gap-1 items-center justify-start">
-            <span
-              className={`flex rounded-full w-6 h-6 border text-xs font-semibold text-red_text justify-center items-center shadow-[0px_5px_15px_rgba(0,0,0,0.15)]
-        `}
-            >
-              {data?.days_until_expiry}
-            </span>
-            <span className="flex text-xs text-grey_text"> Days Remaining</span>
-          </div>
-
-          <div className="flex flex-col justify-center items-center gap-2">
-            <span className="flex text-xs text-red_text font-semibold">
-              {" "}
-              {data?.summary?.total_expiring_count} Centers
-            </span>
-            <span className="flex text-xs text-grey_text">
-              {" "}
-              ₹ {data?.summary?.total_expected_revenue}{" "}
-            </span>
-          </div>
-        </div>
+     
       </div>
       <div className="flex flex-col gap-3">
-        <CustomFilter
-          filterName="Expire days"
-          options={filterVlaue}
-          value={tableParams.expiry}
-          onApply={(value) => updateFilter("expiry", value)}
-        />
-
+      
         <ExpiringTable
-          data={data?.daily_breakdown}
+          data={data?.expired_centers}
           isLoading={isLoading}
           tableParams={tableParams}
           setTableParams={setTableParams}
