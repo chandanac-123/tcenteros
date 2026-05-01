@@ -2,10 +2,16 @@ import React from "react";
 import {
   ArrowRight,
   BarChart3,
+  BicepsFlexed,
   ChartNoAxesCombined,
+  ChessKing,
   CircleCheck,
+  Handshake,
+  Megaphone,
+  Receipt,
   ShieldCheck,
   TrendingUp,
+  UserRound,
 } from "lucide-react";
 import partnerlanding from "@partner/onboarding/assets/partner-landing.svg";
 import partnerbg from "@partner/onboarding/assets/partner-bg.png";
@@ -58,15 +64,15 @@ const PartnerLanding = () => {
 
   const growthValue = [
     {
-      value: 555,
+      value: "500+",
       title: "Active Clients on Platform",
     },
     {
-      value: 8,
+      value: "156",
       title: "Partner Resellers",
     },
     {
-      value: 520,
+      value: "₹0",
       title: "Earning Ceiling",
     },
   ];
@@ -257,21 +263,41 @@ const PartnerLanding = () => {
             {/* CARDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 flex-grow">
               {[
-                "Freelancer",
-                "Digital Marketers",
-                "Consultants",
-                "Fitness Professionals",
-                "Entrepreneurs",
-                "Anyone have Network",
+                {
+                  title: "Freelancer",
+                  icon: <ChessKing />,
+                },
+                {
+                  title: "Digital Marketers",
+                  icon: <Megaphone />,
+                },
+                {
+                  title: "Consultants",
+                  icon: <Handshake />,
+                },
+                {
+                  title: "Fitness Professionals",
+                  icon: <BicepsFlexed />,
+                },
+                {
+                  title: "Entrepreneurs",
+                  icon: <Receipt />,
+                },
+                {
+                  title: "Anyone have Network",
+                  icon: <UserRound />,
+                },
               ].map((item, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border h-full"
                 >
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <div className="w-6 h-6 bg-blue-500 rounded" />
+                    <div className=" bg-onboard_primary/10 p-2 text-onboard_primary rounded-lg">
+                      {item?.icon}
+                    </div>
                   </div>
-                  <p className="font-medium text-gray-800">{item}</p>
+                  <p className="font-medium text-gray-800">{item?.title}</p>
                 </div>
               ))}
             </div>
@@ -387,6 +413,7 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
+
       <section
         className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center min-h-[90vh]"
         style={{
@@ -394,7 +421,7 @@ const PartnerLanding = () => {
         }}
       >
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 items-center h-full">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 justify-center  items-center h-full">
           {/* LEFT */}
           <div className="flex flex-col gap-6">
             <h1 className="text-3xl md:text-5xl font-bold leading-tight">
@@ -404,7 +431,7 @@ const PartnerLanding = () => {
               </span>{" "}
               Today
             </h1>
-            <div className="text-[#DBE7FF] text-base gap-4  leading-relaxed">
+            <div className="text-[#DBE7FF] text-base gap-1 flex flex-col leading-relaxed">
               <span className="flex items-center gap-2">
                 <CircleCheck className="text-onboard_primary" />
                 Join now and start earning from your first client
@@ -441,13 +468,13 @@ const PartnerLanding = () => {
 
         {/* 🔥 OVERLAY CONTENT */}
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
-          <div className="flex flex-col items-center text-center gap-4  backdrop-blur-md rounded-2xl py-6 px-4">
-            <div className="text-sm text-gray-300">
+          <div className="flex flex-col items-center text-center gap-10   rounded-2xl py-6 px-4">
+            <div className="text-sm text-gray-300 mb-16">
               One-time onboarding · ₹2,500 setup fee · Lifetime earning
               potential
             </div>
 
-            <div className="grid grid-cols-3 justify-center">
+            <div className="grid grid-cols-3 w-full justify-center">
               {growthValue?.map((item, i) => (
                 <div key={i} className="flex flex-col items-center">
                   <span className="text-2xl md:text-3xl font-bold text-white">
