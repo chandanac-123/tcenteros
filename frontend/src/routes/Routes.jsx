@@ -94,6 +94,7 @@ import EarningsAndPayouts from '@partner/earnings-payouts'
 import Renewals from '@partner/renewals'
 import BlogPage from '@pages/onboarding-pages/header-components/blogs'
 import PartnerLanding from '@partner/onboarding/PartnerLanding'
+import SuspendedCenters from '@super-admin/subscriptions/suspended'
 
 export const routes = [
   //public routes
@@ -150,6 +151,8 @@ export const routes = [
       { key: 'renewal-calender-detail', title: 'Renewal Calender Detail', path: 'renewal-calender/detail/:id', component: RenewalDetailView, menubar: false, permissionKey: true },
       { key: 'expiring-soon', title: 'Expired', path: 'expired', component: ExpiringSoon, menubar: true, permissionKey: true },
       { key: 'failed-payments', title: 'Failed Payments', path: 'failed-payments', component: FailedPayments, menubar: true, permissionKey: true },
+      { key: 'suspended', title: 'Suspended Center', path: 'suspended', component: SuspendedCenters, menubar: true, permissionKey: true },
+
     ]
   },
   { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: true, isSuperAdmin: true },
@@ -173,11 +176,11 @@ export const routes = [
   { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
 
   //partner public routes
-   { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerLanding, menubar: false, permissionKey: true },
-   { key: 57, path: '/partner-onboard', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
-   { key: 58, path: '/agreement', privetRoute: false, isSubRoute: false, pageTitle: '', component: Agreement, menubar: false, permissionKey: true },
-   { key: 59, path: '/payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: Payment, menubar: false, permissionKey: true },
-   { key: 60, path: '/payment-successful', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentSuccessfull, menubar: false, permissionKey: true },
+  { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerLanding, menubar: false, permissionKey: true },
+  { key: 57, path: '/partner-onboard', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
+  { key: 58, path: '/agreement', privetRoute: false, isSubRoute: false, pageTitle: '', component: Agreement, menubar: false, permissionKey: true },
+  { key: 59, path: '/payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: Payment, menubar: false, permissionKey: true },
+  { key: 60, path: '/payment-successful', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentSuccessfull, menubar: false, permissionKey: true },
 
   //Partner Routes
   { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Leads Management', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isPartner: true },

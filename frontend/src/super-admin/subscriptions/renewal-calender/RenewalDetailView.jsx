@@ -81,9 +81,7 @@ const RenewalDetailView = () => {
           <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
             <span className="font-semibold text-base">₹{renewal?.renewal_amount}</span>
 
-            <Button size="addbutton" className="w-full sm:w-auto">
-              Send Reminder
-            </Button>
+          
           </div>
         </div>))}
 
