@@ -59,8 +59,8 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
         const date = row.original.days_since_expired;
 
         return(
-          <div className=" bg-re">
-            <p>{date}</p>
+          <div>
+            <p  className=" bg-rose-100 text-red w-fit px-4 rounded-md border border-red font-semibold">{date}</p>
           </div>
         )
       }
