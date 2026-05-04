@@ -19,10 +19,20 @@ import {
   Wallet,
   BellRing,
   Ribbon,
+  Target,
+  Zap,
+  ActivityIcon,
 } from "lucide-react";
 import { Button } from "@pages/components/ui/button";
 import mainlanging from "./assets/main-img.svg";
 import unique_advantage from "./assets/unique-advantage.svg";
+import leadfocus from "./assets/lead-focus.svg";
+import network_power from "./assets/netwwork-power.svg";
+import fitness from "./assets/fitness.svg";
+import crossfit from "./assets/crossfit.svg";
+import dance from "./assets/dance.svg";
+import yoga from "./assets/yoga.svg";
+import zumba from "./assets/zumba.svg";
 
 const MainLandingPage = () => {
   const navigate = useNavigate();
@@ -57,7 +67,7 @@ const MainLandingPage = () => {
       borderColor: "#09706A",
     },
     {
-      icon: Users,
+      icon: Zap,
       title: "Built-in Lead Generation System",
       description: "Capture and manage leads directly.",
       color: "#AB3811",
@@ -74,14 +84,14 @@ const MainLandingPage = () => {
 
   const everything_you_need = [
     {
-      icon: Signal ,
+      icon: Signal,
       title: "Lead Management Dashboard",
       description:
         "Track, manage, and convert every inquiry in one powerful view.",
       color: "#D49114",
     },
     {
-      icon: Calendar ,
+      icon: Calendar,
       title: "Booking & Scheduling",
       description:
         "Seamless booking system that works around your clients' lives.",
@@ -111,6 +121,14 @@ const MainLandingPage = () => {
       description: "Complete member profiles, progress tracking, and history.",
       color: "#490482",
     },
+  ];
+
+  const centerTypes = [
+    { icon: fitness, title: "Fitness Centers" },
+    { icon: yoga, title: "Yoga Studios" },
+    { icon: crossfit, title: "CrossFit" },
+    { icon: zumba, title: "Zumba Center" },
+    { icon: dance, title: "Dance Studio" },
   ];
 
   return (
@@ -376,11 +394,13 @@ const MainLandingPage = () => {
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                   style={{ backgroundColor: item?.color }}
                 >
-                    {item?.icon && <item.icon size={30} color="#fff" />}
+                  {item?.icon && <item.icon size={30} color="#fff" />}
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-semibold text-gray-900 text-start">{item?.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 text-start">
+                  {item?.title}
+                </h3>
 
                 {/* Description */}
                 <p className="mt-2 text-sm text-gray-600 leading-relaxed text-start">
@@ -390,6 +410,251 @@ const MainLandingPage = () => {
             ))}
           </div>
         </div>
+      </section>
+
+      <section
+        className="flex flex-col gap-12 text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${partnerbg})`,
+        }}
+      >
+        <div className="text-center flex flex-col items-center gap-6">
+          <div className="text-textwhite text-lg w-fit rounded-full justify-center items-center flex border border-textwhite py-2 px-4 font-semibold">
+            LEAD GENERATION FOCUS
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <div className="w-2/5 flex flex-col gap-6">
+            <img
+              src={leadfocus}
+              alt="Main Landing"
+              className="w-full max-w-[700px] h-auto  object-contain"
+            />
+          </div>
+
+          <div className="w-2/5 flex flex-col gap-6 ">
+            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
+              Turn Visitors Into
+              <span className="bg-gradient-to-r from-[#ab7bef] to-[#FF00D4] bg-clip-text text-transparent">
+                  Paying Clients
+              </span>
+            </h2>
+            <div className="flex flex-col gap-6 justify-start">
+              <div className="flex gap-2 bg-textwhite/10 border border-textgrey rounded-lg p-6">
+                <Target className="text-[#00CCFF]" />
+                Capture leads from your website/app
+              </div>
+              <div className="flex gap-2 border bg-textwhite/10 border-textgrey rounded-lg p-6">
+                <ActivityIcon className="text-[#00CCFF]" />
+                Track every inquiry in real-time
+              </div>
+              <div className="flex gap-2 border bg-textwhite/10 border-textgrey rounded-lg p-6">
+                <Zap className="text-[#00CCFF]" />
+                Convert faster with automated follow-ups
+              </div>
+              <div className="flex flex-col gap-2 border bg-[#D46E14F0]/10 border-[#D46E14F0] rounded-lg p-4">
+                <span className="text-[#D46E14F0]">
+                  No more missed opportunities.
+                </span>
+                <span>
+                  Every visitor is a potential client. Our system makes sure
+                  none slip through the cracks.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-100 py-16 px-6 md:px-16">
+        <div className="text-center flex flex-col items-center gap-6">
+          <div className="text-onboard_primary text-lg w-fit rounded-full justify-center flex border border-onboard_primary py-2 px-4 font-semibold">
+            NETWORK POWER
+          </div>
+          {
+            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
+              Grow Beyond Your 
+              <span className="text-onboard_primary">Physical Location</span>
+            </h2>
+          }
+
+          <div className="flex justify-between gap-10 mt-5 items-stretch">
+            <div className="w-3/5 flex flex-col gap-6 ">
+              <div className="flex flex-col gap-10 border border-gray-300 rounded-xl py-12 px-16">
+                <div className="flex gap-3 justify-start items-center">
+                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
+                    <Smartphone size={24} className="text-textwhite" />
+                  </span>
+                  <div className="flex flex-col  text-start">
+                    <span className="text-lg font-bold">
+                      Partner with other centers
+                    </span>
+                    <span>
+                      Join a growing network of premium training facilities
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-start items-center">
+                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
+                    <Smartphone size={24} className="text-textwhite" />
+                  </span>
+                  <div className="flex flex-col  text-start">
+                    <span className="text-lg font-bold">
+                      Refer clients across locations
+                    </span>
+                    <span>Keep your clients happy wherever they travel</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-start items-center ">
+                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
+                    <Smartphone size={24} className="text-textwhite" />
+                  </span>
+                  <div className="flex flex-col  text-start">
+                    <span className="text-lg font-bold">
+                      Build a strong ecosystem
+                    </span>
+                    <span>
+                      Collective growth benefits everyone in the network
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-2/5 flex flex-col gap-6">
+              <img src={network_power} alt="Main Landing" />
+            </div>
+          </div>
+        </div>
+        <div className="text-onboard_primary text-2xl flex justify-center mt-3 font-medium">
+          Your business is no longer limited by geography.
+        </div>
+      </section>
+
+      <section
+        className="flex flex-col gap-12 text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${partnerbg})`,
+        }}
+      >
+        <div className="text-center flex flex-col items-center gap-6">
+          <div className="text-textwhite text-lg w-fit rounded-full justify-center flex border border-textwhite py-2 px-4 font-semibold">
+            WHO IS THIS FOR?
+          </div>
+          {
+            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
+              Built for Every
+              <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
+                 Training Professional
+              </span>
+            </h2>
+          }
+        </div>
+        <div className="grid md:grid-cols-5 gap-4 mt-4 ">
+          {centerTypes?.map((center, i) => (
+            <div key={i} className="flex flex-col items-center gap-4 mb-6">
+              <img
+                src={center?.icon}
+                alt={center?.title}
+                className="w-12 h-12 object-contain"
+              />
+              <span className="text-lg font-medium">{center?.title}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col px-16 bg-onboard_primary/10 py-6 justify-center text-center items-center w-fit border border-onboard_primary rounded-lg mt-6 gap-4 mx-auto">
+          <span>You don't just run a center anymore.</span>
+          <span className="text-2xl font-semibold text-[#00CCFF]">
+            You run a connected, scalable business.
+          </span>
+        </div>
+
+        <div className="text-center flex flex-col items-center gap-10">
+          <div className="text-textwhite text-lg w-fit rounded-full justify-center flex border border-textwhite py-2 px-4 font-semibold">
+            STRONG CTA SECTION
+          </div>
+          {
+            <h2 className="text-2xl md:text-4xl max-w-5xl font-semibold mt-3">
+              Stop Depending on
+              <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
+                Third-Party Platforms
+              </span>
+            </h2>
+          }
+
+          <div className="flex gap-10">
+            <div className="flex gap-2">
+              <CircleCheck />
+              Build your own system.
+            </div>
+            <div className="flex gap-2">
+              <CircleCheck />
+              Own your clients.
+            </div>
+            <div className="flex gap-2">
+              <CircleCheck />
+              Grow your network.
+            </div>
+          </div>
+
+          <div className="flex gap-3 ">
+            <Button
+              onClick={() => navigate("/")}
+              size="addbutton"
+              className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              Starts Now <ArrowRight size={16} />
+            </Button>
+            <Button
+              variant="outline_secondary"
+              onClick={() => navigate("/")}
+              size="addbutton"
+              className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+            >
+              Get your own App
+            </Button>
+          </div>
+
+          <h2 className="text-xl max-w-5xl font-semibold mt-3">
+            “Why rent customers from marketplaces...
+            <span className="text-[#00CCFF]">when you can own them?”</span>
+          </h2>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between w-full">
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-28 md:w-32 object-contain"
+            />
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline_secondary"
+                onClick={() => navigate("/")}
+                size="addbutton"
+                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+              >
+                Book Demo
+              </Button>
+              <Button
+                onClick={() => navigate("/")}
+                size="addbutton"
+                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+              >
+                Join Now <ArrowRight size={16} />
+              </Button>
+            </div>
+          </div>
+        </div>
+       <div className="text-textwhite flex justify-center text-center">
+  © 2026 Tecenteros All rights reserved. Building the future of fitness businesses.
+</div>
       </section>
     </div>
   );
