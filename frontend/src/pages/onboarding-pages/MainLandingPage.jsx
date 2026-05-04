@@ -553,7 +553,7 @@ const MainLandingPage = () => {
             </h2>
           }
         </div>
-        <div className="grid md:grid-cols-5 gap-4 mt-4 ">
+        <div className="grid sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4 ">
           {centerTypes?.map((center, i) => (
             <div key={i} className="flex flex-col items-center gap-4 mb-6">
               <img
