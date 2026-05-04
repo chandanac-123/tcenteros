@@ -619,7 +619,7 @@ const MainLandingPage = () => {
             </Button>
           </div>
 
-          <h2 className="text-xl max-w-5xl font-semibold mt-3">
+          <h2 className="text-2xl max-w-5xl font-semibold mt-3">
             “Why rent customers from marketplaces...
             <span className="text-[#00CCFF]">when you can own them?”</span>
           </h2>
@@ -633,28 +633,38 @@ const MainLandingPage = () => {
               className="w-28 md:w-32 object-contain"
             />
 
-            <div className="flex gap-3">
+            <div className="flex">
               <Button
-                variant="outline_secondary"
+                variant="link"
                 onClick={() => navigate("/")}
                 size="addbutton"
                 className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
               >
-                Book Demo
+               Privacy
               </Button>
               <Button
+                variant="link"
                 onClick={() => navigate("/")}
                 size="addbutton"
-                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
               >
-                Join Now <ArrowRight size={16} />
+                Terms
+              </Button>
+               <Button
+                variant="link"
+                onClick={() => navigate("/")}
+                size="addbutton"
+                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+              >
+                Contact
               </Button>
             </div>
           </div>
         </div>
-       <div className="text-textwhite flex justify-center text-center">
-  © 2026 Tecenteros All rights reserved. Building the future of fitness businesses.
-</div>
+        <div className="text-textwhite flex justify-center text-center">
+          © 2026 Tecenteros All rights reserved. Building the future of fitness
+          businesses.
+        </div>
       </section>
     </div>
   );
