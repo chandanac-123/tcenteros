@@ -97,6 +97,7 @@ import Renewals from '@partner/renewals'
 import BlogPage from '@pages/onboarding-pages/header-components/blogs'
 import PartnerLanding from '@partner/onboarding/PartnerLanding'
 import SuspendedCenters from '@super-admin/subscriptions/suspended'
+import MainLandingPage from '@pages/onboarding-pages/MainLandingPage'
 
 export const routes = [
   //public routes
@@ -190,4 +191,7 @@ export const routes = [
 
   { key: 60, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <BanknoteArrowUp />, menubar: true, permissionKey: true, isPartner: true },
   { key: 61, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <CalendarSync />, menubar: true, permissionKey: true, isPartner: true },
+
+  //Main Landing Page for users
+  { key: 57, path: '/landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: MainLandingPage, menubar: false, permissionKey: true },
 ]
