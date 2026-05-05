@@ -13,56 +13,70 @@ const CentersList = () => {
   return (
     <SecondaryLayout>
       <Header />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 px-10">
-        {data?.data?.map((center) => (
-          <div
-            key={center.id}
-            className="relative p-5 rounded-2xl shadow-xl border bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 text-white hover:scale-105 transition duration-300"
-          >
-            {/* Header */}
-            <h3 className="font-semibold text-xl capitalize mb-3">
-              {center.center_name}
-            </h3>
+      <div className="px-4 sm:px-6 md:px-10 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {data?.data?.map((center) => (
+            <div
+              key={center.id}
+              className="relative rounded-2xl p-[1px] bg-gradient-to-br from-indigo-400/40 via-transparent to-purple-400/40 hover:from-indigo-500 hover:to-purple-500 transition-all duration-300"
+            >
+              {/* INNER CARD */}
+              <div className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
 
-            {/* Contact Person */}
-            <p className="text-sm text-indigo-100 mb-3">
-              {center.contact_person}
-            </p>
+                {/* TOP GRADIENT LINE */}
+                <div className="h-1 w-full rounded-full bg-gradient-to-r from-indigo-400 to-purple-400" />
 
-            {/* Info Section */}
-            <div className="flex flex-col gap-2 text-sm">
+                {/* HEADER */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 capitalize">
+                      {center.center_name}
+                    </h3>
+                    <span className="text-xs text-gray-400">
+                      {center.center_id}
+                    </span>
+                  </div>
 
-              {/* Email */}
-              <div className="flex items-center gap-2">
-                <Mail size={16} />
-                <span className="truncate">{center.email}</span>
-              </div>
+                  {/* STATUS BADGE */}
+                  {/* <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">
+                    Active
+                  </span> */}
+                </div>
 
-              {/* Phone */}
-              <div className="flex items-center gap-2">
-                <Phone size={16} />
-                <span>{center.phone}</span>
-              </div>
+                {/* CONTACT */}
+                <div className="flex flex-col gap-2 text-sm text-gray-600">
 
-              {/* Location */}
-              <div className="flex items-center gap-2">
-                <MapPin size={16} />
-                <span>{center.city}</span>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <Mail size={16} className="text-indigo-500" />
+                    <span className="truncate">{center.email}</span>
+                  </div>
 
-              {/* Members */}
-              <div className="flex items-center gap-2">
-                <Users size={16} />
-                <span>{center.members_count}+ Members</span>
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-purple-500" />
+                    {center.phone}
+                  </div>
+
+                  <div className="flex items-center gap-2 capitalize">
+                    <MapPin size={16} className="text-indigo-500" />
+                    {center.city}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-purple-500" />
+                    {center.members_count}+ Members
+                  </div>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* Footer Badge */}
-            {/* <div className="absolute top-3 right-3 bg-white/20 text-xs px-2 py-1 rounded-full backdrop-blur">
-              Active
-            </div> */}
+        {/* EMPTY STATE */}
+        {data?.data?.length === 0 && (
+          <div className="text-center text-gray-400 mt-10">
+            No centers found
           </div>
-        ))}
+        )}
       </div>
     </SecondaryLayout>
   )

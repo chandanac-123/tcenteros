@@ -9,7 +9,7 @@ import CustomeBreadcrumb from "@common/components/CustomeBreadcrumb";
 const SupportById = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  // console.log("state",state);
+  console.log("state",state);
 
   return (
     <ContentLayout>
