@@ -535,133 +535,126 @@ const MainLandingPage = () => {
       </section>
 
       <section
-        className="flex flex-col gap-12 text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="flex flex-col gap-10 md:gap-12 text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
-        <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-textwhite text-lg w-fit rounded-full justify-center flex border border-textwhite py-2 px-4 font-semibold">
+        {/* HEADER */}
+        <div className="text-center flex flex-col items-center gap-4 md:gap-6">
+          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
             WHO IS THIS FOR?
           </div>
-          {
-            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
-              Built for Every
-              <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
-                 Training Professional
-              </span>
-            </h2>
-          }
+
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
+            Built for Every
+            <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
+              {" "}
+              Training Professional
+            </span>
+          </h2>
         </div>
-        <div className="grid sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4 ">
+
+        {/* GRID */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 mt-4">
           {centerTypes?.map((center, i) => (
-            <div key={i} className="flex flex-col items-center gap-4 mb-6">
+            <div key={i} className="flex flex-col items-center gap-3">
               <img
                 src={center?.icon}
                 alt={center?.title}
-                className="w-12 h-12 object-contain"
+                className="w-10 h-10 md:w-12 md:h-12 object-contain"
               />
-              <span className="text-lg font-medium">{center?.title}</span>
+              <span className="text-sm md:text-lg font-medium text-center">
+                {center?.title}
+              </span>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col px-16 bg-onboard_primary/10 py-6 justify-center text-center items-center w-fit border border-onboard_primary rounded-lg mt-6 gap-4 mx-auto">
-          <span>You don't just run a center anymore.</span>
-          <span className="text-2xl font-semibold text-[#00CCFF]">
+        {/* MID CTA */}
+        <div className="flex flex-col px-4 sm:px-6 md:px-16 bg-onboard_primary/10 py-4 md:py-6 justify-center text-center items-center border border-onboard_primary rounded-lg mt-4 md:mt-6 gap-2 md:gap-4 mx-auto max-w-xl">
+          <span className="text-sm md:text-base">
+            You don't just run a center anymore.
+          </span>
+          <span className="text-lg md:text-2xl font-semibold text-[#00CCFF]">
             You run a connected, scalable business.
           </span>
         </div>
 
-        <div className="text-center flex flex-col items-center gap-10">
-          <div className="text-textwhite text-lg w-fit rounded-full justify-center flex border border-textwhite py-2 px-4 font-semibold">
+        {/* CTA SECTION */}
+        <div className="text-center flex flex-col items-center gap-6 md:gap-10">
+          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
             STRONG CTA SECTION
           </div>
-          {
-            <h2 className="text-2xl md:text-4xl max-w-5xl font-semibold mt-3">
-              Stop Depending on
-              <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
-                Third-Party Platforms
-              </span>
-            </h2>
-          }
 
-          <div className="flex gap-10">
-            <div className="flex gap-2">
-              <CircleCheck />
+          <h2 className="text-xl sm:text-2xl md:text-4xl max-w-5xl font-semibold mt-2 md:mt-3">
+            Stop Depending on{" "}
+            <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
+              Third-Party Platforms
+            </span>
+          </h2>
+
+          {/* FEATURES */}
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 md:gap-10 text-sm md:text-base">
+            <div className="flex items-center gap-2">
+              <CircleCheck size={18} />
               Build your own system.
             </div>
-            <div className="flex gap-2">
-              <CircleCheck />
+            <div className="flex items-center gap-2">
+              <CircleCheck size={18} />
               Own your clients.
             </div>
-            <div className="flex gap-2">
-              <CircleCheck />
+            <div className="flex items-center gap-2">
+              <CircleCheck size={18} />
               Grow your network.
             </div>
           </div>
 
-          <div className="flex gap-3 ">
+          {/* BUTTONS */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button
               onClick={() => navigate("/")}
               size="addbutton"
-              className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+              className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
               Starts Now <ArrowRight size={16} />
             </Button>
+
             <Button
               variant="outline_secondary"
               onClick={() => navigate("/")}
               size="addbutton"
-              className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+              className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
               Get your own App
             </Button>
           </div>
 
-          <h2 className="text-2xl max-w-5xl font-semibold mt-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl max-w-3xl md:max-w-5xl font-semibold mt-2 md:mt-3 px-2">
             “Why rent customers from marketplaces...
-            <span className="text-[#00CCFF]">when you can own them?”</span>
+            <span className="text-[#00CCFF]"> when you can own them?”</span>
           </h2>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between w-full">
-            <img
-              src={logo}
-              alt="Logo"
-              className="w-28 md:w-32 object-contain"
-            />
+        {/* FOOTER */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
+          <img src={logo} alt="Logo" className="w-24 md:w-32 object-contain" />
 
-            <div className="flex">
-              <Button
-                variant="link"
-                onClick={() => navigate("/")}
-                size="addbutton"
-                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
-              >
-               Privacy
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => navigate("/")}
-                size="addbutton"
-                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
-              >
-                Terms
-              </Button>
-               <Button
-                variant="link"
-                onClick={() => navigate("/")}
-                size="addbutton"
-                className="bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
-              >
-                Contact
-              </Button>
-            </div>
+          <div className="flex flex-wrap justify-center gap-2 md:gap-4">
+            <Button variant="link" onClick={() => navigate("/")}>
+              Privacy
+            </Button>
+            <Button variant="link" onClick={() => navigate("/")}>
+              Terms
+            </Button>
+            <Button variant="link" onClick={() => navigate("/")}>
+              Contact
+            </Button>
           </div>
         </div>
-        <div className="text-textwhite flex justify-center text-center">
+
+        {/* COPYRIGHT */}
+        <div className="text-textwhite text-xs md:text-sm text-center">
           © 2026 Tecenteros All rights reserved. Building the future of fitness
           businesses.
         </div>
