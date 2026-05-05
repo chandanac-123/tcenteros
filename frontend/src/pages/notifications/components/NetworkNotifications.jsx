@@ -72,7 +72,7 @@ const NetworkNotifications = () => {
                     {request?.network_status === "approved" && (
                       <Button
                         size="notificationbutton"
-                        className="text-xs cursor-not-allowed"
+                        className="text-xs cursor-not-allowed bg-green"
                       >
                         Approved
                       </Button>
