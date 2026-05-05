@@ -299,80 +299,104 @@ const MainLandingPage = () => {
       </section>
 
       <section
-        className="flex flex-col gap-12 text-white py-10 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
-        <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-textwhite text-lg w-fit rounded-full justify-center items-center flex border border-textwhite py-2 px-4 font-medium">
-            UNIQUE ADVANTAGE
-          </div>
-          <h2 className="text-2xl md:text-4xl font-semibold mt-3">
-            A Connected Fitness &
-            <span className="bg-gradient-to-r from-[#ab7bef] to-[#FF00D4] bg-clip-text text-transparent">
-               Training Ecosystem
-            </span>
-          </h2>
+  className="flex flex-col gap-8 md:gap-12 text-white py-8 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+  style={{
+    backgroundImage: `url(${partnerbg})`,
+  }}
+>
+  <div className="text-center flex flex-col items-center gap-4 md:gap-6">
+    <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
+      UNIQUE ADVANTAGE
+    </div>
+
+    <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
+      A Connected Fitness &
+      <span className="bg-gradient-to-r from-[#ab7bef] to-[#FF00D4] bg-clip-text text-transparent">
+        {" "}Training Ecosystem
+      </span>
+    </h2>
+  </div>
+
+  {/* MAIN */}
+  <div className="flex flex-col md:flex-row md:justify-between gap-8 md:gap-0">
+    
+    {/* LEFT */}
+    <div className="w-full md:w-2/5 flex flex-col gap-6">
+      
+      <div className="text-sm md:text-lg text-[#FFD36C] text-center md:text-left">
+        " When A client is traveling to another city..."
+      </div>
+
+      {/* STEPS */}
+      <div className="flex flex-col gap-4 md:gap-6 md:pl-20">
+        
+        <div className="flex items-start gap-3">
+          <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+            <Smartphone size={18} />
+          </span>
+          <span className="text-sm md:text-base">
+            They open your app
+          </span>
         </div>
 
-        <div className="flex justify-between">
-          <div className="w-2/5 flex flex-col gap-6">
-            <div className="flex text-lg text-[#FFD36C]">
-              " When A client is traveling to another city..."
-            </div>
-
-            <div className="flex flex-col gap-6 pl-20">
-              <div className="flex gap-2">
-                <span className="bg-onboard_primary p-1.5 justify-center items-center flex rounded-lg">
-                  <Smartphone size={20} />
-                </span>
-                They open your app
-              </div>
-              <div className="flex gap-2">
-                <span className="bg-onboard_primary p-1.5 justify-center items-center flex rounded-lg">
-                  <MapPin size={20} />
-                </span>
-                Find a partner center nearby
-              </div>
-              <div className="flex gap-2">
-                <span className="bg-onboard_primary p-1.5 justify-center items-center flex rounded-lg">
-                  <BicepsFlexed size={20} />
-                </span>
-                Continue their workout seamlessly
-              </div>
-              <div className="flex gap-2">
-                <span className="bg-onboard_primary p-1.5 justify-center items-center flex rounded-lg">
-                  <CirclePile size={20} />
-                </span>
-                You keep the client & expand reach
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6 w-full mt-6">
-              <div className="inline-flex w-fit px-5 py-3 bg-white/90 rounded-lg shadow-sm">
-                <span className="text-lg font-semibold bg-gradient-to-r from-[#078ae7] to-[#ff02ee] bg-clip-text text-transparent">
-                  You don’t lose the client.
-                </span>
-              </div>
-
-              <div className="inline-flex w-fit px-5 py-3 bg-white/90 rounded-lg shadow-sm self-center">
-                <span className="text-lg font-semibold bg-gradient-to-r from-[#078ae7] to-[#ff02ee] bg-clip-text text-transparent">
-                  You expand your reach.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-3/5 flex justify-end  items-end pointer-events-none">
-            <img
-              src={unique_advantage}
-              alt="Main Landing"
-              className="w-full max-w-[700px] h-auto  object-contain"
-            />
-          </div>
+        <div className="flex items-start gap-3">
+          <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+            <MapPin size={18} />
+          </span>
+          <span className="text-sm md:text-base">
+            Find a partner center nearby
+          </span>
         </div>
-      </section>
+
+        <div className="flex items-start gap-3">
+          <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+            <BicepsFlexed size={18} />
+          </span>
+          <span className="text-sm md:text-base">
+            Continue their workout seamlessly
+          </span>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+            <CirclePile size={18} />
+          </span>
+          <span className="text-sm md:text-base">
+            You keep the client & expand reach
+          </span>
+        </div>
+
+      </div>
+
+      {/* HIGHLIGHTS */}
+      <div className="flex flex-col gap-4 md:gap-6 w-full mt-4 md:mt-6 items-center md:items-start">
+        
+        <div className="inline-flex w-fit px-4 md:px-5 py-2.5 md:py-3 bg-white/90 rounded-lg shadow-sm">
+          <span className="text-sm md:text-lg font-semibold bg-gradient-to-r from-[#078ae7] to-[#ff02ee] bg-clip-text text-transparent">
+            You don’t lose the client.
+          </span>
+        </div>
+
+        <div className="inline-flex w-fit px-4 md:px-5 py-2.5 md:py-3 bg-white/90 rounded-lg shadow-sm md:self-center">
+          <span className="text-sm md:text-lg font-semibold bg-gradient-to-r from-[#078ae7] to-[#ff02ee] bg-clip-text text-transparent">
+            You expand your reach.
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    {/* IMAGE */}
+    <div className="w-full md:w-3/5 flex justify-center md:justify-end items-center md:items-end pointer-events-none">
+      <img
+        src={unique_advantage}
+        alt="Main Landing"
+        className="w-full max-w-sm sm:max-w-md md:max-w-[700px] h-auto object-contain"
+      />
+    </div>
+
+  </div>
+</section>
 
       <section className="bg-gray-100 py-16 px-6 md:px-16">
         <div className="text-center flex flex-col items-center gap-6">
