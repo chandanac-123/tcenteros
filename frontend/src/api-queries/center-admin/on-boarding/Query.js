@@ -7,7 +7,8 @@ import {
   calculateGst,
   finalizeOnboardCenter,
   getPlatformById,
-  getInvoice
+  getInvoice,
+  getAllResellers
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -109,6 +110,15 @@ export const useInvoiceQuery = id => {
   return useQuery({
     queryKey: ['invoice', id],
     queryFn: () => getInvoice(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useAllResellersQuery = () => {
+  return useQuery({
+    queryKey: ['resellers'],
+    queryFn: getAllResellers,
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })

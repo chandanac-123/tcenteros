@@ -6,7 +6,8 @@ import {
   gsteApiCall,
   onboardFinalizeApiCall,
   getPlatformApiCall,
-  getInvoiceApiCall
+  getInvoiceApiCall,
+  getResellerApiCall
 } from './index'
 
 export const getAllClassTypes = async () => {
@@ -75,6 +76,15 @@ export const finalizeOnboardCenter = async (details, id) => {
 export const getInvoice = async (id) => {
   try {
     const response = await getInvoiceApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getAllResellers = async () => {
+  try {
+    const response = await getResellerApiCall()
     return response.data
   } catch (error) {
     throw error

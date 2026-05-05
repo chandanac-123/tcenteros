@@ -14,3 +14,6 @@ export const onboardFinalizeApiCall = (details, id) =>
   axiosInstance.post(`/center/billing/onboarding/finalize/${id}`, details);
 export const getInvoiceApiCall = (id) =>
   axiosInstance.get(`/center/billing/invoice?invoice_id=${id}`);
+
+export const getResellerApiCall = () =>
+  axiosInstance.get("/center/partners");
