@@ -299,13 +299,13 @@ const MainLandingPage = () => {
       </section>
 
       <section
-        className="flex flex-col gap-12 text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="flex flex-col gap-12 text-white py-10 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
         <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-textwhite text-lg w-fit rounded-full justify-center items-center flex border border-textwhite py-2 px-4 font-semibold">
+          <div className="text-textwhite text-lg w-fit rounded-full justify-center items-center flex border border-textwhite py-2 px-4 font-medium">
             UNIQUE ADVANTAGE
           </div>
           <h2 className="text-2xl md:text-4xl font-semibold mt-3">
@@ -413,14 +413,14 @@ const MainLandingPage = () => {
       </section>
 
       <section
-        className="flex flex-col gap-8 md:gap-12 text-white py-6 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="flex flex-col gap-8 md:gap-12 text-white py-10 md:py-16 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
         {/* TAG */}
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
-          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
+          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4  font-medium">
             LEAD GENERATION FOCUS
           </div>
         </div>
