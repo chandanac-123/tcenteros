@@ -17,35 +17,41 @@ const ResellersList = () => {
           {resellers?.data?.map((reseller) => (
             <div
               key={reseller.id}
-              className="bg-white rounded-2xl border border-grey-400 p-5 flex flex-col shadow-lg gap-4 hover:shadow-2xl transition-all duration-300"
+              className="relative rounded-2xl p-[1px] bg-gradient-to-br from-[#1AA0FF]/40 via-transparent to-[#ff02d5]/40 hover:from-[#1AA0FF] hover:to-[#ff02d5] transition-all duration-300"
             >
-              {/* TOP */}
-              <div className="flex items-center justify-between ">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 capitalize">
-                    {reseller?.full_name}
-                  </h3>
-                  <span className="text-xs text-gray-400">
-                    {reseller?.reseller_id}
-                  </span>
-                </div>
-              </div>
+              {/* INNER CARD */}
+              <div className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
+                {/* TOP GRADIENT LINE */}
+                <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5]" />
 
-              {/* CONTACT */}
-              <div className="flex flex-col gap-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Mail size={16} />
-                  {reseller.email}
+                {/* TOP */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 capitalize">
+                      {reseller?.full_name}
+                    </h3>
+                    <span className="text-xs text-gray-400">
+                      {reseller?.reseller_id}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Phone size={16} />
-                  {reseller?.phone}
-                </div>
+                {/* CONTACT */}
+                <div className="flex flex-col gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Mail size={16} className="text-[#1AA0FF]" />
+                    {reseller.email}
+                  </div>
 
-                <div className="flex items-center gap-2 capitalize">
-                  <MapPin size={16} />
-                  {reseller?.city}
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-[#ff02d5]" />
+                    {reseller?.phone}
+                  </div>
+
+                  <div className="flex items-center gap-2 capitalize">
+                    <MapPin size={16} className="text-[#1AA0FF]" />
+                    {reseller?.city}
+                  </div>
                 </div>
               </div>
             </div>
