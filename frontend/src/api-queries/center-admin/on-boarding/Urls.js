@@ -6,7 +6,8 @@ import {
   gsteApiCall,
   onboardFinalizeApiCall,
   getPlatformApiCall,
-  getInvoiceApiCall
+  getInvoiceApiCall,
+  getAllCentersOnBoarding
 } from './index'
 
 export const getAllClassTypes = async () => {
@@ -78,5 +79,16 @@ export const getInvoice = async (id) => {
     return response.data
   } catch (error) {
     throw error
+  }
+}
+
+export const getAllOnboardingCenters = async () => {
+  try {
+    const response = await getAllCentersOnBoarding()
+    console.log("Response Centers",response);
+    return response.data
+  } catch (err) {
+    console.error("Error at All center fetching on onboard",err);
+    throw err
   }
 }
