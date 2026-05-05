@@ -101,7 +101,7 @@ const PartnerDashboard = () => {
               <span className="text-md font-semibold">Upcoming Renewals</span>
             </div>
             <div className="mt-4 text-sm text-textgrey">
-              <RenewalCard />
+              <RenewalCard data={partnerData?.upcoming_renewals} />
             </div>
           </Card>
         </div>
