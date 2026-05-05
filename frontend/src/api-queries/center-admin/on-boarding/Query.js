@@ -8,7 +8,8 @@ import {
   finalizeOnboardCenter,
   getPlatformById,
   getInvoice,
-  getAllResellers
+  getAllResellers,
+  getAllOnboardingCenters
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -123,3 +124,10 @@ export const useAllResellersQuery = () => {
     refetchOnMount: true
   })
 }
+export const useOnboardingCenters = () => {
+  return useQuery({
+    queryKey: ['onboarding-centers'],
+    queryFn: getAllOnboardingCenters,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+  });
+};

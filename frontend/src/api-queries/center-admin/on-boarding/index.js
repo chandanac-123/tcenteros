@@ -17,3 +17,5 @@ export const getInvoiceApiCall = (id) =>
 
 export const getResellerApiCall = () =>
   axiosInstance.get("/center/partners");
+export const getAllCentersOnBoarding = () => 
+  axiosInstance.get(`/center/centers-all`)
