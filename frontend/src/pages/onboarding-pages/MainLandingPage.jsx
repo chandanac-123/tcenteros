@@ -467,72 +467,95 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section className="bg-gray-100 py-16 px-6 md:px-16">
-        <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-onboard_primary text-lg w-fit rounded-full justify-center flex border border-onboard_primary py-2 px-4 font-semibold">
-            NETWORK POWER
-          </div>
-          {
-            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
-              Grow Beyond Your 
-              <span className="text-onboard_primary">Physical Location</span>
-            </h2>
-          }
+      <section className="bg-gray-100 py-10 md:py-16 px-4 sm:px-6 md:px-16">
+  <div className="text-center flex flex-col items-center gap-4 md:gap-6">
 
-          <div className="flex justify-between gap-10 mt-5 items-stretch">
-            <div className="w-3/5 flex flex-col gap-6 ">
-              <div className="flex flex-col gap-10 border border-gray-300 rounded-xl py-12 px-16">
-                <div className="flex gap-3 justify-start items-center">
-                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
-                    <Smartphone size={24} className="text-textwhite" />
-                  </span>
-                  <div className="flex flex-col  text-start">
-                    <span className="text-lg font-bold">
-                      Partner with other centers
-                    </span>
-                    <span>
-                      Join a growing network of premium training facilities
-                    </span>
-                  </div>
-                </div>
+    {/* TAG */}
+    <div className="text-onboard_primary text-sm md:text-lg w-fit rounded-full flex border border-onboard_primary py-1.5 md:py-2 px-3 md:px-4 font-semibold">
+      NETWORK POWER
+    </div>
 
-                <div className="flex gap-3 justify-start items-center">
-                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
-                    <Smartphone size={24} className="text-textwhite" />
-                  </span>
-                  <div className="flex flex-col  text-start">
-                    <span className="text-lg font-bold">
-                      Refer clients across locations
-                    </span>
-                    <span>Keep your clients happy wherever they travel</span>
-                  </div>
-                </div>
+    {/* TITLE */}
+    <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
+      Grow Beyond Your{" "}
+      <span className="text-onboard_primary font-bold">Physical Location</span>
+    </h2>
 
-                <div className="flex gap-3 justify-start items-center ">
-                  <span className="bg-onboard_primary p-1.5  flex rounded-lg">
-                    <Smartphone size={24} className="text-textwhite" />
-                  </span>
-                  <div className="flex flex-col  text-start">
-                    <span className="text-lg font-bold">
-                      Build a strong ecosystem
-                    </span>
-                    <span>
-                      Collective growth benefits everyone in the network
-                    </span>
-                  </div>
-                </div>
+    {/* MAIN SECTION */}
+    <div className="flex flex-col lg:flex-row gap-6 md:gap-10 mt-6 w-full max-w-7xl items-stretch">
+      
+      {/* LEFT */}
+      <div className="w-full lg:w-3/5 flex">
+        <div className="flex flex-col justify-between w-full h-full gap-6 md:gap-10 border border-gray-300 rounded-xl py-6 md:py-12 px-4 sm:px-6 md:px-10 lg:px-16">
+
+          {/* ITEMS */}
+          <div className="flex flex-col gap-6 md:gap-10">
+
+            <div className="flex gap-3 items-start md:items-center">
+              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                <Smartphone size={20} className="text-textwhite" />
+              </span>
+              <div className="flex flex-col text-start">
+                <span className="text-base md:text-lg font-bold">
+                  Partner with other centers
+                </span>
+                <span className="text-sm md:text-base">
+                  Join a growing network of premium training facilities
+                </span>
               </div>
             </div>
 
-            <div className="w-2/5 flex flex-col gap-6">
-              <img src={network_power} alt="Main Landing" />
+            <div className="flex gap-3 items-start md:items-center">
+              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                <Smartphone size={20} className="text-textwhite" />
+              </span>
+              <div className="flex flex-col text-start">
+                <span className="text-base md:text-lg font-bold">
+                  Refer clients across locations
+                </span>
+                <span className="text-sm md:text-base">
+                  Keep your clients happy wherever they travel
+                </span>
+              </div>
             </div>
+
+            <div className="flex gap-3 items-start md:items-center">
+              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                <Smartphone size={20} className="text-textwhite" />
+              </span>
+              <div className="flex flex-col text-start">
+                <span className="text-base md:text-lg font-bold">
+                  Build a strong ecosystem
+                </span>
+                <span className="text-sm md:text-base">
+                  Collective growth benefits everyone in the network
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
-        <div className="text-onboard_primary text-2xl flex justify-center mt-3 font-medium">
-          Your business is no longer limited by geography.
+      </div>
+
+      {/* RIGHT (IMAGE SAME HEIGHT) */}
+      <div className="w-full lg:w-2/5 flex">
+        <div className="w-full h-full sm:justify-center items-center flex">
+          <img
+            src={network_power}
+            alt="Network Power"
+            className="w-80 h-full object-cover rounded-xl"
+          />
         </div>
-      </section>
+      </div>
+
+    </div>
+  </div>
+
+  {/* FOOT TEXT */}
+  <div className="text-onboard_primary text-lg sm:text-xl md:text-2xl text-center mt-6 md:mt-8 font-medium px-2">
+    Your business is no longer limited by geography.
+  </div>
+</section>
 
       <section
         className="flex flex-col gap-10 md:gap-12 text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
