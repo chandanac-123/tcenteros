@@ -4,14 +4,14 @@ import { useState } from "react";
 import AddGrace from "./AddGrace";
 
 const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
-  const [graceOpen, setGraceOpen] = useState(false);
-  console.log("Datasss", data);
+  // const [graceOpen, setGraceOpen] = useState(false);
+  // console.log("Datasss", data);
 
 
 
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
-    { accessorKey: "contact_person", header: "Center Person" },
+    { accessorKey: "contact_person_name", header: "Center Person" },
     { accessorKey: "center_email", header: "Center Email" },
     // {
     //   accessorKey: "days_left",
@@ -39,7 +39,7 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
       accessorKey: "subscription_expired_on",
       header: "Expired On",
       cell: ({ row }) => {
-        const date = row.original.subscription_expired_on;
+        const date = row.original.expired_on;
 
         const formattedDate = date
           ? new Date(date).toLocaleDateString("en-IN", {
@@ -53,10 +53,10 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
       },
     },
     {
-      accessorKey: "days_since_expired",
+      accessorKey: "days_expired",
       header: "Days Expired",
       cell: ({ row }) => {
-        const date = row.original.days_since_expired;
+        const date = row.original.days_expired;
 
         return(
           <div>
@@ -69,7 +69,7 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
       accessorKey: "last_invoice",
       header: "Subscription Type",
       cell: ({ row }) => {
-        const duration = row.original.last_invoice?.subscription_duration;
+        const duration = row.original?.subscription_duration;
 
         let colorClass = "";
 

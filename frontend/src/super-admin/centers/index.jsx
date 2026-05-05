@@ -8,6 +8,8 @@ import { useSubscriptionsQuery } from "@api-queries/super-admin/subcriptions/Que
 const Centers = () => {
   const [tableParams, setTableParams] = useState({ page: 1 });
   const { data, isLoading, isError } = useSubscriptionsQuery(tableParams);
+  // console.log("Center Data",data);
+  
   return (
     <ContentLayout>
       <div className="flex items-center justify-between ">
@@ -25,10 +27,10 @@ const Centers = () => {
           </div>
         </div>
         <div className="pe-5">
-          <Button size="addbutton" onClick={() => setOpen(true)}>
+          {/* <Button size="addbutton" onClick={() => setOpen(true)}>
             <CircleArrowDown />
             Export Report
-          </Button>
+          </Button> */}
         </div>
       </div>
 

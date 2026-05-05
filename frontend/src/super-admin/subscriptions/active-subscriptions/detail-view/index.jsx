@@ -31,7 +31,7 @@ const DetailView = () => {
   const { mutateAsync: suspendSubscription, isPending } =
     useSuspendCenterMutation();
   const { data } = useSubscriptionGetByIdQuery(id);
-  console.log("View Details: Data:", data);
+  // console.log("View Details: Data:", data);
 
   const { data: billing_history, isLoading } = useBillingHistoryQuery(
     id
@@ -83,7 +83,7 @@ const DetailView = () => {
   const cardsData = [
     {
       label: "Total Revenue",
-      value: data?.total_revenue || 0,
+      value: data?.this_month_total || 0,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
     },
     {
@@ -103,12 +103,12 @@ const DetailView = () => {
     },
     {
       label: "Network commission",
-      value: data?.network_commission || 0,
+      value: data?.networking_commission || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
     },
     {
       label: "Branch Count",
-      value: data?.total_purchased_branch_count || 0,
+      value: data?.branch_count || 0,
       icon: <Split size={16} strokeWidth={2.75} />,
     },
   ];
@@ -118,7 +118,7 @@ const DetailView = () => {
     <ContentLayout>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
 
           {/* Name + City */}
           <div className="flex flex-wrap items-center">
@@ -126,7 +126,7 @@ const DetailView = () => {
               {isLoading ? (
                 <span className="inline-block h-4 w-32 animate-pulse bg-gray-100 rounded" />
               ) : (
-                data?.center_name || "_ _"
+                data?.center_name
               )}
             </span>
 
@@ -134,7 +134,7 @@ const DetailView = () => {
               {isLoading ? (
                 <span className="inline-block h-3 w-20 animate-pulse bg-gray-100 rounded" />
               ) : (
-                data?.city || "_ _"
+                data?.city 
               )}
             </span>
           </div>
@@ -151,7 +151,7 @@ const DetailView = () => {
                   className={`px-3 rounded-full text-[13px] ${statusStyles[duration] || "bg-gray-100 text-gray-500"
                     }`}
                 >
-                  {statusLabels[duration] || "_ _"}
+                  {statusLabels[duration] }
                 </div>
               )}
             </div>
@@ -167,7 +167,7 @@ const DetailView = () => {
                     className={`px-3 rounded-full text-[13px] ${statusStyles[status] || "bg-gray-100 text-gray-500"
                       }`}
                   >
-                    {statusLabels[status] || "_ _"}
+                    {statusLabels[status] }
                   </div>
                 )}
               </div>

@@ -18,7 +18,7 @@ import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
 
 const SASRevenue = () => {
   const { data, isLoading } = useRevenueBillingOverviewQuery();
-  console.log("data: ", data);
+  console.log("Card data: ", data);
   // Line chart data from API
   const datasets = [
     {
@@ -42,48 +42,62 @@ const SASRevenue = () => {
   const cardsData = [
     {
       label: " Monthly Recurring Revenue (MRR)",
-      value: data?.monthly_recurring_revenue || 0,
+      value: data?.monthly_recurring_revenue?.value || 0,
       icon: <HandCoins size={16} strokeWidth={2.75} />,
       type: "amount",
+      percent: data?.monthly_recurring_revenue?.percent_of_total_income || 0,
     },
     {
       label: " Yearly Locked Revenue (ARR)",
-      value: data?.yearly_recognized_revenue || 0,
+      value: data?.yearly_locked_revenue_arr?.value || 0,
       icon: <Lock size={16} strokeWidth={2.75} />,
       type: "amount",
+      percent: data?.yearly_locked_revenue_arr?.percent_of_total_income || 0,
     },
     {
       label: " 30 Days Renewal Forecast",
-      value: data?.renewal_forecast_30_days || 0,
+      value: data?.renewal_forecast_30_days?.value || 0,
       icon: <RefreshCcw size={16} strokeWidth={2.75} />,
       type: "amount",
+      percent: data?.renewal_forecast_30_days?.percent_of_total_income || 0,
+
     },
     {
       label: "Pending Commission Payout",
-      value: data?.pending_commission_payout || 0,
+      value: data?.pending_commission_payout?.value || 0,
       icon: <Book size={16} strokeWidth={2.75} />,
       type: "amount",
+      percent: data?.pending_commission_payout?.percent_of_total_expense || 0,
+
     },
     {
       label: " Subscriptions",
-      value: data?.center_subscriptions_income || 0,
+      value: data?.revenue_cards?.center_subscription?.value || 0,
       icon: <FileBadge size={16} strokeWidth={2.75} />,
+      type: "amount",
+      percent: data?.revenue_cards?.center_subscription.percent || 0,
+
     },
     {
       label: "Subscription Renewals",
-      value: data?.center_subscription_renewal_income || 0,
+      value: data?.revenue_cards?.center_subscription_renewal?.value || 0,
       icon: <FolderSync size={16} strokeWidth={2.75} />,
+      type: "amount",
+      percent: data?.revenue_cards?.center_subscription_renewal.percent || 0,
     },
     {
       label: "Branch Purchases",
-      value: data?.branch_purchase_income || 0,
+      value: data?.revenue_cards?.branch_purchase?.value || 0,
       icon: <Split size={16} strokeWidth={2.75} />,
+      percent: data?.revenue_cards?.branch_purchase.percent || 0,
+      type: "amount",
     },
     {
       label: " Network Commission",
-      value: data?.network_commission_income || 0,
+      value: data?.revenue_cards?.network_commission.value || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
       type: "amount",
+      percent: data?.revenue_cards?.network_commission.percent || 0,
     },
   ];
   return (

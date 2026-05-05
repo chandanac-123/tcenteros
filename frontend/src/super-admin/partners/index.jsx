@@ -34,10 +34,10 @@ const Partners = () => {
           </div>
 
           <div className="pe-5 flex items-center gap-4">
-            <Button size="addbutton" onClick={() => setOpen(true)}>
+            {/* <Button size="addbutton" onClick={() => setOpen(true)}>
               <CircleArrowDown />
               Export Report
-            </Button>
+            </Button> */}
 
             <Button size="addbutton" onClick={() => runAllCommissions()}>
               <RefreshCcw />

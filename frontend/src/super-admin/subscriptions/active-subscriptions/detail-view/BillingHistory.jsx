@@ -9,7 +9,7 @@ const statusVariant = {
   inactive: "inactive",
 };
 const BillingHistory = ({ data }) => {
-  console.log("data: ", data);
+  // console.log("data: ", data);
 
   const columns = [
     { accessorKey: "invoice_number", header: "Invoice Number" },

@@ -30,6 +30,9 @@ const SuperAdminDashboard = () => {
   const revenueSplit = data?.revenue_split || [];
   const colors = ["#4DB6AC", "#B57CC2", "#E6A57A", "#3BA3C9", "#7E57C2"];
 
+  console.log("Dash-Data",data);
+  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setGreeting(getGreeting());

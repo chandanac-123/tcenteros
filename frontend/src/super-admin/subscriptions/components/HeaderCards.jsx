@@ -15,6 +15,8 @@ const formatCardValue = (value, type) => {
 
 const HeaderCard = ({ cardsData}) => {
 
+// console.log("CardData",cardsData);
+
   return (
     <>
       {cardsData?.map((item, index) => {
