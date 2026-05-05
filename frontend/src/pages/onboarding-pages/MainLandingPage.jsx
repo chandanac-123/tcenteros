@@ -413,51 +413,69 @@ const MainLandingPage = () => {
       </section>
 
       <section
-        className="flex flex-col gap-12 text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="flex flex-col gap-8 md:gap-12 text-white py-6 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
-        <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-textwhite text-lg w-fit rounded-full justify-center items-center flex border border-textwhite py-2 px-4 font-semibold">
+        {/* TAG */}
+        <div className="text-center flex flex-col items-center gap-4 md:gap-6">
+          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
             LEAD GENERATION FOCUS
           </div>
         </div>
 
-        <div className="flex justify-between">
-          <div className="w-2/5 flex flex-col gap-6">
+        {/* MAIN */}
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-10 justify-center lg:items-stretch">
+          {/* IMAGE (TOP ON MOBILE) */}
+          <div className="w-full lg:w-1/2 flex justify-center">
             <img
               src={leadfocus}
               alt="Main Landing"
-              className="w-full max-w-[700px] h-auto  object-contain"
+              className="w-full max-w-sm sm:max-w-md md:max-w-lg h-auto lg:h-full object-contain"
             />
           </div>
 
-          <div className="w-2/5 flex flex-col gap-6 ">
-            <h2 className="text-2xl md:text-4xl font-semibold mt-3">
+          {/* CONTENT */}
+          <div className="w-full lg:w-1/2 flex flex-col gap-6">
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold">
               Turn Visitors Into
               <span className="bg-gradient-to-r from-[#ab7bef] to-[#FF00D4] bg-clip-text text-transparent">
-                  Paying Clients
+                {" "}
+                Paying Clients
               </span>
             </h2>
-            <div className="flex flex-col gap-6 justify-start">
-              <div className="flex gap-2 bg-textwhite/10 border border-textgrey rounded-lg p-6">
-                <Target className="text-[#00CCFF]" />
-                Capture leads from your website/app
+
+            <div className="flex flex-col gap-4 md:gap-6">
+              <div className="flex items-start gap-3 bg-textwhite/10 border border-textgrey rounded-lg p-4 md:p-6">
+                <Target className="text-[#00CCFF] shrink-0 mt-1" size={20} />
+                <span className="text-sm md:text-base">
+                  Capture leads from your website/app
+                </span>
               </div>
-              <div className="flex gap-2 border bg-textwhite/10 border-textgrey rounded-lg p-6">
-                <ActivityIcon className="text-[#00CCFF]" />
-                Track every inquiry in real-time
+
+              <div className="flex items-start gap-3 bg-textwhite/10 border border-textgrey rounded-lg p-4 md:p-6">
+                <ActivityIcon
+                  className="text-[#00CCFF] shrink-0 mt-1"
+                  size={20}
+                />
+                <span className="text-sm md:text-base">
+                  Track every inquiry in real-time
+                </span>
               </div>
-              <div className="flex gap-2 border bg-textwhite/10 border-textgrey rounded-lg p-6">
-                <Zap className="text-[#00CCFF]" />
-                Convert faster with automated follow-ups
+
+              <div className="flex items-start gap-3 bg-textwhite/10 border border-textgrey rounded-lg p-4 md:p-6">
+                <Zap className="text-[#00CCFF] shrink-0 mt-1" size={20} />
+                <span className="text-sm md:text-base">
+                  Convert faster with automated follow-ups
+                </span>
               </div>
+
               <div className="flex flex-col gap-2 border bg-[#D46E14F0]/10 border-[#D46E14F0] rounded-lg p-4">
-                <span className="text-[#D46E14F0]">
+                <span className="text-[#D46E14F0] text-sm md:text-base font-medium">
                   No more missed opportunities.
                 </span>
-                <span>
+                <span className="text-sm md:text-base">
                   Every visitor is a potential client. Our system makes sure
                   none slip through the cracks.
                 </span>
@@ -468,94 +486,90 @@ const MainLandingPage = () => {
       </section>
 
       <section className="bg-gray-100 py-10 md:py-16 px-4 sm:px-6 md:px-16">
-  <div className="text-center flex flex-col items-center gap-4 md:gap-6">
+        <div className="text-center flex flex-col items-center gap-4 md:gap-6">
+          {/* TAG */}
+          <div className="text-onboard_primary text-sm md:text-lg w-fit rounded-full flex border border-onboard_primary py-1.5 md:py-2 px-3 md:px-4 font-semibold">
+            NETWORK POWER
+          </div>
 
-    {/* TAG */}
-    <div className="text-onboard_primary text-sm md:text-lg w-fit rounded-full flex border border-onboard_primary py-1.5 md:py-2 px-3 md:px-4 font-semibold">
-      NETWORK POWER
-    </div>
+          {/* TITLE */}
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
+            Grow Beyond Your{" "}
+            <span className="text-onboard_primary font-bold">
+              Physical Location
+            </span>
+          </h2>
 
-    {/* TITLE */}
-    <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
-      Grow Beyond Your{" "}
-      <span className="text-onboard_primary font-bold">Physical Location</span>
-    </h2>
+          {/* MAIN SECTION */}
+          <div className="flex flex-col lg:flex-row gap-6 md:gap-10 mt-6 w-full max-w-7xl items-stretch">
+            {/* LEFT */}
+            <div className="w-full lg:w-3/5 flex">
+              <div className="flex flex-col justify-between w-full h-full gap-6 md:gap-10 border border-gray-300 rounded-xl py-6 md:py-12 px-4 sm:px-6 md:px-10 lg:px-16">
+                {/* ITEMS */}
+                <div className="flex flex-col gap-6 md:gap-10">
+                  <div className="flex gap-3 items-start md:items-center">
+                    <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                      <Smartphone size={20} className="text-textwhite" />
+                    </span>
+                    <div className="flex flex-col text-start">
+                      <span className="text-base md:text-lg font-bold">
+                        Partner with other centers
+                      </span>
+                      <span className="text-sm md:text-base">
+                        Join a growing network of premium training facilities
+                      </span>
+                    </div>
+                  </div>
 
-    {/* MAIN SECTION */}
-    <div className="flex flex-col lg:flex-row gap-6 md:gap-10 mt-6 w-full max-w-7xl items-stretch">
-      
-      {/* LEFT */}
-      <div className="w-full lg:w-3/5 flex">
-        <div className="flex flex-col justify-between w-full h-full gap-6 md:gap-10 border border-gray-300 rounded-xl py-6 md:py-12 px-4 sm:px-6 md:px-10 lg:px-16">
+                  <div className="flex gap-3 items-start md:items-center">
+                    <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                      <Smartphone size={20} className="text-textwhite" />
+                    </span>
+                    <div className="flex flex-col text-start">
+                      <span className="text-base md:text-lg font-bold">
+                        Refer clients across locations
+                      </span>
+                      <span className="text-sm md:text-base">
+                        Keep your clients happy wherever they travel
+                      </span>
+                    </div>
+                  </div>
 
-          {/* ITEMS */}
-          <div className="flex flex-col gap-6 md:gap-10">
-
-            <div className="flex gap-3 items-start md:items-center">
-              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
-                <Smartphone size={20} className="text-textwhite" />
-              </span>
-              <div className="flex flex-col text-start">
-                <span className="text-base md:text-lg font-bold">
-                  Partner with other centers
-                </span>
-                <span className="text-sm md:text-base">
-                  Join a growing network of premium training facilities
-                </span>
+                  <div className="flex gap-3 items-start md:items-center">
+                    <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
+                      <Smartphone size={20} className="text-textwhite" />
+                    </span>
+                    <div className="flex flex-col text-start">
+                      <span className="text-base md:text-lg font-bold">
+                        Build a strong ecosystem
+                      </span>
+                      <span className="text-sm md:text-base">
+                        Collective growth benefits everyone in the network
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3 items-start md:items-center">
-              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
-                <Smartphone size={20} className="text-textwhite" />
-              </span>
-              <div className="flex flex-col text-start">
-                <span className="text-base md:text-lg font-bold">
-                  Refer clients across locations
-                </span>
-                <span className="text-sm md:text-base">
-                  Keep your clients happy wherever they travel
-                </span>
+            {/* RIGHT (IMAGE SAME HEIGHT) */}
+            <div className="w-full lg:w-2/5 flex">
+              <div className="w-full h-full sm:justify-center items-center flex">
+                <img
+                  src={network_power}
+                  alt="Network Power"
+                  className="w-80 h-full object-cover rounded-xl"
+                />
               </div>
             </div>
-
-            <div className="flex gap-3 items-start md:items-center">
-              <span className="bg-onboard_primary p-2 flex rounded-lg shrink-0">
-                <Smartphone size={20} className="text-textwhite" />
-              </span>
-              <div className="flex flex-col text-start">
-                <span className="text-base md:text-lg font-bold">
-                  Build a strong ecosystem
-                </span>
-                <span className="text-sm md:text-base">
-                  Collective growth benefits everyone in the network
-                </span>
-              </div>
-            </div>
-
           </div>
         </div>
-      </div>
 
-      {/* RIGHT (IMAGE SAME HEIGHT) */}
-      <div className="w-full lg:w-2/5 flex">
-        <div className="w-full h-full sm:justify-center items-center flex">
-          <img
-            src={network_power}
-            alt="Network Power"
-            className="w-80 h-full object-cover rounded-xl"
-          />
+        {/* FOOT TEXT */}
+        <div className="text-onboard_primary text-lg sm:text-xl md:text-2xl text-center mt-6 md:mt-8 font-medium px-2">
+          Your business is no longer limited by geography.
         </div>
-      </div>
-
-    </div>
-  </div>
-
-  {/* FOOT TEXT */}
-  <div className="text-onboard_primary text-lg sm:text-xl md:text-2xl text-center mt-6 md:mt-8 font-medium px-2">
-    Your business is no longer limited by geography.
-  </div>
-</section>
+      </section>
 
       <section
         className="flex flex-col gap-10 md:gap-12 text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
