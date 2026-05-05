@@ -44,7 +44,9 @@ const VisitorAdd = ({ goBack }) => {
     onSubmit: async values => {
       try {
         if (values.date_of_birth) {
-          const [day, month, year] = values.date_of_birth.split('-')
+          let [day, month, year] = values.date_of_birth.split('-')
+          day = day.padStart(2, '0');
+          month = month.padStart(2, '0');
           values.date_of_birth = `${year}-${month}-${day}`
         }
         await createMember(values)

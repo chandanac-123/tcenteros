@@ -72,6 +72,8 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
   const generateStrongPassword = (length = 12) => {
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    console.log("password generated");
+    
     const lower = "abcdefghijklmnopqrstuvwxyz";
     const number = "0123456789";
     const special = "!@#$%^&*";

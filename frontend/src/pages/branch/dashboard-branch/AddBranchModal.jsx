@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSettingsTabStore } from '@store/tabStore'
 import RazorpayButton from '@common/Razorpay/RazorpayButton'
 import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
-import { showError } from '@utils/toast'
+import { showError, showSuccess } from '@utils/toast'
 
 const AddBranchModal = ({ open, onOpenChange }) => {
   const navigate = useNavigate()
@@ -50,34 +50,48 @@ const AddBranchModal = ({ open, onOpenChange }) => {
     setCount(prev => (prev > 1 ? prev - 1 : 1))
   }
 
+  // const handlePurchase = async () => {
+  //   try {
+  //     const payload = {
+  //       branch_count: count
+  //     }
+  //     const response = await addCount(payload);
+  //     console.log('count success:', response)
+  //     const payment_id = response?.payment_order_id;
+  //     console.log("Pay", payment_id);
+
+  //     if (!payment_id) {
+  //       throw new Error("Payment ID not found .");
+  //     }
+  //     create_Order(payment_id, {
+  //       onSuccess: (res) => {
+  //         console.log("Order ID:", res);
+  //         const orderData = res?.data;
+  //         openRazorpay(orderData);
+  //       },
+  //       onError: (err) => {
+  //         console.error(err?.response?.data?.detail);
+  //         const message=err?.response?.data?.detail
+  //         showError(message)
+  //       },
+  //     });
+
+
+
+  //   } catch (error) {
+  //     console.error('Purchase failed:', error)
+  //     setOpenFailed(true)
+  //   }
+  // }
+
+
   const handlePurchase = async () => {
     try {
-      const payload = {
-        branch_count: count
-      }
-      const response = await addCount(payload);
-      console.log('count success:', response)
-      const payment_id = response?.payment_order_id;
-      console.log("Pay", payment_id);
-
-      if (!payment_id) {
-        throw new Error("Payment ID not found .");
-      }
-      create_Order(payment_id, {
-        onSuccess: (res) => {
-          console.log("Order ID:", res);
-          const orderData = res?.data;
-          openRazorpay(orderData);
-        },
-        onError: (err) => {
-          console.error(err?.response?.data?.detail);
-          const message=err?.response?.data?.detail
-          showError(message)
-        },
-      });
 
 
+      console.log("Payment Success"); 
 
+      showSuccess("Payment Successfull .Ready")
     } catch (error) {
       console.error('Purchase failed:', error)
       setOpenFailed(true)
