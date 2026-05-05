@@ -18,7 +18,7 @@ const ActiveSubcriptionTable = ({
   setTableParams,
   isLoading,
 }) => {
-  console.log("Data", data);
+  // console.log("Data", data);
   // const data = [
   //   {
   //     center_id: "1",

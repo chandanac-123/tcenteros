@@ -13,6 +13,7 @@ import UpdateplatformFeature from "./modals/UpdateplatformFeature";
 import DeleteplatformFeature from "./modals/DeleteplatformFeature";
 import { usePlatformFeatures } from "@api-queries/super-admin/platform-feature/Query";
 import { useAppPermissions } from "@hooks/index";
+import { Spinner } from "@pages/components/ui/spinner";
 
 const PlatformFeatureCards = () => {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -23,9 +24,11 @@ const PlatformFeatureCards = () => {
   const { hydrated, canFeatureUpdate, canFeatureDelete } = useAppPermissions();
   if (!hydrated) return null;
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <p className='flex items-center justify-center'><Spinner /></p>;
   if (error) return <p>Error loading platform features</p>;
   const features = featureData?.features || [];
+  console.log("Platform_features",features);
+  
   return (
     <>
       <div className="flex flex-col gap-3 px-5 py-3">

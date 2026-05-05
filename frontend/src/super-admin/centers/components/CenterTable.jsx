@@ -93,19 +93,26 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
         );
       },
     },
-    { accessorKey: "partner", header: "Partner" },
+    { accessorKey: "partner_name",
+       header: "Partner",
+      cell:({row})=>{
+        const partner = row.original.partner_name;
+      return(
+        partner?partner:"_ _"
+      )
+      } },
     { accessorKey: "total_revenue", header: "Total Revenue" },
-    {
-      accessorKey: "action",
-      header: "Action",
-      cell: ({ row }) => (
-        <div className="flex">
-          <button className="px-3 py-1 text-xs items-center justify-center rounded-xl border">
-            View
-          </button>
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: "action",
+    //   header: "Action",
+    //   cell: ({ row }) => (
+    //     <div className="flex">
+    //       <button className="px-3 py-1 text-xs items-center justify-center rounded-xl border">
+    //         View
+    //       </button>
+    //     </div>
+    //   ),
+    // },
   ];
 
   const cardsData = [
@@ -116,7 +123,7 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
     },
     {
       label: "Total Number Of Members",
-      value: data?.summary?.total_members,
+      value: data?.summary?.centers_through_partner,
       icon: <UserPlus size={16} strokeWidth={2.75} />,
     },
     {
@@ -126,7 +133,7 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
     },
     {
       label: "Average Growth",
-      value: data?.summary?.average_growth_percentage,
+      value: data?.summary?.average_growth_rate,
       icon: <SignalHigh size={16} strokeWidth={2.75} />,
     },
   ];

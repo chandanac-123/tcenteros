@@ -17,7 +17,7 @@ const ExpiringSoon = () => {
   });
   const { data, isLoading, isError } = useRenewalExpiringQuery(tableParams);
 
-console.log("Expire Data",data);
+// console.log("Expire Data",data);
 
 
 

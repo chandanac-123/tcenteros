@@ -2,9 +2,11 @@ import { showError, showSuccess } from "@utils/toast";
 import {
   createCenterType,
   createGlobalTermsAndPrivacy,
+  createNewFAQs,
   deleteCenterType,
   getCenterType,
   getPlatformSettings,
+  listAllFAQs,
   updatePlatformSettings,
 } from "./Urls";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +23,7 @@ export const useCreateGlobalTermsAndPrivacyMutation = () => {
     onError: (err) => {
       showError(
         err?.response?.data?.detail ||
-          "Failed to create Global Terms and Privacy",
+        "Failed to create Global Terms and Privacy",
       );
       return err;
     },
@@ -90,5 +92,36 @@ export const useDeleteCenterTypeMutation = () => {
       showError(err?.response?.data?.detail || "Failed to delete center type");
       return err;
     },
+  });
+};
+
+
+export const useCreateFAQ = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data) => createNewFAQs(data),
+
+    onSuccess: (data) => {
+      console.log('FAQ created successfully:', data);
+      showSuccess(data?.message || "Successfully added FAQs...!")
+      // ✅ Refetch FAQ list (important)
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    },
+
+    onError: (error) => {
+      console.error('Error creating FAQ:', error);
+      showError("Error at adding FAQs")
+    },
+  });
+};
+
+
+export const useFAQs = () => {
+  return useQuery({
+    queryKey: ['faqs'],
+    queryFn: listAllFAQs,
+    staleTime: 1000 * 60 * 5, // cache for 5 mins
+    retry: 2,
   });
 };

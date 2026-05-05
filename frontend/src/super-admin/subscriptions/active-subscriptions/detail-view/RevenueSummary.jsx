@@ -5,7 +5,7 @@ import RevenueCard from "@super-admin/subscriptions/components/RevenueCard";
 import React from "react";
 
 const RevenueSummary = ({ data }) => {
-  console.log("data: ", data);
+  // console.log("data: ", data);
   const revenueLabels = data?.revenue_chart?.map((i) => i.month) || [];
 
   const revenueData = data?.revenue_chart?.map((i) => i.revenue) || [];

@@ -8,6 +8,9 @@ import {
   getBillingHistory,
   suspendCenter,
   sendReminder,
+  getFailedSubList,
+  makeSuspendSubscribe,
+  suspendedSubscribeList,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -88,12 +91,51 @@ export const useSendReminder = () => {
 
     onSuccess: () => {
       console.log("Reminder sent successfully");
-     showSuccess("Send the reminder to the center")
+      showSuccess("Send the reminder to the center")
     },
 
     onError: (error) => {
       console.error("Failed to send reminder", error);
       showError(error?.response?.data?.detail || "Failed to send reminder to center");
     },
+  });
+};
+
+
+export const useFailedSubscriptionsQuery = (params) => {
+  return useQuery({
+    queryKey: ["failed-subscriptions", params],
+    queryFn: () => getFailedSubList(params),
+  });
+};
+
+
+export const useSuspendSubscriptionMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id) => makeSuspendSubscribe(id),
+
+    onSuccess: (data, id) => {
+      console.log("Suspended successfully:", data);
+      showSuccess(data?.message)
+      queryClient.invalidateQueries({
+        queryKey: ["failed-subscriptions"],
+      });
+    },
+
+    onError: (error) => {
+      console.error("Suspend failed:", error);
+    },
+  });
+};
+
+export const useSuspendedSubscriptionsQuery = () => {
+  return useQuery({
+    queryKey: ["suspended-subscriptions"],
+
+    queryFn: suspendedSubscribeList,
+
+    staleTime: 1000 * 60 * 5, // optional (5 mins cache)
   });
 };

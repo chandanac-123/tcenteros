@@ -26,9 +26,23 @@ export const getBillingHistoryApiCall = (id) =>
     `/superadmin/superadmin/billing/centers/subscription-history?center_id=${id}`,
   );
 
-  export const suspendCenterApiCall = (id, details) =>
+export const suspendCenterApiCall = (id, details) =>
   axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`, details);
 
-  export const sendReminderApiCall=(id)=>{
-    axiosInstance.post(`/superadmin/superadmin/billing/renewal-calendar/send-reminder/${id}`);
-  }
+export const sendReminderApiCall = (id) => {
+  axiosInstance.post(`/superadmin/superadmin/billing/renewal-calendar/send-reminder/${id}`);
+}
+
+export const failedSubscriptionApiCall = (details) => 
+   axiosInstance.get(`/superadmin/superadmin/centers/failed-payments`, {
+    params: {
+      page: details?.page,
+      page_size: details?.page_size,
+    },
+  });
+
+  export const suspendTheSubscription =(id)=>
+    axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`);
+
+  export const listSuspendedSubscription = ()=>
+    axiosInstance.get(`/superadmin/superadmin/centers/subscriptions/suspended`)

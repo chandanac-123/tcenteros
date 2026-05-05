@@ -6,7 +6,10 @@ import {
   getRenewalExpiringApiCall,
   getBillingHistoryApiCall,
   suspendCenterApiCall,
-  sendReminderApiCall
+  sendReminderApiCall,
+  failedSubscriptionApiCall,
+  suspendTheSubscription,
+  listSuspendedSubscription
 } from "./index";
 
 export const getActiveSubscriptions = async (data) => {
@@ -74,10 +77,40 @@ export const suspendCenter = async (id, details) => {
 
 export const sendReminder = async (id) => {
   try {
-    const response = await sendReminderApiCall(id);
+    const response = sendReminderApiCall(id);
     return response;
   } catch (err) {
     console.error("Erroe at sending Reminder", err);
     throw err
+  } 1
+}
+
+export const getFailedSubList = async (details) => {
+  try {
+    const response = await failedSubscriptionApiCall(details);
+    return response.data; // ✅ important
+  } catch (err) {
+    console.error("Error at Failed Subscription List", err);
+    throw err;
+  }
+};
+
+export const makeSuspendSubscribe = async (id) => {
+  try {
+    const response = await suspendTheSubscription(id);
+    return response.data;
+  } catch (err) {
+    console.error("Error at suspending Subscription", err);
+    throw err;
+  }
+}
+
+export const suspendedSubscribeList = async () => {
+  try {
+    const response = await listSuspendedSubscription();
+    return response.data;
+  } catch (err) {
+    console.error("Error at fetching Suspended List", err);
+    throw err;
   }
 }

@@ -12,7 +12,7 @@ const RenewalDetailView = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useRenewalByIdQuery(params?.id);
-  console.log('data: ', data);
+  // console.log('data: ', data);
 
   return (
     <ContentLayout>
@@ -48,42 +48,49 @@ const RenewalDetailView = () => {
         <p className="font-medium text-base">{data?.summary?.total_renewal_count} Renewals</p>
 
         {/* Card */}
-       {data?.renewals?.map((renewal) => (
-         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4" key={renewal.id}>
-          {/* Left Section */}
-          <div className="flex items-start gap-3">
-            <MapIcon className="text-gray-500 mt-1" />
+        {data?.renewals?.map((renewal) => (
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4" key={renewal.id}>
+            {/* Left Section */}
+            <div className="flex items-start gap-3">
+              <MapIcon className="text-gray-500 mt-1" />
 
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium">{renewal.center_name}</span>
-                <Badge
-                  className="bg-badge_bg_green border-none text-green_text rounded-xl w-auto"
-                  variant="future_lead"
-                  label={renewal.center_status}
-                />
-              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">{renewal.center_name}</span>
+                  {/* <Badge
+                    className="bg-badge_bg_green border-none  rounded-xl w-auto"
+                    variant="future_lead"
+                    label={renewal.calculated_subscription_status}
+                  /> */}
+                  <Badge
+                    className={`border-none rounded-xl w-auto capitalize ${renewal.calculated_subscription_status === "grace"
+                      ? "bg-badge_bg_green text-green_text"
+                      : "bg-light_red text-red_text"
+                      }`}
+                    label={renewal.calculated_subscription_status}
+                  />
+                </div>
 
-              <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                <span>{renewal.city},</span>
-                <span>1200 + Members</span>
-                <span className="flex text-textblack font-semibold gap-2">
-                  Renew Date : <p className=""> {renewal?.renewal_date?.split("-")?.reverse()?.join("-")}</p>
-                </span>
-                <span className="flex gap-2">
-                  Days Left : <p className="text-red_text">{renewal?.days_left_for_renewal} Days</p>
-                </span>
+                <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                  <span>{renewal.city},</span>
+                  {/* <span>1200 + Members</span> */}
+                  <span className="flex text-textblack font-semibold gap-2">
+                    Renew Date : <p className=""> {renewal?.renewal_date?.split("-")?.reverse()?.join("-")}</p>
+                  </span>
+                  <span className="flex gap-2">
+                    Days Left : <p className="text-red_text">{renewal?.days_left} Days</p>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Section */}
-          <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
-            <span className="font-semibold text-base">₹{renewal?.renewal_amount}</span>
+            {/* Right Section */}
+            <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+              <span className="font-semibold text-base">₹{renewal?.subscription_amount}</span>
 
-          
-          </div>
-        </div>))}
+
+            </div>
+          </div>))}
 
       </div>
     </ContentLayout>
