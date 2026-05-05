@@ -1,11 +1,14 @@
+import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
+import Header from '@pages/onboarding-pages/components/Header'
 import React from 'react'
 
-const index = () => {
+const CentersList = () => {
   return (
-    <div>
-      aaaaa
-    </div>
+    <SecondaryLayout>
+      <Header />
+      aaaaa xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    </SecondaryLayout>
   )
 }
 
-export default index
+export default CentersList

@@ -98,6 +98,8 @@ import BlogPage from '@pages/onboarding-pages/header-components/blogs'
 import PartnerLanding from '@partner/onboarding/PartnerLanding'
 import SuspendedCenters from '@super-admin/subscriptions/suspended'
 import MainLandingPage from '@pages/onboarding-pages/MainLandingPage'
+import CentersList from '@pages/onboarding-pages/header-components/centers'
+import ResellersList from '@pages/onboarding-pages/header-components/resellers'
 
 export const routes = [
   //public routes
@@ -122,7 +124,9 @@ export const routes = [
   { key: 23, path: '/otp-verification', privetRoute: false, isSubRoute: false, pageTitle: '', component: OTPVerification, menubar: false, permissionKey: true },
   { key: 24, path: '/reset-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
   { key: 25, path: '/reset-success', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permissionKey: true },
-  { key: 61, path: '/blog', privetRoute: false, isSubRoute: false, pageTitle: '', component: BlogPage, menubar: false, permissionKey: true },
+  { key: 62, path: '/blog', privetRoute: false, isSubRoute: false, pageTitle: '', component: BlogPage, menubar: false, permissionKey: true },
+  { key: 63, path: '/centers-list', privetRoute: false, isSubRoute: false, pageTitle: '', component: CentersList, menubar: false, permissionKey: true },
+  { key: 64, path: '/partners-list', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResellersList, menubar: false, permissionKey: true },
 
   //private routes
   { key: 26, path: '/dashboard', privetRoute: true, isSubRoute: false, pageTitle: 'Dashboard', component: Dashboard, icon: <LayoutDashboard />, menubar: true, permissionKey: 'dashboard', alwaysVisible: true },
