@@ -4,8 +4,13 @@ import { useState } from "react";
 import { useAllTicketsQuery } from "@api-queries/center-admin/notifictaions/Query";
 import CloseTicket from "./TicketClose";
 import { Spinner } from "@pages/components/ui/spinner";
+import { useAuthStore } from "@store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const Tickets = () => {
+  const navigate = useNavigate();
+  const role = useAuthStore((state) => state.auth?.role);
+  const isSuperAdmin = role === "superadmin";
   const [openChat, setOpenChat] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ticketClose, setTicketClose] = useState(false);
@@ -70,7 +75,9 @@ const Tickets = () => {
                         size="notificationbutton"
                         className="text-xs"
                         onClick={() => {
-                          setSelectedTicket(ticket.id);
+                          isSuperAdmin
+                            ? navigate(`/supportById/${ticket?.id}`)
+                            : setSelectedTicket(ticket.id);
                           setOpenChat(true);
                         }}
                       >
@@ -89,9 +96,11 @@ const Tickets = () => {
             />
           </div>
 
-          <div className="flex-1">
-            {selectedTicket && <Chat ticketId={selectedTicket} />}
-          </div>
+          {!isSuperAdmin && (
+            <div className="flex-1">
+              {selectedTicket && <Chat ticketId={selectedTicket} />}
+            </div>
+          )}
         </>
       )}
     </div>

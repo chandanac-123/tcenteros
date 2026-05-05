@@ -89,12 +89,12 @@ const SupportTablelist = () => {
 
     const columns = [
         {
-            accessorKey: "id",
-            header: "Ticket ID",
+            accessorKey: "center_name",
+            header: "Center Name",
         },
         {
-            accessorKey: "center_name",
-            header: "Customer  Name",
+            accessorKey: "member_name",
+            header: "Member Email",
         },
         {
             accessorKey: "subject",
