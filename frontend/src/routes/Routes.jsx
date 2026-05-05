@@ -31,7 +31,7 @@ import EmployeeManagement from '@pages/employee-management'
 import Settings from '@pages/settings'
 import Accounts from '@pages/accounts'
 import AccountsSubModules from '@pages/accounts/sub-modules'
-import AddBranches from "@pages/branch/AddBranches"
+// import AddBranches from "@pages/branch/AddBranches"
 import ProfilePage from '@pages/profile'
 
 import {
@@ -68,7 +68,7 @@ import Partners from '@super-admin/partners'
 import Centers from '@super-admin/centers'
 import PlatformFeatures from '@super-admin/platform-features'
 import PlatformSettings from '@super-admin/platform-settings'
-import Analytics from '@super-admin/analytics'
+// import Analytics from '@super-admin/analytics'
 import ExpiringSoon from '@super-admin/subscriptions/expiring-soon'
 import RenewalCalender from '@super-admin/subscriptions/renewal-calender'
 import ActiveSubscriptions from '@super-admin/subscriptions/active-subscriptions'
@@ -118,7 +118,7 @@ export const routes = [
   { key: 13, path: '/attendance-tracking', privetRoute: false, isSubRoute: false, pageTitle: '', component: AttendanceTracking, menubar: false, permissionKey: true },
   { key: 16, path: '/sellable-item', privetRoute: false, isSubRoute: false, pageTitle: '', component: SellableItem, menubar: false, permissionKey: true },
   { key: 19, path: '/primary-login', privetRoute: false, isSubRoute: false, pageTitle: '', component: PrimaryLogin, menubar: false, permissionKey: true },
-  { key: 20, path: '/add-branches', privetRoute: true, isSubRoute: false, pageTitle: '', component: AddBranches, menubar: false, permissionKey: true },
+  // { key: 20, path: '/add-branches', privetRoute: true, isSubRoute: false, pageTitle: '', component: AddBranches, menubar: false, permissionKey: true },
   { key: 21, path: '/login', privetRoute: false, isSubRoute: false, pageTitle: '', component: Login, menubar: false, permissionKey: true },
   { key: 22, path: '/forgot-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ForgetPassord, menubar: false, permissionKey: true },
   { key: 23, path: '/otp-verification', privetRoute: false, isSubRoute: false, pageTitle: '', component: OTPVerification, menubar: false, permissionKey: true },
