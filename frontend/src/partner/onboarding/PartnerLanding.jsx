@@ -79,34 +79,34 @@ const PartnerLanding = () => {
   return (
     <div className="font-sans">
       <section
-        className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
+        className="text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between w-full">
+        <div className="flex items-center justify-between w-full sm:mb-0 mb-4">
           <img
             src={logo}
             alt="Logo"
-            className="w-28 md:w-32 object-contain"
+            className="w-24 sm:w-28 md:w-32 object-contain"
             loading="lazy"
           />
 
           <Button
             onClick={() => navigate("/partner-onboard")}
             size="addbutton"
-            className="bg-white hover:bg-white/80 text-onboard_primary font-medium flex items-center gap-2 px-4 py-2 rounded-lg"
+            className="bg-white hover:bg-white/80 text-onboard_primary font-medium flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base"
           >
             Join Now <ArrowRight size={16} />
           </Button>
         </div>
 
         {/* HERO CONTENT */}
-        <div className="w-full grid md:grid-cols-2 items-center">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 items-center  ">
           {/* LEFT */}
-          <div className="flex flex-col gap-6 md:justify-start justify-center">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+          <div className="flex flex-col gap-10 text-center md:text-left">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight">
               Build Your{" "}
               <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
                 Recurring
@@ -117,22 +117,22 @@ const PartnerLanding = () => {
               Business with Us
             </h1>
 
-            <p className="text-[#DBE7FF] text-base md:text-lg  font-semibold leading-relaxed">
+            <p className="text-[#DBE7FF] text-sm sm:text-base md:text-lg font-semibold leading-relaxed">
               Earn from every sale. <br />
               Earn from every renewal. <br />
               Earn as long as your clients stay.
             </p>
 
-            <div>
+            <div className="flex justify-center md:justify-start">
               <Button
                 onClick={() => navigate("/partner-onboard")}
-                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg"
+                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base"
               >
                 Become a Partner today <ArrowRight size={18} />
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-sm  mt-2">
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 text-xs sm:text-sm mt-2">
               <p>No limits.</p>
               <p>No targets.</p>
               <p>Pure earning potential.</p>
@@ -140,35 +140,35 @@ const PartnerLanding = () => {
           </div>
 
           {/* RIGHT */}
-          <div className="flex justify-center md:justify-end ">
+          <div className="flex justify-center md:justify-end">
             <img
               loading="lazy"
               src={partnerlanding}
               alt="Partner Landing"
-              className="max-w-lg object-contain"
+              className="w-full max-w-xs sm:max-w-sm md:max-w-lg object-contain"
             />
           </div>
         </div>
 
         {/* CARDS */}
-        <div className="flex justify-center ">
-          <div className="grid md:grid-cols-3 justify-center gap-8">
+        <div className="flex justify-center mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full max-w-5xl">
             <img
               src={instant}
               alt="Card 1"
-              className=" object-contain"
+              className="w-full max-w-xs mx-auto object-contain"
               loading="lazy"
             />
             <img
               src={resurring}
               alt="Card 2"
-              className=" object-contain"
+              className="w-full max-w-xs mx-auto object-contain"
               loading="lazy"
             />
             <img
               src={unlimited}
               alt="Card 3"
-              className=" object-contain"
+              className="w-full max-w-xs mx-auto object-contain"
               loading="lazy"
             />
           </div>
