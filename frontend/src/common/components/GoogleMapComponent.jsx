@@ -66,24 +66,42 @@ function GoogleMapComponent({ open, setLocationOpen }) {
 
   // Get Current Location
   useEffect(() => {
-    if (!open) return; //  only run when modal opens
+    if (!open) return;
+    //  1. If API already has saved location → use it
+    if (centerLocationData?.latitude && centerLocationData?.longitude) {
+      const lat = Number(centerLocationData.latitude);
+      const lng = Number(centerLocationData.longitude);
+
+      const location = { lat, lng };
+
+      setCenter(location);
+      setMarker(location);
+
+      formik.setFieldValue("latitude", lat);
+      formik.setFieldValue("longitude", lng);
+
+      return; // ⛔ stop here (don’t fetch current location)
+    }
+
+    // 2. Else → fallback to current location
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
+
         const location = { lat, lng };
+
         setCenter(location);
         setMarker(location);
+
         formik.setFieldValue("latitude", lat);
         formik.setFieldValue("longitude", lng);
-        // (optional) clear search box
-        setSearchValue("");
       },
       (error) => {
         console.error("Error getting location:", error);
       },
     );
-  }, [open]);
+  }, [open, centerLocationData]);
 
   //  Search place
   const onPlaceChanged = () => {
