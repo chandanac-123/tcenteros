@@ -508,43 +508,43 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
-
       <section
-        className="text-white py-4 px-6 md:px-16 relative overflow-hidden bg-cover bg-center min-h-[90vh]"
+        className="text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center md:min-h-[90vh]"
         style={{
           backgroundImage: `url(${partnerbg})`,
         }}
       >
         {/* HERO CONTENT */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 justify-center  items-center h-full">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center md:gap-0 h-full">
           {/* LEFT */}
-          <div className="flex flex-col gap-6">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+          <div className="flex flex-col gap-5 text-center md:text-left">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight">
               Start Building Your{" "}
               <span className="bg-gradient-to-r from-[#1AA0FF] to-[#FF00D4] bg-clip-text text-transparent">
                 Passive Income
               </span>{" "}
               Today
             </h1>
-            <div className="text-[#DBE7FF] text-base gap-1 flex flex-col leading-relaxed">
+
+            <div className="text-[#DBE7FF] text-sm sm:text-base gap-2  flex flex-col leading-relaxed ">
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary" />
+                <CircleCheck className="text-onboard_primary shrink-0" />
                 Join now and start earning from your first client
               </span>
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary" />
+                <CircleCheck className="text-onboard_primary shrink-0" />
                 Build a long-term income stream with zero limits
               </span>
               <span className="flex items-center gap-2">
-                <CircleCheck className="text-onboard_primary" />
+                <CircleCheck className="text-onboard_primary shrink-0" />
                 Your clients' renewals pay you — forever
               </span>
             </div>
 
-            <div>
+            <div className="flex justify-center md:justify-center">
               <Button
                 onClick={() => navigate("/partner-onboard")}
-                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-5 py-3 rounded-lg"
+                className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base"
               >
                 Become a Partner today <ArrowRight size={18} />
               </Button>
@@ -557,33 +557,33 @@ const PartnerLanding = () => {
               loading="lazy"
               src={growthimage}
               alt="Partner Landing"
-              className="max-w-lg object-contain"
+              className="w-full max-w-xs sm:max-w-sm md:max-w-lg object-contain"
             />
           </div>
         </div>
 
         {/* 🔥 OVERLAY CONTENT */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
-          <div className="flex flex-col items-center text-center gap-10   rounded-2xl py-6 px-4">
-            <div className="text-sm text-gray-300 mb-16">
+        <div className="md:absolute md:bottom-2 left-1/2 md:-translate-x-1/2 w-full max-w-4xl px-4 mt-10 md:mt-0">
+          <div className="flex flex-col items-center text-center gap-8 rounded-2xl py-6 px-4 backdrop-blur-sm">
+            <div className="text-xs sm:text-sm text-gray-300">
               One-time onboarding · ₹2,500 setup fee · Lifetime earning
               potential
             </div>
 
-            <div className="grid grid-cols-3 w-full justify-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
               {growthValue?.map((item, i) => (
                 <div key={i} className="flex flex-col items-center">
-                  <span className="text-2xl md:text-3xl font-bold text-white">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
                     {item.value}
                   </span>
-                  <span className="text-sm text-gray-300 text-center">
+                  <span className="text-xs sm:text-sm text-gray-300 text-center">
                     {item.title}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="text-sm text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-400">
               © 2026 Tcenteros. All rights reserved.
             </div>
           </div>
