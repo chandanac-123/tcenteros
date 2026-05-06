@@ -1,14 +1,19 @@
-import { useOnboardingCenters } from '@api-queries/center-admin/on-boarding/Query';
-import SecondaryLayout from '@common/onboardlayouts/SecondaryLayout'
-import Header from '@pages/onboarding-pages/components/Header'
-import React from 'react'
-import { Mail, Phone, MapPin, Users } from 'lucide-react';
+import { useOnboardingCenters } from "@api-queries/center-admin/on-boarding/Query";
+import SecondaryLayout from "@common/onboardlayouts/SecondaryLayout";
+import Header from "@pages/onboarding-pages/components/Header";
+import React from "react";
+import { Mail, Phone, MapPin, Users } from "lucide-react";
+import { Spinner } from "@pages/components/ui/spinner";
 
 const CentersList = () => {
   const { data, isLoading, isError, error } = useOnboardingCenters();
-  console.log("Data ", data);
 
-  if (isLoading) return <p>Loading centers...</p>;
+  if (isLoading)
+    return (
+      <p className="flex justify-center items-center">
+        <Spinner />
+      </p>
+    );
   if (isError) return <p>Error: {error.message}</p>;
   return (
     <SecondaryLayout>
@@ -22,7 +27,6 @@ const CentersList = () => {
             >
               {/* INNER CARD */}
               <div className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
-
                 {/* TOP GRADIENT LINE */}
                 <div className="h-1 w-full rounded-full bg-gradient-to-r from-indigo-400 to-purple-400" />
 
@@ -45,7 +49,6 @@ const CentersList = () => {
 
                 {/* CONTACT */}
                 <div className="flex flex-col gap-2 text-sm text-gray-600">
-
                   <div className="flex items-center gap-2">
                     <Mail size={16} className="text-indigo-500" />
                     <span className="truncate">{center.email}</span>
@@ -79,7 +82,7 @@ const CentersList = () => {
         )}
       </div>
     </SecondaryLayout>
-  )
-}
+  );
+};
 
-export default CentersList
+export default CentersList;

@@ -1,12 +1,17 @@
 import { useAllResellersQuery } from "@api-queries/center-admin/on-boarding/Query";
 import SecondaryLayout from "@common/onboardlayouts/SecondaryLayout";
+import { Spinner } from "@pages/components/ui/spinner";
 import Header from "@pages/onboarding-pages/components/Header";
-import { Mail, Phone, MapPin, CreditCard, Landmark } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 const ResellersList = () => {
-  const { data: resellers } = useAllResellersQuery();
-  console.log("resellers: ", resellers);
-
+  const { data: resellers, isLoading } = useAllResellersQuery();
+  if (isLoading)
+    return (
+      <p className="flex justify-center items-center">
+        <Spinner />
+      </p>
+    );
   return (
     <SecondaryLayout>
       <Header />

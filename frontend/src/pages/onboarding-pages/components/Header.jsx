@@ -4,7 +4,7 @@ import { ArrowRight, Menu, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const navLinks = [
-  { label: "Home", href: "/" },
+  { label: "Home", href: "/landing" },
   { label: "Centers", href: "/centers-list" },
   { label: "Blogs", href: "/blog" },
   { label: "Resellers", href: "/partners-list" },
