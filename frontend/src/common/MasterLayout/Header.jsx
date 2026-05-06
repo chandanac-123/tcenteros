@@ -33,7 +33,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const isSuperAdmin = role === "superadmin";
   const isPartner = role === "partner";
   const isCenterAdmin = role === "centeradmin";
-  const { hydrated, canAddMember,canViewNotifications } = useAppPermissions();
+  const { hydrated, canAddMember, canViewNotifications } = useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -61,9 +61,9 @@ const Header = ({ toggleSidebar, collapsed }) => {
         {!isSuperAdmin && !isPartner && (
           <div className="flex w-full justify-end gap-2 items-center">
             <button onClick={() => setLocationOpen(true)}>
-              <span className="flex justify-center items-center text-xs font-normal bg-search_bg p-2 rounded-md">
-                <img src={map} alt="" className="w-5 h-5 mr-2" loading="lazy" />
-                Fitness center
+              <span className="flex justify-center items-center text-xs font-normal gap-1 capitalize bg-search_bg p-2 rounded-md">
+                <img src={map} alt="" className="w-5 h-5" loading="lazy" />
+                {data?.city ? data?.city : "Location"}
               </span>
             </button>
             <GoogleMapComponent
@@ -97,7 +97,11 @@ const Header = ({ toggleSidebar, collapsed }) => {
                 <div className="flex items-center gap-0">
                   <img
                     loading="lazy"
-                    src={data?.profile_photo || superadminData?.profile_photo || defalutUser}
+                    src={
+                      data?.profile_photo ||
+                      superadminData?.profile_photo ||
+                      defalutUser
+                    }
                     alt="logo"
                     className="w-8 h-8 mr-2 rounded-full"
                   />
