@@ -257,15 +257,12 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section className="bg-gray-100 py-16 px-6 md:px-16">
+      <section className="bg-gray-100 py-10 px-6 md:px-16">
         <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-onboard_primary text-lg w-fit rounded-full justify-center flex border border-onboard_primary py-2 px-4 font-semibold">
-            THIS IS YOUR DIFFERENTIATOR
-          </div>
           {
             <h2 className="text-2xl md:text-4xl font-semibold mt-3">
               Not Just Software.
-              <span className="text-onboard_primary">
+              <span className="text-onboard_primary pl-1">
                 A Complete Growth Engine.
               </span>
             </h2>
@@ -312,10 +309,6 @@ const MainLandingPage = () => {
         }}
       >
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
-          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
-            UNIQUE ADVANTAGE
-          </div>
-
           <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
             A Connected Fitness &
             <span className="bg-gradient-to-r from-[#ab7bef] to-[#FF00D4] bg-clip-text text-transparent">
@@ -398,11 +391,8 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section className="bg-gray-100 py-16 px-6 md:px-16">
+      <section className="bg-gray-100 py-10 px-6 md:px-16">
         <div className="text-center flex flex-col items-center gap-6">
-          <div className="text-onboard_primary text-lg w-fit rounded-full justify-center flex border border-onboard_primary py-2 px-4 font-semibold">
-            FEATURES THAT DRIVE BUSINESS
-          </div>
           {
             <h2 className="text-2xl md:text-4xl font-semibold mt-3">
               Everything You Need to  
@@ -443,11 +433,7 @@ const MainLandingPage = () => {
         }}
       >
         {/* TAG */}
-        <div className="text-center flex flex-col items-center gap-4 md:gap-6">
-          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4  font-medium">
-            LEAD GENERATION FOCUS
-          </div>
-        </div>
+        <div className="text-center flex flex-col items-center gap-4 md:gap-6"></div>
 
         {/* MAIN */}
         <div className="flex flex-col lg:flex-row gap-6 md:gap-10 justify-center lg:items-stretch">
@@ -510,13 +496,8 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section className="bg-gray-100 py-10 md:py-16 px-4 sm:px-6 md:px-16">
+      <section className="bg-gray-100 py-10 px-4 sm:px-6 md:px-16">
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
-          {/* TAG */}
-          <div className="text-onboard_primary text-sm md:text-lg w-fit rounded-full flex border border-onboard_primary py-1.5 md:py-2 px-3 md:px-4 font-semibold">
-            NETWORK POWER
-          </div>
-
           {/* TITLE */}
           <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
             Grow Beyond Your{" "}
@@ -647,10 +628,6 @@ const MainLandingPage = () => {
 
         {/* CTA SECTION */}
         <div className="text-center flex flex-col items-center gap-6 md:gap-10">
-          <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
-            STRONG CTA SECTION
-          </div>
-
           <h2 className="text-xl sm:text-2xl md:text-4xl max-w-5xl font-semibold mt-2 md:mt-3">
             Stop Depending on{" "}
             <span className="bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5] bg-clip-text text-transparent">
@@ -698,40 +675,6 @@ const MainLandingPage = () => {
             “Why rent customers from marketplaces...
             <span className="text-[#00CCFF]"> when you can own them?”</span>
           </h2>
-        </div>
-
-        {/* FOOTER */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
-          <img
-            src={logo}
-            alt="Logo"
-            className="w-24 md:w-32 object-contain"
-            loading="lazy"
-          />
-
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button
-              variant="link"
-              className="text-textwhite text-sm"
-              onClick={() => navigate("/landing")}
-            >
-              Privacy
-            </Button>
-            <Button
-              variant="link"
-              className="text-textwhite text-sm"
-              onClick={() => navigate("/landing")}
-            >
-              Terms
-            </Button>
-            <Button
-              variant="link"
-              className="text-textwhite text-sm"
-              onClick={() => navigate("/landing")}
-            >
-              Contact
-            </Button>
-          </div>
         </div>
 
         {/* COPYRIGHT */}
