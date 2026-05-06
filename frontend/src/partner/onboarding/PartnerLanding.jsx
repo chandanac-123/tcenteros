@@ -541,7 +541,7 @@ const PartnerLanding = () => {
               </span>
             </div>
 
-            <div className="flex justify-center md:justify-center">
+            <div className="flex justify-center md:justify-start">
               <Button
                 onClick={() => navigate("/partner-onboard")}
                 className="bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base"
