@@ -18,6 +18,7 @@ const MessageBox = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const { data, isLoading, error } = useSupportTicketById(id);
+  console.log("data: ", data);
   const { mutate: sendMessage, isPending } = useSendSupportMessage();
   const { mutate: closeTicket, isClosePending } = useCloseSupportTicket();
   const { mutate, isPendings } = useAssignTicketMutation();
@@ -164,6 +165,17 @@ const MessageBox = () => {
         ref={chatRef}
         className="flex-1 overflow-y-auto  p-4 flex flex-col gap-4 "
       >
+        <div className="flex flex-col justify-start gap-3  mb-1">
+          <div>{data?.description}</div>
+          {data?.image_url && (
+            <img
+              src={data?.image_url}
+              alt="ticket"
+              className="max-w-[250px] rounded-lg border bg-white"
+            />
+          )}
+        </div>
+
         {messages.map((msg) => {
           const isUser = msg.sender_role === "superadmin"; // or change logic if needed
 
