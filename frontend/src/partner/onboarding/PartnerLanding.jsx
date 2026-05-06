@@ -40,9 +40,12 @@ import whatyouget5 from "@partner/onboarding/assets/whatyouget5.svg";
 import whatyouget6 from "@partner/onboarding/assets/whatyouget6.svg";
 import growthimage from "@partner/onboarding/assets/growthimg.svg";
 import { useNavigate } from "react-router-dom";
+import { usePartnerLandingDataQuery } from "@api-queries/partner/on-boarding/Query";
 
 const PartnerLanding = () => {
   const navigate = useNavigate();
+  const { data: landingData } = usePartnerLandingDataQuery();
+  console.log("landingData: ", landingData);
 
   const features = [
     {
@@ -68,11 +71,11 @@ const PartnerLanding = () => {
       title: "Active Clients on Platform",
     },
     {
-      value: "156",
+      value: landingData?.summary?.total_partners,
       title: "Partner Resellers",
     },
     {
-      value: "₹0",
+      value: `₹${parseInt(landingData?.summary?.total_partner_earnings) || 0}`,
       title: "Earning Ceiling",
     },
   ];

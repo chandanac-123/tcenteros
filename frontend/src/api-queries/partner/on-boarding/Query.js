@@ -2,6 +2,7 @@ import { showError, showSuccess } from "@utils/toast";
 import {
   createOnboardingDetails,
   createOnboardingPayment,
+  getPartnerLandingData,
   getPaymentFee,
   getPaymentSuccess,
 } from "./Urls";
@@ -16,8 +17,6 @@ export const usePaymentFeeQuery = (data) => {
     refetchOnMount: true,
   });
 };
-
-
 
 export const usePaymentSuccessQuery = (id) => {
   return useQuery({
@@ -67,5 +66,14 @@ export const useCreateOnboardingPaymentMutation = () => {
       );
       return err;
     },
+  });
+};
+
+export const usePartnerLandingDataQuery = () => {
+  return useQuery({
+    queryKey: ["getPartnerLandingData"],
+    queryFn: () => getPartnerLandingData(),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };

@@ -11,3 +11,6 @@ export const onboardPartnerPaymentApiCall = (id) =>
 
 export const onboardPaymentSuccessApiCall = (id) =>
   axiosInstance.get(`/partner/onboarding/${id}`);
+
+export const partnerLandingApiCall = () =>
+  axiosInstance.get(`/partner/superadmin/partners/landing-overview`);

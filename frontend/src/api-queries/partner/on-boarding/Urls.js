@@ -3,7 +3,8 @@ import {
   onboardPartnerDetailApiCall,
   onboardPartnerPaymentApiCall,
   onboardPaymentFeeApiCall,
-  onboardPaymentSuccessApiCall
+  onboardPaymentSuccessApiCall,
+  partnerLandingApiCall
 } from './index'
 
 
@@ -36,6 +37,15 @@ export const createOnboardingPayment = async (id) => {
 export const getPaymentSuccess = async (id) => {
   try {
     const response = await onboardPaymentSuccessApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getPartnerLandingData = async () => {
+  try {
+    const response = await partnerLandingApiCall()
     return response.data
   } catch (error) {
     throw error
