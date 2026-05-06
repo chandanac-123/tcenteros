@@ -63,7 +63,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
             <button onClick={() => setLocationOpen(true)}>
               <span className="flex justify-center items-center text-xs font-normal gap-1 capitalize bg-search_bg p-2 rounded-md">
                 <img src={map} alt="" className="w-5 h-5" loading="lazy" />
-                {data?.city ? data?.city : "Location"}
+                Location
               </span>
             </button>
             <GoogleMapComponent
