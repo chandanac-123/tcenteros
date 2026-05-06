@@ -103,7 +103,9 @@ import ResellersList from '@pages/onboarding-pages/header-components/resellers'
 
 export const routes = [
   //public routes
-  { key: 1, path: '/', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permissionKey: true },
+  
+  { key: 57, path: '/', privetRoute: false, isSubRoute: false, pageTitle: '', component: MainLandingPage, menubar: false, permissionKey: true },
+  { key: 1, path: '/landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: Landing, menubar: false, permissionKey: true },
   { key: 2, path: '/type-selection', privetRoute: false, isSubRoute: false, pageTitle: '', component: TypeSelection, menubar: false, permissionKey: true },
   { key: 3, path: '/class-mode', privetRoute: false, isSubRoute: false, pageTitle: '', component: ClassSelectionMode, menubar: false, permissionKey: true },
   { key: 4, path: '/center-size-scale', privetRoute: false, isSubRoute: false, pageTitle: '', component: CenterSize, menubar: false, permissionKey: true },
@@ -196,6 +198,4 @@ export const routes = [
   { key: 60, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <BanknoteArrowUp />, menubar: true, permissionKey: true, isPartner: true },
   { key: 61, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <CalendarSync />, menubar: true, permissionKey: true, isPartner: true },
 
-  //Main Landing Page for users
-  { key: 57, path: '/landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: MainLandingPage, menubar: false, permissionKey: true },
 ]

@@ -141,19 +141,24 @@ const MainLandingPage = () => {
       >
         {/* HEADER */}
         <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
-          <img src={logo} alt="Logo" className="w-24 md:w-32 object-contain" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-24 md:w-32 object-contain"
+            loading="lazy"
+          />
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
             <Button
               variant="outline_secondary"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
               Book Demo
             </Button>
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
@@ -210,14 +215,14 @@ const MainLandingPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 w-full">
               <Button
                 variant="outline_secondary"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/landing")}
                 size="addbutton"
                 className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
               >
                 Book a Demo
               </Button>
               <Button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/landing")}
                 size="addbutton"
                 className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
               >
@@ -232,6 +237,7 @@ const MainLandingPage = () => {
               src={mainlanging}
               alt="Main Landing"
               className="w-full max-w-sm sm:max-w-md md:max-w-[700px] h-auto object-contain"
+              loading="lazy"
             />
           </div>
         </div>
@@ -383,6 +389,7 @@ const MainLandingPage = () => {
           {/* IMAGE */}
           <div className="w-full md:w-3/5 flex justify-center md:justify-end items-center md:items-end pointer-events-none">
             <img
+              loading="lazy"
               src={unique_advantage}
               alt="Main Landing"
               className="w-full max-w-sm sm:max-w-md md:max-w-[700px] h-auto object-contain"
@@ -450,6 +457,7 @@ const MainLandingPage = () => {
               src={leadfocus}
               alt="Main Landing"
               className="w-full max-w-sm sm:max-w-md md:max-w-lg h-auto lg:h-full object-contain"
+              loading="lazy"
             />
           </div>
 
@@ -573,6 +581,7 @@ const MainLandingPage = () => {
             <div className="w-full lg:w-2/5 flex">
               <div className="w-full h-full sm:justify-center items-center flex">
                 <img
+                  loading="lazy"
                   src={network_power}
                   alt="Network Power"
                   className="w-80 h-full object-cover rounded-xl"
@@ -617,6 +626,7 @@ const MainLandingPage = () => {
                 src={center?.icon}
                 alt={center?.title}
                 className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                loading="lazy"
               />
               <span className="text-sm md:text-lg font-medium text-center">
                 {center?.title}
@@ -667,7 +677,7 @@ const MainLandingPage = () => {
           {/* BUTTONS */}
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
@@ -676,7 +686,7 @@ const MainLandingPage = () => {
 
             <Button
               variant="outline_secondary"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
@@ -692,16 +702,33 @@ const MainLandingPage = () => {
 
         {/* FOOTER */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
-          <img src={logo} alt="Logo" className="w-24 md:w-32 object-contain" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-24 md:w-32 object-contain"
+            loading="lazy"
+          />
 
-          <div className="flex flex-wrap justify-center gap-2 md:gap-4">
-            <Button variant="link" onClick={() => navigate("/")}>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              variant="link"
+              className="text-textwhite text-sm"
+              onClick={() => navigate("/landing")}
+            >
               Privacy
             </Button>
-            <Button variant="link" onClick={() => navigate("/")}>
+            <Button
+              variant="link"
+              className="text-textwhite text-sm"
+              onClick={() => navigate("/landing")}
+            >
               Terms
             </Button>
-            <Button variant="link" onClick={() => navigate("/")}>
+            <Button
+              variant="link"
+              className="text-textwhite text-sm"
+              onClick={() => navigate("/landing")}
+            >
               Contact
             </Button>
           </div>

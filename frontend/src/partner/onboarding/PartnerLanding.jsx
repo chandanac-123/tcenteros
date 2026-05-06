@@ -86,7 +86,12 @@ const PartnerLanding = () => {
       >
         {/* HEADER */}
         <div className="flex items-center justify-between w-full">
-          <img src={logo} alt="Logo" className="w-28 md:w-32 object-contain" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-28 md:w-32 object-contain"
+            loading="lazy"
+          />
 
           <Button
             onClick={() => navigate("/partner-onboard")}
@@ -137,6 +142,7 @@ const PartnerLanding = () => {
           {/* RIGHT */}
           <div className="flex justify-center md:justify-end ">
             <img
+              loading="lazy"
               src={partnerlanding}
               alt="Partner Landing"
               className="max-w-lg object-contain"
@@ -147,9 +153,24 @@ const PartnerLanding = () => {
         {/* CARDS */}
         <div className="flex justify-center ">
           <div className="grid md:grid-cols-3 justify-center gap-8">
-            <img src={instant} alt="Card 1" className=" object-contain" />
-            <img src={resurring} alt="Card 2" className=" object-contain" />
-            <img src={unlimited} alt="Card 3" className=" object-contain" />
+            <img
+              src={instant}
+              alt="Card 1"
+              className=" object-contain"
+              loading="lazy"
+            />
+            <img
+              src={resurring}
+              alt="Card 2"
+              className=" object-contain"
+              loading="lazy"
+            />
+            <img
+              src={unlimited}
+              alt="Card 3"
+              className=" object-contain"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
@@ -170,7 +191,11 @@ const PartnerLanding = () => {
           <div className="grid md:grid-cols-2 gap-6 mt-10">
             {[revenu1, revenu2, revenu3, revenu4].map((img, i) => (
               <div key={i} className="flex justify-center">
-                <img src={img} className="w-full object-contain" />
+                <img
+                  src={img}
+                  className="w-full object-contain"
+                  loading="lazy"
+                />
               </div>
             ))}
           </div>
@@ -201,14 +226,29 @@ const PartnerLanding = () => {
 
           <div className="flex justify-center mt-8">
             <div className="flex flex-wrap justify-center gap-8">
-              <img src={stream1} alt="Card 1" className=" object-contain " />
-              <img src={stream2} alt="Card 2" className=" object-contain" />
-              <img src={stream3} alt="Card 3" className=" object-contain" />
+              <img
+                src={stream1}
+                alt="Card 1"
+                className=" object-contain "
+                loading="lazy"
+              />
+              <img
+                src={stream2}
+                alt="Card 2"
+                className=" object-contain"
+                loading="lazy"
+              />
+              <img
+                src={stream3}
+                alt="Card 3"
+                className=" object-contain"
+                loading="lazy"
+              />
             </div>
           </div>
 
           <div className="flex justify-center mt-12">
-            <img src={quoteimg} alt="qquoteimg" />
+            <img src={quoteimg} alt="qquoteimg" loading="lazy" />
           </div>
         </div>
       </section>
@@ -231,10 +271,30 @@ const PartnerLanding = () => {
         {/* ✅ CENTERED GRID */}
         <div className="max-w-full mx-auto mt-10">
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 place-items-center">
-            <img src={step1} alt="Card 1" className="object-contain" />
-            <img src={step2} alt="Card 2" className="object-contain" />
-            <img src={step3} alt="Card 3" className="object-contain" />
-            <img src={step4} alt="Card 4" className="object-contain" />
+            <img
+              src={step1}
+              alt="Card 1"
+              className="object-contain"
+              loading="lazy"
+            />
+            <img
+              src={step2}
+              alt="Card 2"
+              className="object-contain"
+              loading="lazy"
+            />
+            <img
+              src={step3}
+              alt="Card 3"
+              className="object-contain"
+              loading="lazy"
+            />
+            <img
+              src={step4}
+              alt="Card 4"
+              className="object-contain"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
@@ -382,12 +442,42 @@ const PartnerLanding = () => {
           </p>
         </div>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 justify-center gap-2 mt-10 text-left">
-          <img src={whatyouget2} alt="Card 2" className=" object-contain" />
-          <img src={whatyouget4} alt="Card 4" className=" object-contain" />
-          <img src={whatyouget5} alt="Card 5" className=" object-contain" />
-          <img src={whatyouget1} alt="Card 1" className=" object-contain" />
-          <img src={whatyouget3} alt="Card 3" className=" object-contain" />
-          <img src={whatyouget6} alt="Card 6" className=" object-contain" />
+          <img
+            src={whatyouget2}
+            alt="Card 2"
+            className=" object-contain"
+            loading="lazy"
+          />
+          <img
+            src={whatyouget4}
+            alt="Card 4"
+            className=" object-contain"
+            loading="lazy"
+          />
+          <img
+            src={whatyouget5}
+            alt="Card 5"
+            className=" object-contain"
+            loading="lazy"
+          />
+          <img
+            src={whatyouget1}
+            alt="Card 1"
+            className=" object-contain"
+            loading="lazy"
+          />
+          <img
+            src={whatyouget3}
+            alt="Card 3"
+            className=" object-contain"
+            loading="lazy"
+          />
+          <img
+            src={whatyouget6}
+            alt="Card 6"
+            className=" object-contain"
+            loading="lazy"
+          />
         </div>
 
         <div className="px-6 md:px-16 py-10 bg-gray-100">
@@ -464,6 +554,7 @@ const PartnerLanding = () => {
           {/* RIGHT */}
           <div className="flex justify-center md:justify-end">
             <img
+              loading="lazy"
               src={growthimage}
               alt="Partner Landing"
               className="max-w-lg object-contain"
