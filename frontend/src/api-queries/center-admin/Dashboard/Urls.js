@@ -2,6 +2,7 @@ import {
   dashboardApiCall,
   renewSubscriptionApiCall,
   changeSubscriptionApiCall,
+  updateSubscriptionDetailsApiCall,
 } from "./index";
 
 export const getDashboardData = async () => {
@@ -25,6 +26,15 @@ export const getRenewSubscriptionData = async () => {
 export const changeSubscription = async (data) => {
   try {
     const response = await changeSubscriptionApiCall(data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateSubscriptionDetails = async (data) => {
+  try {
+    const response = await updateSubscriptionDetailsApiCall(data);
     return response.data;
   } catch (error) {
     throw error;

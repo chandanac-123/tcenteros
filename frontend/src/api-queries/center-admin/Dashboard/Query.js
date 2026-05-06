@@ -3,6 +3,7 @@ import {
   getDashboardData,
   getRenewSubscriptionData,
   changeSubscription,
+  updateSubscriptionDetails,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -35,5 +36,15 @@ export const useChangeSubscriptionMutation = () => {
     onError: (error) => {
       showError(error?.response?.data?.detail || "Failed to change subscription");
     },
+  });
+};
+
+
+export const useUpdateSubscriptionDetailsQuery = (data) => {
+  return useQuery({
+    queryKey: ["updateSubscriptionDetails"],
+    queryFn: () => updateSubscriptionDetails(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };

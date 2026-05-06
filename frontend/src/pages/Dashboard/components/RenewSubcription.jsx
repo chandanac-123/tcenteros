@@ -1,6 +1,7 @@
 import {
   useRenewSubscriptionQuery,
   useChangeSubscriptionMutation,
+  useUpdateSubscriptionDetailsQuery,
 } from "@api-queries/center-admin/Dashboard/Query";
 import CustomeModal from "@common/components/CustomeModal";
 import { Button } from "@pages/components/ui/button";
@@ -22,6 +23,10 @@ const RenewSubscription = ({ open, setOpen }) => {
       : currentSubscriptionDuration === "monthly"
         ? "yearly"
         : "";
+
+  const { data: updateSubscriptionData } = useUpdateSubscriptionDetailsQuery(
+    upgradedSubscriptionDuration,
+  );
 
   const currentPackageDetails = [
     {
@@ -103,6 +108,22 @@ const RenewSubscription = ({ open, setOpen }) => {
               </span>
               <span className="text-sm font-medium capitalize text-onboard_primary">
                 {upgradedSubscriptionDuration || "N/A"}
+              </span>
+            </div>
+            <div className="col-span-2 flex items-center justify-between gap-4 px-4">
+              <span className="text-sm text-gray-500">
+                Expiry date with upgraded plan
+              </span>
+              <span className="text-sm font-medium capitalize text-onboard_primary">
+                {formatTextDate(updateSubscriptionData?.expiry_date) || "N/A"}
+              </span>
+            </div>
+            <div className="col-span-2 flex items-center justify-between gap-4 px-4">
+              <span className="text-sm text-gray-500">
+                Total amount payable with upgraded plan
+              </span>
+              <span className="text-sm font-medium capitalize text-onboard_primary">
+                {updateSubscriptionData?.total_amount_paid || "N/A"}
               </span>
             </div>
           </div>
