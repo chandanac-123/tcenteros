@@ -4,6 +4,7 @@ import {
 } from "@api-queries/center-admin/Dashboard/Query";
 import CustomeModal from "@common/components/CustomeModal";
 import { Button } from "@pages/components/ui/button";
+import { formatTextDate } from "@utils/helper";
 import { useFormik } from "formik";
 import { useState } from "react";
 
@@ -27,10 +28,13 @@ const RenewSubscription = ({ open, setOpen }) => {
       label: "Billing Cycle",
       value: currentSubscriptionDuration || "N/A",
     },
-    { label: "Expiry Date", value: data?.expiry_info?.latest_end_date },
+    {
+      label: "Expiry Date",
+      value: formatTextDate(data?.expiry_info?.latest_end_date) || "N/A",
+    },
     {
       label: "Amount Paid",
-      value: data?.pricing_options?.total_amount_payable,
+      value: data?.pricing_options?.total_amount_payable?.toFixed(2) || "N/A",
     },
   ];
 

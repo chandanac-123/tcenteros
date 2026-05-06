@@ -21,3 +21,6 @@ export const fetchCenterLocationApiCall = details =>
   axiosInstance.post(`/center/center-location/`, details)
 export const getAllCenterApiCall = () =>
   axiosInstance.get(`/center/centers/accessible-centers`)
+
+export const getCenterLocationApiCall = (id) =>
+  axiosInstance.get(`/center/center-location/${id}`)

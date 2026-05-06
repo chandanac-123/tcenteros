@@ -7,7 +7,8 @@ import {
   updateProfileImage,
   getProfileInfo,
   fetchCenterLocation,
-  fetchAllCenters
+  fetchAllCenters,
+  getCenterLocation
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -105,6 +106,15 @@ export const useAllCentersQuery = () => {
   return useQuery({
     queryKey: ['centers'],
     queryFn: fetchAllCenters,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+export const useGetCenterLocationQuery = id => {
+  return useQuery({
+    queryKey: ['centerLocation', id],
+    queryFn: () => getCenterLocation(id),
     refetchOnWindowFocus: true,
     refetchOnMount: true
   })
