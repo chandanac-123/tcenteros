@@ -1,79 +1,76 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBranchCount,
   createNewBranch,
   getBranchCategoriesList,
   getBranchCount,
   getBranchPricesAndTax,
-  getPurchasedBranches
-} from './Urls'
+  getPurchasedBranches,
+} from "./Urls";
+import { showError, showSuccess } from "@utils/toast";
 
 export const useAddBranchCountMutation = () => {
-  const query = useQueryClient()
+  const query = useQueryClient();
   return useMutation({
     mutationFn: createBranchCount,
     onSuccess: () => {
-      query.invalidateQueries({ queryKey: ['branchCount'] })
+      query.invalidateQueries({ queryKey: ["branchCount"] });
     },
-    onError: error => {
-      console.error('Branch count creation failed:', error)
-    }
-  })
-}
+    onError: (error) => {
+      console.error("Branch count creation failed:", error);
+    },
+  });
+};
 
 export const useGetBranchPricesAndTaxQuery = () => {
   return useQuery({
-    queryKey: ['branchPricesAndTax'],
+    queryKey: ["branchPricesAndTax"],
     queryFn: () => getBranchPricesAndTax(),
     refetchOnWindowFocus: true,
-    refetchOnMount: true
-  })
-}
+    refetchOnMount: true,
+  });
+};
 
 export const useGetPurchasedBranchesQuery = () => {
   return useQuery({
-    queryKey: ['purchasedBranches'],
+    queryKey: ["purchasedBranches"],
     queryFn: getPurchasedBranches,
-    onSuccess: data => {
-      console.log('Purchased Branches data fetched successfully:', data)
-    }
-  })
-}
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
 
 export const useGetBranchCategoriesListQuery = () => {
   return useQuery({
-    queryKey: ['branchCategoriesList'],
+    queryKey: ["branchCategoriesList"],
     queryFn: getBranchCategoriesList,
-    onSuccess: data => {
-      console.log('Branch Categories List data fetched successfully:', data)
-    },
-    onError: error => {
-      console.error('Error fetching Branch Categories List:', error)
-    }
-  })
-}
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
 
 export const useCreateNewBranchMutation = () => {
-  const query = useQueryClient()
+  const query = useQueryClient();
   return useMutation({
-    mutationFn: async payload => {
-      console.log('🔥 Mutation Payload:', payload)
-      return await createNewBranch(payload)
+    mutationFn: async (payload) => {
+      console.log("Mutation Payload:", payload);
+      return await createNewBranch(payload);
     },
     onSuccess: () => {
-      query.invalidateQueries({ queryKey: ['branchCount'] })
+      query.invalidateQueries({ queryKey: ["branchCount"] });
+      showSuccess("Branch created successfully");
     },
-    onError: error => {
-      showError(error?.response?.data?.detail || 'Failed to create branch')
-    }
-  })
-}
+    onError: (error) => {
+      showError(error?.response?.data?.detail || "Failed to create branch");
+    },
+  });
+};
 
 export const useGetBranchCountQuery = () => {
   return useQuery({
-    queryKey: ['branchCount'],
+    queryKey: ["branchCount"],
     queryFn: getBranchCount,
     refetchOnWindowFocus: true,
-    refetchOnMount: true
-  })
-}
+    refetchOnMount: true,
+  });
+};
