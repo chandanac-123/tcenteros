@@ -6,7 +6,7 @@ export const createNewPaymentOrder_Url = async (payment_id) => {
     try {
 
         const response = await createNewPaymentOrder(payment_id);
-        console.log("Payment Response:", response);
+        // console.log("Payment Response:", response);
 
         return response
     } catch (err) {

@@ -26,7 +26,7 @@ const CustomeModal = ({
       )}
 
       <DialogContent
-        className={`w-auto max-h-[80vh] overflow-y-auto ${className}`}
+        className={`w-auto max-h-[80vh] overflow-y-auto  ${className}`}
       >
         <DialogHeader>
           <DialogTitle>{header}</DialogTitle>
