@@ -257,7 +257,23 @@ export const memberValidationSchema = (isEdit = false) =>
       .required("Mobile number is required"),
     date_of_birth: Yup.string()
       .nullable()
-      .required("Date of birth is required"),
+      .required("Date of birth is required")
+      .test("valid-date", "Format should be DD-MM-YYYY", (value) => {
+        if (!value) return false;
+
+        const regex = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+
+        if (!regex.test(value)) return false;
+
+        const [day, month, year] = value.split("-");
+        const date = new Date(`${year}-${month}-${day}`);
+
+        return (
+          date.getFullYear() === Number(year) &&
+          date.getMonth() + 1 === Number(month) &&
+          date.getDate() === Number(day)
+        );
+      }),
     membership_id: isEdit
       ? Yup.string().nullable().notRequired() // optional for edit
       : Yup.string().required("Please select a membership plan"), // required for create
