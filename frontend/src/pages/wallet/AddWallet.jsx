@@ -4,11 +4,18 @@ import { Input } from '@pages/components/ui/input'
 import { Button } from '@pages/components/ui/button'
 import { useCreateWalletAmountMutation } from '@api-queries/center-admin/wallet/Query'
 import { showError, showSuccess } from '@utils/toast'
+import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
+import SuccessModal from '@pages/branch/message-popup/success'
+import FaledModal from '@pages/branch/message-popup/failed'
 
-const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
-  const [amount, setAmount] = useState('')
-  const { mutate: createWalletAmount, isPending } =
-    useCreateWalletAmountMutation()
+const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, topUp }) => {
+  const [amount, setAmount] = useState('');
+  const [openSuccess, setOpenSuccess] = useState(false);
+  const [openFailed, setOpenFailed] = useState(false);
+  const { mutate: createWalletAmount, isPending } = useCreateWalletAmountMutation()
+  const { mutate: create_Order, isPendings } = useCreatePaymentOrder();
+  const { mutateAsync: verifyPayment } = useVerifyPayment();
+
 
 
   const handleAddWalletAmount = e => {
@@ -19,18 +26,32 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
       return
     }
     //  Only when topUp is FALSE
-    if (!topUp && numericAmount  < 20000) {
-      showError('Deposit amount must be exactly ₹20,000')
+    if (!topUp && numericAmount < 5000) {
+      showError('Deposit amount must be exactly ₹5,000')
       return
     }
     createWalletAmount(
       { deposit: numericAmount },
       {
-        onSuccess: () => {
-          setAmount('')
+        onSuccess: (response) => {
           refetchWalletAmount()
-          setOpen(false)
-          showSuccess('You successfully added your wallet amount')
+          const payment_id = response?.payment_order_id;
+          if (!payment_id) {
+            showError("Payment ID not found .");
+          }
+          create_Order(payment_id, {
+            onSuccess: (res) => {
+              console.log("Order ID:", res);
+              const orderData = res?.data;
+              openRazorpay(orderData);
+            },
+            onError: (err) => {
+              console.error(err?.response?.data?.detail);
+              const message = err?.response?.data?.detail
+              showError(message)
+            },
+          });
+
         },
         onError: error => {
           const message =
@@ -43,6 +64,66 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
     )
   }
 
+  const openRazorpay = async (orderData) => {
+    setOpen(false);
+    try {
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "TcenterOS",
+        description: "Branch purchase Payment",
+        order_id: orderData.order_id,
+
+        handler: async function (response) {
+          try {
+            console.log("Payment Success:", response);
+            const result = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setOpen(true);
+            if (!result || result.error) {
+              showError("Payment Verification is Failed");
+              setOpen(true);
+              setOpenFailed(true);
+            }
+            console.log("Verified Result:", result);
+            await refetchWalletAmount();
+            await refetchWalletSummary();
+            setOpenSuccess(true)
+            showSuccess("Wallet added successfully")
+          } catch (err) {
+            console.log("Verification Error:", err);
+            setOpen(true);
+            setOpenFailed(true);
+          }
+        },
+
+        // prefill: {
+        //   name: "Customer Name",
+        //   email: "customer@email.com",
+        // },
+
+        // theme: {
+        //   color: "#6D28D9",
+        // },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.on("payment.failed", function (response) {
+        console.log("Payment Failed:", response);
+        // onOpenChange(true);
+        // setOpenFailed(true);
+        showError(response.error.description || "Payment Failed");
+      });
+      razor.open();
+    } catch (err) {
+      console.log("Error at opening razor Pay checkOut", err);
+    }
+  };
+
   return (
     <CustomeModal open={open} onOpenChange={setOpen}>
       <form className='space-y-2' onSubmit={handleAddWalletAmount}>
@@ -54,7 +135,7 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
           placeholder='Enter Your Amount'
           value={amount}
           onChange={e => setAmount(e.target.value)}
-         
+
         />
         {topUp ? (
           <p className='text-xs text-secondary'>
@@ -76,6 +157,12 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, topUp }) => {
           </Button>
         </div>
       </form>
+      <SuccessModal
+        open={openSuccess}
+        onOpenChange={setOpenSuccess}
+      />
+      <FaledModal open={openFailed} onOpenChange={setOpenFailed} />
+
     </CustomeModal>
   )
 }
