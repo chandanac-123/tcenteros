@@ -68,7 +68,7 @@ const Tickets = () => {
                           setTicketClose(true);
                         }}
                       >
-                        Close
+                        {ticket?.status === "closed" ? "Closed" : "Close"}
                       </Button>
 
                       <Button
