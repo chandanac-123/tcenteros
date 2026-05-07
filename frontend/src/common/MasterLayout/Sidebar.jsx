@@ -65,7 +65,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
       <div className="flex justify-center items-center">
         <img
           src={branding.logo_url || logo}
-          className="w-28 h-16 mt-3"
+          className="w-28 h-28 mt-3"
           loading="lazy"
         />
       </div>
