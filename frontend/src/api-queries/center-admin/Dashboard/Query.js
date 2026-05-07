@@ -31,7 +31,7 @@ export const useChangeSubscriptionMutation = () => {
     mutationFn: changeSubscription,
     onSuccess: () => {
       queryClient.invalidateQueries(["renewSubscription"]);
-      showSuccess("Subscription changed successfully");
+      // showSuccess("Subscription changed successfully");
     },
     onError: (error) => {
       showError(error?.response?.data?.detail || "Failed to change subscription");
