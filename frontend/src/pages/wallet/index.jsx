@@ -39,7 +39,7 @@ const Wallet = () => {
   })
   const { hydrated, canAddTopup } = useAppPermissions()
   if (!hydrated) return null
-  const { data, isPending, isError } = useGetWalletSummaryQuery()
+  const { data, isPending, isError, refetch: refetchWalletSummary } = useGetWalletSummaryQuery()
   const {
     data: dataList,
     isLoading,
@@ -83,6 +83,7 @@ const Wallet = () => {
           open={open}
           setOpen={setOpen}
           refetchWalletAmount={refetchWalletAmount}
+          refetchWalletSummary={refetchWalletSummary}
           topUp={true}
         />
 
