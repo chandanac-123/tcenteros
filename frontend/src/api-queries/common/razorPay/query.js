@@ -6,7 +6,7 @@ export const useCreatePaymentOrder = () => {
     mutationFn: createNewPaymentOrder_Url,
 
     onSuccess: (data) => {
-      console.log("Order created:", data);
+      // console.log("Order created:", data);
     },
 
     onError: (error) => {

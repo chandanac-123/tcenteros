@@ -9,6 +9,8 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: data => {
+      console.log("login Data",data);
+      
       setAuth(data)
       query.invalidateQueries({ queryKey: ['auth'] })
       showSuccess('Login successful')
