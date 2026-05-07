@@ -58,7 +58,7 @@ export const useCreateOnboardingPaymentMutation = () => {
     mutationFn: (id) => createOnboardingPayment(id),
     onSuccess: async (_, id) => {
       query.invalidateQueries(["partnerOnboardingPaymentSuccess", id]);
-      showSuccess("Partner onboarding payment created successfully");
+      // showSuccess("Partner onboarding payment created successfully");
     },
     onError: (err) => {
       showError(
