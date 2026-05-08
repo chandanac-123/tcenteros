@@ -92,7 +92,7 @@ const Payroll = () => {
             }}
           />
           <Button size='mini' onClick={handleAddCycleDay} disabled={isDisabled}>
-            Add
+            Add Pay Run Day
           </Button>
         </div>
       </div>
