@@ -201,11 +201,7 @@ const PartnerLanding = () => {
 
       <section className="text-white bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] px-6 md:px-20 py-6 gap-4 relative overflow-hidden bg-cover bg-center">
         <div className="flex flex-col gap-5">
-          <div className="justify-center items-center flex flex-col ">
-            <div className="inline-block bg-onboard_primary/5 text-onboard_primary text-sm px-4 py-1 rounded-full mb-6">
-              How You Earn
-            </div>
-
+          <div className="justify-center items-center flex flex-col pt-6">
             <h2 className="text-3xl md:text-5xl font-semibold mb-4">
               Three Powerful Income Streams
             </h2>
@@ -247,10 +243,6 @@ const PartnerLanding = () => {
 
       <section className="bg-gray-100 py-8 px-4 md:px-8">
         <div className="flex flex-col items-center text-center">
-          <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
-            How It Works
-          </div>
-
           <h2 className="text-3xl md:text-5xl font-semibold mb-4">
             Simple. Proven. Profitable.
           </h2>
@@ -293,10 +285,6 @@ const PartnerLanding = () => {
 
       <section className="bg-gray-100 py-8 px-4 md:px-8">
         <div className="justify-center items-center flex flex-col">
-          <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
-            Who Can Join
-          </div>
-
           <h2 className="text-base md:text-4xl font-semibold mb-4">
             If You Can Connect People,
           </h2>
@@ -420,10 +408,6 @@ const PartnerLanding = () => {
 
       <section className="bg-gray-100 px-4 md:px-8 flex flex-col justify-center items-center ">
         <div className="justify-center items-center flex flex-col">
-          <div className="inline-block bg-onboard_primary/10 text-onboard_primary text-sm px-4 py-1 rounded-full">
-            What you Get
-          </div>
-
           <h2 className="text-3xl md:text-5xl font-semibold mb-4">
             Everything You Need to Succeed
           </h2>
