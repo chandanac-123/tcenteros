@@ -14,7 +14,6 @@ import {
   UserRound,
 } from "lucide-react";
 import partnerlanding from "@partner/onboarding/assets/partner-landing.svg";
-import partnerbg from "@partner/onboarding/assets/partner-bg.png";
 import instant from "@partner/onboarding/assets/instant.svg";
 import resurring from "@partner/onboarding/assets/recurring.svg";
 import unlimited from "@partner/onboarding/assets/unlimited.svg";
@@ -81,12 +80,7 @@ const PartnerLanding = () => {
   ];
   return (
     <div className="font-sans">
-      <section
-        className="text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="text-white bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
         {/* HEADER */}
         <div className="flex items-center justify-between w-full sm:mb-0 mb-4">
           <img
@@ -205,12 +199,7 @@ const PartnerLanding = () => {
         </div>
       </section>
 
-      <section
-        className="text-white px-6 md:px-20 py-6 gap-4 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="text-white bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] px-6 md:px-20 py-6 gap-4 relative overflow-hidden bg-cover bg-center">
         <div className="flex flex-col gap-5">
           <div className="justify-center items-center flex flex-col ">
             <div className="inline-block bg-onboard_primary/5 text-onboard_primary text-sm px-4 py-1 rounded-full mb-6">
@@ -511,12 +500,7 @@ const PartnerLanding = () => {
           </div>
         </div>
       </section>
-      <section
-        className="text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center md:min-h-[90vh]"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="text-white bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center md:min-h-[90vh]">
         {/* HERO CONTENT */}
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center md:gap-0 h-full">
           {/* LEFT */}
@@ -565,7 +549,7 @@ const PartnerLanding = () => {
           </div>
         </div>
 
-        {/* 🔥 OVERLAY CONTENT */}
+        {/*  OVERLAY CONTENT */}
         <div className="md:absolute md:bottom-2 left-1/2 md:-translate-x-1/2 w-full max-w-4xl px-4 mt-10 md:mt-0">
           <div className="flex flex-col items-center text-center gap-8 rounded-2xl py-6 px-4 backdrop-blur-sm">
             <div className="text-xs sm:text-sm text-gray-300">

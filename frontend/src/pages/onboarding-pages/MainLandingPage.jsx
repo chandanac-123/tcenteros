@@ -1,4 +1,3 @@
-import partnerbg from "@partner/onboarding/assets/partner-bg.png";
 import logo from "@assets/header-icons/logo.svg";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,9 +5,6 @@ import {
   CircleCheck,
   Star,
   Smartphone,
-  BarChart3,
-  Users,
-  ShieldCheck,
   Globe,
   Network,
   MapPin,
@@ -133,12 +129,7 @@ const MainLandingPage = () => {
 
   return (
     <div className=" font-urbanist">
-      <section
-        className="flex flex-col gap-10 md:gap-12 text-white py-6 md:py-4 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="flex flex-col gap-10 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] md:gap-12 text-white py-6 md:py-4 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
           <img
@@ -302,12 +293,7 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section
-        className="flex flex-col gap-8 md:gap-12 text-white py-8 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="flex flex-col gap-8 md:gap-12 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] text-white py-8 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
           <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
             A Connected Fitness &
@@ -426,12 +412,7 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section
-        className="flex flex-col gap-8 md:gap-12 text-white py-10 md:py-16 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="flex flex-col gap-8 md:gap-12 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] text-white py-10 md:py-16 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
         {/* TAG */}
         <div className="text-center flex flex-col items-center gap-4 md:gap-6"></div>
 
@@ -578,12 +559,7 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section
-        className="flex flex-col gap-10 md:gap-12 text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${partnerbg})`,
-        }}
-      >
+      <section className="flex flex-col gap-10 md:gap-12 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] text-white py-6 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
         {/* HEADER */}
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
           <div className="text-textwhite text-sm md:text-lg w-fit rounded-full flex border border-textwhite py-1.5 md:py-2 px-3 md:px-4 font-medium">
