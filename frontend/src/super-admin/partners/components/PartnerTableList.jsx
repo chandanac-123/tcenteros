@@ -73,7 +73,7 @@ const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
     },
     {
       label: "Total Number Of Centers",
-      value: data?.summary?.total_centers,
+      value: data?.summary?.total_centers_through_partners,
       icon: <Building2 />,
     },
     {
@@ -84,7 +84,7 @@ const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
     },
     {
       label: "Pending Payout",
-      value: data?.summary?.pending_payout,
+      value: data?.summary?.pending_payouts,
       icon: <Wallet />,
       type: "amount",
     },

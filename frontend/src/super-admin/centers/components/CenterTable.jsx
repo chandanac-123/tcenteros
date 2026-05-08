@@ -93,14 +93,14 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
         );
       },
     },
-    { accessorKey: "partner_name",
-       header: "Partner",
-      cell:({row})=>{
+    {
+      accessorKey: "partner_name",
+      header: "Partner",
+      cell: ({ row }) => {
         const partner = row.original.partner_name;
-      return(
-        partner?partner:"_ _"
-      )
-      } },
+        return partner ? partner : "_ _";
+      },
+    },
     { accessorKey: "total_revenue", header: "Total Revenue" },
     // {
     //   accessorKey: "action",
@@ -130,11 +130,13 @@ const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
       label: "Total Revenue",
       value: data?.summary?.total_platform_revenue,
       icon: <Briefcase size={16} strokeWidth={2.75} />,
+      type: "amount",
     },
     {
       label: "Average Growth",
       value: data?.summary?.average_growth_rate,
       icon: <SignalHigh size={16} strokeWidth={2.75} />,
+      type: "percent",
     },
   ];
   return (

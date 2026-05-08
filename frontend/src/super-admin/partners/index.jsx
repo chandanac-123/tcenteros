@@ -1,6 +1,6 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Button } from "@pages/components/ui/button";
-import { CircleArrowDown, Handshake, RefreshCcw } from "lucide-react";
+import { Handshake, RefreshCcw } from "lucide-react";
 import PartnerTableList from "./components/partnerTableList";
 import { useGetPartnersOverviewQuery } from "@api-queries/super-admin/partners/Query";
 import { useState } from "react";
@@ -12,8 +12,6 @@ const Partners = () => {
   });
   const { data, isLoading } = useGetPartnersOverviewQuery(tableParams);
   const { mutateAsync: runAllCommissions } = useRunAllCommissionsMutation();
-
-  console.log("data: ", data);
 
   return (
     <ContentLayout>
