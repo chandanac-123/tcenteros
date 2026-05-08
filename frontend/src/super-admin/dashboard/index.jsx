@@ -1,5 +1,5 @@
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import { getGreeting } from "@utils/helper";
+import { formatIndianCurrency, getGreeting } from "@utils/helper";
 import { useEffect, useState } from "react";
 import { Card } from "@pages/components/ui/card";
 import LineChart from "@common/charts/LineChart";
@@ -53,13 +53,13 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Sales via Partners",
-      value: data?.partner_snapshot?.revenue_via_partner,
+      value: formatIndianCurrency(data?.partner_snapshot?.revenue_via_partner),
       icon: <Receipt size={16} strokeWidth={2.75} />,
       type: "amount",
     },
     {
       label: "Commission Payable",
-      value: data?.partner_snapshot?.commission_payable,
+      value: formatIndianCurrency(data?.partner_snapshot?.commission_payable),
       icon: <NotebookPen size={16} strokeWidth={2.75} />,
       type: "amount",
     },
@@ -89,21 +89,21 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Monthly Recurring Revenue",
-      value: data?.kpis?.monthly_recurring_revenue,
+      value: formatIndianCurrency(data?.kpis?.monthly_recurring_revenue),
       icon: <Receipt size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/membership-plan?tab=active"),
       type: "amount",
     },
     {
       label: "Yearly Locked Revenue",
-      value: data?.kpis?.yearly_locked_revenue,
+      value: formatIndianCurrency(data?.kpis?.yearly_locked_revenue),
       icon: <Briefcase size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=leads"),
       type: "amount",
     },
     {
       label: "Branching Earning",
-      value: data?.kpis?.branching_earnings,
+      value: formatIndianCurrency(data?.kpis?.branching_earnings),
       icon: <Split size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
       type: "amount",
@@ -117,7 +117,7 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Network Earning",
-      value: data?.kpis?.network_earnings,
+      value:formatIndianCurrency(data?.kpis?.network_earnings),
       icon: <Network size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/attendance"),
       type: "amount",
@@ -137,7 +137,7 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Failed Payments Value",
-      value: data?.revenue?.failed_payments?.amount,
+      value: formatIndianCurrency(data?.kpis?.failed_payments?.amount),
       icon: <TriangleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
     },

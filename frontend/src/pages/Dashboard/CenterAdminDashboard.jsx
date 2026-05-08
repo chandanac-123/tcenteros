@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@store/authStore";
 import { useGetBranchCountQuery } from "@api-queries/center-admin/branch/Query";
 import InstructionPage from "./components/InstructionPage";
-import { getGreeting } from "@utils/helper";
+import { formatIndianCurrency, getGreeting } from "@utils/helper";
 import { useAppPermissions } from "@hooks/index";
 import { Button } from "@pages/components/ui/button";
 import RenewSubcription from "./components/RenewSubcription";
@@ -72,17 +72,17 @@ const CenterAdminDashboard = () => {
     },
     {
       label: "Total Revenue",
-      value: data?.total_revenue || 0,
+      value: formatIndianCurrency(data?.total_revenue) || 0,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Total Expense",
-      value: data?.total_expenses || 0,
+      value: formatIndianCurrency(data?.total_expenses) || 0,
       onClick: () => navigate("/accounts"),
     },
     {
       label: "Net Profit",
-      value: data?.net_profit || 0,
+      value: formatIndianCurrency(data?.net_profit) || 0,
       onClick: () => navigate("/accounts"),
     },
   ];
