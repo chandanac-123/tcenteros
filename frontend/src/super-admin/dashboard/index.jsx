@@ -65,38 +65,6 @@ const SuperAdminDashboard = () => {
     },
   ];
 
-  const GrowingCentrs = [
-    {
-      label: "Yoga Hub Bangalore",
-      sublabel: "Yoga Hub Bangalore",
-      value: 0,
-      growingCenter: true,
-    },
-    {
-      label: "Pilates Plus Hyderabad",
-      sublabel: "Pilates Plus Hyderabad",
-      value: -8,
-      growingCenter: true,
-    },
-    {
-      label: "Commission Payable",
-      sublabel: "Pilates Plus Hyderabad",
-      value: 7,
-      growingCenter: true,
-    },
-    {
-      label: "Commission Payable",
-      sublabel: "Pilates Plus Hyderabad",
-      value: 7,
-      growingCenter: true,
-    },
-    {
-      label: "Commission Payable",
-      sublabel: "Pilates Plus Hyderabad",
-      value: 7,
-      growingCenter: true,
-    },
-  ];
 
   // const chartData = revenueSplit.map((item, index) => ({
   //   label: item.label,
