@@ -22,16 +22,17 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { useDashboardOverviewQuery } from "@api-queries/super-admin/superadmin-dashboard/Query";
+import GrowingCenterCard from "./components/GrowingCenterCard";
 
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const { data, isLoading } = useDashboardOverviewQuery();
-  const revenueTrend = data?.saas_revenue_trend || [];
-  const revenueSplit = data?.revenue_split || [];
+  console.log("data: ", data);
+  const revenueTrend = data?.revenue_trend || [];
+  // const revenueSplit = data?.revenue_split || [];
   const colors = ["#4DB6AC", "#B57CC2", "#E6A57A", "#3BA3C9", "#7E57C2"];
 
-  console.log("Dash-Data",data);
-  
+  console.log("Dash-Data", data);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,19 +41,19 @@ const SuperAdminDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const linechartData = revenueTrend.map((item) => item.value);
-  const chartLabels = revenueTrend.map((item) => item.label);
+  const linechartData = revenueTrend.map((item) => item.revenue);
+  const chartLabels = revenueTrend.map((item) => item.month);
 
   const PartnerData = [
     {
       label: "Active Partners",
-      value: data?.partner_snapshot?.active_partners,
+      value: data?.partner_snapshot?.active_partner_count,
       icon: <Users size={16} strokeWidth={2.75} />,
       type: "count",
     },
     {
       label: "Sales via Partners",
-      value: data?.partner_snapshot?.revenue_via_partners,
+      value: data?.partner_snapshot?.revenue_via_partner,
       icon: <Receipt size={16} strokeWidth={2.75} />,
       type: "amount",
     },
@@ -97,11 +98,11 @@ const SuperAdminDashboard = () => {
     },
   ];
 
-  const chartData = revenueSplit.map((item, index) => ({
-    label: item.label,
-    value: item.percent, // 👈 IMPORTANT: use percent for doughnut
-    color: colors[index % colors.length],
-  }));
+  // const chartData = revenueSplit.map((item, index) => ({
+  //   label: item.label,
+  //   value: item.percent, // 👈 IMPORTANT: use percent for doughnut
+  //   color: colors[index % colors.length],
+  // }));
 
   const cardsData = [
     {
@@ -236,7 +237,7 @@ const SuperAdminDashboard = () => {
                   Revenue Split by Source
                 </span>
               </div>
-              <MultiRingChart dataConfig={chartData} />
+              {/* <MultiRingChart dataConfig={chartData} /> */}
             </Card>
           </div>
 
@@ -246,11 +247,10 @@ const SuperAdminDashboard = () => {
                 Top 5 Growing Centers
               </span>
               <div className="flex flex-col gap-3">
-                {GrowingCentrs?.map((item, index) => (
-                  <BaseCard
+                {data?.top_growing_centers?.map((item, index) => (
+                  <GrowingCenterCard
                     key={index}
                     data={item}
-                    growingCenter={item.growingCenter}
                   />
                 ))}
               </div>
