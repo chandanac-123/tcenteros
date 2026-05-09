@@ -154,7 +154,7 @@ export const routes = [
   {
     key: 44, path: '/subscriptions', privetRoute: true, isSubRoute: true, pageTitle: 'Subscriptions', component: SubscriptionsLayout, icon: <UserRoundPen />, menubar: true, permissionKey: true, isSuperAdmin: true,
     submodules: [
-      { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
+      { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: 'subscription' },
       { key: 'active-subscriptions-detail', title: 'Active Subscriptions Detail', path: 'active-subscriptions/detail/:id', component: DetailView, menubar: false, permissionKey: true },
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
       { key: 'renewal-calender-detail', title: 'Renewal Calender Detail', path: 'renewal-calender/detail/:id', component: RenewalDetailView, menubar: false, permissionKey: true },
@@ -164,25 +164,25 @@ export const routes = [
 
     ]
   },
-  { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 46, path: '/centers', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 47, path: '/partners', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 48, path: '/branching', privetRoute: true, isSubRoute: false, pageTitle: 'Branching', component: Branching, icon: <Split />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 49, path: '/networking', privetRoute: true, isSubRoute: false, pageTitle: 'Networking', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: 'plateform_feature', isSuperAdmin: true },
+  { key: 46, path: '/centers', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: 'center', isSuperAdmin: true },
+  { key: 47, path: '/partners', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: 'partner', isSuperAdmin: true },
+  { key: 48, path: '/branching', privetRoute: true, isSubRoute: false, pageTitle: 'Branching', component: Branching, icon: <Split />, menubar: true, permissionKey: 'branching', isSuperAdmin: true },
+  { key: 49, path: '/networking', privetRoute: true, isSubRoute: false, pageTitle: 'Networking', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: 'networking', isSuperAdmin: true },
 
   {
-    key: 50, path: '/revenue-billing', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign />, menubar: true, permissionKey: true, isSuperAdmin: true,
+    key: 50, path: '/revenue-billing', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign />, menubar: true, permissionKey: 'revenue_billing', isSuperAdmin: true,
     submodules: [
       { key: 'partner-commission', title: 'Partner Commission', path: 'partner-commission', component: PartnerCommision, menubar: false, permissionKey: true },
       { key: 'sas-revenue', title: 'SAS Revenue', path: 'sas-revenue', component: SASRevenue, menubar: true, permissionKey: true }
     ]
   },
   // { key: 51, path: '/analytics', privetRoute: true, isSubRoute: false, pageTitle: 'Analytics', component: Analytics, icon: <ChartPie />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 52, path: '/support', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 52, path: '/support', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: Support, icon: <Headset />, menubar: true, permissionKey: 'support', isSuperAdmin: true },
   { key: 53, path: '/supportById/:id', privetRoute: true, isSubRoute: false, pageTitle: 'Support', component: SupportById, icon: <Headset />, menubar: false, permissionKey: true, isSuperAdmin: true },
   { key: 54, path: '/partnersbyId/:id', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: PartnerById, icon: <UserRoundPen />, menubar: false, permissionKey: true, isSuperAdmin: true },
-  { key: 55, path: '/roleandpermission', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: true, isSuperAdmin: true },
-  { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: true, isSuperAdmin: true },
+  { key: 55, path: '/roleandpermission', privetRoute: true, isSubRoute: false, pageTitle: 'Role & Permissions', component: RoleAndPermissions, icon: <UserRoundCog />, menubar: true, permissionKey: 'role_and_permissions', isSuperAdmin: true },
+  { key: 56, path: '/platform-settings', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Settings', component: PlatformSettings, icon: <SettingsIcon />, menubar: true, permissionKey: 'platform_settings', isSuperAdmin: true },
 
   //partner public routes
   { key: 57, path: '/partner-landing', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerLanding, menubar: false, permissionKey: true },
