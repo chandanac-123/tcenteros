@@ -71,6 +71,7 @@ const SuperAdminDashboard = () => {
   const maxValue = Math.max(...linechartData, 0);
   const roundedMax = Math.ceil(maxValue / 10000) * 10000;
   const yStep = roundedMax / 5;
+  
   const cardsData = [
     {
       label: "Total Active Centers",
@@ -109,7 +110,7 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Partner Earning",
-      value: data?.kpis?.partner_commission,
+      value: formatIndianCurrency(data?.partner_snapshot?.revenue_via_partner),
       icon: <Handshake size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/crm?tab=guests"),
       type: "amount",
@@ -123,9 +124,10 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Upcoming Renewal Value",
-      value: data?.kpis?.upcoming_renewal_value,
+      value: formatIndianCurrency(data?.kpis?.upcoming_renewal_value),
       icon: <CalendarSearch size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
+      type: "amount",
     },
     {
       label: "Churn Rate",
@@ -139,6 +141,7 @@ const SuperAdminDashboard = () => {
       value: formatIndianCurrency(data?.kpis?.failed_payments?.amount),
       icon: <TriangleAlert size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/accounts"),
+      type: "amount",
     },
   ];
 
