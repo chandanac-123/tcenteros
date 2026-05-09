@@ -1,4 +1,4 @@
-import inperson from '@assets/images/inperson.svg'
+import inperson from '@assets/images/inperson.webp'
 import hybrid from '@assets/images/hybrid.svg'
 
 export const classModes = [

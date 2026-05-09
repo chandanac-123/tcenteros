@@ -13,9 +13,9 @@ export default {
         "primary-shadow": "0px 2px 8px rgba(99, 99, 99, 0.2)",
       },
       backgroundImage: {
-        "primary-bg": "url('/src/assets/images/landingprimary.svg')",
-        "secondary-bg": "url('/src/assets/images/bgimage.svg')",
-        "img-bg": "url('/src/assets/images/smart-bg-image.svg')",
+        "primary-bg": "url('/src/assets/images/landingprimary.webp')",
+        "secondary-bg": "url('/src/assets/images/landingsecondary.webp')",
+        "img-bg": "url('/src/assets/images/smart-bg-image.webp')",
       },
       colors: {
         primary: "rgb(var(--primary) / <alpha-value>)",
