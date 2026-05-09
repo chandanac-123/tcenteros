@@ -23,7 +23,7 @@ const SASRevenue = () => {
   const datasets = [
     {
       label: "Revenue",
-      data: data?.mrr_trend?.map((item) => item.value) || [],
+      data: data?.monthly_recurring_revenue_trend?.map((item) => item.value) || [],
       borderColor: "#03881B",
       backgroundColor: "#03881B",
     },
@@ -100,6 +100,7 @@ const SASRevenue = () => {
       percent: data?.revenue_cards?.network_commission.percent || 0,
     },
   ];
+  
   return (
     <div>
       <div className="flex items-center gap-4 p-4">
