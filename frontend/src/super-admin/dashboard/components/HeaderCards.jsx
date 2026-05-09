@@ -32,7 +32,7 @@ const DashboardHeaderCard = ({ cardsData }) => {
               <span className="text-xl font-bold text-textblack">
                 {formatCardValue(item?.value, currentType)}
               </span>
-              <TrendBadge value={item?.percent} />
+              {/* <TrendBadge value={item?.percent} /> */}
             </div>
           </div>
         );
