@@ -79,7 +79,7 @@ const MemberView = ({ goBack, memberId }) => {
         <div className='flex gap-16'>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Membership Plan</span>
-            <span>{memberData?.membership_id}</span>
+            <span>{memberData?.membership_name}</span>
           </div>
           <div className='flex flex-col'>
             <span className='text-pricing_text'>Time Slot</span>
