@@ -15,18 +15,20 @@ import DoughnutChart from "@common/charts/DoughnutChart";
 import LineBarChart from "./LineBarChart";
 import { useRevenueBillingOverviewQuery } from "@api-queries/super-admin/revenue-billing/Query";
 import DashboardHeaderCard from "@super-admin/dashboard/components/HeaderCards";
+import { formatCurrencyCompact } from "@utils/helper";
 
 const SASRevenue = () => {
   const { data, isLoading } = useRevenueBillingOverviewQuery();
-  console.log("Card data: ", data);
-  // Line chart data from API
+  const monthlyTrend = data?.monthly_recurring_revenue_trend || [];
+
   const datasets = [
     {
       label: "Revenue",
-      data:
-        data?.monthly_recurring_revenue_trend?.map((item) => item.value) || [],
+      data: monthlyTrend.map((item) => item.value),
       borderColor: "#03881B",
       backgroundColor: "#03881B",
+      tension: 0.4,
+      fill: false,
     },
   ];
 
@@ -117,8 +119,8 @@ const SASRevenue = () => {
           <LineChart
             datasets={datasets}
             yMin={0}
-            yMax={500}
-            tickFormat={(val) => `₹${val}`}
+            yMax={Math.max(...monthlyTrend.map((item) => item.value), 0) * 1.1}
+            tickFormat={formatCurrencyCompact}
           />
         </div>
       </div>
