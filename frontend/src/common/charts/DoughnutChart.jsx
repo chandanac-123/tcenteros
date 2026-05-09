@@ -8,6 +8,7 @@ const DoughnutChart = ({
   values = [],
   labels = [],
   colors = [],
+  percentage = [],
   cutout = "70%",
 }) => {
   const hasData =
@@ -92,7 +93,7 @@ const DoughnutChart = ({
               style={{ backgroundColor: colors[i] }}
             />
             <span className="text-sm">
-              {label} - {values[i]}%
+              {label} - {percentage[i]}%
             </span>
           </div>
         ))}

@@ -23,7 +23,8 @@ const SASRevenue = () => {
   const datasets = [
     {
       label: "Revenue",
-      data: data?.monthly_recurring_revenue_trend?.map((item) => item.value) || [],
+      data:
+        data?.monthly_recurring_revenue_trend?.map((item) => item.value) || [],
       borderColor: "#03881B",
       backgroundColor: "#03881B",
     },
@@ -32,6 +33,7 @@ const SASRevenue = () => {
   // Doughnut and bar chart data from API
   const doughnutData = data?.revenue_breakdown || [];
   const values = doughnutData.map((item) => item.value);
+  const percentage = doughnutData.map((item) => item.percentage);
   const labels = doughnutData.map((item) => item.label);
   // Assign colors for up to 4 segments, fallback to default if more
   const defaultColors = ["#344BFD", "#FFD200", "#8B24E2", "#F4A79D", "#F68D2B"];
@@ -42,65 +44,52 @@ const SASRevenue = () => {
   const cardsData = [
     {
       label: " Monthly Recurring Revenue (MRR)",
-      value: data?.monthly_recurring_revenue?.value || 0,
+      value: data?.overview?.monthly_recurring_revenue || 0,
       icon: <HandCoins size={16} strokeWidth={2.75} />,
       type: "amount",
-      percent: data?.monthly_recurring_revenue?.percent_of_total_income || 0,
     },
     {
       label: " Yearly Locked Revenue (ARR)",
-      value: data?.yearly_locked_revenue_arr?.value || 0,
+      value: data?.overview?.yearly_locked_revenue || 0,
       icon: <Lock size={16} strokeWidth={2.75} />,
       type: "amount",
-      percent: data?.yearly_locked_revenue_arr?.percent_of_total_income || 0,
     },
     {
       label: " 30 Days Renewal Forecast",
-      value: data?.renewal_forecast_30_days?.value || 0,
+      value: data?.overview?.renewal_forecast_30_days || 0,
       icon: <RefreshCcw size={16} strokeWidth={2.75} />,
       type: "amount",
-      percent: data?.renewal_forecast_30_days?.percent_of_total_income || 0,
-
     },
     {
       label: "Pending Commission Payout",
-      value: data?.pending_commission_payout?.value || 0,
+      value: data?.overview?.pending_commission_payout || 0,
       icon: <Book size={16} strokeWidth={2.75} />,
       type: "amount",
-      percent: data?.pending_commission_payout?.percent_of_total_expense || 0,
-
     },
     {
-      label: " Subscriptions",
-      value: data?.revenue_cards?.center_subscription?.value || 0,
+      label: "Subscriptions",
+      value: data?.overview?.subscriptions || 0,
       icon: <FileBadge size={16} strokeWidth={2.75} />,
-      type: "amount",
-      percent: data?.revenue_cards?.center_subscription.percent || 0,
-
     },
     {
       label: "Subscription Renewals",
-      value: data?.revenue_cards?.center_subscription_renewal?.value || 0,
+      value: data?.overview?.subscription_renewals || 0,
       icon: <FolderSync size={16} strokeWidth={2.75} />,
-      type: "amount",
-      percent: data?.revenue_cards?.center_subscription_renewal.percent || 0,
     },
     {
       label: "Branch Purchases",
-      value: data?.revenue_cards?.branch_purchase?.value || 0,
+      value: data?.overview?.branch_purchases || 0,
       icon: <Split size={16} strokeWidth={2.75} />,
-      percent: data?.revenue_cards?.branch_purchase.percent || 0,
       type: "amount",
     },
     {
       label: " Network Commission",
-      value: data?.revenue_cards?.network_commission.value || 0,
+      value: data?.overview?.network_commission?.network_commission || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
       type: "amount",
-      percent: data?.revenue_cards?.network_commission.percent || 0,
     },
   ];
-  
+
   return (
     <div>
       <div className="flex items-center gap-4 p-4">
@@ -141,13 +130,14 @@ const SASRevenue = () => {
               <DoughnutChart
                 values={values}
                 labels={labels}
+                percentage={percentage}
                 colors={colors}
                 cutout="80%"
               />
             </div>
           </div>
 
-          <div className="w-[70%] p-5 rounded-lg flex items-center justify-center">
+          <div className="w-[60%] p-5 rounded-lg flex items-center justify-center">
             <LineBarChart data={doughnutData} colors={colors} />
           </div>
         </div>
