@@ -1,4 +1,4 @@
-import TrendBadge from "@common/components/TrendBadge";
+import { formatIndianCurrency } from "@utils/helper";
 
 const GrowingCenterCard = ({ data }) => {
   return (
@@ -18,8 +18,9 @@ const GrowingCenterCard = ({ data }) => {
             </span>
           </div>
         </div>
-
-        <TrendBadge value={data?.value} />
+        <span className="text-lg font-semibold">
+          ₹{formatIndianCurrency(data?.monthly_revenue)}
+        </span>
       </div>
     </div>
   );

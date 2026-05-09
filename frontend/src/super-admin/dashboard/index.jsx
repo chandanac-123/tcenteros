@@ -27,12 +27,9 @@ import GrowingCenterCard from "./components/GrowingCenterCard";
 const SuperAdminDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const { data, isLoading } = useDashboardOverviewQuery();
-  console.log("data: ", data);
   const revenueTrend = data?.revenue_trend || [];
-  // const revenueSplit = data?.revenue_split || [];
+  const revenueSplit = data?.revenue_split || [];
   const colors = ["#4DB6AC", "#B57CC2", "#E6A57A", "#3BA3C9", "#7E57C2"];
-
-  console.log("Dash-Data", data);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -65,13 +62,15 @@ const SuperAdminDashboard = () => {
     },
   ];
 
+  const chartData = revenueSplit.map((item, index) => ({
+    label: item?.label,
+    value: item?.value, //
+    color: colors[index % colors.length],
+  }));
 
-  // const chartData = revenueSplit.map((item, index) => ({
-  //   label: item.label,
-  //   value: item.percent, // 👈 IMPORTANT: use percent for doughnut
-  //   color: colors[index % colors.length],
-  // }));
-
+  const maxValue = Math.max(...linechartData, 0);
+  const roundedMax = Math.ceil(maxValue / 10000) * 10000;
+  const yStep = roundedMax / 5;
   const cardsData = [
     {
       label: "Total Active Centers",
@@ -117,7 +116,7 @@ const SuperAdminDashboard = () => {
     },
     {
       label: "Network Earning",
-      value:formatIndianCurrency(data?.kpis?.network_earnings),
+      value: formatIndianCurrency(data?.kpis?.network_earnings),
       icon: <Network size={16} strokeWidth={2.75} />,
       onClick: () => navigate("/attendance"),
       type: "amount",
@@ -142,6 +141,7 @@ const SuperAdminDashboard = () => {
       onClick: () => navigate("/accounts"),
     },
   ];
+
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col">
@@ -177,9 +177,13 @@ const SuperAdminDashboard = () => {
                   },
                 ]}
                 yMin={0}
-                yMax={Math.max(...linechartData, 1000)}
-                yStep={500} //  ADD THIS
-                tickFormat={(v) => (v >= 1000 ? v / 1000 + "k" : v)}
+                yMax={roundedMax}
+                yStep={yStep}
+                tickFormat={(value) => {
+                  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
+                  if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                  return value;
+                }}
               />
             </Card>
           </div>
@@ -207,7 +211,7 @@ const SuperAdminDashboard = () => {
                   Revenue Split by Source
                 </span>
               </div>
-              {/* <MultiRingChart dataConfig={chartData} /> */}
+              <MultiRingChart dataConfig={chartData} />
             </Card>
           </div>
 
@@ -218,10 +222,7 @@ const SuperAdminDashboard = () => {
               </span>
               <div className="flex flex-col gap-3">
                 {data?.top_growing_centers?.map((item, index) => (
-                  <GrowingCenterCard
-                    key={index}
-                    data={item}
-                  />
+                  <GrowingCenterCard key={index} data={item} />
                 ))}
               </div>
             </Card>
