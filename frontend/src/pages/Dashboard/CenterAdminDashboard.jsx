@@ -246,7 +246,6 @@ const CenterAdminDashboard = () => {
             />
           </Card>
         </div>
-        {/* <DashboardTable /> */}
       </div>
       <InstructionPage open={instructionOpen} setOpen={setInstructionOpen} />
       <RenewSubcription
