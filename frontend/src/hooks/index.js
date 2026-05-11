@@ -15,7 +15,6 @@ export const useAppPermissions = () => {
     canEditProfile: hasPermission('profile.submodules.edit_profile'),
 
     // CRM
-    canViewMember: hasPermission('crm.submodules.member.list'),
     canAddMember: hasPermission('crm.submodules.member.add'),
     canEditMember: hasPermission('crm.submodules.member.edit'),
     canDeleteMember: hasPermission('crm.submodules.member.delete'),
@@ -26,7 +25,6 @@ export const useAppPermissions = () => {
     canConvertVisitor: hasPermission('crm.submodules.visitor.convert_to_member'),
 
     // Employee Management
-    canEmployee: hasPermission('employee_management.submodules.employee.list'),
     canSalary: hasPermission('employee_management.submodules.salary_structure'),
     canPayroll: hasPermission('employee_management.submodules.payroll'),
     canAddEmployee: hasPermission('employee_management.submodules.employee.add'),
@@ -36,14 +34,12 @@ export const useAppPermissions = () => {
     canEnableEmployee: hasPermission('employee_management.submodules.employee.enable_disable'),
 
     //Membership
-    canListMembership: hasPermission('membership_plan.submodules.list'),
     canAddMembership: hasPermission('membership_plan.submodules.add'),
     canEditMembership: hasPermission('membership_plan.submodules.edit'),
     canDeleteMembership: hasPermission('membership_plan.submodules.delete'),
     canEnableMembership: hasPermission('membership_plan.submodules.enable_disable'),
 
     // Network
-    canViewNetwork: hasPermission('network.submodules.list'),
     canApproveNetwork: hasPermission('network.submodules.netwrok_request_approve'),
     canAddAmount: hasPermission('network.submodules.add_network_amount'),
     canEnableNetwork: hasPermission('network.submodules.enable_disable'),

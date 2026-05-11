@@ -1,92 +1,88 @@
-import { useState } from 'react'
-import CustomFilter from '@common/components/CustomeFilter'
-import ContentLayout from '@common/MasterLayout/ContentLayout'
-import { Button } from '@pages/components/ui/button'
-import CustomeTab from '@common/components/CustomeTab'
-import SalaryStructure from './salary-structure'
-import Employee from './employee'
-import AddEditForm from './employee/AddEditForm'
-import StructureAddEdit from './salary-structure/AddEdit'
-import { useAllCentersQuery } from '@api-queries/center-admin/center-profile/Query'
-import Payroll from './payroll'
-import { useAppPermissions } from '@hooks/index'
+import { useState } from "react";
+import CustomFilter from "@common/components/CustomeFilter";
+import ContentLayout from "@common/MasterLayout/ContentLayout";
+import { Button } from "@pages/components/ui/button";
+import CustomeTab from "@common/components/CustomeTab";
+import SalaryStructure from "./salary-structure";
+import Employee from "./employee";
+import AddEditForm from "./employee/AddEditForm";
+import StructureAddEdit from "./salary-structure/AddEdit";
+import { useAllCentersQuery } from "@api-queries/center-admin/center-profile/Query";
+import Payroll from "./payroll";
+import { useAppPermissions } from "@hooks/index";
 
 const EmployeeManagement = () => {
-  const { hydrated, canEmployee, canSalary, canPayroll, canAddEmployee } =
-    useAppPermissions()
-  if (!hydrated) return null
+  const { hydrated, canAddEmployee } = useAppPermissions();
+  if (!hydrated) return null;
 
   const tabConfig = [
     {
-      id: 'employee',
-      name: 'Employee',
-      visible: canEmployee
+      id: "employee",
+      name: "Employee",
     },
     {
-      id: 'salary_structure',
-      name: 'Salary Structure',
-      visible: canSalary
+      id: "salary_structure",
+      name: "Salary Structure",
     },
     {
-      id: 'payroll',
-      name: 'Payroll',
-      visible: canPayroll
-    }
-  ]
+      id: "payroll",
+      name: "Payroll",
+    },
+  ];
 
-  const employeeOrCenter = tabConfig.filter(tab => tab.visible)
-  const defaultTab = employeeOrCenter[0]?.id || null
-  const [activeTab, setActiveTab] = useState(() => defaultTab)
-  const [open, setOpen] = useState(false)
-  const [structureOpen, setStructureOpen] = useState(false)
+  const employeeOrCenter = tabConfig.filter((tab) => tab.id);
+  const defaultTab = employeeOrCenter[0]?.id || null;
+  const [activeTab, setActiveTab] = useState(() => defaultTab);
+  const [open, setOpen] = useState(false);
+  const [structureOpen, setStructureOpen] = useState(false);
   const { data: centersData, isFetching: isCentersFetching } =
-    useAllCentersQuery()
+    useAllCentersQuery();
   const [tableParams, setTableParams] = useState({
     page: 1,
-    search: ''
-  })
+    search: "",
+  });
 
   const handleOpen = () => {
-    setOpen(true)
-  }
+    setOpen(true);
+  };
 
   return (
     <ContentLayout>
-      <div className='flex justify-between items-center'>
-        <div className='flex flex-col'>
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col">
           <span>Employees</span>
-          <span className='text-textgrey text-sm'>
+          <span className="text-textgrey text-sm">
             All Employees and Trainee Details
           </span>
         </div>
-        <div className='flex-1 flex justify-end items-center gap-2'>
+        <div className="flex-1 flex justify-end items-center gap-2">
           <CustomFilter
             options={centersData?.centers}
-            onApply={value =>
-              setTableParams(prev => ({ ...prev, payment_status: value }))
+            onApply={(value) =>
+              setTableParams((prev) => ({ ...prev, payment_status: value }))
             }
           />
-          {activeTab === 'employee' && canAddEmployee && (
-            <Button onClick={handleOpen} size='addbutton'>
+          {activeTab === "employee" && canAddEmployee && (
+            <Button onClick={handleOpen} size="addbutton">
               + Add Employee
             </Button>
           )}
-          {activeTab === 'salary_structure' && (
-            <Button onClick={() => setStructureOpen(true)} size='addbutton'>
+          {activeTab === "salary_structure" && (
+            <Button onClick={() => setStructureOpen(true)} size="addbutton">
               + Add Salary Structure
             </Button>
           )}
         </div>
       </div>
-      <div className=' gap-4 mt-4 flex flex-col'>
+      <div className=" gap-4 mt-4 flex flex-col">
         <CustomeTab
           tabList={employeeOrCenter}
           defaultVal={employeeOrCenter[0]?.id}
-          tabsListClass=' w-[400px] p-[1px]'
-          onChange={value => setActiveTab(value)}
+          tabsListClass=" w-[400px] p-[1px]"
+          onChange={(value) => setActiveTab(value)}
         />
 
-        {activeTab === 'employee' && (
+        {activeTab === "employee" && (
           <Employee
             open={open}
             setOpen={setOpen}
@@ -94,8 +90,8 @@ const EmployeeManagement = () => {
             setTableParams={setTableParams}
           />
         )}
-        {activeTab === 'salary_structure' && <SalaryStructure />}
-        {activeTab === 'payroll' && <Payroll />}
+        {activeTab === "salary_structure" && <SalaryStructure />}
+        {activeTab === "payroll" && <Payroll />}
         <AddEditForm
           open={open}
           setOpen={setOpen}
@@ -108,6 +104,6 @@ const EmployeeManagement = () => {
         />
       </div>
     </ContentLayout>
-  )
-}
-export default EmployeeManagement
+  );
+};
+export default EmployeeManagement;

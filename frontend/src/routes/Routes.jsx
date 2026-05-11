@@ -164,7 +164,7 @@ export const routes = [
 
     ]
   },
-  { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: 'plateform_feature', isSuperAdmin: true },
+  { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: 'platform_feature', isSuperAdmin: true },
   { key: 46, path: '/centers', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: 'center', isSuperAdmin: true },
   { key: 47, path: '/partners', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: 'partner', isSuperAdmin: true },
   { key: 48, path: '/branching', privetRoute: true, isSubRoute: false, pageTitle: 'Branching', component: Branching, icon: <Split />, menubar: true, permissionKey: 'branching', isSuperAdmin: true },
