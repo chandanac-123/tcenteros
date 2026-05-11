@@ -17,6 +17,8 @@ import { Button } from "@pages/components/ui/button";
 import RenewSubcription from "./components/RenewSubcription";
 
 const CenterAdminDashboard = () => {
+  const role = useAuthStore((state) => state.auth?.role);
+  const isCenterAdmin = role === "centeradmin";
   const [greeting, setGreeting] = useState(getGreeting());
   const [instructionOpen, setInstructionOpen] = useState(false);
   const [renewSubscriptionOpen, setRenewSubscriptionOpen] = useState(false);
@@ -117,9 +119,14 @@ const CenterAdminDashboard = () => {
             {canCreateBranch && (
               <BranchDetailsButton isLimitReached={isLimitReached} />
             )}
-            <Button size="addbutton" onClick={() => setRenewSubscriptionOpen(true)}>
-              Renew Subscription
-            </Button>
+            {isCenterAdmin && (
+              <Button
+                size="addbutton"
+                onClick={() => setRenewSubscriptionOpen(true)}
+              >
+                Renew Subscription
+              </Button>
+            )}
           </div>
         </div>
 
@@ -242,7 +249,10 @@ const CenterAdminDashboard = () => {
         {/* <DashboardTable /> */}
       </div>
       <InstructionPage open={instructionOpen} setOpen={setInstructionOpen} />
-      <RenewSubcription open={renewSubscriptionOpen} setOpen={setRenewSubscriptionOpen} />
+      <RenewSubcription
+        open={renewSubscriptionOpen}
+        setOpen={setRenewSubscriptionOpen}
+      />
     </ContentLayout>
   );
 };
