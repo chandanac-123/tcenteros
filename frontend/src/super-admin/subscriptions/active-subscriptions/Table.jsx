@@ -1,5 +1,4 @@
 import { DataTable } from "@common/components/DataTable";
-import { useAppPermissions } from "@hooks/index";
 import { Badge } from "@pages/components/ui/badge";
 import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,77 +17,7 @@ const ActiveSubcriptionTable = ({
   setTableParams,
   isLoading,
 }) => {
-  // console.log("Data", data);
-  // const data = [
-  //   {
-  //     center_id: "1",
-  //     center_name: "Center Alpha",
-  //     center_email: "alpha@gmail.com",
-  //     center_phone: "9876543210",
-  //     contact_person: "Rahul",
-  //     center_status: "active",
-  //     center_member_count: 25,
-  //     current_month_revenue: 1200,
-  //     total_revenue: 15000,
-  //     days_left_for_renewal: 2,
-  //     renewal_date: "2026-05-03",
-  //     subscription_duration: "monthly",
-  //     status: "due",
-  //     partner_name: null,
-  //   },
-  //   {
-  //     center_id: "2",
-  //     center_name: "Center Beta",
-  //     center_email: "beta@gmail.com",
-  //     center_phone: "9123456780",
-  //     contact_person: "Anjali",
-  //     center_status: "active",
-  //     center_member_count: 40,
-  //     current_month_revenue: 2500,
-  //     total_revenue: 32000,
-  //     days_left_for_renewal: 0,
-  //     renewal_date: "2026-05-01",
-  //     subscription_duration: "yearly",
-  //     status: "graced",
-  //     partner_name: "FitPartner",
-  //   },
-  //   {
-  //     center_id: "3",
-  //     center_name: "Center Gamma",
-  //     center_email: "gamma@gmail.com",
-  //     center_phone: "9988776655",
-  //     contact_person: "Arjun",
-  //     center_status: "inactive",
-  //     center_member_count: 10,
-  //     current_month_revenue: 500,
-  //     total_revenue: 8000,
-  //     days_left_for_renewal: -3,
-  //     renewal_date: "2026-04-28",
-  //     subscription_duration: "monthly",
-  //     status: "due",
-  //     partner_name: null,
-  //   },
-  //   {
-  //     center_id: "4",
-  //     center_name: "Center Delta",
-  //     center_email: "delta@gmail.com",
-  //     center_phone: "9090909090",
-  //     contact_person: "Meera",
-  //     center_status: "active",
-  //     center_member_count: 60,
-  //     current_month_revenue: 4000,
-  //     total_revenue: 50000,
-  //     days_left_for_renewal: 5,
-  //     renewal_date: "2026-05-06",
-  //     subscription_duration: "yearly",
-  //     status: "graced",
-  //     partner_name: "WellnessHub",
-  //   },
-  // ];
-
   const navigate = useNavigate();
-  const { hydrated, canActiveSubscriptionView } = useAppPermissions();
-  if (!hydrated) return null;
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     { accessorKey: "center_phone", header: "Phone" },
@@ -153,7 +82,6 @@ const ActiveSubcriptionTable = ({
     //   },
     // },
 
-
     // { accessorKey: "total_revenue", header: "Total Revenue" },
     {
       accessorKey: "action",
@@ -161,7 +89,6 @@ const ActiveSubcriptionTable = ({
       cell: ({ row }) => (
         <div className="flex">
           <button
-            disabled={!canActiveSubscriptionView}
             className="px-3 py-1 text-xs  items-center justify-center rounded-xl border"
             onClick={() =>
               navigate(

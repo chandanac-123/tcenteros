@@ -1,6 +1,5 @@
 import { useFailedSubscriptionsQuery, useSuspendSubscriptionMutation } from '@api-queries/super-admin/subcriptions/Query';
 import DeleteModal from '@common/components/CustomeDelete';
-import { useAppPermissions } from '@hooks/index';
 import { Button } from '@pages/components/ui/button';
 import { Spinner } from '@pages/components/ui/spinner';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -15,9 +14,7 @@ const FailedDataList = () => {
         page,
         page_size,
     });
-    const { hydrated, canSuspendFailedPayment } = useAppPermissions();
     const { mutate: suspendCenter, isPending } = useSuspendSubscriptionMutation();
-    if (!hydrated) return null;
 
     const handleSuspend = () => {
         if (!selectedCenter) return;
@@ -95,7 +92,6 @@ const FailedDataList = () => {
                         {/* Button */}
                         <div className="flex justify-end sm:justify-center">
                             <Button
-                                disabled={!canSuspendFailedPayment}
                                 variant="danger"
                                 size="addbutton"
                                 onClick={() => {

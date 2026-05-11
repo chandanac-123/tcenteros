@@ -4,12 +4,9 @@ import PlatformFeatureCards from "./components/platformFeatureCards";
 import { Button } from "@pages/components/ui/button";
 import AddplatformFeature from "./components/modals/AddplatformFeature";
 import { useState } from "react";
-import { useAppPermissions } from "@hooks/index";
 
 const PlatformFeatures = () => {
   const [open, setOpen] = useState(false);
-  const { hydrated, canFeatureAdd } = useAppPermissions();
-  if (!hydrated) return null;
 
   return (
     <ContentLayout>
@@ -31,7 +28,6 @@ const PlatformFeatures = () => {
 
           <div className="pe-5">
             <Button
-              disabled={!canFeatureAdd}
               size="addbutton"
               onClick={() => setOpen(true)}
             >

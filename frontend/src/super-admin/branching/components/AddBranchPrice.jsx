@@ -1,5 +1,4 @@
 import { useCreateBranchPriceMutation } from "@api-queries/super-admin/branching/Query";
-import { useAppPermissions } from "@hooks/index";
 import { Button } from "@pages/components/ui/button";
 import { Input } from "@pages/components/ui/input";
 import { Plus } from "lucide-react";
@@ -8,9 +7,6 @@ import React, { useState } from "react";
 const AddBranchPrice = () => {
   const [branchPrice, setBranchPrice] = useState();
   const { mutateAsync: createBranchPrice } = useCreateBranchPriceMutation();
-  const { hydrated, canBranchingAdd } = useAppPermissions();
-  const hasBranchPrice = Boolean(String(branchPrice ?? "").trim());
-  if (!hydrated) return null;
 
   const handleCreateBranchPrice = async () => {
     try {
@@ -37,7 +33,6 @@ const AddBranchPrice = () => {
           <Button
             className="mt-5"
             size="addbutton"
-            disabled={!canBranchingAdd || !hasBranchPrice}
             onClick={handleCreateBranchPrice}
           >
             <Plus />

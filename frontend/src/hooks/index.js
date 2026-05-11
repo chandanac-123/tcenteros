@@ -53,40 +53,5 @@ export const useAppPermissions = () => {
 
     // Notifications
     canViewNotifications: hasPermission('notification.enabled'),
-
-    //superadmin
-    //Subscription
-    canActiveSubscriptionList: hasPermission("subscription.submodules.active_subcription.list"),
-    canActiveSubscriptionView: hasPermission("subscription.submodules.active_subcription.view"),
-    canRenewalCalender: hasPermission("subscription.submodules.renewal_calender.list"),
-    canRenwalView: hasPermission("subscription.submodules.renewal_calender.view"),
-    canExpiringList: hasPermission("subscription.submodules.expiring_soon.list"),
-    canSendReminderExpiring: hasPermission("subscription.submodules.expiring_soon.send_reminder"),
-    canAddGraceExpiring: hasPermission("subscription.submodules.expiring_soon.add_grace"),
-    canListFailedPayment: hasPermission("subscription.submodules.failed_payments.list"),
-    canSuspendFailedPayment: hasPermission("subscription.submodules.failed_payments.suspend"),
-
-    //Plateform Feature
-    canFeatureList: hasPermission("plateform_feature.submodules.list"),
-    canFeatureAdd: hasPermission("plateform_feature.submodules.add"),
-    canFeatureUpdate: hasPermission("plateform_feature.submodules.edit"),
-    canFeatureDelete: hasPermission("plateform_feature.submodules.delete"),
-
-    //Partner
-    canPartnerList: hasPermission("partner.submodules.list"),
-    canPartnerView: hasPermission("partner.submodules.view"),
-
-    //Branching
-    canBranchingList: hasPermission("partner.submodules.list"),
-    canBranchingAdd: hasPermission("partner.submodules.add"),
-
-    //Revenue Billing
-    canSasRevenueOverview: hasPermission("revenue_billing.submodules.sas_revenue"),
-    canPartnerCommisionList: hasPermission("revenue_billing.submodules.partner_commision"),
-
-    //Support
-    canSupportList: hasPermission("support.submodules.list"),
-    canOpenTicket: hasPermission("support.submodules.open_ticket"),
-    canAssignCenterAdmin: hasPermission("support.submodules.assign_center_admin"),
   };
 };

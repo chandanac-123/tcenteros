@@ -1,11 +1,8 @@
 import { DataTable } from "@common/components/DataTable";
-import { useAppPermissions } from "@hooks/index";
 import HeaderCard from "@super-admin/subscriptions/components/HeaderCards";
 import { useNavigate } from "react-router-dom";
 import { Building2, IndianRupee, Users, Wallet } from "lucide-react";
 const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
-  const { hydrated, canPartnerView } = useAppPermissions();
-  if (!hydrated) return null;
   const navigate = useNavigate();
 
   const columns = [
@@ -54,7 +51,6 @@ const PartnerTableList = ({ data, tableParams, setTableParams, isLoading }) => {
         const id = row.original.partner_id;
         return (
           <button
-            disabled={!canPartnerView}
             onClick={() => navigate(`/partnersbyId/${id}`)}
             className="px-3 py-1 text-xs border border-[#DAD9D9] rounded-full hover:bg-gray-100"
           >

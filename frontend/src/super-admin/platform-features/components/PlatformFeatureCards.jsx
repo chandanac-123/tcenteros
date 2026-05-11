@@ -1,18 +1,8 @@
-import {
-  ChartBarStacked,
-  CircleCheckBig,
-  CircleDollarSign,
-  Crown,
-  Edit,
-  Feather,
-  Trash,
-  Waypoints,
-} from "lucide-react";
+import { Edit, Feather, Trash } from "lucide-react";
 import React, { useState } from "react";
 import UpdateplatformFeature from "./modals/UpdateplatformFeature";
 import DeleteplatformFeature from "./modals/DeleteplatformFeature";
 import { usePlatformFeatures } from "@api-queries/super-admin/platform-feature/Query";
-import { useAppPermissions } from "@hooks/index";
 import { Spinner } from "@pages/components/ui/spinner";
 
 const PlatformFeatureCards = () => {
@@ -21,14 +11,17 @@ const PlatformFeatureCards = () => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
   const { data: featureData, isLoading, error } = usePlatformFeatures();
-  const { hydrated, canFeatureUpdate, canFeatureDelete } = useAppPermissions();
-  if (!hydrated) return null;
 
-  if (isLoading) return <p className='flex items-center justify-center'><Spinner /></p>;
+  if (isLoading)
+    return (
+      <p className="flex items-center justify-center">
+        <Spinner />
+      </p>
+    );
   if (error) return <p>Error loading platform features</p>;
   const features = featureData?.features || [];
-  console.log("Platform_features",features);
-  
+  console.log("Platform_features", features);
+
   return (
     <>
       <div className="flex flex-col gap-3 px-5 py-3">
@@ -100,7 +93,6 @@ const PlatformFeatureCards = () => {
                   <div className="w-full max-w-[150px] bg-white rounded-xl shadow-[0px_2px_7.5px_rgba(0,0,0,0.26)] p-2 flex flex-col gap-2">
                     {/* UPDATE */}
                     <button
-                      disabled={!canFeatureUpdate}
                       onClick={(e) => {
                         e.stopPropagation(); // prevent card click
                         setSelectedFeature(item);
@@ -115,7 +107,6 @@ const PlatformFeatureCards = () => {
 
                     {/* DELETE */}
                     <button
-                      disabled={!canFeatureDelete}
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenDeleteModal(true);

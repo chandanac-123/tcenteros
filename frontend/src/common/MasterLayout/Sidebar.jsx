@@ -16,31 +16,40 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
   const location = useLocation();
   const [openMenuKey, setOpenMenuKey] = useState(null);
 
-  const role = useAuthStore((state) => state.auth?.role);
-  const isSuperAdmin = role === "superadmin";
+  const auth = useAuthStore((state) => state.auth);
+  const role = auth?.role;
+  const centerId = auth?.center_id; // "superadmin" | "centeradmin"
+  const isEmployee = role === "employee";
   const isPartner = role === "partner";
+
+  // Determine which route group employee belongs to
+  const isSuperAdmin = role === "superadmin" || (isEmployee && !centerId);
+
+  const isCenterAdmin = role === "centeradmin" || (isEmployee && !!centerId);
 
   const filteredRoutes = useMemo(() => {
     return routes.filter((item) => {
-      if (item.alwaysVisible) return true; // Show for all roles
-      if (isSuperAdmin) return item.isSuperAdmin === true;
-      if (isPartner) return item.isPartner === true;
-      return item.isSuperAdmin !== true && item.isPartner !== true;
+      // Always visible routes (e.g. Dashboard)
+      if (item.alwaysVisible) return true;
+
+      // Partner routes
+      if (isPartner) {
+        return item.isPartner === true;
+      }
+
+      // Super Admin + Super Admin Employee
+      if (isSuperAdmin) {
+        return item.isSuperAdmin === true;
+      }
+
+      // Center Admin + Center Admin Employee
+      if (isCenterAdmin) {
+        return item.isSuperAdmin !== true && item.isPartner !== true;
+      }
+
+      return false;
     });
-  }, [isSuperAdmin, isPartner]);
-
-  useEffect(() => {
-    const activeMenu = filteredRoutes.find((item) => isSubmenuActive(item));
-    if (activeMenu) {
-      //  Open submenu if inside it
-      setOpenMenuKey(activeMenu.key);
-    } else {
-      //  Close submenu if navigating outside
-      setOpenMenuKey(null);
-    }
-  }, [location.pathname]);
-
-  if (!hydrated) return null;
+  }, [isSuperAdmin, isCenterAdmin, isPartner]);
 
   const isSubmenuActive = (item) => {
     if (!item.submodules) return false;
@@ -51,6 +60,18 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
       ),
     );
   };
+
+  useEffect(() => {
+    const activeMenu = filteredRoutes.find((item) => isSubmenuActive(item));
+
+    if (activeMenu) {
+      setOpenMenuKey(activeMenu.key);
+    } else {
+      setOpenMenuKey(null);
+    }
+  }, [location.pathname, filteredRoutes]);
+
+  if (!hydrated) return null;
 
   return (
     <div
@@ -67,6 +88,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
           src={branding.logo_url || logo}
           className="w-28 h-28 mt-3"
           loading="lazy"
+          alt="Logo"
         />
       </div>
 
@@ -74,9 +96,12 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
       <div className="flex flex-col gap-1 w-full my-3 px-2 overflow-auto">
         {filteredRoutes.map((item) => {
           const allowed = sidebarPermission(permissions, item.permissionKey);
-          if (!item?.menubar || !allowed) return null;
+
+          if (!item.menubar || !allowed) return null;
+
           const hasSubmenu = item.submodules?.length > 0;
           const isOpen = openMenuKey === item.key;
+
           return (
             <MenuCard
               key={item.key}
@@ -94,12 +119,13 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
                 } else {
                   setOpenMenuKey(null);
                 }
+
                 if (isMobile) setOpen(false);
               }}
             >
               {hasSubmenu && isOpen && (
                 <SubmenuCard
-                  submenu={item?.submodules?.filter((sub) => sub?.menubar)}
+                  submenu={item.submodules.filter((sub) => sub.menubar)}
                   parentPath={item.path.replace(/^\//, "")}
                   collapsed={collapsed}
                   onClick={() => isMobile && setOpen(false)}
