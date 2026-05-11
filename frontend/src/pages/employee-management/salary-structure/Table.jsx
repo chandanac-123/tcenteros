@@ -1,62 +1,72 @@
-import React, { useState } from 'react'
-import { DataTable } from '@common/components/DataTable'
-import edit from '@assets/form-icons/edit.svg'
-import deleteicon from '@assets/form-icons/delete.svg'
-import StructureAddEdit from './AddEdit'
-import DeleteModal from '@common/components/CustomeDelete'
-import { useDeleteSalaryMutation } from '@api-queries/center-admin/employee-salary/Query'
+import React, { useState } from "react";
+import { DataTable } from "@common/components/DataTable";
+import edit from "@assets/form-icons/edit.svg";
+import deleteicon from "@assets/form-icons/delete.svg";
+import StructureAddEdit from "./AddEdit";
+import DeleteModal from "@common/components/CustomeDelete";
+import { useDeleteSalaryMutation } from "@api-queries/center-admin/employee-salary/Query";
+import { useAppPermissions } from "@hooks/index";
 
 const SalaryStructureTable = ({
   pagination,
   data,
   isLoading,
   setTableParams,
-  tableParams
+  tableParams,
 }) => {
-  const [editId, setEditId] = useState(null)
-  const [deleteId, setDeleteId] = useState(null)
-  const { mutate: deleteSalary } = useDeleteSalaryMutation()
+  const [editId, setEditId] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const { mutate: deleteSalary } = useDeleteSalaryMutation();
+  const { hydrated, canEditSalary, canDeleteSalary } = useAppPermissions();
+  if (!hydrated) return null;
 
   const handleDelete = async () => {
     try {
       if (deleteId) {
-        await deleteSalary(deleteId)
+        await deleteSalary(deleteId);
       }
-      setDeleteId(null)
+      setDeleteId(null);
     } catch (error) {
-      console.error('Delete failed:', error)
+      console.error("Delete failed:", error);
     }
-  }
+  };
 
   const columns = [
-    { accessorKey: 'full_name', header: 'Name' },
-    { accessorKey: 'designation', header: 'Designation' },
-    { accessorKey: 'joining_date', header: 'Joining Date' },
-    { accessorKey: 'salary_type', header: 'Salary Type' },
-    { accessorKey: 'pay_cycle', header: 'Pay Cycle' },
+    { accessorKey: "full_name", header: "Name" },
+    { accessorKey: "designation", header: "Designation" },
+    { accessorKey: "joining_date", header: "Joining Date" },
+    { accessorKey: "salary_type", header: "Salary Type" },
+    { accessorKey: "pay_cycle", header: "Pay Cycle" },
     {
-      header: 'Actions',
+      header: "Actions",
       cell: ({ row }) => (
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <button
+            disabled={!canEditSalary}
             onClick={() => {
-              setEditId(row.original.id)
+              setEditId(row.original.id);
             }}
           >
-            <img src={edit} loading="lazy" alt='edit' className='w-6 h-6' />
+            <img src={edit} loading="lazy" alt="edit" className="w-6 h-6" />
           </button>
 
           <button
+            disabled={!canDeleteSalary}
             onClick={() => {
-              setDeleteId(row.original.id)
+              setDeleteId(row.original.id);
             }}
           >
-            <img src={deleteicon} loading="lazy" alt='delete' className='w-6 h-6' />
+            <img
+              src={deleteicon}
+              loading="lazy"
+              alt="delete"
+              className="w-6 h-6"
+            />
           </button>
         </div>
-      )
-    }
-  ]
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -78,12 +88,12 @@ const SalaryStructureTable = ({
         open={!!deleteId}
         setOpen={() => setDeleteId(null)}
         id={deleteId}
-        header='Delete Employee'
-        description={'Are you sure you want to delete this employee?'}
+        header="Delete Employee"
+        description={"Are you sure you want to delete this employee?"}
         onConfirm={handleDelete}
       />
     </div>
-  )
-}
+  );
+};
 
-export default SalaryStructureTable
+export default SalaryStructureTable;

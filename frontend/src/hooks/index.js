@@ -25,8 +25,11 @@ export const useAppPermissions = () => {
     canConvertVisitor: hasPermission('crm.submodules.visitor.convert_to_member'),
 
     // Employee Management
-    canSalary: hasPermission('employee_management.submodules.salary_structure'),
-    canPayroll: hasPermission('employee_management.submodules.payroll'),
+    canAddSalary: hasPermission('employee_management.submodules.salary_structure.add'),
+    canEditSalary: hasPermission('employee_management.submodules.salary_structure.edit'),
+    canDeleteSalary: hasPermission('employee_management.submodules.salary_structure.delete'),
+    canAddPayroll: hasPermission('employee_management.submodules.payroll.add'),
+    canRunPayroll: hasPermission('employee_management.submodules.payroll.run'),
     canAddEmployee: hasPermission('employee_management.submodules.employee.add'),
     canViewEmployee: hasPermission('employee_management.submodules.employee.view'),
     canEditEmployee: hasPermission('employee_management.submodules.employee.edit'),

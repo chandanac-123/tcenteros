@@ -12,7 +12,7 @@ import Payroll from "./payroll";
 import { useAppPermissions } from "@hooks/index";
 
 const EmployeeManagement = () => {
-  const { hydrated, canAddEmployee } = useAppPermissions();
+  const { hydrated, canAddEmployee, canAddSalary } = useAppPermissions();
   if (!hydrated) return null;
 
   const tabConfig = [
@@ -62,13 +62,21 @@ const EmployeeManagement = () => {
               setTableParams((prev) => ({ ...prev, payment_status: value }))
             }
           />
-          {activeTab === "employee" && canAddEmployee && (
-            <Button onClick={handleOpen} size="addbutton">
+          {activeTab === "employee" && (
+            <Button
+              onClick={handleOpen}
+              disabled={!canAddEmployee}
+              size="addbutton"
+            >
               + Add Employee
             </Button>
           )}
           {activeTab === "salary_structure" && (
-            <Button onClick={() => setStructureOpen(true)} size="addbutton">
+            <Button
+              onClick={() => setStructureOpen(true)}
+              disabled={!canAddSalary}
+              size="addbutton"
+            >
               + Add Salary Structure
             </Button>
           )}
