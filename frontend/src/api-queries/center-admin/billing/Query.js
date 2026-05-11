@@ -52,7 +52,7 @@ export const useCreateCartMutation = () => {
       showSuccess('Cart created successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.message || 'Failed to create cart')
+      showError(err?.response?.data?.detail || 'Failed to create cart')
       return err
     }
   })
