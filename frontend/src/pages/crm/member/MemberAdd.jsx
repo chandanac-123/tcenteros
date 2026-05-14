@@ -193,7 +193,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         }
 
         //  Edit cleanup rules
-        if (isEdit && sourceData?.payment_status != null) {
+        if (isEdit && sourceData?.payment_status != 'unpaid') {
           delete payload.membership_id;
           delete payload.payment_method;
           delete payload.password;
@@ -397,7 +397,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         </div>
         {formik?.values?.payment_status === "paid" &&
-          memberData?.payment_status == null && (
+          memberData?.payment_status == 'unpaid' && (
             <div className="flex gap-4 ">
               <div className="flex-1">
                 <CustomeSelect
@@ -431,7 +431,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           )}
 
-        {memberData?.payment_status == null && (
+        {memberData?.payment_status == 'unpaid' && (
           <div className="flex justify-end">
             <CustomeTab
               tabList={paidStatus}
