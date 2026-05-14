@@ -52,11 +52,11 @@ const RenewalDetailView = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4" key={renewal.id}>
             {/* Left Section */}
             <div className="flex items-start gap-3">
-              <MapIcon className="text-gray-500 mt-1" />
+              <img src={renewal?.center_image_url} alt="" className="w-12 h-12 rounded-full "/>
 
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium">{renewal.center_name}</span>
+                  <span className="font-medium">{renewal?.center_name}</span>
                   {/* <Badge
                     className="bg-badge_bg_green border-none  rounded-xl w-auto"
                     variant="future_lead"
