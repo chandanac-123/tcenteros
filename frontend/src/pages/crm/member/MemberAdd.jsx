@@ -193,7 +193,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
         }
 
         //  Edit cleanup rules
-        if (isEdit && sourceData?.payment_status != 'unpaid') {
+        if (isEdit && sourceData?.payment_status != "unpaid") {
           delete payload.membership_id;
           delete payload.payment_method;
           delete payload.password;
@@ -233,6 +233,20 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   //     </div>
   //   )
   // }
+
+  const handleDateChange = (e) => {
+    // Keep only numbers
+    let value = e.target.value.replace(/\D/g, "");
+    // Limit to 8 digits (DDMMYYYY)
+    value = value.slice(0, 8);
+    // Insert hyphens automatically
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}-${value.slice(2, 4)}-${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}-${value.slice(2)}`;
+    }
+    formik.setFieldValue("date_of_birth", value);
+  };
 
   // console.log('formi: ', formik.values)
   const isBlocked = memberPlan?.length === 0 || memberTimeSlot?.length === 0;
@@ -297,7 +311,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
               name="date_of_birth"
               placeholder="DD-MM-YYYY"
               value={formik.values.date_of_birth}
-              onChange={formik.handleChange}
+              onChange={handleDateChange}
               error={
                 formik.touched.date_of_birth && formik.errors.date_of_birth
               }
@@ -397,7 +411,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           </div>
         </div>
         {formik?.values?.payment_status === "paid" &&
-          memberData?.payment_status == 'unpaid' && (
+          memberData?.payment_status == "unpaid" && (
             <div className="flex gap-4 ">
               <div className="flex-1">
                 <CustomeSelect
@@ -431,7 +445,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           )}
 
-        {memberData?.payment_status == 'unpaid' && (
+        {memberData?.payment_status == "unpaid" && (
           <div className="flex justify-end">
             <CustomeTab
               tabList={paidStatus}
