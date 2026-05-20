@@ -15,7 +15,7 @@ const MultiRingChart = ({ dataConfig, size = 260, display = true }) => {
       backgroundColor: [item.color, "#E6E6E6"],
       borderWidth: 3,
       borderRadius: 8, // smooth rounded ends
-      cutout: `${baseCutout - index * step}%`, //  KEY FIX
+      cutout: `${baseCutout - index * step}%`,
     };
   });
 
@@ -29,7 +29,20 @@ const MultiRingChart = ({ dataConfig, size = 260, display = true }) => {
     plugins: {
       datalabels: { display: false },
       legend: { display: false },
-      tooltip: { enabled: false },
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          label: function (context) {
+            // Show tooltip only for the colored segment
+            if (context.dataIndex === 0) {
+              const label = context.dataset.label;
+              const value = context.dataset.data[0];
+              return `${label}: ${value}%`;
+            }
+            return null;
+          },
+        },
+      },
     },
   };
 
@@ -39,8 +52,7 @@ const MultiRingChart = ({ dataConfig, size = 260, display = true }) => {
         <Doughnut data={data} options={options} />
       </div>
 
-      {/* Legend */}
-      {/* Legend */}
+      {/* Custom Legend */}
       {display && (
         <div className="grid grid-cols-2 gap-x-10 gap-y-3 mt-6">
           {dataConfig.map((item, idx) => (
@@ -50,7 +62,7 @@ const MultiRingChart = ({ dataConfig, size = 260, display = true }) => {
                 style={{ backgroundColor: item.color }}
               />
               <span className="text-sm text-gray-600">
-                {item.label} – {item.value}%
+                {item.label} - {item.value}%
               </span>
             </div>
           ))}
