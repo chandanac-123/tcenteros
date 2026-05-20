@@ -116,7 +116,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     email: sourceData?.email || "",
     mobile: sourceData?.mobile || "",
     gender: sourceData?.gender || "male",
-    date_of_birth: formatToDDMMYYYY(sourceData?.date_of_birth) || "",
+    date_of_birth: formatToDDMMYYYY(sourceData?.date_of_birth) || null,
     blood_group: sourceData?.blood_group || "",
     address_line_1: sourceData?.address?.address_line_1 || "",
     address_line_2: sourceData?.address?.address_line_2 || "",

@@ -1,62 +1,63 @@
-import CustomeModal from '@common/components/CustomeModal'
-import logo from '@assets/header-icons/logo_in_auth.svg'
-import { Button } from '@pages/components/ui/button'
-import { useEffect, useState } from 'react'
-import { useAddBranchCountMutation } from '@api-queries/center-admin/branch/Query'
-import { useGetBranchPricesAndTaxQuery } from '@api-queries/center-admin/branch/Query'
-import SuccessModal from '../message-popup/success'
-import FaledModal from '../message-popup/failed'
-import { useNavigate } from 'react-router-dom'
-import { useSettingsTabStore } from '@store/tabStore'
-import RazorpayButton from '@common/Razorpay/RazorpayButton'
-import { useCreatePaymentOrder, useVerifyPayment } from '@api-queries/common/razorPay/query'
-import { showError, showSuccess } from '@utils/toast'
+import CustomeModal from "@common/components/CustomeModal";
+import logo from "@assets/header-icons/logo_in_auth.svg";
+import { Button } from "@pages/components/ui/button";
+import { useEffect, useState } from "react";
+import { useAddBranchCountMutation } from "@api-queries/center-admin/branch/Query";
+import { useGetBranchPricesAndTaxQuery } from "@api-queries/center-admin/branch/Query";
+import SuccessModal from "../message-popup/success";
+import FaledModal from "../message-popup/failed";
+import { useNavigate } from "react-router-dom";
+import { useSettingsTabStore } from "@store/tabStore";
+import RazorpayButton from "@common/Razorpay/RazorpayButton";
+import {
+  useCreatePaymentOrder,
+  useVerifyPayment,
+} from "@api-queries/common/razorPay/query";
+import { showError, showSuccess } from "@utils/toast";
 
 const AddBranchModal = ({ open, onOpenChange }) => {
-  const navigate = useNavigate()
-  const { setSelectedTab } = useSettingsTabStore()
-  const [count, setCount] = useState(0)
-  const { mutateAsync: addCount, isPending } = useAddBranchCountMutation()
-  const { data, isLoading, refetch } = useGetBranchPricesAndTaxQuery()
-  const [openSuccess, setOpenSuccess] = useState(false)
+  const navigate = useNavigate();
+  const { setSelectedTab } = useSettingsTabStore();
+  const [count, setCount] = useState(0);
+  const { mutateAsync: addCount, isPending } = useAddBranchCountMutation();
+  const { data, isLoading, refetch } = useGetBranchPricesAndTaxQuery();
+  const [openSuccess, setOpenSuccess] = useState(false);
   const [openFailed, setOpenFailed] = useState(false);
   const { mutate: create_Order, isPendings } = useCreatePaymentOrder();
   const { mutateAsync: verifyPayment } = useVerifyPayment();
 
-
-  const branchingPrice = data?.branching_price || 0
-  const taxPercentage = data?.tax_percentage || 0
-  console.log("LogData", data);
+  const branchingPrice = data?.branching_price || 0;
+  const taxPercentage = data?.tax_percentage || 0;
 
   // subtotal for selected branches
-  const subtotal = count * branchingPrice
+  const subtotal = count * branchingPrice;
   // tax amount
-  const taxAmount = (subtotal * taxPercentage) / 100
+  const taxAmount = (subtotal * taxPercentage) / 100;
   // total payable
-  const totalAmount = subtotal + taxAmount
+  const totalAmount = subtotal + taxAmount;
 
   useEffect(() => {
     if (open) {
-      refetch()
-      setCount(0)
+      refetch();
+      setCount(0);
     }
-  }, [open])
+  }, [open]);
 
   const increment = () => {
-    setCount(prev => prev + 1)
-  }
+    setCount((prev) => prev + 1);
+  };
 
   const decrement = () => {
-    setCount(prev => (prev > 1 ? prev - 1 : 1))
-  }
+    setCount((prev) => (prev > 1 ? prev - 1 : 1));
+  };
 
   const handlePurchase = async () => {
     try {
       const payload = {
-        branch_count: count
-      }
+        branch_count: count,
+      };
       const response = await addCount(payload);
-      console.log('count success:', response)
+      console.log("count success:", response);
       const payment_id = response?.payment_order_id;
       console.log("Pay", payment_id);
 
@@ -71,19 +72,16 @@ const AddBranchModal = ({ open, onOpenChange }) => {
         },
         onError: (err) => {
           console.error(err?.response?.data?.detail);
-          const message = err?.response?.data?.detail
-          showError(message)
+          const message = err?.response?.data?.detail;
+          showError(message);
         },
       });
-
     } catch (error) {
-      console.error('Purchase failed:', error)
-      showError("Branch Purchase Failed..!")
+      console.error("Purchase failed:", error);
+      showError("Branch Purchase Failed..!");
       // setOpenFailed(true)
     }
-  }
-
-
+  };
 
   const openRazorpay = async (orderData) => {
     onOpenChange(false);
@@ -95,10 +93,8 @@ const AddBranchModal = ({ open, onOpenChange }) => {
         name: "TcenterOS",
         description: "Branch purchase Payment",
         order_id: orderData.order_id,
-
         handler: async function (response) {
           try {
-            console.log("Payment Success:", response);
             const result = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -107,35 +103,17 @@ const AddBranchModal = ({ open, onOpenChange }) => {
             if (!result || result.error) {
               showError("Payment Verification is Failed");
               onOpenChange(true);
-              setOpenFailed(true)
+              setOpenFailed(true);
             }
-            console.log("Verified Result:", result);
-            showSuccess("Branch purchase successfully completed")
-            // setOpenSuccess(true)
           } catch (err) {
-            console.log("Verification Error:", err);
             onOpenChange(true);
-            // setOpenFailed(true);
           }
         },
-
-
-        // prefill: {
-        //   name: "Customer Name",
-        //   email: "customer@email.com",
-        // },
-
-        // theme: {
-        //   color: "#6D28D9",
-        // },
       };
 
       const razor = new window.Razorpay(options);
       razor.on("payment.failed", function (response) {
         console.log("Payment Failed:", response);
-
-        // onOpenChange(true);
-        // setOpenFailed(true);
 
         showError(response.error.description || "Payment Failed");
       });
@@ -145,53 +123,52 @@ const AddBranchModal = ({ open, onOpenChange }) => {
     }
   };
 
-
   return (
     <CustomeModal open={open} onOpenChange={onOpenChange}>
-      <div className='flex flex-col space-y-4 min-w-[380px]'>
-        <h2 className='text-sm font-semibold'>Purchase Branches</h2>
+      <div className="flex flex-col space-y-4 min-w-[380px]">
+        <h2 className="text-sm font-semibold">Purchase Branches</h2>
         {data?.tax_percentage === 0 && (
-          <p className='flex justify-center items-center text-red_text'>
+          <p className="flex justify-center items-center text-red_text">
             Purchase branch tax is currently 0%. You can add a Purchase Tax in
             Tax Settings if required, otherwise it will continue as 0%.
             <Button
-              variant='link'
+              variant="link"
               onClick={() => {
-                setSelectedTab(1)
-                navigate('/settings')
-                onOpenChange(false)
+                setSelectedTab(1);
+                navigate("/settings");
+                onOpenChange(false);
               }}
             >
               Go to Tax Settings
             </Button>
           </p>
         )}
-        <div className='flex justify-between items-center'>
-          <div className='flex flex-col space-y-2 py-3'>
-            <p className='text-[14px] text-[#7C7C7C]'>Branch Price</p>
-            <div className='flex border text-primary px-4 py-1 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] gap-3'>
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col space-y-2 py-3">
+            <p className="text-[14px] text-[#7C7C7C]">Branch Price</p>
+            <div className="flex border text-primary px-4 py-1 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] gap-3">
               <p>Branch</p>
               <p> ₹{data?.branching_price}</p>
             </div>
           </div>
-          <div className='flex flex-col space-y-2'>
-            <p className='text-[14px] text-[#7C7C7C]'>No. of Branches</p>
+          <div className="flex flex-col space-y-2">
+            <p className="text-[14px] text-[#7C7C7C]">No. of Branches</p>
 
-            <div className='flex justify-around gap-1 '>
+            <div className="flex justify-around gap-1 ">
               <button
                 onClick={decrement}
-                className='px-3 py-1 text-lg border rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold text-primary hover:bg-purple-50 transition'
+                className="px-3 py-1 text-lg border rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold text-primary hover:bg-purple-50 transition"
               >
                 −
               </button>
 
-              <div className='px-4 py-1 flex items-center rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold min-w-[40px] text-center'>
+              <div className="px-4 py-1 flex items-center rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold min-w-[40px] text-center">
                 {count}
               </div>
 
               <button
                 onClick={increment}
-                className='px-3 py-1 text-lg border rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold text-primary  hover:bg-purple-50 transition'
+                className="px-3 py-1 text-lg border rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] font-semibold text-primary  hover:bg-purple-50 transition"
               >
                 +
               </button>
@@ -199,36 +176,36 @@ const AddBranchModal = ({ open, onOpenChange }) => {
           </div>
         </div>
 
-        <div className='flex flex-col space-y-3'>
-          <h2 className='font-semibold'>Purchase Summary</h2>
-          <div className='flex justify-between items-center'>
-            <p className='text-[14px] text-[#7C7C7C]'>Cost Per Branch: </p>
+        <div className="flex flex-col space-y-3">
+          <h2 className="font-semibold">Purchase Summary</h2>
+          <div className="flex justify-between items-center">
+            <p className="text-[14px] text-[#7C7C7C]">Cost Per Branch: </p>
             <p>₹{data?.branching_price}</p>
           </div>
-          <div className='flex justify-between items-center'>
-            <p className='text-[14px] text-[#7C7C7C]'>Selected Branches: </p>
+          <div className="flex justify-between items-center">
+            <p className="text-[14px] text-[#7C7C7C]">Selected Branches: </p>
             <p>₹{subtotal}</p>
           </div>
 
-          <div className='flex justify-between items-center'>
-            <p className='text-[14px] text-[#7C7C7C]'>Tax</p>
+          <div className="flex justify-between items-center">
+            <p className="text-[14px] text-[#7C7C7C]">Tax</p>
             <p>₹{taxAmount}</p>
           </div>
-          <hr className='border-t-2 border-gray-300' />
+          <hr className="border-t-2 border-gray-300" />
 
-          <div className='flex justify-between items-center'>
-            <p className='text-[14px] text-[#7C7C7C]'>Total Amount</p>
-            <p className='font-semibold'>₹{totalAmount}</p>
+          <div className="flex justify-between items-center">
+            <p className="text-[14px] text-[#7C7C7C]">Total Amount</p>
+            <p className="font-semibold">₹{totalAmount}</p>
           </div>
-          <div className='py-3'>
+          <div className="py-3">
             <Button
-              variant='button_filled'
-              size='sm'
-              className='w-full'
+              variant="button_filled"
+              size="sm"
+              className="w-full"
               onClick={handlePurchase}
               disabled={isPending}
             >
-              {isPending ? 'Processing...' : 'Proceed to Payment'}
+              {isPending ? "Processing..." : "Proceed to Payment"}
             </Button>
             {/* <RazorpayButton
                 amount={50000} // ₹500
@@ -245,7 +222,7 @@ const AddBranchModal = ({ open, onOpenChange }) => {
       />
       <FaledModal open={openFailed} onOpenChange={setOpenFailed} />
     </CustomeModal>
-  )
-}
+  );
+};
 
-export default AddBranchModal
+export default AddBranchModal;

@@ -20,8 +20,6 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
   const { data: purchasedData, isPending } = useGetPurchasedBranchesQuery()
   const { data: categoryList, isLoading } = useGetBranchCategoriesListQuery()
   const { mutate: createNewBranch } = useCreateNewBranchMutation()
-  // console.log("Data", purchasedData);
-  //     console.log("Data1", categoryList);
 
   const param = purchasedData?.payment_order_id
 
@@ -45,7 +43,6 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
     enableReinitialize: true,
     validationSchema: branchValidationSchema,
     onSubmit: async values => {
-      console.log('Values', values)
       try {
         const formData = new FormData()
         Object.keys(values).forEach(key => {

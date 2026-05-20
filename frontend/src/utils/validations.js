@@ -353,10 +353,7 @@ export const visitorValidationSchema = (isEdit = false) =>
       .required("Email is required"),
     mobile: Yup.string()
       .matches(/^[0-9]{10}$/, "Enter a valid 10 digit mobile number")
-      .required("Mobile number is required"),
-    date_of_birth: Yup.string()
-      .nullable()
-      .required("Date of birth is required"),
+      .required("Mobile number is required")
   });
 
 export const centerTimingValidationSchema = Yup.object().shape({

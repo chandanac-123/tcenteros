@@ -26,12 +26,14 @@ const CenterAdminDashboard = () => {
   const firstLogin = useAuthStore((state) => state.firstLogin);
   const setFirstLogin = useAuthStore((state) => state.setFirstLogin);
   const { data: branchCountData } = useGetBranchCountQuery();
+  console.log("branchCountData: ", branchCountData);
   const { hydrated, canCreateBranch } = useAppPermissions();
   if (!hydrated) return null;
 
   const isLimitReached =
     branchCountData &&
     branchCountData.created_subcenters === branchCountData.branches_purchased;
+  console.log("isLimitReached: ", isLimitReached);
 
   useEffect(() => {
     if (firstLogin) {
@@ -115,10 +117,7 @@ const CenterAdminDashboard = () => {
             <span className="text-xs">{data?.centeradmin_name}</span>
           </div>
           <div className="flex gap-2">
-            {" "}
-            {canCreateBranch && (
-              <BranchDetailsButton isLimitReached={isLimitReached} />
-            )}
+            {canCreateBranch && !isLimitReached && <BranchDetailsButton />}
             {isCenterAdmin && (
               <Button
                 size="addbutton"

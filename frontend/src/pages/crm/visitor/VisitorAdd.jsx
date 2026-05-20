@@ -26,7 +26,7 @@ const VisitorAdd = ({ goBack }) => {
     email: '',
     mobile: '',
     gender: '',
-    date_of_birth: '',
+    date_of_birth: null,
     blood_group: '',
     address_line_1: '',
     address_line_2: '',
@@ -118,9 +118,6 @@ const VisitorAdd = ({ goBack }) => {
               placeholder='DD-MM-YYYY'
               value={formik.values.date_of_birth}
               onChange={formik.handleChange}
-              error={
-                formik.touched.date_of_birth && formik.errors.date_of_birth
-              }
             />
           </div>
           <div className='flex-1'>
