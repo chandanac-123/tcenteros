@@ -1,5 +1,4 @@
 import StockActivity from '@pages/iventories/tab_modules/Stock_Activity'
-import ReceiveStock from '@pages/iventories/tab_modules/Receive_Stock'
 import Overview from '@pages/iventories/tab_modules/Overview'
 import Reports from '@pages/iventories/tab_modules/Reports'
 import POS from '@pages/iventories/tab_modules/POS'
@@ -15,11 +14,6 @@ export const inventory_modules = [
     id: 'products',
     name: 'Products',
     component: <Product />
-  },
-  {
-    id: 'receive_stock',
-    name: 'Receive Stock',
-    component: <ReceiveStock />
   },
   {
     id: 'stock_activity',
