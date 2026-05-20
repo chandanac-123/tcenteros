@@ -1,20 +1,11 @@
-import { useFailedSubscriptionsQuery } from "@api-queries/super-admin/subcriptions/Query";
-import DeleteModal from "@common/components/CustomeDelete";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
-import { useAppPermissions } from "@hooks/index";
-import { Button } from "@pages/components/ui/button";
-import { BanknoteX, FileExclamationPoint, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { FileExclamationPoint } from "lucide-react";
 import FailedDataList from "./components/FailedDataList";
 
 const FailedPayments = () => {
-
-
-
-
   return (
     <ContentLayout>
-      <div className="bg- p-5">
+      <div className="bg- p-2">
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-4 p-4">
             <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
@@ -29,14 +20,9 @@ const FailedPayments = () => {
               </p>
             </div>
           </div>
-
         </div>
       </div>
-
-
-      <FailedDataList/>
-
-
+      <FailedDataList />
     </ContentLayout>
   );
 };

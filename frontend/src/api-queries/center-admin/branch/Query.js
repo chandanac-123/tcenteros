@@ -49,22 +49,37 @@ export const useGetBranchCategoriesListQuery = () => {
   });
 };
 
+// export const useCreateNewBranchMutation = () => {
+//   const query = useQueryClient();
+//   return useMutation({
+//     mutationFn: async (payload) => {
+//       console.log("Mutation Payload:", payload);
+//       return await createNewBranch(payload);
+//     },
+//     onSuccess: () => {
+//       query.invalidateQueries({ queryKey: ["branchCount"] });
+//       showSuccess("Branch created successfully");
+//     },
+//     onError: (error) => {
+//       showError(error?.response?.data?.detail || "Failed to create branch");
+//     },
+//   });
+// };
+
 export const useCreateNewBranchMutation = () => {
-  const query = useQueryClient();
+  const query = useQueryClient()
   return useMutation({
-    mutationFn: async (payload) => {
-      console.log("Mutation Payload:", payload);
-      return await createNewBranch(payload);
+    mutationFn: data => createNewBranch(data),
+    onSuccess: async data => {
+     query.invalidateQueries({ queryKey: ["branchCount"] });
+       showSuccess("Branch created successfully");
     },
-    onSuccess: () => {
-      query.invalidateQueries({ queryKey: ["branchCount"] });
-      showSuccess("Branch created successfully");
-    },
-    onError: (error) => {
-      showError(error?.response?.data?.detail || "Failed to create branch");
-    },
-  });
-};
+    onError: error => {
+       showError(error?.response?.data?.detail || "Failed to create branch");
+      return error
+    }
+  })
+}
 
 export const useGetBranchCountQuery = () => {
   return useQuery({
