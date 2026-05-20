@@ -86,7 +86,7 @@ const SASRevenue = () => {
     },
     {
       label: " Network Commission",
-      value: data?.overview?.network_commission?.network_commission || 0,
+      value: data?.overview?.network_commission || 0,
       icon: <Network size={16} strokeWidth={2.75} />,
       type: "amount",
     },
