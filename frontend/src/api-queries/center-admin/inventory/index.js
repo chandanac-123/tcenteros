@@ -2,7 +2,7 @@ import axiosInstance from '@api/axiosInstance'
 
 //Inventory API
 export const createProductApiCall = data =>
-  axiosInstance.post(`/inventory/products`, data)
+  axiosInstance.post(`/inventory/products/create-with-stock`, data)
 export const getSKUApiCall = data =>
   axiosInstance.get(`/settings/superadmin/center/sku-categories`, data)
 export const getProductApiCall = data =>

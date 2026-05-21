@@ -23,6 +23,7 @@ const Products = () => {
     { accessorKey: "name", header: "Product Name" },
     { accessorKey: "sku_code", header: "SKU Code" },
     { accessorKey: "stock", header: "Current Stock" },
+    { accessorKey: "base_price", header: "Base Price" },
     { accessorKey: "selling_price", header: "Selling Price" },
     { accessorKey: "reorder_level", header: "Reorder Level" },
     {

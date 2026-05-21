@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import AddProductCategory from "@pages/settings/components/AddProductCategory";
 import CustomDatePicker from "@common/components/CustomeDatepicker";
+import { format } from "date-fns";
 
 const unitTypes = [
   { id: "Kilogram", name: "Kilogram" },
@@ -32,12 +33,16 @@ const AddProductModal = ({ open, setOpen }) => {
   const isCategoryEmpty = !skus || skus.length == 0;
   const initialValues = {
     name: "",
-    category: "",
-    unit_of_measure: "",
+    sku_category_id: "",
     base_price: "",
     selling_price: "",
-    reorder_level: "",
+    unit_of_measure: "",
+    initial_stock: "",
+    supplier_name: "",
+    invoice_number: "",
+    invoice_date: "",
   };
+
   useEffect(() => {
     if (skus?.length == 0) {
       setCategoryOpen(true);
@@ -59,6 +64,10 @@ const AddProductModal = ({ open, setOpen }) => {
     },
   });
 
+  const handleDateChange = (field, val) => {
+    formik.setFieldValue(field, val ? format(val, "yyyy-MM-dd") : "");
+  };
+  
   return (
     <CustomeModal open={open} onOpenChange={setOpen} header="Add Product">
       <form
@@ -85,11 +94,12 @@ const AddProductModal = ({ open, setOpen }) => {
                 <CustomeSelect
                   label="Category"
                   placeholder="Select Category"
-                  name="category"
+                  name="sku_category_id"
                   options={skus || []}
-                  value={formik.values.category}
-                  onChange={(value) => formik.setFieldValue("category", value)}
-                  error={formik.touched.category && formik.errors.category}
+                  value={formik.values.sku_category_id}
+                  onChange={(value) =>
+                    formik.setFieldValue("sku_category_id", value)
+                  }
                 />
               )}
             </div>
@@ -138,50 +148,39 @@ const AddProductModal = ({ open, setOpen }) => {
           </div>
 
           <Input
-            label="Reorder Level"
-            placeholder="Enter Reorder Level"
-            name="reorder_level"
-            value={formik.values.reorder_level}
-            onChange={formik.handleChange}
-            error={formik.touched.reorder_level && formik.errors.reorder_level}
-          />
-
-          <Input
             label="Supplier Name"
             placeholder="Enter Supplier Name"
-            // name='supplier_name'
-            // value={formik.values.supplier_name}
-            // onChange={formik.handleChange}
-            // error={formik.touched.supplier_name && formik.errors.supplier_name}
+            name="supplier_name"
+            value={formik.values.supplier_name}
+            onChange={formik.handleChange}
           />
           <Input
-            label="Invoice Name"
+            label="Invoice Number"
             placeholder="Add"
-            // name='invoice_number'
-            // value={formik.values.invoice_number}
-            // onChange={formik.handleChange}
-            // error={
-            //   formik.touched.invoice_number && formik.errors.invoice_number
-            // }
+            name="invoice_number"
+            value={formik.values.invoice_number}
+            onChange={formik.handleChange}
           />
 
           <CustomDatePicker
             disableFuture={true}
             label="Invoice Date"
             placeholder="Add"
-            // name='invoice_date'
-            // value={formik.values.invoice_date}
-            // onChange={val => handleDateChange('invoice_date', val)}
-            // error={formik.touched.invoice_date && formik.errors.invoice_date}
+            name="invoice_date"
+            value={
+              formik.values.invoice_date
+                ? new Date(formik.values.invoice_date)
+                : null
+            }
+            onChange={(val) => handleDateChange("invoice_date", val)}
           />
 
           <Input
             label="Quantity"
             placeholder="Add"
-            // name='quantity'
-            // value={formik.values.quantity}
-            // onChange={formik.handleChange}
-            // error={formik.touched.quantity && formik.errors.quantity}
+            name="initial_stock"
+            value={formik.values.initial_stock}
+            onChange={formik.handleChange}
           />
         </div>
 

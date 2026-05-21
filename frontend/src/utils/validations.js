@@ -296,28 +296,12 @@ export const memberValidationSchema = (isEdit = false) =>
 
 export const productValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required("Product name is required"),
-  category: Yup.string().trim().required("Category is required"),
-  unit_of_measure: Yup.string().trim().required("Unit type is required"),
   base_price: Yup.number()
     .typeError("Base price must be a number")
     .required("Base price is required")
     .min(0, "Base price cannot be negative"),
   selling_price: Yup.number()
-    .typeError("Selling price must be a number")
-    .required("Selling price is required")
-    .min(0, "Selling price cannot be negative")
-    .test(
-      "selling-price-check",
-      "Selling price must be greater than or equal to base price",
-      function (value) {
-        const { base_price } = this.parent;
-        return value >= base_price;
-      },
-    ),
-  reorder_level: Yup.number()
-    .typeError("Reorder level must be a number")
-    .required("Reorder level is required")
-    .min(0, "Reorder level cannot be negative"),
+    .required("Selling price is required"),
 });
 
 export const productCategorySchema = Yup.object().shape({
@@ -370,15 +354,6 @@ export const centerTimingValidationSchema = Yup.object().shape({
         return value > opening_time;
       },
     ),
-  // inventory_profit: Yup.number()
-  //   .typeError('Inventory profit must be a number')
-  //   .required('Inventory profit is required')
-  //   .min(0, 'Cannot be negative'),
-  // payroll_cycle_day: Yup.number()
-  //   .typeError('Pay cycle must be a number')
-  //   .required('Pay cycle is required')
-  //   .min(1, 'Must be between 1 and 31')
-  //   .max(31, 'Must be between 1 and 31')
 });
 
 export const centerSlotValidationSchema = Yup.object().shape({
