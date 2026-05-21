@@ -21,7 +21,7 @@ const ApproveModal = ({ open, setOpen, data }) => {
 
   return (
     <>
-      <CustomeModal open={open} onOpenChange={setOpen} header={''}>
+      <CustomeModal open={open} onOpenChange={setOpen} header='Approve Request'>
         <form className='space-y-5' onSubmit={handleApprove}>
           <h2 className='text-[20px] leading-[30px]'>
             Do you sure you want to Approve this request?
