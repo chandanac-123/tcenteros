@@ -5,7 +5,7 @@ export const onboardingValidationSchema = Yup.object().shape({
   center_name: Yup.string().required("Center name is required"),
   contact_person: Yup.string().required("Contact person name is required"),
   center_email: Yup.string()
-    .email("Invalid email format")
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, "Invalid email format")
     .required("Contact email is required"),
   center_phone: Yup.string()
     .matches(/^[0-9]{10,12}$/, "Invalid phone number")
@@ -300,8 +300,7 @@ export const productValidationSchema = Yup.object().shape({
     .typeError("Base price must be a number")
     .required("Base price is required")
     .min(0, "Base price cannot be negative"),
-  selling_price: Yup.number()
-    .required("Selling price is required"),
+  selling_price: Yup.number().required("Selling price is required"),
 });
 
 export const productCategorySchema = Yup.object().shape({
@@ -337,7 +336,7 @@ export const visitorValidationSchema = (isEdit = false) =>
       .required("Email is required"),
     mobile: Yup.string()
       .matches(/^[0-9]{10}$/, "Enter a valid 10 digit mobile number")
-      .required("Mobile number is required")
+      .required("Mobile number is required"),
   });
 
 export const centerTimingValidationSchema = Yup.object().shape({

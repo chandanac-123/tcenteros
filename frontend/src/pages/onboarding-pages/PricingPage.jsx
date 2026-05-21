@@ -11,7 +11,6 @@ const PricingPage = () => {
   const store = useOnboardingStore()
   const { data, isFetching } = usePricingPageQuery(store?.onboardId)
 
-
   const amount = data?.calculated_amount || 0
   const isYearly = data?.subscription_duration === 'yearly'
   const monthlyPrice = isYearly ? amount / 12 : amount
@@ -92,18 +91,6 @@ const PricingPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Back Button */}
-      {/* <div className='mt-auto flex px-4 sm:px-10 pb-6 sm:pb-8'>
-        <Button
-          variant='outline_secondary'
-          size='sm'
-          leftIcon={backarrow}
-          onClick={() => navigate('/contact-details')}
-        >
-          Back
-        </Button>
-      </div> */}
     </SecondaryLayout>
   )
 }
