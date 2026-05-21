@@ -1,137 +1,80 @@
-import { DataTable } from '@common/components/DataTable'
-import { Badge } from '@pages/components/ui/badge'
-import { useState } from 'react'
-import Card from '../components/Cards'
-import { leadsType } from '@constants/leads'
-import edit from '@assets/form-icons/edit.svg'
-import LeadStatusChange from './LeadStatusChange'
+import { DataTable } from "@common/components/DataTable";
+import { useState } from "react";
 
 const Leads = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
     pageSize: 10,
     totalCount: 3,
-    search: ''
-  })
-  const [editOpen, setEditOpen] = useState(false)
+    search: "",
+  });
 
   // Dummy data for DataTable
   const data = [
     {
       id: 1,
-      full_name: 'John Doe',
-      email: 'john.doe@example.com',
-      mobile: '9876543210',
-      status: 'active',
-      date: '2024-06-10'
+      full_name: "John Doe",
+      email: "john.doe@example.com",
+      mobile: "9876543210",
+      status: "active",
+      date: "2024-06-10",
     },
     {
       id: 2,
-      full_name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      mobile: '9123456780',
-      status: 'inactive',
-      date: '2024-06-10'
+      full_name: "Jane Smith",
+      email: "jane.smith@example.com",
+      mobile: "9123456780",
+      status: "inactive",
+      date: "2024-06-10",
     },
     {
       id: 3,
-      full_name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      mobile: '9988776655',
-      status: 'pending',
-      date: ''
+      full_name: "Alice Johnson",
+      email: "alice.johnson@example.com",
+      mobile: "9988776655",
+      status: "pending",
+      date: "",
     },
     {
       id: 3,
-      full_name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      mobile: '9988776655',
-      status: 'fullfilled',
-      date: '2024-06-10'
+      full_name: "Alice Johnson",
+      email: "alice.johnson@example.com",
+      mobile: "9988776655",
+      status: "fullfilled",
+      date: "2024-06-10",
     },
     {
       id: 3,
-      full_name: 'Alice Johnson',
-      email: 'alice.johnson@example.com',
-      mobile: '9988776655',
-      status: 'followwup',
-      date: '2024-06-10'
-    }
-  ]
-
-  const statusVariantMap = {
-    active: 'active',
-    inactive: 'inactive',
-    pending: 'pending',
-    fullfilled: 'future_lead', // map to blue
-    followwup: 'follow_up' // map to purple
-  }
+      full_name: "Alice Johnson",
+      email: "alice.johnson@example.com",
+      mobile: "9988776655",
+      status: "followwup",
+      date: "2024-06-10",
+    },
+  ];
 
   const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Member  Name'
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Phone Number'
-    },
-    {
-      accessorKey: 'mobile',
-      header: 'Source'
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <span className='flex gap-3'>
-          <Badge
-            label={row.original.status.replace('_', ' ').toUpperCase()}
-            variant={statusVariantMap[row.original.status] || 'inactive'}
-          />
-        </span>
-      )
-    },
-    {
-      header: 'Followup date',
-      accessorKey: 'date',
-      cell: ({ row }) => {
-        const date = row.original.date
-
-        return date ? (
-          <span>{date}</span>
-        ) : (
-          <button onClick={()=>setEditOpen(true)}>
-            <img src={edit} alt='edit' loading="lazy"/>
-          </button>
-        )
-      }
-    }
-  ]
+    { accessorKey: "full_name", header: "Name" },
+    { accessorKey: "email", header: "Email" },
+    { accessorKey: "mobile", header: "Phone Number" },
+    { accessorKey: "mobile", header: "Date" },
+    { accessorKey: "mobile", header: "Location" },
+  ];
 
   return (
-    <>
-      <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6'>
-        {leadsType?.map(member => (
-          <Card key={member.id} label={member.name} />
-        ))}
-      </div>
+    <div className="flex flex-col mt-4">
       <DataTable
-        title='Products'
-        subTitle='Products'
+        title="Products"
+        subTitle="Products"
         columns={columns}
         data={data}
+        search={false}
         setTableParams={setTableParams}
         tableParams={tableParams}
         paginationVisibile={true}
       />
-      <LeadStatusChange open={editOpen} setOpen={setEditOpen}/>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default Leads
+export default Leads;
