@@ -82,7 +82,7 @@ const Payment = () => {
             // await refetchWalletAmount();
             // await refetchWalletSummary();
             // setOpenSuccess(true)
-            navigate("/payment-successful", { state: { paymentResponse: response }})
+            navigate("/dashbaord", { state: { paymentResponse: response }})
             showSuccess("Partner Payment received successfully")
           } catch (err) {
             console.log("Verification Error:", err);
