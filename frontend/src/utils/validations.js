@@ -429,3 +429,25 @@ export const centerTypeValidationSchema = Yup.object({
   code: Yup.string().required("Code is required"),
   image: Yup.mixed().required("Image is required"),
 });
+
+export const accountValidationSchema = (requireBankDetails) =>
+  Yup.object().shape({
+    account_holder_name: requireBankDetails
+      ? Yup.string().trim().required("Account holder name is required")
+      : Yup.string().trim(),
+    bank_name: requireBankDetails
+      ? Yup.string().trim().required("Bank name is required")
+      : Yup.string().trim(),
+    account_number: requireBankDetails
+      ? Yup.string()
+          .trim()
+          .matches(/^[0-9]{9,18}$/, "Enter a valid account number")
+          .required("Account number is required")
+      : Yup.string().trim(),
+    ifsc_code: requireBankDetails
+      ? Yup.string()
+          .trim()
+          .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, "Enter a valid IFSC code")
+          .required("IFSC code is required")
+      : Yup.string().trim(),
+  });

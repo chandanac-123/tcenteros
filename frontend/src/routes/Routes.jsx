@@ -45,6 +45,7 @@ import {
   FileUserIcon,
   Handshake,
   Headset,
+  Landmark,
   LayoutDashboard,
   ListChecks,
   LucideNetwork,
@@ -100,6 +101,7 @@ import SuspendedCenters from '@super-admin/subscriptions/suspended'
 import MainLandingPage from '@pages/onboarding-pages/MainLandingPage'
 import CentersList from '@pages/onboarding-pages/header-components/centers'
 import ResellersList from '@pages/onboarding-pages/header-components/resellers'
+import AccountDetails from '@partner/account-details'
 
 export const routes = [
   //public routes
@@ -194,8 +196,8 @@ export const routes = [
   //Partner Routes
   { key: 100, path: '/lead-management', privetRoute: true, isSubRoute: false, pageTitle: 'Leads Management', component: LeadsManagement, icon: <UserRoundPen />, menubar: true, permissionKey: true, isPartner: true },
   { key: 101, path: '/lead-management/add-newLeads', privetRoute: true, isSubRoute: false, pageTitle: 'Partners-Leads', component: AddnewLeads, icon: <UserRoundPen />, menubar: false, permissionKey: true, isPartner: true },
-
   { key: 60, path: '/earning-payout', privetRoute: true, isSubRoute: false, pageTitle: 'Earnings & Payouts', component: EarningsAndPayouts, icon: <BanknoteArrowUp />, menubar: true, permissionKey: true, isPartner: true },
   { key: 61, path: '/renewal', privetRoute: true, isSubRoute: false, pageTitle: 'Renewals', component: Renewals, icon: <CalendarSync />, menubar: true, permissionKey: true, isPartner: true },
+  { key: 68, path: '/account-details', privetRoute: true, isSubRoute: false, pageTitle: 'Account details', component: AccountDetails, icon: <Landmark />, menubar: true, permissionKey: true, isPartner: true },
 
 ]
