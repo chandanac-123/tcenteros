@@ -149,6 +149,14 @@ const MainLandingPage = () => {
               Book Demo
             </Button>
             <Button
+              onClick={() => navigate("/partner-landing")}
+              size="addbutton"
+              className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
+            >
+              Join as Reseller
+              <ArrowRight size={16} />
+            </Button>
+            <Button
               onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
