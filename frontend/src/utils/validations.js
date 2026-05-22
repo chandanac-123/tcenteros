@@ -22,12 +22,9 @@ export const onboardingValidationSchema = Yup.object().shape({
 
 export const partnerOnboardingValidationSchema = (requireBankDetails) =>
   Yup.object().shape({
-    full_name: Yup.string()
-      .trim()
-      .min(3, "Name must be at least 3 characters")
-      .required("Full name is required"),
+    full_name: Yup.string().required("Full name is required"),
     email: Yup.string()
-      .email("Invalid email format")
+      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, "Invalid email format")
       .required("Email is required"),
     mobile: Yup.string()
       .matches(/^[0-9]{10}$/, "Enter a valid 10 digit mobile number")
