@@ -24,7 +24,7 @@ export const useVerifyPayment = () => {
       console.log("Payment verified successfully:", data);
       // Refetch the branchCount query
       await queryClient.invalidateQueries({
-        queryKey: ["branchCount"],
+        queryKey: ["branchCountData"],
       });
       showSuccess("Branch purchase successfully completed");
     },

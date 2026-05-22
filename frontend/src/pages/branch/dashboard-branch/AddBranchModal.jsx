@@ -8,12 +8,11 @@ import SuccessModal from "../message-popup/success";
 import FaledModal from "../message-popup/failed";
 import { useNavigate } from "react-router-dom";
 import { useSettingsTabStore } from "@store/tabStore";
-import RazorpayButton from "@common/Razorpay/RazorpayButton";
 import {
   useCreatePaymentOrder,
   useVerifyPayment,
 } from "@api-queries/common/razorPay/query";
-import { showError, showSuccess } from "@utils/toast";
+import { showError } from "@utils/toast";
 
 const AddBranchModal = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
@@ -78,8 +77,6 @@ const AddBranchModal = ({ open, onOpenChange }) => {
       });
     } catch (error) {
       console.error("Purchase failed:", error);
-      showError("Branch Purchase Failed..!");
-      // setOpenFailed(true)
     }
   };
 

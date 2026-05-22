@@ -83,7 +83,7 @@ export const useCreateNewBranchMutation = () => {
 
 export const useGetBranchCountQuery = () => {
   return useQuery({
-    queryKey: ["branchCount"],
+    queryKey: ["branchCountData"],
     queryFn: getBranchCount,
     refetchOnWindowFocus: true,
     refetchOnMount: true,

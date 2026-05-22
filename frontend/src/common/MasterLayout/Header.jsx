@@ -27,13 +27,16 @@ import defalutUser from "@assets/header-icons/user.svg";
 import { useAppPermissions } from "@hooks/index";
 import AdminProfileModal from "@super-admin/admin-profile";
 import { useSuperadminProfileQuery } from "@api-queries/super-admin/profile/Query";
+import AddBranchModal from "@pages/branch/dashboard-branch/AddBranchModal";
 
 const Header = ({ toggleSidebar, collapsed }) => {
+  const [openAddBranch, setOpenAddbranch] = useState(false);
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
   const isPartner = role === "partner";
   const isCenterAdmin = role === "centeradmin";
-  const { hydrated, canAddMember, canViewNotifications } = useAppPermissions();
+  const { hydrated, canAddMember, canViewNotifications, canAddBranch } =
+    useAppPermissions();
   if (!hydrated) return null;
   const { setSelectedTab, setMemberView } = useCrmStore();
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -50,6 +53,9 @@ const Header = ({ toggleSidebar, collapsed }) => {
     setLogoutOpen(false);
   };
 
+  const handleOpenBranch = () => {
+    setOpenAddbranch(true);
+  };
   return (
     <header className="w-full bg-secondary shadow flex items-center h-16 p-3">
       <div className="flex items-center bg-secondary">
@@ -70,7 +76,17 @@ const Header = ({ toggleSidebar, collapsed }) => {
               open={locationOpen}
               setLocationOpen={setLocationOpen}
             />
-            <AddBranchButton />
+            <Button
+              disabled={!canAddBranch}
+              size="addbutton"
+              onClick={handleOpenBranch}
+            >
+              + Add Branch
+            </Button>
+            <AddBranchModal
+              open={openAddBranch}
+              onOpenChange={setOpenAddbranch}
+            />
             <Button
               disabled={!canAddMember}
               size="addbutton"
