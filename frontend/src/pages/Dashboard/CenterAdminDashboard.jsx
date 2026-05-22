@@ -4,7 +4,6 @@ import SubCard from "./components/Cards";
 import { Card } from "@pages/components/ui/card";
 import CustomDatePicker from "@common/components/CustomeDatepicker";
 import BarChart from "@common/charts/BarChart";
-import BranchDetailsButton from "@pages/branch/BranchDetailsButton";
 import { useDashboardQuery } from "@api-queries/center-admin/Dashboard/Query";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,18 +14,19 @@ import { formatIndianCurrency, getGreeting } from "@utils/helper";
 import { useAppPermissions } from "@hooks/index";
 import { Button } from "@pages/components/ui/button";
 import RenewSubcription from "./components/RenewSubcription";
+import AddBranchDetails from "@pages/branch/dashboard-branch/AddBranchDetails";
 
 const CenterAdminDashboard = () => {
   const role = useAuthStore((state) => state.auth?.role);
   const isCenterAdmin = role === "centeradmin";
   const [greeting, setGreeting] = useState(getGreeting());
+  const [openAddBranch, setOpenAddbranch] = useState(false);
   const [instructionOpen, setInstructionOpen] = useState(false);
   const [renewSubscriptionOpen, setRenewSubscriptionOpen] = useState(false);
   const navigate = useNavigate();
   const firstLogin = useAuthStore((state) => state.firstLogin);
   const setFirstLogin = useAuthStore((state) => state.setFirstLogin);
   const { data: branchCountData } = useGetBranchCountQuery();
-  console.log("branchCountData: ", branchCountData);
   const { hydrated, canCreateBranch } = useAppPermissions();
   if (!hydrated) return null;
 
@@ -108,6 +108,10 @@ const CenterAdminDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleOpenBranch = () => {
+    setOpenAddbranch(true);
+  };
+
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col w-full">
@@ -117,7 +121,12 @@ const CenterAdminDashboard = () => {
             <span className="text-xs">{data?.centeradmin_name}</span>
           </div>
           <div className="flex gap-2">
-            {canCreateBranch && !isLimitReached && <BranchDetailsButton />}
+            {" "}
+            {canCreateBranch && !isLimitReached && (
+              <Button size="addbutton" onClick={handleOpenBranch}>
+                + Setup Branch
+              </Button>
+            )}
             {isCenterAdmin && (
               <Button
                 size="addbutton"
@@ -251,6 +260,7 @@ const CenterAdminDashboard = () => {
         open={renewSubscriptionOpen}
         setOpen={setRenewSubscriptionOpen}
       />
+      <AddBranchDetails open={openAddBranch} onOpenChange={setOpenAddbranch} />
     </ContentLayout>
   );
 };

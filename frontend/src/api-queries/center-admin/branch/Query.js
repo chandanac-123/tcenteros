@@ -14,7 +14,7 @@ export const useAddBranchCountMutation = () => {
   return useMutation({
     mutationFn: createBranchCount,
     onSuccess: () => {
-      query.invalidateQueries({ queryKey: ["branchCount"] });
+      query.invalidateQueries({ queryKey: ["addBranchCount"] });
     },
     onError: (error) => {
       console.error("Branch count creation failed:", error);
@@ -71,7 +71,8 @@ export const useCreateNewBranchMutation = () => {
   return useMutation({
     mutationFn: data => createNewBranch(data),
     onSuccess: async data => {
-     query.invalidateQueries({ queryKey: ["branchCount"] });
+     query.invalidateQueries({ queryKey: ["branchCountData"] });
+     query.invalidateQueries({ queryKey: ["dashboard"] });
        showSuccess("Branch created successfully");
     },
     onError: error => {
