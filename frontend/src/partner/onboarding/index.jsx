@@ -47,6 +47,7 @@ const PartnerOnboarding = () => {
     onSubmit: async (values) => {
       try {
         setPartnerOnboardingDraft(values);
+        formik.resetForm();
         navigate("/agreement");
       } catch (error) {}
     },
@@ -99,7 +100,9 @@ const PartnerOnboarding = () => {
                 label="City"
               />
               {formik.touched.city && formik.errors.city && (
-                <div className="text-xs text-red_text mt-1">{formik.errors.city}</div>
+                <div className="text-xs text-red_text mt-1">
+                  {formik.errors.city}
+                </div>
               )}
             </div>
             <StateSelect
@@ -171,7 +174,8 @@ const PartnerOnboarding = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={
-                    formik.touched.account_number && formik.errors.account_number
+                    formik.touched.account_number &&
+                    formik.errors.account_number
                   }
                 />
                 <Input
@@ -186,7 +190,11 @@ const PartnerOnboarding = () => {
             )}
 
             <div className="flex w-full justify-center md:col-span-2">
-              <Button size="addbutton" type="submit" className="w-full bg-onboard_primary hover:bg-onboard_primary  justify-center">
+              <Button
+                size="addbutton"
+                type="submit"
+                className="w-full bg-onboard_primary hover:bg-onboard_primary  justify-center"
+              >
                 Continue to Agreement <MoveRight />
               </Button>
             </div>

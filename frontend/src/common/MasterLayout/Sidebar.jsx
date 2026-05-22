@@ -16,9 +16,8 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
   const location = useLocation();
   const [openMenuKey, setOpenMenuKey] = useState(null);
 
-  const auth = useAuthStore((state) => state.auth);
-  const role = auth?.role;
-  const centerId = auth?.center_id; // "superadmin" | "centeradmin"
+  const role = useAuthStore((state) => state.auth?.role);
+  const centerId = useAuthStore((state) => state.auth?.center_id);
   const isEmployee = role === "employee";
   const isPartner = role === "partner";
 
