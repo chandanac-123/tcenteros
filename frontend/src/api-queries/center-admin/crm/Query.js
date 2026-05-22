@@ -13,7 +13,8 @@ import {
   getGuestInfo,
   getVisitorById,
   getGuestById,
-  getActiveMemberPlan
+  getActiveMemberPlan,
+  getLeadExcel
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -173,3 +174,22 @@ export const useGuestById = (id) => {
     refetchOnMount: true
   })
 }
+
+
+export const useLeadExcelQuery = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (formData) => getLeadExcel(formData),
+
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["members"],
+      });
+      showSuccess(data.message);
+    },
+    onError: (err) => {
+      showError(err?.response?.data?.detail);
+    },
+  });
+};

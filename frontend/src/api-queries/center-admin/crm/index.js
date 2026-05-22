@@ -31,3 +31,14 @@ export const getVisitorByIdApiCall = id =>
   axiosInstance.get(`/membership/center/visitors/${id}`)
 export const getGuestByIdApiCall = id =>
   axiosInstance.get(`/membership/center/guests/${id}`)
+
+export const getLeadExcelApiCall = (formData) =>
+  axiosInstance.post(
+    "/membership/import-excel",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
