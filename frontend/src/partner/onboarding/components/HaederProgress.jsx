@@ -4,7 +4,7 @@ import { FileText, CreditCard, NotebookText } from "lucide-react";
 const steps = [
   { id: 1, label: "Detail", icon: FileText },
   { id: 2, label: "Agreement", icon: NotebookText },
-  { id: 3, label: "Payment", icon: CreditCard },
+  { id: 3, label: "Finish", icon: CreditCard },
 ];
 
 const HeaderProgress = ({ currentStep = 1 }) => {
