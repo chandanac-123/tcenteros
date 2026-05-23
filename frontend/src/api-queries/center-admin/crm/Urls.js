@@ -13,7 +13,8 @@ import {
   getVisitorByIdApiCall,
   getGuestByIdApiCall,
   getActiveMemberPlanApiCall,
-  getLeadExcelApiCall
+  getLeadExcelApiCall,
+  getLeadApiCall
 } from './index'
 
 export const getAllMember = async data => {
@@ -144,6 +145,15 @@ export const getGuestById = async id => {
 export const getLeadExcel = async (formData) => {
   try {
     const response = await getLeadExcelApiCall(formData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getLead = async (data) => {
+  try {
+    const response = await getLeadApiCall(data);
     return response.data;
   } catch (error) {
     throw error;

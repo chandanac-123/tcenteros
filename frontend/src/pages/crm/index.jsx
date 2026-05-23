@@ -17,33 +17,24 @@ import { useLeadExcelQuery } from "@api-queries/center-admin/crm/Query";
 
 const CRM = () => {
   const fileInputRef = useRef(null);
-
-const [excelData, setExcelData] = useState([]);
   const { mutateAsync: exportExcel, isPending } = useLeadExcelQuery();
-
-  const handleFileChange = async (e) => {
-  const file = e.target.files[0];
-
-  if (!file) return;
-
-  const formData = new FormData();
-
-  formData.append("file", file);
-
-  try {
-    const response = await exportExcel(formData);
-
-    console.log(response);
-
-    // Assuming API returns array
-    setExcelData(response?.data || response || []);
-  } catch (error) {
-    console.log(error);
-  }
-};
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const queryTab = queryParams.get("tab"); // 'members', 'leads', 'guests', etc.
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await exportExcel(formData);
+      console.log(response);
+      // Assuming API returns array
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   // Map query param to your crm_tabs id
   const tabMapping = {
@@ -189,7 +180,7 @@ const [excelData, setExcelData] = useState([]);
         ) : crmSelectedTab === 3 ? (
           <Guest />
         ) : crmSelectedTab === 2 ? (
-          <Leads excelData={excelData} />
+          <Leads  />
         ) : (
           selectedCrmCategory?.component_view
         )}
