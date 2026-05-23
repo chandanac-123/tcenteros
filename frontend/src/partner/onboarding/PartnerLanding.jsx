@@ -66,7 +66,7 @@ const PartnerLanding = () => {
 
   const growthValue = [
     {
-      value: "500+",
+      value: landingData?.summary?.centers_through_partners,
       title: "Active Clients on Platform",
     },
     {
