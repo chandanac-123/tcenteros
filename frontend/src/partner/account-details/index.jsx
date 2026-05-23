@@ -7,7 +7,7 @@ import { Button } from "@pages/components/ui/button";
 import { Input } from "@pages/components/ui/input";
 import { accountValidationSchema } from "@utils/validations";
 import { useFormik } from "formik";
-import { Landmark } from "lucide-react";
+import { Landmark, Save } from "lucide-react";
 import React from "react";
 
 const AccountDetails = () => {
@@ -24,6 +24,7 @@ const AccountDetails = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validateOnMount: true,
     validationSchema: accountValidationSchema(),
     onSubmit: async (values) => {
       try {
@@ -32,6 +33,7 @@ const AccountDetails = () => {
       } catch (error) {}
     },
   });
+  
   return (
     <ContentLayout>
       <div className="flex flex-col gap-4">
@@ -92,11 +94,15 @@ const AccountDetails = () => {
               onBlur={formik.handleBlur}
               error={formik.touched.ifsc_code && formik.errors.ifsc_code}
             />
-            <div className="flex justify-end w-full">
-              <Button size="addbutton" type="submit">
-                Save Details
-              </Button>
-            </div>
+          </div>
+          <div className="flex justify-end w-full mt-4">
+            <Button
+              size="addbutton"
+              type="submit"
+              disabled={!formik.dirty || !formik.isValid}
+            >
+              <Save /> Save Details
+            </Button>
           </div>
         </form>
       </div>

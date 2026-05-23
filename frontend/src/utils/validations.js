@@ -20,7 +20,7 @@ export const onboardingValidationSchema = Yup.object().shape({
   ),
 });
 
-export const partnerOnboardingValidationSchema = (requireBankDetails) =>
+export const partnerOnboardingValidationSchema = () =>
   Yup.object().shape({
     full_name: Yup.string().required("Full name is required"),
     email: Yup.string()
@@ -30,24 +30,6 @@ export const partnerOnboardingValidationSchema = (requireBankDetails) =>
       .matches(/^[0-9]{10}$/, "Enter a valid 10 digit mobile number")
       .required("Mobile number is required"),
     city: Yup.string().trim().required("City is required"),
-    account_holder_name: requireBankDetails
-      ? Yup.string().trim().required("Account holder name is required")
-      : Yup.string().trim(),
-    bank_name: requireBankDetails
-      ? Yup.string().trim().required("Bank name is required")
-      : Yup.string().trim(),
-    account_number: requireBankDetails
-      ? Yup.string()
-          .trim()
-          .matches(/^[0-9]{9,18}$/, "Enter a valid account number")
-          .required("Account number is required")
-      : Yup.string().trim(),
-    ifsc_code: requireBankDetails
-      ? Yup.string()
-          .trim()
-          .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, "Enter a valid IFSC code")
-          .required("IFSC code is required")
-      : Yup.string().trim(),
   });
 
 export const partnerAgreementValidationSchema = Yup.object().shape({
@@ -430,24 +412,18 @@ export const centerTypeValidationSchema = Yup.object({
   image: Yup.mixed().required("Image is required"),
 });
 
-export const accountValidationSchema = (requireBankDetails) =>
+export const accountValidationSchema = () =>
   Yup.object().shape({
-    account_holder_name: requireBankDetails
-      ? Yup.string().trim().required("Account holder name is required")
-      : Yup.string().trim(),
-    bank_name: requireBankDetails
-      ? Yup.string().trim().required("Bank name is required")
-      : Yup.string().trim(),
-    account_number: requireBankDetails
-      ? Yup.string()
-          .trim()
-          .matches(/^[0-9]{9,18}$/, "Enter a valid account number")
-          .required("Account number is required")
-      : Yup.string().trim(),
-    ifsc_code: requireBankDetails
-      ? Yup.string()
-          .trim()
-          .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, "Enter a valid IFSC code")
-          .required("IFSC code is required")
-      : Yup.string().trim(),
+    account_holder_name: Yup.string()
+      .trim()
+      .required("Account holder name is required"),
+    bank_name: Yup.string().trim().required("Bank name is required"),
+    account_number: Yup.string()
+      .trim()
+      .matches(/^[0-9]{9,18}$/, "Enter a valid account number")
+      .required("Account number is required"),
+    ifsc_code: Yup.string()
+      .trim()
+      .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, "Enter a valid IFSC code")
+      .required("IFSC code is required"),
   });

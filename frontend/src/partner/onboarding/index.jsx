@@ -9,14 +9,13 @@ import CitySelect from "@common/components/CitySelect";
 import StateSelect from "@common/components/StateSelect";
 import CountrySelect from "@common/components/CountrySelect";
 import { Textarea } from "@pages/components/ui/textarea";
-import { ChevronDown, MoveRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useOnboardingStore } from "@store/onboardingStore";
 import { partnerOnboardingValidationSchema } from "@utils/validations";
 
 const PartnerOnboarding = () => {
   const navigate = useNavigate();
-  const [showBankDetails, setShowBankDetails] = useState(false);
   const partnerOnboardingDraft = useOnboardingStore(
     (state) => state.partnerOnboardingDraft,
   );
@@ -34,16 +33,12 @@ const PartnerOnboarding = () => {
     city: partnerOnboardingDraft?.city || "",
     previous_sales_experience:
       partnerOnboardingDraft?.previous_sales_experience || "",
-    account_holder_name: partnerOnboardingDraft?.account_holder_name || "",
-    bank_name: partnerOnboardingDraft?.bank_name || "",
-    account_number: partnerOnboardingDraft?.account_number || "",
-    ifsc_code: partnerOnboardingDraft?.ifsc_code || "",
   };
 
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    validationSchema: partnerOnboardingValidationSchema(showBankDetails),
+    validationSchema: partnerOnboardingValidationSchema(),
     onSubmit: async (values) => {
       try {
         setPartnerOnboardingDraft(values);
@@ -52,13 +47,13 @@ const PartnerOnboarding = () => {
       } catch (error) {}
     },
   });
+
   return (
     <PartnerLayout>
       <div className="flex h-full w-full flex-col gap-2 overflow-y-auto p-4">
         <HeaderProgress currentStep={1} />
         <div className="flex gap-3 flex-col">
           <span className="flex text-md font-semibold">Basic Information</span>
-
           <form
             className="grid grid-cols-1 gap-4 md:grid-cols-2 px-4 "
             onSubmit={formik.handleSubmit}
@@ -132,63 +127,6 @@ const PartnerOnboarding = () => {
               value={formik.values.previous_sales_experience}
               onChange={formik.handleChange}
             />
-
-            <button
-              type="button"
-              className="flex items-center gap-1 text-sm text-onboard_primary md:col-span-2"
-              onClick={() => setShowBankDetails((prev) => !prev)}
-            >
-              {showBankDetails ? "Hide bank details" : "Add bank details"}
-              <ChevronDown
-                className={`transition-transform duration-200 ${showBankDetails ? "rotate-180" : ""}`}
-              />
-            </button>
-            {showBankDetails && (
-              <>
-                <span className="flex text-md font-semibold md:col-span-2">
-                  Bank Details
-                </span>
-                <Input
-                  label="Account Holder Name "
-                  name="account_holder_name"
-                  value={formik.values.account_holder_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.account_holder_name &&
-                    formik.errors.account_holder_name
-                  }
-                />
-                <Input
-                  label="Bank Name "
-                  name="bank_name"
-                  value={formik.values.bank_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.bank_name && formik.errors.bank_name}
-                />
-                <Input
-                  label="Account Number "
-                  name="account_number"
-                  value={formik.values.account_number}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.account_number &&
-                    formik.errors.account_number
-                  }
-                />
-                <Input
-                  label="IFSC Code "
-                  name="ifsc_code"
-                  value={formik.values.ifsc_code}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.ifsc_code && formik.errors.ifsc_code}
-                />
-              </>
-            )}
-
             <div className="flex w-full justify-center md:col-span-2">
               <Button
                 size="addbutton"
