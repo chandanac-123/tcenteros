@@ -123,6 +123,7 @@ const AccountDetails = () => {
               <Save /> Save Details
             </Button>
             <Button
+              disabled={!data?.account_holder_name}
               type="button"
               variant="danger"
               size="icon"
