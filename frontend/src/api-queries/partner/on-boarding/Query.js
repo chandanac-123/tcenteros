@@ -40,7 +40,7 @@ export const useCreateOnboardCenterMutation = () => {
       setPartnerOnboardingResponse(data);
       setOnboardId(data?.id ?? data?.onboarding_id ?? null);
       query.invalidateQueries("pricingPage");
-      showSuccess("Onboard center created successfully");
+      showSuccess("Onboard details saved");
     },
     onError: (err) => {
       console.log("err: ", err?.response);
