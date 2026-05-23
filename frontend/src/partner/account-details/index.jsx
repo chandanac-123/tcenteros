@@ -1,17 +1,21 @@
 import {
   useAddAccountMutation,
   useAccountDetailQuery,
+  useDeleteAccountMutation,
 } from "@api-queries/partner/account-details/Query";
+import DeleteModal from "@common/components/CustomeDelete";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Button } from "@pages/components/ui/button";
 import { Input } from "@pages/components/ui/input";
 import { accountValidationSchema } from "@utils/validations";
 import { useFormik } from "formik";
-import { Landmark, Save } from "lucide-react";
-import React from "react";
+import { Landmark, Save, Trash2Icon } from "lucide-react";
+import React, { useState } from "react";
 
 const AccountDetails = () => {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { mutateAsync: add_account } = useAddAccountMutation();
+  const { mutateAsync: delete_account } = useDeleteAccountMutation();
   const { data } = useAccountDetailQuery();
 
   const initialValues = {
@@ -33,7 +37,22 @@ const AccountDetails = () => {
       } catch (error) {}
     },
   });
-  
+
+  const handleDelete = async () => {
+    try {
+      await delete_account();
+      formik.resetForm({
+        values: {
+          account_holder_name: "",
+          bank_name: "",
+          account_number: "",
+          ifsc_code: "",
+        },
+      });
+      setDeleteOpen(false);
+    } catch (error) {}
+  };
+
   return (
     <ContentLayout>
       <div className="flex flex-col gap-4">
@@ -95,7 +114,7 @@ const AccountDetails = () => {
               error={formik.touched.ifsc_code && formik.errors.ifsc_code}
             />
           </div>
-          <div className="flex justify-end w-full mt-4">
+          <div className="flex justify-end w-full mt-4 gap-3">
             <Button
               size="addbutton"
               type="submit"
@@ -103,9 +122,24 @@ const AccountDetails = () => {
             >
               <Save /> Save Details
             </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="icon"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2Icon />
+            </Button>
           </div>
         </form>
       </div>
+      <DeleteModal
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        header="Delete Account Details"
+        description="Are you sure you want to delete this Account details?"
+        onConfirm={handleDelete}
+      />
     </ContentLayout>
   );
 };
