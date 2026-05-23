@@ -2,27 +2,49 @@ import { Clock, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export default function TimePicker ({ label, value, onChange, error }) {
-  console.log('value: ', value)
   const [hour, setHour] = useState('')
   const [minute, setMinute] = useState('')
   const [period, setPeriod] = useState('AM')
 
   // If parent value changes, update local UI
-  useEffect(() => {
-    if (!value) {
-      setHour('')
-      setMinute('')
-      setPeriod('AM')
-      return
-    }
-    const [h, m] = value.split(':')
-    const hour24 = parseInt(h, 10)
-    const newPeriod = hour24 >= 12 ? 'PM' : 'AM'
-    const hour12 = hour24 % 12 || 12
-    setHour(hour12.toString())
-    setMinute((m || '').slice(0, 2)) // safe minute
-    setPeriod(newPeriod)
-  }, [value])
+useEffect(() => {
+  if (!value) {
+    setHour('')
+    setMinute('')
+    setPeriod('AM')
+    return
+  }
+  // -----------------------------
+  // Handle 12-hour format
+  // Example: "04:00 AM"
+  // -----------------------------
+  if (value.includes('AM') || value.includes('PM')) {
+    const [time, meridian] = value.trim().split(' ')
+    const [h, m] = time.split(':')
+    setHour(String(Number(h)))
+    setMinute(m)
+    setPeriod(meridian)
+
+    return
+  }
+  // -----------------------------
+  // Handle 24-hour format
+  // Example: "16:00"
+  // -----------------------------
+  const [h, m] = value.split(':')
+  const hour24 = parseInt(h, 10)
+  if (isNaN(hour24)) {
+    setHour('')
+    setMinute('')
+    setPeriod('AM')
+    return
+  }
+  const newPeriod = hour24 >= 12 ? 'PM' : 'AM'
+  const hour12 = hour24 % 12 || 12
+  setHour(hour12.toString())
+  setMinute((m || '').slice(0, 2))
+  setPeriod(newPeriod)
+}, [value])
 
   const updateParent = (h, m, p) => {
     if (h !== '') {
