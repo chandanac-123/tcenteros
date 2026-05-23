@@ -8,7 +8,7 @@ export const verifyOTPforgotPasswordApiCall = details =>
   axiosInstance.post('/auth/centeradmin/forgot-password/verify-otp', details)
 export const resetPasswordApiCall = details => {
   return axiosInstance.post(
-    '/auth/centeradmin/forgot-password/set-password',
+    '/auth/centeradmin/forgot-password/reset-password',
     details
   )
 }

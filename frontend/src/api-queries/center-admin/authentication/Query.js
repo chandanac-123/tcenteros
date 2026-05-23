@@ -9,8 +9,7 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: data => {
-      console.log("login Data",data);
-      
+
       setAuth(data)
       query.invalidateQueries({ queryKey: ['auth'] })
       showSuccess('Login successful')
@@ -29,7 +28,16 @@ export const useLoginMutation = () => {
 
 export const useRequestOTPforgotPasswordMutation = () => {
   return useMutation({
-    mutationFn: requestOTPforgotPassword
+    mutationFn: requestOTPforgotPassword,
+    onSuccess: data => {
+      showSuccess(data?.detail)
+    },
+    onError: error => {
+      const message =
+        error?.response?.data?.detail
+      showError(message)
+      throw new Error(message)
+    }
   })
 }
 
@@ -37,7 +45,8 @@ export const useResetPasswordMutation = () => {
   const query = useQueryClient()
   return useMutation({
     mutationFn: resetPassword,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      showSuccess(data?.detail)
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })
@@ -47,7 +56,8 @@ export const useVerifyOTPforgotPasswordMutation = () => {
   const query = useQueryClient()
   return useMutation({
     mutationFn: verifyOTPforgotPassword,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      showSuccess(data?.detail)
       query.invalidateQueries({ queryKey: ['auth'] })
     }
   })
