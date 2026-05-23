@@ -168,7 +168,7 @@ const CenterAdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* Chart Section */}
           <div className="lg:col-span-2">
-            <Card className="p-4 h-full ">
+            {/* <Card className="p-4 h-full ">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                 <span className="font-semibold text-base">
                   Total Revenue Summary
@@ -198,6 +198,31 @@ const CenterAdminDashboard = () => {
                 yMin={0}
                 yMax={10000}
                 tickFormat={(v) => (v >= 1000 ? v / 1000 + "k" : v)}
+              />
+            </Card> */}
+
+            <Card className="p-4 h-full">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <span className="font-semibold text-base">
+                  Total Attendance
+                </span>
+                <span>
+                  <CustomDatePicker pickerType="year" />
+                </span>
+              </div>
+              <LineChart
+                labels={attendanceLabels}
+                datasets={[
+                  {
+                    label: "Attendance %",
+                    data: attendanceData,
+                    borderColor: "#3B82F6",
+                  },
+                ]}
+                yMin={0}
+                yMax={100}
+                stepSize={20}
+                tickFormat={(v) => v + "%"}
               />
             </Card>
           </div>
@@ -230,30 +255,6 @@ const CenterAdminDashboard = () => {
           </div>
         </div>
 
-        <div className="w-full col-span-full">
-          <Card className="p-4 h-full">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
-              <span className="font-semibold text-base">Total Attendance</span>
-              <span>
-                <CustomDatePicker pickerType="year" />
-              </span>
-            </div>
-            <LineChart
-              labels={attendanceLabels}
-              datasets={[
-                {
-                  label: "Attendance %",
-                  data: attendanceData,
-                  borderColor: "#3B82F6",
-                },
-              ]}
-              yMin={0}
-              yMax={100}
-              stepSize={20}
-              tickFormat={(v) => v + "%"}
-            />
-          </Card>
-        </div>
       </div>
       <InstructionPage open={instructionOpen} setOpen={setInstructionOpen} />
       <RenewSubcription
