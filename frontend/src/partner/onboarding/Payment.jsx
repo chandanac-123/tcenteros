@@ -9,13 +9,19 @@ import {
   useCreateOnboardingPaymentMutation,
 } from "@api-queries/partner/on-boarding/Query";
 import { useOnboardingStore } from "@store/onboardingStore";
-import { useCreatePaymentOrder, useVerifyPayment } from "@api-queries/common/razorPay/query";
+import {
+  useCreatePaymentOrder,
+  useVerifyPayment,
+} from "@api-queries/common/razorPay/query";
 import { showError, showSuccess } from "@utils/toast";
 
 const Payment = () => {
   const navigate = useNavigate();
   const partnerEmail = useOnboardingStore(
     (state) => state.partnerOnboardingDraft?.email,
+  );
+  const resetPartnerOnboardingDraft = useOnboardingStore(
+    (state) => state.resetPartnerOnboardingDraft,
   );
   const { data } = usePaymentFeeQuery(partnerEmail);
   const onboardId = useOnboardingStore((state) => state.onboardId);
@@ -42,12 +48,10 @@ const Payment = () => {
         },
         onError: (err) => {
           console.error(err?.response?.data?.detail);
-          const message = err?.response?.data?.detail
-          showError(message)
+          const message = err?.response?.data?.detail;
+          showError(message);
         },
       });
-
-
     } catch (error) {
       console.log("Payment initiation failed: ", error);
     }
@@ -82,8 +86,9 @@ const Payment = () => {
             // await refetchWalletAmount();
             // await refetchWalletSummary();
             // setOpenSuccess(true)
-            navigate("/dashboard", { state: { paymentResponse: response }})
-            showSuccess("Partner Payment received successfully")
+            resetPartnerOnboardingDraft();
+            navigate("/dashboard", { state: { paymentResponse: response } });
+            showSuccess("Partner Payment received successfully");
           } catch (err) {
             console.log("Verification Error:", err);
             // setOpen(true);
