@@ -127,8 +127,9 @@ const AddProductModal = ({ open, setOpen }) => {
 
           <Input
             label="Base Price"
-            placeholder="₹1500"
+            placeholder="Add Base Price"
             name="base_price"
+            type="number"
             value={formik.values.base_price}
             onChange={formik.handleChange}
             error={formik.touched.base_price && formik.errors.base_price}
@@ -137,8 +138,9 @@ const AddProductModal = ({ open, setOpen }) => {
           <div>
             <Input
               label="Selling Price"
-              placeholder="₹2000"
+              placeholder="Add Selling Price"
               name="selling_price"
+              type="number"
               value={formik.values.selling_price}
               onChange={formik.handleChange}
               error={
@@ -156,7 +158,7 @@ const AddProductModal = ({ open, setOpen }) => {
           />
           <Input
             label="Invoice Number"
-            placeholder="Add"
+            placeholder="Enter Invoice Number"
             name="invoice_number"
             value={formik.values.invoice_number}
             onChange={formik.handleChange}
@@ -165,7 +167,7 @@ const AddProductModal = ({ open, setOpen }) => {
           <CustomDatePicker
             disableFuture={true}
             label="Invoice Date"
-            placeholder="Add"
+            placeholder="Add Invoice Date"
             name="invoice_date"
             value={
               formik.values.invoice_date
@@ -177,7 +179,8 @@ const AddProductModal = ({ open, setOpen }) => {
 
           <Input
             label="Quantity"
-            placeholder="Add"
+            type="number"
+            placeholder="Add Quantity"
             name="initial_stock"
             value={formik.values.initial_stock}
             onChange={formik.handleChange}
