@@ -9,7 +9,7 @@ const AccountSubCard = () => {
         <div
           onClick={() => navigate(`/accounts/sub-modules/${item.title.toLowerCase()}`)}
           key={item.title}
-          className='flex flex-col w-24 items-center gap-4 border border-tab_bg rounded-lg p-3 hover:shadow-sm transition'
+          className='flex flex-col cursor-pointer w-24 items-center gap-4 border border-tab_bg rounded-lg p-3 hover:shadow-sm transition'
         >
           <img src={item.image} alt={item.title} loading="lazy" />
           <span className='text-sm font-medium text-muted-foreground'>
