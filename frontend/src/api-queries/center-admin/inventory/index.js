@@ -11,6 +11,8 @@ export const updateProductApiCall = (details, id) =>
   axiosInstance.patch(`/inventory/products/${id}`, details)
 export const deleteProductApiCall = id =>
   axiosInstance.delete(`/inventory/products/${id}`)
+export const getProductByidApiCall = id =>
+  axiosInstance.get(`/inventory/products/${id}`)
 export const createStockApiCall = data =>
   axiosInstance.post(`/inventory/stock/adjust`, data)
 export const getStockApiCall = data =>

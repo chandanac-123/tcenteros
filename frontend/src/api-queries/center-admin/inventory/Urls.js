@@ -21,7 +21,8 @@ import {
   getGenerateSaleReportApiCall,
   inventoryDashboardApiCall,
   getInventoryProfitValueApiCall,
-  createInventoryProfitApiCall
+  createInventoryProfitApiCall,
+  getProductByidApiCall
 } from './index'
 
 export const getAllSKU = async () => {
@@ -54,6 +55,15 @@ export const updateProduct = async (details, id) => {
 export const deleteProduct = async id => {
   try {
     const response = await deleteProductApiCall(id)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getProductById = async id => {
+  try {
+    const response = await getProductByidApiCall(id)
     return response.data
   } catch (error) {
     throw error

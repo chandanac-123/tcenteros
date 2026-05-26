@@ -22,7 +22,8 @@ import {
   getDashboardData,
   getDropdownProducts,
   getInventoryProfitValue,
-  createInventoryProfit
+  createInventoryProfit,
+  getProductById
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -65,6 +66,16 @@ export const useUpdateProductMutation = () => {
   })
 }
 
+export const useProductByIdQuery = id => {
+  return useQuery({
+    queryKey: ['Productlist', id],
+    queryFn: () => getProductById(id),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
+
+
 export const useDeleteProductMutation = () => {
   const queryClient = useQueryClient()
   return useMutation({
@@ -82,7 +93,7 @@ export const useDeleteProductMutation = () => {
 
 export const useAllProductsQuery = data => {
   return useQuery({
-    queryKey: ['Product'],
+    queryKey: ['Products'],
     queryFn: () => getAllProducts(data),
     refetchOnWindowFocus: true,
     refetchOnMount: true

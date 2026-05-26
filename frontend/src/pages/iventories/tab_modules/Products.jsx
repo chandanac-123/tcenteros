@@ -1,22 +1,19 @@
 import React, { useState } from "react";
 import { DataTable } from "@common/components/DataTable";
-import deleteicon from "@assets/form-icons/delete.svg";
 import {
   useAllProductsQuery,
-  useDeleteProductMutation,
 } from "@api-queries/center-admin/inventory/Query";
 import { Button } from "@pages/components/ui/button";
 import AddProductModal from "../components/AddProductModal";
-import DeleteModal from "@common/components/CustomeDelete";
+import RestockProductModal from "../components/RestockProductModal.";
 
 const Products = () => {
   const [tableParams, setTableParams] = useState({
     page: 1,
   });
   const { data, isFetching } = useAllProductsQuery(tableParams);
-  const { mutateAsync: deleteProduct } = useDeleteProductMutation();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
+  const [restockOpen, setRestockOpen] = useState(false);
+  const [restockId, setRestockId] = useState(null);
   const [open, setOpen] = useState(false);
 
   const columns = [
@@ -32,31 +29,17 @@ const Products = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              setDeleteId(row.original.product_id);
-              setDeleteOpen(true);
+              setRestockId(row.original.product_id);
+              setRestockOpen(true);
             }}
           >
-            <img
-              src={deleteicon}
-              loading="lazy"
-              alt="delete"
-              className="w-6 h-6"
-            />
+            Add more stock
           </button>
         </div>
       ),
     },
   ];
 
-  const handleDelete = async () => {
-    try {
-      await deleteProduct(deleteId);
-      setDeleteOpen(false);
-      setDeleteId(null);
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,13 +64,7 @@ const Products = () => {
           search={false}
         />
       </div>
-      <DeleteModal
-        open={deleteOpen}
-        setOpen={setDeleteOpen}
-        header="Delete Product"
-        description="Are you sure you want to delete this Product?"
-        onConfirm={handleDelete}
-      />
+      <RestockProductModal open={restockOpen} setOpen={setRestockOpen} restockId={restockId} />
     </div>
   );
 };
