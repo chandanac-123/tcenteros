@@ -6,6 +6,7 @@ import {
 import { Button } from "@pages/components/ui/button";
 import AddProductModal from "../components/AddProductModal";
 import RestockProductModal from "../components/RestockProductModal.";
+import { Plus } from "lucide-react";
 
 const Products = () => {
   const [tableParams, setTableParams] = useState({
@@ -27,14 +28,18 @@ const Products = () => {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            size='notificationbutton'
+            variant='button_filled'
+            type='button'
             onClick={() => {
               setRestockId(row.original.product_id);
               setRestockOpen(true);
             }}
           >
-            Add more stock
-          </button>
+            <Plus strokeWidth={2.75}/>
+            Add more
+          </Button>
         </div>
       ),
     },
@@ -47,7 +52,7 @@ const Products = () => {
         <h1 className="text-lg font-semibold">Products List</h1>
         <div className="flex gap-2">
           <Button size="addbutton" type="submit" onClick={() => setOpen(true)}>
-            + Add Product
+              <Plus strokeWidth={2.75}/> Add Product
           </Button>
           <AddProductModal open={open} setOpen={setOpen} />
         </div>
