@@ -1,6 +1,6 @@
+import CustomeBreadcrumb from '@common/components/CustomeBreadcrumb'
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { subaccounts } from '@constants/accounts_submodules'
-import { ChevronsLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 const AccountsSubModules = () => {
@@ -17,17 +17,19 @@ const AccountsSubModules = () => {
 
   return (
     <ContentLayout>
-      <div className='flex flex-col gap-2'>
-        <span className='text-lg font-semibold text-textblack'>
-          Accounts Sub Modules - {subaccounts[currentIndex].title}
-        </span>
+      <div className='flex flex-col gap-6'>
+        <div>
+          <span className='text-lg font-semibold text-textblack'>
+            Accounts Sub Modules - {subaccounts[currentIndex].title}
+          </span>
+          <CustomeBreadcrumb
+            goBack={() => navigate("/accounts")}
+            buttonName="Revenue Calendar"
+            currentPageName="Revenue Details"
+          />
 
-        <button
-          className='flex gap-1 border-none bg-transparent text-primary items-center mb-2'
-          onClick={() => navigate('/accounts')}
-        >
-          <ChevronsLeft /> Back to Accounts
-        </button>
+        </div>
+
 
         {/* Tabs */}
         <div className='bg-white rounded-xl border border-gray-200 flex overflow-x-auto'>
