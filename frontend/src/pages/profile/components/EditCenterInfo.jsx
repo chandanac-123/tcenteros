@@ -39,7 +39,6 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
     center_phone: data?.center_phone || '',
     gst_number: data?.gst_number || '',
     center_email: data?.center_email || '',
-    live_class_enable: data?.live_class_enable ?? true,
     country: data?.address?.country || '',
     state: data?.address?.state || '',
     city: data?.address?.city || '',
@@ -68,8 +67,8 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           currently_using_digital_tool: digitalTools,
           marketing_platform: marketingPlatforms
         }
-        console.log("All Payloads in Profile",payload);
-        
+        console.log("All Payloads in Profile", payload);
+
         await update(payload)
         formik.resetForm()
         setOpen(false)
@@ -175,20 +174,7 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           </div>
         </div>
         <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CustomeSelect
-              options={[
-                { id: 'true', name: 'Yes' },
-                { id: 'false', name: 'No' }
-              ]}
-              label='Live Class'
-              name='live_class_enable'
-              value={String(formik.values.live_class_enable)}
-              onChange={option =>
-                formik.setFieldValue('live_class_enable', option === 'true')
-              }
-            />
-          </div>
+
           <div className='flex-1'>
             <Input
               label='Whatsapp Number'
