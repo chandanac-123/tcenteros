@@ -101,9 +101,9 @@ const SmartRecommandation = () => {
               ))}
 
               {/* Highlight */}
-              <div className='mt-3 flex items-center bg-secondary_light gap-2 border border-onboard_secondary rounded-2xl p-3 text-onboard_secondary text-sm font-medium'>
+              <div className='mt-3 justify-center flex items-center bg-secondary_light gap-2 border border-onboard_secondary rounded-2xl p-3 text-onboard_secondary text-sm font-medium'>
                 <img src={tick} alt='tick' className='w-5' loading="lazy" />
-                White-Label Offline + Live Classes
+                White-Label Offline
               </div>
             </div>
           </div>

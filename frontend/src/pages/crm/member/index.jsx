@@ -92,20 +92,19 @@ const Members = ({ onView, onEdit }) => {
     },
     {
       header: 'Action',
-      accessorKey: '',
       cell: ({ row }) => (
-        <span className='flex gap-3'>
+        <div className='items-center gap-2 flex'>
           <button
             disabled={!canViewMember}
             onClick={() => onView(row.original.id)}
           >
-            <img src={view} alt='view' loading="lazy"/>
+            <img src={view} alt='view' loading="lazy"  className='w-6 h-6'/>
           </button>
           <button
             disabled={!canEditMember}
             onClick={() => onEdit(row.original.id)}
           >
-            <img src={edit} alt='edit' loading="lazy"/>
+            <img src={edit} alt='edit' loading="lazy"  className='w-6 h-6'/>
           </button>
           <button
             disabled={!canDeleteMember}
@@ -114,7 +113,7 @@ const Members = ({ onView, onEdit }) => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} loading="lazy" alt='delete' />
+            <img src={deleteicon} loading="lazy" alt='delete'  className='w-6 h-6' />
           </button>
           <Switch
             disabled={!canEnableMember}
@@ -126,7 +125,7 @@ const Members = ({ onView, onEdit }) => {
               )
             }}
           />
-        </span>
+        </div>
       )
     }
   ]
