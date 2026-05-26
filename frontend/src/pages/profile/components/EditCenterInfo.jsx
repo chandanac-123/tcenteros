@@ -86,168 +86,121 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
       className='max-w-5xl w-full'
     >
       <form className='space-y-2 w-full' onSubmit={formik.handleSubmit}>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='About'
-              name='about'
-              placeholder='Enter Your Name'
-              value={formik.values.about}
-              onChange={formik.handleChange}
-              error={formik.touched.about && formik.errors.about}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Center Name'
-              name='center_name'
-              placeholder='Enter Your Name'
-              value={formik.values.center_name}
-              onChange={formik.handleChange}
-              error={formik.touched.center_name && formik.errors.center_name}
-            />
-          </div>
+        <Input
+          label='About'
+          name='about'
+          placeholder='Enter a brief introduction '
+          value={formik.values.about}
+          onChange={formik.handleChange}
+          error={formik.touched.about && formik.errors.about}
+        />
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <Input
+            label='Center Name'
+            name='center_name'
+            placeholder='Enter Your Name'
+            value={formik.values.center_name}
+            onChange={formik.handleChange}
+            error={formik.touched.center_name && formik.errors.center_name}
+          />
+          <Input
+            label='Center Capacity'
+            name='capacity'
+            placeholder='Enter Center Capacity'
+            value={formik.values.capacity}
+            onChange={formik.handleChange}
+          />
+          <CustomeSelect
+            options={classModes}
+            label='Kind of Center'
+            name='kind_of_center'
+            placeholder='Enter Kind of Center'
+            value={formik.values.kind_of_center}
+            onChange={option =>
+              formik.setFieldValue('kind_of_center', option)
+            }
+          />
+          <Input
+            label='Contact Person'
+            name='contact_person'
+            placeholder='Enter Contact Person'
+            value={formik.values.contact_person}
+            onChange={formik.handleChange}
+          />
+          <Input
+            label='GST Number'
+            name='gst_number'
+            placeholder='Enter GST Number'
+            value={formik.values.gst_number}
+            onChange={formik.handleChange}
+          />
+          <Input
+            label='Center Email'
+            name='center_email'
+            placeholder='Enter Center Email'
+            value={formik.values.center_email}
+            onChange={formik.handleChange}
+            error={formik.touched.center_email && formik.errors.center_email}
+          />
+          <Input
+            label='Center Phone'
+            name='center_phone'
+            value={formik.values.center_phone}
+            placeholder='Enter Center Phone'
+            onChange={formik.handleChange}
+            error={formik.touched.center_phone && formik.errors.center_phone}
+          />
+          <Input
+            label='Whatsapp Number'
+            name='whatsapp_number'
+            value={formik.values.whatsapp_number}
+            onChange={formik.handleChange}
+            error={
+              formik.touched.whatsapp_number && formik.errors.whatsapp_number
+            }
+          />
+          <CitySelect
+            country={formik.values.countryCode}
+            value={formik.values.city}
+            onChange={data => {
+              formik.setFieldValue('city', data.city)
+              formik.setFieldValue('state', data.state) // auto-fill
+              formik.setFieldValue('country', data.country) // auto-fill country
+            }}
+            label='City'
+          />
+          <StateSelect
+            country={formik.values.country}
+            value={formik.values.state}
+            onChange={val => formik.setFieldValue('state', val)}
+            label='State'
+          />
+          <CountrySelect
+            value={formik.values.country}
+            onChange={val => {
+              formik.setFieldValue('country', val.country)
+            }}
+            label='Country'
+          />
+          <Input
+            label='Pincode'
+            name='postal_code'
+            value={formik.values.postal_code}
+            onChange={formik.handleChange}
+          />
+          <Input
+            label='Address 1'
+            name='address_line_1'
+            value={formik.values.address_line_1}
+            onChange={formik.handleChange}
+          />
+          <Input
+            label='Address 2'
+            name='address_line_2'
+            value={formik.values.address_line_2}
+            onChange={formik.handleChange}
+          />
         </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Center Capacity'
-              name='capacity'
-              placeholder='Enter Center Capacity'
-              value={formik.values.capacity}
-              onChange={formik.handleChange}
-            />
-          </div>
-          <div className='flex-1'>
-            <CustomeSelect
-              options={classModes}
-              label='Kind of Center'
-              name='kind_of_center'
-              placeholder='Enter Kind of Center'
-              value={formik.values.kind_of_center}
-              onChange={option =>
-                formik.setFieldValue('kind_of_center', option)
-              }
-            />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Contact Person'
-              name='contact_person'
-              placeholder='Enter Contact Person'
-              value={formik.values.contact_person}
-              onChange={formik.handleChange}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='GST Number'
-              name='gst_number'
-              placeholder='Enter GST Number'
-              value={formik.values.gst_number}
-              onChange={formik.handleChange}
-            />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Center Email'
-              name='center_email'
-              placeholder='Enter Center Email'
-              value={formik.values.center_email}
-              onChange={formik.handleChange}
-              error={formik.touched.center_email && formik.errors.center_email}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Center Phone'
-              name='center_phone'
-              value={formik.values.center_phone}
-              placeholder='Enter Center Phone'
-              onChange={formik.handleChange}
-              error={formik.touched.center_phone && formik.errors.center_phone}
-            />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-
-          <div className='flex-1'>
-            <Input
-              label='Whatsapp Number'
-              name='whatsapp_number'
-              value={formik.values.whatsapp_number}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.whatsapp_number && formik.errors.whatsapp_number
-              }
-            />
-          </div>
-        </div>
-
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CitySelect
-              country={formik.values.countryCode}
-              value={formik.values.city}
-              onChange={data => {
-                formik.setFieldValue('city', data.city)
-                formik.setFieldValue('state', data.state) // auto-fill
-                formik.setFieldValue('country', data.country) // auto-fill country
-              }}
-              label='City'
-            />
-          </div>
-          <div className='flex-1'>
-            <StateSelect
-              country={formik.values.country}
-              value={formik.values.state}
-              onChange={val => formik.setFieldValue('state', val)}
-              label='State'
-            />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CountrySelect
-              value={formik.values.country}
-              onChange={val => {
-                formik.setFieldValue('country', val.country)
-              }}
-              label='Country'
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Pincode'
-              name='postal_code'
-              value={formik.values.postal_code}
-              onChange={formik.handleChange}
-            />
-          </div>
-        </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Address 1'
-              name='address_line_1'
-              value={formik.values.address_line_1}
-              onChange={formik.handleChange}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Address 2'
-              name='address_line_2'
-              value={formik.values.address_line_2}
-              onChange={formik.handleChange}
-            />
-          </div>
-        </div>
-
         <DynamicListInput
           label='Facilities'
           values={facilities}

@@ -55,12 +55,8 @@ const ViewCenterInfo = ({ open, setOpen, viewId }) => {
         {/* Status & Configuration */}
         <SectionTitle title='Configuration' />
 
-        <div className='grid grid-cols-4 gap-6'>
+        <div className='grid grid-cols-4 gap-6 capitalize'>
           <Info label='Center Status' value={data?.center_status} />
-          <Info
-            label='Live Class Enabled'
-            value={data?.live_class_enable ? 'Yes' : 'No'}
-          />
           <Info
             label='White Label Enabled'
             value={data?.white_label_enabled ? 'Yes' : 'No'}
