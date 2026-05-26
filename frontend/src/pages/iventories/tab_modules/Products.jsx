@@ -14,7 +14,6 @@ const Products = () => {
   });
   const { data, isFetching } = useAllProductsQuery(tableParams);
   const [restockOpen, setRestockOpen] = useState(false);
-  const [restockId, setRestockId] = useState(null);
   const [open, setOpen] = useState(false);
 
   const columns = [
@@ -24,25 +23,6 @@ const Products = () => {
     { accessorKey: "base_price", header: "Base Price" },
     { accessorKey: "selling_price", header: "Selling Price" },
     { accessorKey: "reorder_level", header: "Reorder Level" },
-    {
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Button
-            size='notificationbutton'
-            variant='button_filled'
-            type='button'
-            onClick={() => {
-              setRestockId(row.original.product_id);
-              setRestockOpen(true);
-            }}
-          >
-            <Plus strokeWidth={2.75}/>
-            Add more
-          </Button>
-        </div>
-      ),
-    },
   ];
 
 
@@ -50,11 +30,16 @@ const Products = () => {
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold">Products List</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
+          <Button size="addbutton" type="submit" onClick={() => setRestockOpen(true)}>
+            <Plus strokeWidth={2.75} /> Add Stock
+          </Button>
           <Button size="addbutton" type="submit" onClick={() => setOpen(true)}>
-              <Plus strokeWidth={2.75}/> Add Product
+            <Plus strokeWidth={2.75} /> Add Product
           </Button>
           <AddProductModal open={open} setOpen={setOpen} />
+          <RestockProductModal open={restockOpen} setOpen={setRestockOpen}  />
+
         </div>
       </div>
       <div className="">
@@ -69,7 +54,6 @@ const Products = () => {
           search={false}
         />
       </div>
-      <RestockProductModal open={restockOpen} setOpen={setRestockOpen} restockId={restockId} />
     </div>
   );
 };

@@ -6,7 +6,6 @@ import {
   deleteSKU,
   getAllProducts,
   getAllSKU,
-  updateProduct,
   getAllStock,
   getAllStockTransactions,
   createStockEntry,
@@ -23,7 +22,8 @@ import {
   getDropdownProducts,
   getInventoryProfitValue,
   createInventoryProfit,
-  getProductById
+  getProductById,
+  addStock
 } from './Urls'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -51,16 +51,16 @@ export const useCreateProductMutation = () => {
   })
 }
 
-export const useUpdateProductMutation = () => {
+export const useAddStockMutation = () => {
   const query = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => updateProduct(data, id),
+    mutationFn: ({ id, data }) => addStock(data, id),
     onSuccess: async data => {
       query.invalidateQueries('Product')
-      showSuccess('Product updated successfully')
+      showSuccess('Stock added successfully')
     },
     onError: err => {
-      showError(err?.response?.data?.detail || 'Failed to update product')
+      showError(err?.response?.data?.detail || 'Failed to add stock')
       return err
     }
   })

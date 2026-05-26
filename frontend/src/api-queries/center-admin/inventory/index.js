@@ -7,8 +7,8 @@ export const getSKUApiCall = data =>
   axiosInstance.get(`/settings/superadmin/center/sku-categories`, data)
 export const getProductApiCall = data =>
   axiosInstance.get(`inventory/products?page=${data?.page}`)
-export const updateProductApiCall = (details, id) =>
-  axiosInstance.patch(`/inventory/products/${id}`, details)
+export const addStockApiCall = (details, id) =>
+  axiosInstance.post(`/inventory/products/${id}/add-stock`, details)
 export const deleteProductApiCall = id =>
   axiosInstance.delete(`/inventory/products/${id}`)
 export const getProductByidApiCall = id =>
@@ -32,8 +32,7 @@ export const getProductDropdownApiCall = () =>
 
 export const getSaleReportApiCall = data =>
   axiosInstance.get(
-    `inventory/reports/sales?page=${data?.page}&date_from=${
-      data?.date_from
+    `inventory/reports/sales?page=${data?.page}&date_from=${data?.date_from
     }&date_to=${data?.date_to}&page_size=${10}`
   )
 export const getPurchaseReportApiCall = data =>

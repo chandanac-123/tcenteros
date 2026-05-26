@@ -2,38 +2,24 @@ import CustomeModal from "@common/components/CustomeModal";
 import { Input } from "@pages/components/ui/input";
 import { Button } from "@pages/components/ui/button";
 import {
-  useProductByIdQuery,
-  useUpdateProductMutation,
+  useAddStockMutation,
+  useProductDropdownQuery,
 } from "@api-queries/center-admin/inventory/Query";
 import { useFormik } from "formik";
 import CustomeSelect from "@common/components/CustomeSelect";
-
 import CustomDatePicker from "@common/components/CustomeDatepicker";
 import { format } from "date-fns";
+import { addStockValidationSchema } from "@utils/validations";
 
-const unitTypes = [
-  { id: "Kilogram", name: "Kilogram" },
-  { id: "Gram", name: "Gram " },
-  { id: "Liter", name: "Liter " },
-  { id: "Milliliter", name: "Milliliter" },
-  { id: "Piece", name: "Piece" },
-  { id: "Pack", name: "Pack" },
-  { id: "box", name: "Box" },
-  { id: "unit", name: "Unit" },
-];
 
-const RestockProductModal = ({ open, setOpen, restockId }) => {
-  const { data: productData } = useProductByIdQuery(restockId)
-  console.log('productData: ', productData);
-  const { mutateAsync: updateProduct, isLoading } = useUpdateProductMutation();
-
+const RestockProductModal = ({ open, setOpen }) => {
+  const { data: productDropdownData } = useProductDropdownQuery()
+  const { mutateAsync: addStock, isLoading } = useAddStockMutation();
   const initialValues = {
-    name: productData?.name || "",
-    sku_category_id: productData?.sku_category_id || "",
-    base_price: productData?.base_price || "",
-    selling_price: productData?.selling_price || "",
-    unit_of_measure: productData?.unit_of_measure || "",
-    initial_stock: productData?.stock || "",
+    product_id: "",
+    unit_cost: "",
+    selling_price: "",
+    quantity: "",
     supplier_name: "",
     invoice_number: "",
     invoice_date: "",
@@ -42,9 +28,14 @@ const RestockProductModal = ({ open, setOpen, restockId }) => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
+    validationSchema: addStockValidationSchema,
     onSubmit: async (values) => {
       try {
-        await updateProduct({ id: restockId, data: values });
+        const { product_id, ...payload } = values;
+        await addStock({
+          id: product_id,
+          data: payload,
+        });
         setOpen(false);
         formik.resetForm();
       } catch (error) {
@@ -56,51 +47,31 @@ const RestockProductModal = ({ open, setOpen, restockId }) => {
   const handleDateChange = (field, val) => {
     formik.setFieldValue(field, val ? format(val, "yyyy-MM-dd") : "");
   };
-  console.log('formik: ', formik);
 
   return (
-    <CustomeModal open={open} onOpenChange={setOpen} header="Restock Product">
+    <CustomeModal open={open} onOpenChange={setOpen} header="Add Stock">
       <form
         onSubmit={formik.handleSubmit}
         className="w-full max-w-2xl space-y-2 "
       >
-        <div className='flex gap-2 justify-between '>
-          <div className='flex flex-col'>
-            <span className='text-sm'>Product Name</span>
-            <span className='flex text-textgrey '>
-              {productData?.name}
-            </span>
-          </div>
-          <div className='flex flex-col'>
-            <span className='text-sm'>Category</span>
-            <span className='flex text-textgrey '>
-              {productData?.sku_category_name}
-            </span>
-          </div>
-          <div className='flex flex-col'>
-            <span className='text-sm'>Available Quantity</span>
-            <span className='flex text-textgrey '>{productData?.stock}</span>
-          </div>
-
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
           <CustomeSelect
-            label="Unit Type"
-            name="unit_of_measure"
-            placeholder="Select Unit"
-            options={unitTypes}
-            value={formik.values.unit_of_measure}
-            onChange={(value) => formik.setFieldValue("unit_of_measure", value)}
+            label='Product Name'
+            name='product_id'
+            placeholder='Select Product'
+            options={productDropdownData?.products || []}
+            value={formik.values.product_id}
+            onChange={value => formik.setFieldValue('product_id', value)}
+            error={formik.touched.product_id && formik.errors.product_id}
           />
           <Input
             label="Base Price"
             placeholder="Add Base Price"
-            name="base_price"
+            name="unit_cost"
             type="number"
-            value={formik.values.base_price}
+            value={formik.values.unit_cost}
             onChange={formik.handleChange}
-            error={formik.touched.base_price && formik.errors.base_price}
+            error={formik.touched.unit_cost && formik.errors.unit_cost}
           />
 
           <div>
@@ -148,8 +119,8 @@ const RestockProductModal = ({ open, setOpen, restockId }) => {
             label="Add Quantity"
             type="number"
             placeholder="Add Quantity"
-            name="initial_stock"
-            value={formik.values.initial_stock}
+            name="quantity"
+            value={formik.values.quantity}
             onChange={formik.handleChange}
           />
         </div>
@@ -157,7 +128,7 @@ const RestockProductModal = ({ open, setOpen, restockId }) => {
         {/* Buttons */}
         <div className="flex justify-end gap-3 pt-4">
           <Button size="addbutton" type="submit">
-            Restock Product
+            Add Stock
           </Button>
         </div>
       </form>

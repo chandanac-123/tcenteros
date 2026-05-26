@@ -260,17 +260,17 @@ export const memberValidationSchema = (isEdit = false) =>
     payment_method: isEdit
       ? Yup.string().nullable().notRequired()
       : Yup.string().when("payment_status", {
-          is: "paid",
-          then: (schema) => schema.required("Select payment method"),
-          otherwise: (schema) => schema.nullable(),
-        }),
+        is: "paid",
+        then: (schema) => schema.required("Select payment method"),
+        otherwise: (schema) => schema.nullable(),
+      }),
     password: isEdit
       ? Yup.string().nullable().notRequired()
       : Yup.string().when("payment_status", {
-          is: "paid",
-          then: (schema) => schema.required("Password is required"),
-          otherwise: (schema) => schema.notRequired(),
-        }),
+        is: "paid",
+        then: (schema) => schema.required("Password is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
   });
 
 export const productValidationSchema = Yup.object().shape({
@@ -280,6 +280,15 @@ export const productValidationSchema = Yup.object().shape({
     .required("Base price is required")
     .min(0, "Base price cannot be negative"),
   selling_price: Yup.number().required("Selling price is required"),
+});
+
+export const addStockValidationSchema = Yup.object().shape({
+  unit_cost: Yup.number()
+    .typeError("Unit cost must be a number")
+    .required("Unit cost is required")
+    .min(0, "Unit cost cannot be negative"),
+  selling_price: Yup.number().required("Selling price is required"),
+  product_id: Yup.string().required("Select a product")
 });
 
 export const productCategorySchema = Yup.object().shape({
