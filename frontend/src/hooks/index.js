@@ -17,6 +17,7 @@ export const useAppPermissions = () => {
     // CRM
     canAddMember: hasPermission('crm.submodules.member.add'),
     canEditMember: hasPermission('crm.submodules.member.edit'),
+    canViewMember: hasPermission('crm.submodules.member.view'),
     canDeleteMember: hasPermission('crm.submodules.member.delete'),
     canEnableMember: hasPermission('crm.submodules.member.enable_disable'),
     canViewLeads: hasPermission('crm.submodules.leads'),
