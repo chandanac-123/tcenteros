@@ -22,7 +22,7 @@ const RestockProductModal = ({ open, setOpen }) => {
     quantity: "",
     supplier_name: "",
     invoice_number: "",
-    invoice_date: "",
+    invoice_date: null,
   };
 
   const formik = useFormik({
@@ -122,6 +122,7 @@ const RestockProductModal = ({ open, setOpen }) => {
             name="quantity"
             value={formik.values.quantity}
             onChange={formik.handleChange}
+            error={formik.touched.quantity && formik.errors.quantity}
           />
         </div>
 
