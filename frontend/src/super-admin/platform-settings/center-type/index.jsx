@@ -10,6 +10,7 @@ import { useFormik } from "formik";
 import InputFile from "@common/components/CustomeFileUpload";
 import CenterTypeCard from "./CenterTypeCard";
 import { centerTypeValidationSchema } from "@utils/validations";
+import { generateCode } from "@utils/helper";
 
 const CenterType = () => {
   const { data, isLoading } = useGetCenterTypeQuery();
@@ -22,7 +23,7 @@ const CenterType = () => {
     initialValues: {
       name: "",
       image: null,
-      code: "",
+      code: generateCode(),
     },
     validationSchema: centerTypeValidationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -34,7 +35,13 @@ const CenterType = () => {
           formData.append("image", values.image);
         }
         await createCenterType(formData);
-        resetForm();
+        resetForm({
+          values: {
+            name: "",
+            image: null,
+            code: generateCode(),
+          },
+        });
       } catch (err) {
         console.log(err);
       }
