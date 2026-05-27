@@ -4,20 +4,30 @@ import { ChevronDown, Edit, Trash } from 'lucide-react'
 import React, { useState } from 'react'
 import EditFAQmodals from './modals/EditFAQmodals'
 import DeleteModal from '@common/components/CustomeDelete'
-import { useCreateFAQ, useFAQs } from '@api-queries/super-admin/platform-settings/Query'
+import { useCreateFAQ, useFAQs, useDeleteFAQMutation } from '@api-queries/super-admin/platform-settings/Query'
 import { Spinner } from '@pages/components/ui/spinner'
 
 const FAQpages = () => {
     const [open, setOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [deleteFAQ, setDeleteFAQ] = useState(false);
+    const [selectedFAQId, setSelectedFAQId] = useState(null);
     const [question, setQuestion] = useState('');
     const [answer, setAnswer] = useState('');
     const [openId, setOpenId] = useState(null);
     const { mutate, isPending, isSuccess, isError } = useCreateFAQ();
+    const { mutate: deleteFAQMutate, isPending: isDeletePending } = useDeleteFAQMutation();
     const { data, isLoading } = useFAQs();
 
-
+    const handleDeleteFAQ = async (id) => {
+        try {
+            await deleteFAQMutate(id);
+            setDeleteFAQ(false);
+            setSelectedFAQId(null);
+        } catch (error) {
+            console.error('Error deleting FAQ:', error);
+        }
+    };
 
     const handleAddFAQ = () => {
         if (!question || !answer) {
@@ -113,15 +123,18 @@ const FAQpages = () => {
                             )}
 
                             {/* Actions */}
-                            {/* <div className="flex gap-3">
-                                <button onClick={() => setEditOpen(true)}>
+                            <div className="flex gap-3">
+                                {/* <button onClick={() => setEditOpen(true)}>
                                     <Edit size={20} />
-                                </button>
+                                </button> */}
 
-                                <button onClick={() => setDeleteFAQ(true)}>
+                                <button onClick={() => {
+                                    setSelectedFAQId(faq.id);
+                                    setDeleteFAQ(true);
+                                }}>
                                     <Trash size={20} className="text-red" />
                                 </button>
-                            </div> */}
+                            </div>
                         </div>
                     );
                 })}
@@ -134,9 +147,8 @@ const FAQpages = () => {
             <DeleteModal
                 open={deleteFAQ}
                 setOpen={setDeleteFAQ}
-                // data={selectedCenter}
                 suspend={false}
-                // onConfirm={handleSuspend}
+                onConfirm={() => handleDeleteFAQ(selectedFAQId)}
                 header={`Are you sure you want to delete this FAQ ?`}
                 description={`This FAQ will be removed from your listing the center will lost this information ?`}
             />

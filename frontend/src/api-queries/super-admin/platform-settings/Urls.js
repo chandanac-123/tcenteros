@@ -3,6 +3,7 @@ import {
   createFAQs,
   createGlobalTermsAndPrivacyApiCall,
   deleteCenterTypeApiCall,
+  deleteFAQApiCall,
   getAllFAQs,
   getCenterTypeApiCall,
   getPlatformSettingsApiCall,
@@ -83,3 +84,12 @@ export const listAllFAQs = async () => {
     throw err
   }
 }
+
+export const deleteFAQ = async (id) => {
+  try {
+    const response = await deleteFAQApiCall(id);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

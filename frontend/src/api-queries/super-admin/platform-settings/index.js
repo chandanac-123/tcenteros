@@ -24,3 +24,5 @@ export const createFAQs = (data) =>
   axiosInstance.post(`/settings/superadmin/faqs`, data);
 export const getAllFAQs = () =>
   axiosInstance.get(`/settings/superadmin/faqs`)
+export const deleteFAQApiCall = (id) =>
+  axiosInstance.delete(`/settings/superadmin/faqs/${id}`);

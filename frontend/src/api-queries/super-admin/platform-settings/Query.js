@@ -4,6 +4,7 @@ import {
   createGlobalTermsAndPrivacy,
   createNewFAQs,
   deleteCenterType,
+  deleteFAQ,
   getCenterType,
   getPlatformSettings,
   listAllFAQs,
@@ -123,5 +124,20 @@ export const useFAQs = () => {
     queryFn: listAllFAQs,
     staleTime: 1000 * 60 * 5, // cache for 5 mins
     retry: 2,
+  });
+};
+
+export const useDeleteFAQMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => deleteFAQ(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["faqs"] });
+      showSuccess(data?.message || "FAQ deleted successfully");
+    },
+    onError: (err) => {
+      showError(err?.response?.data?.detail || "Failed to delete FAQ");
+      return err;
+    },
   });
 };
