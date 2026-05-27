@@ -118,7 +118,7 @@ const DetailView = () => {
     <ContentLayout>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
 
           {/* Name + City */}
           <div className="flex flex-wrap items-center">
