@@ -83,7 +83,7 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, t
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            setOpen(true);
+            setOpen(false);
             if (!result || result.error) {
               showError("Payment Verification is Failed");
               setOpen(true);

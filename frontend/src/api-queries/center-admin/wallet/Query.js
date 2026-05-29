@@ -27,6 +27,8 @@ export const useGetWalletSummaryQuery = () => {
     return useQuery({
         queryKey: ['walletSummary'],
         queryFn: getWalletSummary,
+        refetchOnWindowFocus: true,
+        refetchOnMount: true
     });
 };
 
