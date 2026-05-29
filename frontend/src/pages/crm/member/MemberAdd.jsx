@@ -41,6 +41,7 @@ const genderOption = [
 ];
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
+  const centerId = useAuthStore.getState()?.auth?.center_id;
   const [planOpen, setPlanOpen] = useState(false);
   const [timeslotOpen, setTimeslotOpen] = useState(false);
   const { selectedVisitorId, selectedGuestId, clearSelectedIds } =
@@ -50,11 +51,10 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     useVisitorById(selectedVisitorId);
   const { data: guestData, isFetching: isGuestFetching } =
     useGuestById(selectedGuestId);
-  const state = useAuthStore();
   const { mutateAsync: createMember } = useCreateMemberMutation();
   const { mutateAsync: updateMember } = useUpdateMemberMutation();
   const { data: memberTimeSlot } = useMembersTimeSlotQuery(
-    state?.auth?.center_id,
+    centerId
   );
 
   const { data: memberData, isFetching: isMemberFetching } =
@@ -111,7 +111,7 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
   }, []);
 
   const initialValues = {
-    center_id: state?.auth?.center_id,
+    center_id: centerId,
     full_name: sourceData?.full_name || "",
     email: sourceData?.email || "",
     mobile: sourceData?.mobile || "",
