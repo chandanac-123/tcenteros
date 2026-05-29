@@ -117,8 +117,14 @@ const FAQpages = () => {
 
                             {/* Answer */}
                             {isOpen && (
-                                <div>
+                                <div className="flex items-start justify-between">
                                     <p className="text-sm text-gray-600">{faq.answer}</p>
+                                    <button onClick={() => {
+                                        setSelectedFAQId(faq.id);
+                                        setDeleteFAQ(true);
+                                    }}>
+                                        <Trash size={20} className="text-red" />
+                                    </button>
                                 </div>
                             )}
 
@@ -128,12 +134,12 @@ const FAQpages = () => {
                                     <Edit size={20} />
                                 </button> */}
 
-                                <button onClick={() => {
+                                {/* <button onClick={() => {
                                     setSelectedFAQId(faq.id);
                                     setDeleteFAQ(true);
                                 }}>
                                     <Trash size={20} className="text-red" />
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     );
