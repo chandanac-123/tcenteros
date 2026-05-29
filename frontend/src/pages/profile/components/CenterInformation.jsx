@@ -83,7 +83,7 @@ const CenterInformation = ({ data }) => {
         </div>
       </div>
       <div className='grid grid-cols-3 gap-y-2 gap-x-6'>
-        <InfoItem label='Center Code' value={center.center_email || '-'} />
+        <InfoItem label='Contact Person' value={center.contact_person || '-'} />
         <InfoItem label='Email address' value={center.center_email || '-'} />
         <InfoItem label='Phone' value={center.center_phone || '-'} />
         <InfoItem label='Country' value={center.address?.country || '-'} />
