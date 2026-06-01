@@ -5,11 +5,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const navLinks = [
   { label: "Home", href: "/landing" },
-  { label: "Centers", href: "/centers-list" },
-  { label: "Blogs", href: "/blog" },
-  { label: "Resellers", href: "/partners-list" },
+  { label: "Centers", href: "#" },
+  { label: "Blogs", href: "#" },
+  { label: "Resellers", href: "#" },
 ];
 
+///centers-list  /blog /partners-list
 const Header = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();

@@ -27,7 +27,7 @@ const ResellersList = () => {
               {/* INNER CARD */}
               <div className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 {/* TOP GRADIENT LINE */}
-                <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5]" />
+                {/* <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5]" /> */}
 
                 {/* TOP */}
                 <div className="flex items-center justify-between">
@@ -35,9 +35,9 @@ const ResellersList = () => {
                     <h3 className="text-lg font-semibold text-gray-800 capitalize">
                       {reseller?.full_name}
                     </h3>
-                    <span className="text-xs text-gray-400">
+                    {/* <span className="text-xs text-gray-400">
                       {reseller?.reseller_id}
-                    </span>
+                    </span> */}
                   </div>
                 </div>
 
