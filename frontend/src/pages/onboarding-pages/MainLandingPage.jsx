@@ -140,14 +140,14 @@ const MainLandingPage = () => {
           />
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
-            <Button
+            {/* <Button
               variant="outline_secondary"
               onClick={() => navigate("/landing")}
               size="addbutton"
               className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
               Book Demo
-            </Button>
+            </Button> */}
             <Button
               onClick={() => navigate("/partner-landing")}
               size="addbutton"
@@ -212,14 +212,14 @@ const MainLandingPage = () => {
 
             {/* CTA */}
             <div className="flex flex-col sm:flex-row gap-3 w-full">
-              <Button
+              {/* <Button
                 variant="outline_secondary"
                 onClick={() => navigate("/landing")}
                 size="addbutton"
                 className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
               >
                 Book a Demo
-              </Button>
+              </Button> */}
               <Button
                 onClick={() => navigate("/landing")}
                 size="addbutton"
