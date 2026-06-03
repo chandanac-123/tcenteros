@@ -301,7 +301,7 @@ const MainLandingPage = () => {
         </div>
       </section>
 
-      <section className="flex flex-col gap-8 md:gap-12 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] text-white py-8 md:py-10 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
+      <section className="flex flex-col gap-8 md:gap-12 bg-gradient-to-b from-[#2c0149] pt-8 via-[#210168] to-[#43007D] text-white  relative overflow-hidden bg-cover bg-center">
         <div className="text-center flex flex-col items-center gap-4 md:gap-6">
           <h2 className="text-xl sm:text-2xl md:text-4xl font-semibold mt-2 md:mt-3">
             A Connected Fitness &
@@ -315,7 +315,7 @@ const MainLandingPage = () => {
         {/* MAIN */}
         <div className="flex flex-col md:flex-row md:justify-between gap-8 md:gap-0">
           {/* LEFT */}
-          <div className="w-full md:w-2/5 flex flex-col gap-6">
+          <div className="w-full md:w-2/5 flex flex-col gap-6 px-4 sm:px-6 md:px-16">
             <div className="text-sm md:text-lg text-[#FFD36C] text-center md:text-left">
               " When A client is traveling to another city..."
             </div>
@@ -374,7 +374,7 @@ const MainLandingPage = () => {
           </div>
 
           {/* IMAGE */}
-          <div className="w-full md:w-3/5 flex justify-center md:justify-end items-center md:items-end pointer-events-none">
+          <div className="w-full md:w-3/5 flex justify-end items-center md:items-end pointer-events-none">
             <img
               loading="lazy"
               src={unique_advantage}
