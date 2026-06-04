@@ -9,7 +9,8 @@ import {
   getPlatformById,
   getInvoice,
   getAllResellers,
-  getAllOnboardingCenters
+  getAllOnboardingCenters,
+  razorpayFailure
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -129,5 +130,19 @@ export const useOnboardingCenters = () => {
     queryKey: ['onboarding-centers'],
     queryFn: getAllOnboardingCenters,
     staleTime: 1000 * 60 * 5, // 5 minutes cache
+  });
+};
+
+export const useRazorpayFailure = () => {
+  return useMutation({
+    mutationFn: (paymentOrderId) => razorpayFailure(paymentOrderId),
+    // onSuccess: async data => {
+    //   console.log('data: ', data);
+    //   showError(data.message || 'Payment failed')
+    // },
+    // onError: err => {
+    //   showError(err?.response?.data?.detail || 'Failed to report payment failure')
+    //   return err
+    // }
   });
 };

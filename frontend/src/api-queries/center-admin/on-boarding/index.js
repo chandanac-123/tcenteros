@@ -19,3 +19,6 @@ export const getResellerApiCall = () =>
   axiosInstance.get("/center/partners");
 export const getAllCentersOnBoarding = () => 
   axiosInstance.get(`/center/centers-all`)
+
+export const razorpayFailureApiCall = (data)=>
+  axiosInstance.post(`/auth/payment-failed?payment_order_id=${data}`)

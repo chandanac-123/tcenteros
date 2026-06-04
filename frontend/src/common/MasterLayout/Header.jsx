@@ -12,6 +12,7 @@ import {
   ListIndentIncrease,
   LogOut,
   Settings,
+  SquarePen,
   UserRound,
 } from "lucide-react";
 import CustomeModal from "../components/CustomeModal";
@@ -27,9 +28,11 @@ import { useAppPermissions } from "@hooks/index";
 import AdminProfileModal from "@super-admin/admin-profile";
 import { useSuperadminProfileQuery } from "@api-queries/super-admin/profile/Query";
 import AddBranchModal from "@pages/branch/dashboard-branch/AddBranchModal";
+import ChangePassword from "./ChangePassword";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const [openAddBranch, setOpenAddbranch] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
   const isPartner = role === "partner";
@@ -164,6 +167,13 @@ const Header = ({ toggleSidebar, collapsed }) => {
                 </button>
               )}
               <button
+                onClick={() => setChangePasswordOpen(true)}
+                className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
+              >
+                <SquarePen className="w-5 h-5 text-primary" />
+                Change Password
+              </button>
+              <button
                 onClick={() => setLogoutOpen(true)}
                 className="flex items-center gap-2 text-left hover:bg-textwhite px-2 py-1 rounded"
               >
@@ -204,6 +214,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
         open={openAdminProfile}
         setOpen={setOpemAdminProfile}
       />
+      <ChangePassword open={changePasswordOpen} setOpen={setChangePasswordOpen} />
     </header>
   );
 };

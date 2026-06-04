@@ -1,4 +1,5 @@
 import {
+  changePasswordApiCall,
   getSuperadminProfileApiCall,
   updateSuperadminProfileApiCall,
 } from "./index";
@@ -20,3 +21,12 @@ export const updateSuperadminProfile = async (data) => {
     throw error;
   }
 };
+
+export const changePassword = async (details) => {
+  try {
+    const response = await changePasswordApiCall(details)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

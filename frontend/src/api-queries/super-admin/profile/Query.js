@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updateSuperadminProfile, getSuperadminProfile } from "./Urls";
+import { updateSuperadminProfile, getSuperadminProfile, changePassword } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
 export const useSuperadminProfileQuery = () => {
@@ -26,3 +26,17 @@ export const useUpdateSuperadminProfileMutation = () => {
     },
   });
 };
+
+export const useChangePasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data) => changePassword(data),
+    onSuccess: (data) => {
+      console.log('data: ', data);
+      showSuccess("Password changed successfully");
+    },
+    onError: (error) => {
+      const message = error?.response?.data?.detail || "Error changing password";
+      showError(message);
+    },
+  })
+}

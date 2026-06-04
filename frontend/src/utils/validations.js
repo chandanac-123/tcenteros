@@ -437,3 +437,16 @@ export const accountValidationSchema = () =>
       .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/i, "Enter a valid IFSC code")
       .required("IFSC code is required"),
   });
+
+  export const changePasswordValidationSchema = Yup.object({
+  new_password: Yup.string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters"),
+
+  confirm_password: Yup.string()
+    .required("Confirm password is required")
+    .oneOf(
+      [Yup.ref("new_password")],
+      "Passwords do not match"
+    ),
+});

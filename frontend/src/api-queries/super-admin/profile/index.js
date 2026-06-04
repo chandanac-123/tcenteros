@@ -5,3 +5,6 @@ export const getSuperadminProfileApiCall = () =>
 
 export const updateSuperadminProfileApiCall = (data) =>
   axiosInstance.put(`/platforms/superadmin/profile`, data);
+
+export const changePasswordApiCall = details =>
+  axiosInstance.post('/auth/centeradmin/change-password', details)
