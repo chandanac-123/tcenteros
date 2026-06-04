@@ -25,5 +25,5 @@ export const razorpayFailureApiCall = (data) =>
 
 export const retryRazorpayPaymentApiCall = ({ onboardId, paymentId }) =>
   axiosInstance.post(
-    `/api/auth/payment/retry/${onboardId}/${paymentId}`
+    `/auth/payment/retry/${onboardId}/${paymentId}`
   );

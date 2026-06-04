@@ -4,6 +4,7 @@ import OnboardHeader from "./components/OnboardHeader";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   useCalculateGstQuery,
+  useRazorpayFailure,
   useRetryPaymentMutation,
 } from "@api-queries/center-admin/on-boarding/Query";
 import { useFormik } from "formik";
@@ -13,24 +14,27 @@ import {
   useCreatePaymentOrder,
   useVerifyPayment,
 } from "@api-queries/common/razorPay/query";
+import { useOnboardingStore } from "@store/onboardingStore";
 
 const RetryPayment = () => {
   const navigate = useNavigate();
   const { onboardId, paymentId } = useParams();
   const [success, setSuccess] = useState(false);
+  const resetStore = useOnboardingStore((state) => state.resetStore);
   const { data, isFetching } = useCalculateGstQuery(onboardId);
   const { mutateAsync: retryPayment, isLoading } = useRetryPaymentMutation(
   );
   const { mutate: create_Order, isPending } = useCreatePaymentOrder();
+  const { mutateAsync: razorpayFailure } = useRazorpayFailure();
   const { mutateAsync: verifyPayment } = useVerifyPayment();
   const phoneNumber = data?.center_phone;
 
   const formik = useFormik({
+    initialValues: {},
     enableReinitialize: true,
     onSubmit: async () => {
       try {
         await retryPayment({ onboardId, paymentId });
-
         create_Order(paymentId, {
           onSuccess: (res) => {
             console.log("Order ID:", res);
@@ -42,7 +46,7 @@ const RetryPayment = () => {
           },
         });
       } catch (error) {
-        console.log("error: ", error);
+        console.log("error: ", error.response);
       }
     },
   });
@@ -158,6 +162,7 @@ const RetryPayment = () => {
                 </div>
 
                 <form
+                id="retry-payment-form"
                   className="space-y-1 mt-2"
                   onSubmit={formik.handleSubmit}
                 >
@@ -223,6 +228,7 @@ const RetryPayment = () => {
               {/* Actions */}
               <div className="flex justify-center gap-3 mt-4">
                 <Button
+                form="retry-payment-form"
                   type="submit"
                   variant="onboard_button_filled"
                   className="w-1/2"

@@ -26,7 +26,6 @@ export const useVerifyPayment = () => {
       await queryClient.invalidateQueries({
         queryKey: ["branchCountData"],
       });
-      showSuccess("Branch purchase successfully completed");
     },
     onError: (error) => {
       console.log("error: ", error);
