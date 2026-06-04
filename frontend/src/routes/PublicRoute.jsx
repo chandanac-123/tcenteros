@@ -1,14 +1,23 @@
-import { Navigate, Outlet } from 'react-router-dom'
-import { useAuthStore } from '@store/authStore'
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuthStore } from "@store/authStore";
 
 const PublicRoute = () => {
-  const { accessToken, firstLogin } = useAuthStore()
+  const { accessToken, firstLogin } = useAuthStore();
+  const location = useLocation();
 
-  if (accessToken && !firstLogin) {
-    return <Navigate to="/dashboard" replace />
+  const allowedPublicRoutes = [
+    "/reset-password",
+  ];
+
+  const isAllowedRoute = allowedPublicRoutes.some((route) =>
+    location.pathname.startsWith(route)
+  );
+
+  if (accessToken && !firstLogin && !isAllowedRoute) {
+    return <Navigate to="/dashboard" replace />;
   }
 
-  return <Outlet />
-}
+  return <Outlet />;
+};
 
-export default PublicRoute
+export default PublicRoute;
