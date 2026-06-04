@@ -39,7 +39,7 @@ const EmailResetPassword = () => {
       <form action='' onSubmit={formik.handleSubmit} className='space-y-4'>
         <PasswordInput
           label='Create Password'
-          name='center_name'
+          name='password'
           placeholder='Create Password'
           iconPosition='end'
           value={formik.values.password}
