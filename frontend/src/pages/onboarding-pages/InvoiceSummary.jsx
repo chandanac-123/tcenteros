@@ -161,7 +161,7 @@ const InvoiceSummary = () => {
     } catch (err) {
       console.error("Error opening Razorpay:", err);
       try {
-        await razorpayFailure(paymentId);
+        await razorpayFailure(payment_id);
       } catch (error) {
         console.error("Failure API Error: 2", error);
       }
