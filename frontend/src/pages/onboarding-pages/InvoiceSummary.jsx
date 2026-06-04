@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import {
   useCalculateGstQuery,
   useFinalizeOnboardCenterMutation,
+  useRazorpayFailure,
 } from "@api-queries/center-admin/on-boarding/Query";
 import { useOnboardingStore } from "@store/onboardingStore";
 import { Input } from "@pages/components/ui/input";
@@ -29,6 +30,7 @@ const InvoiceSummary = () => {
   );
   const { mutate: create_Order, isPending } = useCreatePaymentOrder();
   const { mutateAsync: verifyPayment } = useVerifyPayment();
+  const { mutateAsync: razorpayFailure } = useRazorpayFailure();
   const phoneNumber = data?.center_phone;
 
   const initialValues = {
@@ -45,6 +47,8 @@ const InvoiceSummary = () => {
       try {
         const response = await finalize(values);
         const payment_id = response?.payment?.payment_order_id;
+        console.log('payment_id: ', payment_id);
+     
         if (!payment_id) {
           throw new Error("Payment ID not found from finalize response");
         }
@@ -52,46 +56,115 @@ const InvoiceSummary = () => {
           onSuccess: (res) => {
             console.log("Order ID:", res);
             const orderData = res?.data;
-            openRazorpay(orderData);
+            openRazorpay(orderData, payment_id);
           },
           onError: (err) => {
-            console.log(err);
+            console.log(err.response);
           },
         });
       } catch (error) {
-        console.log("error: ", error);
+        console.log("error: ", error.response);
       }
     },
   });
 
-  const openRazorpay = async (orderData) => {
+  // const openRazorpay = async (orderData) => {
+  //   try {
+  //     const options = {
+  //       key: orderData.key_id, // from backend
+  //       amount: orderData.amount,
+  //       currency: orderData.currency,
+  //       name: "TcenterOS",
+  //       description: "Center Subscription Payment",
+  //       order_id: orderData.order_id,
+  //       handler: async function (response) {
+  //         const result = await verifyPayment({
+  //           razorpay_order_id: response.razorpay_order_id,
+  //           razorpay_payment_id: response.razorpay_payment_id,
+  //           razorpay_signature: response.razorpay_signature,
+  //         });
+  //         setSuccess(true);
+  //         navigate("/dashboard");
+  //         resetStore();
+  //         console.log("Verified Result:", result);
+  //       },
+  //       prefill: {
+  //         contact: phoneNumber,
+  //       },
+  //     };
+  //     const razor = new window.Razorpay(options);
+  //     razor.open();
+  //   } catch (err) {
+  //     console.log("Error at opening razor Pay checkOut");
+  //   }
+  // };
+
+  const openRazorpay = async (orderData, payment_id) => {
     try {
       const options = {
-        key: orderData.key_id, // from backend
+        key: orderData.key_id,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "TcenterOS",
-        description: "Center Subscription Payment",
+        description: "Network Center Wallet Payment",
         order_id: orderData.order_id,
         handler: async function (response) {
-          const result = await verifyPayment({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-          });
-          setSuccess(true);
-          navigate("/dashboard");
-          resetStore();
-          console.log("Verified Result:", result);
+          try {
+            const result = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            setSuccess(true);
+            navigate("/dashboard");
+            resetStore();
+
+            console.log("Verified Result:", result);
+          } catch (error) {
+            console.error("Payment Verification Failed:", error);
+            await razorpayFailure(payment_id);
+          }
         },
+
         prefill: {
           contact: phoneNumber,
         },
+
+        modal: {
+          ondismiss: async () => {
+            console.log("User closed Razorpay popup");
+
+            try {
+              await razorpayFailure(payment_id);
+            } catch (error) {
+              console.error("Failure API Error:", error);
+            }
+
+          },
+        },
       };
+
       const razor = new window.Razorpay(options);
+
+      razor.on("payment.failed", async (response) => {
+        console.error("Payment Failed:", response.error);
+        try {
+          await razorpayFailure(payment_id);
+        } catch (error) {
+          console.error("Failure API Error 1:", error);
+        }
+
+      });
+
       razor.open();
     } catch (err) {
-      console.log("Error at opening razor Pay checkOut");
+      console.error("Error opening Razorpay:", err);
+      try {
+        await razorpayFailure(paymentId);
+      } catch (error) {
+        console.error("Failure API Error: 2", error);
+      }
     }
   };
 

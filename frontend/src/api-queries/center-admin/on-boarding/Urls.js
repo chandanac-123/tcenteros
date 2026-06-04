@@ -9,7 +9,8 @@ import {
   getInvoiceApiCall,
   getResellerApiCall,
   getAllCentersOnBoarding,
-  razorpayFailureApiCall
+  razorpayFailureApiCall,
+  retryRazorpayPaymentApiCall
 } from './index'
 
 export const getAllClassTypes = async () => {
@@ -110,4 +111,13 @@ export const razorpayFailure = async (paymentOrderId) => {
   } catch (err) {
     throw err;
   }
+};
+
+export const retryRazorpayPayment = async ({ onboardId, paymentId }) => {
+  const response = await retryRazorpayPaymentApiCall({
+    onboardId,
+    paymentId,
+  });
+
+  return response.data;
 };

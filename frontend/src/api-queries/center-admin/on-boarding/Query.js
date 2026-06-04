@@ -10,7 +10,8 @@ import {
   getInvoice,
   getAllResellers,
   getAllOnboardingCenters,
-  razorpayFailure
+  razorpayFailure,
+  retryRazorpayPayment
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -144,5 +145,12 @@ export const useRazorpayFailure = () => {
     //   showError(err?.response?.data?.detail || 'Failed to report payment failure')
     //   return err
     // }
+  });
+};
+
+export const useRetryPaymentMutation = () => {
+  return useMutation({
+    mutationFn: ({ onboardId, paymentId }) =>
+      retryRazorpayPayment({ onboardId, paymentId }),
   });
 };

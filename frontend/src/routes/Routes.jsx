@@ -102,6 +102,7 @@ import MainLandingPage from '@pages/onboarding-pages/MainLandingPage'
 import CentersList from '@pages/onboarding-pages/header-components/centers'
 import ResellersList from '@pages/onboarding-pages/header-components/resellers'
 import AccountDetails from '@partner/account-details'
+import RetryPayment from '@pages/onboarding-pages/RetryPayment'
 
 export const routes = [
   //public routes
@@ -117,7 +118,8 @@ export const routes = [
   { key: 8, path: '/contact-details', privetRoute: false, isSubRoute: false, pageTitle: '', component: ContactDetails, menubar: false, permissionKey: true },
   { key: 9, path: '/pricing-page', privetRoute: false, isSubRoute: false, pageTitle: '', component: PricingPage, menubar: false, permissionKey: true },
   { key: 10, path: '/invoice-summary', privetRoute: false, isSubRoute: false, pageTitle: '', component: InvoiceSummary, menubar: false, permissionKey: true },
-  { key: 10, path: '/invoice-download', privetRoute: false, isSubRoute: false, pageTitle: '', component: InvoiceTemplate, menubar: false, permissionKey: true },
+  { key: 70, path: '/retry-payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: RetryPayment, menubar: false, permissionKey: true },
+  { key: 71, path: '/invoice-download', privetRoute: false, isSubRoute: false, pageTitle: '', component: InvoiceTemplate, menubar: false, permissionKey: true },
   { key: 11, path: '/management', privetRoute: false, isSubRoute: false, pageTitle: '', component: CenterManagement, menubar: false, permissionKey: true },
   { key: 13, path: '/attendance-tracking', privetRoute: false, isSubRoute: false, pageTitle: '', component: AttendanceTracking, menubar: false, permissionKey: true },
   { key: 16, path: '/sellable-item', privetRoute: false, isSubRoute: false, pageTitle: '', component: SellableItem, menubar: false, permissionKey: true },
