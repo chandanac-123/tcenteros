@@ -450,3 +450,16 @@ export const accountValidationSchema = () =>
       "Passwords do not match"
     ),
 });
+
+export const emailResetPasswordValidationSchema = Yup.object({
+  password: Yup.string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters"),
+
+  confirm_password: Yup.string()
+    .required("Confirm password is required")
+    .oneOf(
+      [Yup.ref("password")],
+      "Passwords do not match"
+    ),
+});

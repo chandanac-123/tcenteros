@@ -14,3 +14,6 @@ export const resetPasswordApiCall = details => {
 }
 export const createCenterAccountApiCall = details =>
   axiosInstance.post('/auth/centeradmin/change-password', details)
+
+export const emailResetPasswordApiCall = details =>
+  axiosInstance.post('/auth/set-password', details)

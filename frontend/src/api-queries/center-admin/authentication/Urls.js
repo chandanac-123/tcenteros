@@ -1,5 +1,6 @@
 import {
   createCenterAccountApiCall,
+  emailResetPasswordApiCall,
   loginApiCall,
   requestOTPforgotPasswordApiCall,
   resetPasswordApiCall,
@@ -56,6 +57,15 @@ export const createCenterAccount = async (details) => {
     console.error("Message:", error.response?.data?.message);
     console.error("Full Error:", error.response?.data);
     console.error("Error at createCenterAccount() api-queries/authentication/Urls.js::", error);
+    throw error
+  }
+}
+
+export const emailResetPassword = async (details) => {
+  try {
+    const response = await emailResetPasswordApiCall(details)
+    return response.data
+  } catch (error) {
     throw error
   }
 }

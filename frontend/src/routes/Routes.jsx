@@ -103,6 +103,7 @@ import CentersList from '@pages/onboarding-pages/header-components/centers'
 import ResellersList from '@pages/onboarding-pages/header-components/resellers'
 import AccountDetails from '@partner/account-details'
 import RetryPayment from '@pages/onboarding-pages/RetryPayment'
+import EmailResetPassword from '@pages/authentication/EmailResetPassword'
 
 export const routes = [
   //public routes
@@ -128,7 +129,8 @@ export const routes = [
   { key: 21, path: '/login', privetRoute: false, isSubRoute: false, pageTitle: '', component: Login, menubar: false, permissionKey: true },
   { key: 22, path: '/forgot-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ForgetPassord, menubar: false, permissionKey: true },
   { key: 23, path: '/otp-verification', privetRoute: false, isSubRoute: false, pageTitle: '', component: OTPVerification, menubar: false, permissionKey: true },
-  { key: 24, path: '/reset-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
+  { key: 24, path: '/change-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetPassword, menubar: false, permissionKey: true },
+  { key: 24, path: '/reset-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: EmailResetPassword, menubar: false, permissionKey: true },
   { key: 25, path: '/reset-success', privetRoute: false, isSubRoute: false, pageTitle: '', component: ResetSuccess, menubar: false, permissionKey: true },
   { key: 62, path: '/blog', privetRoute: false, isSubRoute: false, pageTitle: '', component: BlogPage, menubar: false, permissionKey: true },
   { key: 63, path: '/centers-list', privetRoute: false, isSubRoute: false, pageTitle: '', component: CentersList, menubar: false, permissionKey: true },

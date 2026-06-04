@@ -28,7 +28,7 @@ const OTPVerification = () => {
         
           showSuccess("OTP Verified Successfully");
           // navigate to reset password page
-          navigate("/reset-password", {
+          navigate("/change-password", {
             state: { otp }   // pass OTP forward
           })
         },

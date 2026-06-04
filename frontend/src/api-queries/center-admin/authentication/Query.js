@@ -1,5 +1,5 @@
 import { useAuthStore } from '@store/authStore'
-import { createCenterAccount, login, requestOTPforgotPassword, resetPassword, verifyOTPforgotPassword } from './Urls'
+import { createCenterAccount, emailResetPassword, login, requestOTPforgotPassword, resetPassword, verifyOTPforgotPassword } from './Urls'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { showError, showSuccess } from '@utils/toast'
 
@@ -70,6 +70,18 @@ export const useCreateCenterAccountMutation = () => {
     mutationFn: createCenterAccount,
     onSuccess: (data) => {
       console.log("Data Token", data);
+      setAuth(data, true)
+      query.invalidateQueries({ queryKey: ['auth'] })
+    }
+  })
+}
+
+export const useEmailResetPasswordMutation = () => {
+  const query = useQueryClient()
+  const setAuth = useAuthStore(state => state.setAuth)
+  return useMutation({
+    mutationFn: emailResetPassword,
+    onSuccess: (data) => {
       setAuth(data, true)
       query.invalidateQueries({ queryKey: ['auth'] })
     }
