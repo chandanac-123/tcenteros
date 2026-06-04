@@ -84,6 +84,10 @@ export const useEmailResetPasswordMutation = () => {
     onSuccess: (data) => {
       setAuth(data, true)
       query.invalidateQueries({ queryKey: ['auth'] })
+    },
+    onError: (error) => {
+      console.log('aaaaaaaaaaaa: ', error.response);
+      showError(error?.response?.data?.detail)
     }
   })
 }
