@@ -24,6 +24,7 @@ const packageOptions = [
 
 const ContactDetails = () => {
   const navigate = useNavigate()
+  const [errorMessage, setErrorMessage] = useState('')
   const { mutateAsync: create, isPending } = useCreateOnboardCenterMutation()
   const store = useOnboardingStore()
   const setOnboardId = useOnboardingStore(state => state.setOnboardId)
@@ -70,6 +71,7 @@ const ContactDetails = () => {
     validationSchema: onboardingValidationSchema,
     onSubmit: async (values) => {
       try {
+        setErrorMessage("");
         const response = await create(values)
         setUserNumber(values.center_phone)
         if (response?.id) {
@@ -82,7 +84,8 @@ const ContactDetails = () => {
 
         formik.resetForm();
       } catch (error) {
-        console.log("error: ", error);
+        console.log("error: ", error?.response?.data?.detail);
+        setErrorMessage(error?.response?.data?.detail)
       }
     },
   });
@@ -96,6 +99,12 @@ const ContactDetails = () => {
         <div className="flex-1 overflow-y-auto px-4 sm:px-10">
           <div className="flex flex-col gap-1 mb-6 text-xl font-medium">
             Let’s Set This Up for You
+            {errorMessage && (
+              <span className="text-sm text-red_text">
+                {errorMessage}
+              </span>
+            )}
+
           </div>
 
           <div className="flex flex-col md:flex-row gap-10 md:gap-16">
