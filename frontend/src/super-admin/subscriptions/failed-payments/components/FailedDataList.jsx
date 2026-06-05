@@ -36,6 +36,7 @@ const FailedDataList = () => {
 
     return (
         <div>
+            {data?.inactive_centers?.length === 0 && <span className="flex justify-center text-textgrey">No Data Available</span>}
             <div className="flex flex-col gap-6 px-8">
                 {data?.inactive_centers?.map((item) => (
                     <div
@@ -124,7 +125,7 @@ const FailedDataList = () => {
                     disabled={page >= totalPages}
                     onClick={() => setPage(prev => prev + 1)}
                 >
-                    <ChevronsRight  />
+                    <ChevronsRight />
                 </Button>
             </div>
 

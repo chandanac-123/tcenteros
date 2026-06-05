@@ -71,7 +71,7 @@ const SuperAdminDashboard = () => {
   const maxValue = Math.max(...linechartData, 0);
   const roundedMax = Math.ceil(maxValue / 10000) * 10000;
   const yStep = roundedMax / 5;
-  
+
   const cardsData = [
     {
       label: "Total Active Centers",
@@ -223,6 +223,7 @@ const SuperAdminDashboard = () => {
               <span className="font-semibold text-base">
                 Top 5 Growing Centers
               </span>
+              {data?.top_growing_centers?.length === 0 && <span className="flex justify-center text-textgrey">No Data Available</span>}
               <div className="flex flex-col gap-3">
                 {data?.top_growing_centers?.map((item, index) => (
                   <GrowingCenterCard key={index} data={item} />
