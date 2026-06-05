@@ -41,6 +41,7 @@ import {
   CalendarSync,
   ChartPie,
   CircleDollarSign,
+  CloudSync,
   CrownIcon,
   FileUserIcon,
   Handshake,
@@ -104,6 +105,7 @@ import ResellersList from '@pages/onboarding-pages/header-components/resellers'
 import AccountDetails from '@partner/account-details'
 import RetryPayment from '@pages/onboarding-pages/RetryPayment'
 import EmailResetPassword from '@pages/authentication/EmailResetPassword'
+import ActiveNetworkCenters from '@super-admin/subscriptions/active-network-centers'
 
 export const routes = [
   //public routes
@@ -162,6 +164,7 @@ export const routes = [
     submodules: [
       { key: 'active-subscriptions', title: 'Active Subscriptions', path: 'active-subscriptions', component: ActiveSubscriptions, menubar: true, permissionKey: true },
       { key: 'active-subscriptions-detail', title: 'Active Subscriptions Detail', path: 'active-subscriptions/detail/:id', component: DetailView, menubar: false, permissionKey: true },
+
       { key: 'renewal-calender', title: 'Renewal Calender', path: 'renewal-calender', component: RenewalCalender, menubar: true, permissionKey: true },
       { key: 'renewal-calender-detail', title: 'Renewal Calender Detail', path: 'renewal-calender/detail/:id', component: RenewalDetailView, menubar: false, permissionKey: true },
       { key: 'expiring-soon', title: 'Expired', path: 'expired', component: ExpiringSoon, menubar: true, permissionKey: true },
@@ -170,6 +173,7 @@ export const routes = [
 
     ]
   },
+  { key: 70, path: 'networking-centers', privetRoute: true, isSubRoute: false, pageTitle: 'Networking Centers', component: ActiveNetworkCenters, icon: <CloudSync />, menubar: true, permissionKey: 'network_centers' , isSuperAdmin: true},
   { key: 45, path: '/platform-features', privetRoute: true, isSubRoute: false, pageTitle: 'Platform Features', component: PlatformFeatures, icon: <Boxes />, menubar: true, permissionKey: 'platform_feature', isSuperAdmin: true },
   { key: 46, path: '/centers', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: 'center', isSuperAdmin: true },
   { key: 47, path: '/partners', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: 'partner', isSuperAdmin: true },

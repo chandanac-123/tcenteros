@@ -11,6 +11,7 @@ import {
   getFailedSubList,
   makeSuspendSubscribe,
   suspendedSubscribeList,
+  getNetworkOnly,
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -137,5 +138,14 @@ export const useSuspendedSubscriptionsQuery = () => {
     queryFn: suspendedSubscribeList,
 
     staleTime: 1000 * 60 * 5, // optional (5 mins cache)
+  });
+};
+
+export const useNetworkOnlyCenterQuery = (data) => {
+  return useQuery({
+    queryKey: ["networkOnly", data],
+    queryFn: () => getNetworkOnly(data),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };

@@ -9,7 +9,8 @@ import {
   sendReminderApiCall,
   failedSubscriptionApiCall,
   suspendTheSubscription,
-  listSuspendedSubscription
+  listSuspendedSubscription,
+  getNetworkOnlyApiCall
 } from "./index";
 
 export const getActiveSubscriptions = async (data) => {
@@ -114,3 +115,12 @@ export const suspendedSubscribeList = async () => {
     throw err;
   }
 }
+
+export const getNetworkOnly = async (data) => {
+  try {
+    const response = await getNetworkOnlyApiCall(data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

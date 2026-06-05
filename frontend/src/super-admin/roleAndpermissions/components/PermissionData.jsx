@@ -7,6 +7,10 @@ export const permissionData = [
     id: "subscription",
     name: "Subscription",
   },
+   {
+    id: "network_centers",
+    name: "Networking Centers",
+  },
   {
     id: "platform_feature",
     name: "Plateform Feature",

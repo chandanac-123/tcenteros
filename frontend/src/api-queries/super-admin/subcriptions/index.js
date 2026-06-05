@@ -18,7 +18,7 @@ export const getRenewalByIdApiCall = (data) =>
 
 export const getRenewalExpiringApiCall = (data) =>
   axiosInstance.get(
-    `/superadmin/superadmin/centers/subscriptions/expired`,
+    `/superadmin/superadmin/centers/subscriptions/expired?page=${data?.page}`,
   );
 
 export const getBillingHistoryApiCall = (id) =>
@@ -33,16 +33,21 @@ export const sendReminderApiCall = (id) => {
   axiosInstance.post(`/superadmin/superadmin/billing/renewal-calendar/send-reminder/${id}`);
 }
 
-export const failedSubscriptionApiCall = (details) => 
-   axiosInstance.get(`/superadmin/superadmin/centers/failed-payments`, {
+export const failedSubscriptionApiCall = (details) =>
+  axiosInstance.get(`/superadmin/superadmin/centers/failed-payments`, {
     params: {
       page: details?.page,
       page_size: details?.page_size,
     },
   });
 
-  export const suspendTheSubscription =(id)=>
-    axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`);
+export const suspendTheSubscription = (id) =>
+  axiosInstance.post(`/superadmin/superadmin/centers/${id}/suspend`);
 
-  export const listSuspendedSubscription = ()=>
-    axiosInstance.get(`/superadmin/superadmin/centers/subscriptions/suspended`)
+export const listSuspendedSubscription = () =>
+  axiosInstance.get(`/superadmin/superadmin/centers/subscriptions/suspended`)
+
+export const getNetworkOnlyApiCall = (data) =>
+  axiosInstance.get(
+    `/superadmin/superadmin/network-centers?page=${data?.page}`,
+  );

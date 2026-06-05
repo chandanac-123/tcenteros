@@ -116,7 +116,7 @@ const ExpiringTable = ({ data, isLoading, tableParams, setTableParams }) => {
         data={data}
         setTableParams={setTableParams}
         tableParams={tableParams}
-        pagination={30}
+        pagination={data?.total}
         loading={isLoading}
         paginationVisibile={true}
         search={false}
