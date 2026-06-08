@@ -1,9 +1,10 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllSettlementsQuery } from '@api-queries/center-admin/accounts/Query'
 import { useState } from 'react'
+import { formatDate } from '@utils/helper'
 
 const Settlement = () => {
-   const [tableParams, setTableParams] = useState({
+  const [tableParams, setTableParams] = useState({
     page: 1,
     search: ''
   })
@@ -11,7 +12,14 @@ const Settlement = () => {
   const columns = [
     { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'source', header: 'Source' },
-    { accessorKey: 'entry_date', header: 'Date' },
+    {
+      accessorKey: 'entry_date', header: 'Date',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          {formatDate(row?.original?.entry_date)}
+        </span>
+      )
+    },
     { accessorKey: 'total_credit', header: 'Total Credit' },
     { accessorKey: 'total_debit', header: 'Total Debit' },
     { accessorKey: 'description', header: 'Description' }

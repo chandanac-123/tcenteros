@@ -1,6 +1,7 @@
 import { DataTable } from '@common/components/DataTable'
 import { useAllExpensesQuery } from '@api-queries/center-admin/accounts/Query'
 import { useState } from 'react'
+import { formatDate } from '@utils/helper'
 
 const Expense = () => {
   const [tableParams, setTableParams] = useState({
@@ -12,7 +13,14 @@ const Expense = () => {
     { accessorKey: 'entry_number', header: 'Entry Number' },
     { accessorKey: 'expense_type', header: 'Expense Type' },
     { accessorKey: 'source', header: 'Source' },
-    { accessorKey: 'date', header: 'Date' },
+    {
+      accessorKey: 'date', header: 'Date',
+      cell: ({ row }) => (
+        <span className='flex gap-3'>
+          {formatDate(row?.original?.date)}
+        </span>
+      )
+    },
     { accessorKey: 'amount', header: 'Amount' },
     { accessorKey: 'tax_amount', header: 'Tax Amount' },
     { accessorKey: 'total_amount', header: 'Total Amount' },
