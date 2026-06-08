@@ -32,6 +32,7 @@ import ChangePassword from "./ChangePassword";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const [openAddBranch, setOpenAddbranch] = useState(false);
+  const is_subcenter = useAuthStore((state) => state.auth?.is_subcenter);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const role = useAuthStore((state) => state.auth?.role);
   const isSuperAdmin = role === "superadmin";
@@ -78,13 +79,13 @@ const Header = ({ toggleSidebar, collapsed }) => {
               open={locationOpen}
               setLocationOpen={setLocationOpen}
             />
-            <Button
+            {!is_subcenter && <Button
               disabled={!canAddBranch}
               size="addbutton"
               onClick={handleOpenBranch}
             >
               + Add Branch
-            </Button>
+            </Button>}
             <AddBranchModal
               open={openAddBranch}
               onOpenChange={setOpenAddbranch}

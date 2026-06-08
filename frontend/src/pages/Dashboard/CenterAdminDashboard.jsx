@@ -18,6 +18,7 @@ import AddBranchDetails from "@pages/branch/dashboard-branch/AddBranchDetails";
 
 const CenterAdminDashboard = () => {
   const role = useAuthStore((state) => state.auth?.role);
+  const is_subcenter = useAuthStore((state) => state.auth?.is_subcenter);
   const isCenterAdmin = role === "centeradmin";
   const [greeting, setGreeting] = useState(getGreeting());
   const [openAddBranch, setOpenAddbranch] = useState(false);
@@ -122,7 +123,7 @@ const CenterAdminDashboard = () => {
           </div>
           <div className="flex gap-2">
             {" "}
-            {canCreateBranch && !isLimitReached && (
+            {canCreateBranch && !isLimitReached && !is_subcenter && (
               <Button size="addbutton" onClick={handleOpenBranch}>
                 + Setup Branch
               </Button>

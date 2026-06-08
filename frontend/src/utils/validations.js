@@ -149,8 +149,6 @@ export const branchValidationSchema = Yup.object().shape({
           value.type,
         ),
     ),
-  country: Yup.string().required("Select country"),
-  state: Yup.string().required("Select state"),
   city: Yup.string().required("Select city"),
   postal_code: Yup.string().required("Enter postal code"),
 });

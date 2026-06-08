@@ -106,9 +106,7 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
               placeholder='Address Line 2'
               value={formik.values.address_line_2}
               onChange={formik.handleChange}
-              error={
-                formik.touched.address_line_2 && formik.errors.address_line_2
-              }
+              error={formik.touched.address_line_2 && formik.errors.address_line_2}
             />
             <Input
               label='Branch Email'
@@ -165,6 +163,7 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
                 formik.setFieldValue('country', data.country) // auto-fill country
               }}
               label='City'
+              error={formik.touched.city && formik.errors.city}
             />
 
             <StateSelect
