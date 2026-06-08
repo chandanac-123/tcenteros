@@ -90,6 +90,13 @@ const ContactDetails = () => {
     },
   });
 
+  const handleInputChange = (e) => {
+  if (errorMessage) {
+    setErrorMessage('');
+  }
+  formik.handleChange(e);
+};
+
   return (
     <SecondaryLayout>
       <div className="flex flex-col h-screen">
@@ -128,7 +135,7 @@ const ContactDetails = () => {
                     />
                   }
                   value={formik.values.center_name}
-                  onChange={formik.handleChange}
+                  onChange={handleInputChange}
                   error={
                     formik.touched.center_name && formik.errors.center_name
                   }
@@ -139,7 +146,7 @@ const ContactDetails = () => {
                   name="contact_person"
                   icon={<User className="w-5 h-5 mr-2 text-onboard_primary" />}
                   value={formik.values.contact_person}
-                  onChange={formik.handleChange}
+                  onChange={handleInputChange}
                   error={
                     formik.touched.contact_person &&
                     formik.errors.contact_person
@@ -151,7 +158,7 @@ const ContactDetails = () => {
                   name="center_email"
                   icon={<Mail className="w-5 h-5 mr-2 text-onboard_primary" />}
                   value={formik.values.center_email}
-                  onChange={formik.handleChange}
+                  onChange={handleInputChange}
                   error={
                     formik.touched.center_email && formik.errors.center_email
                   }
@@ -162,7 +169,7 @@ const ContactDetails = () => {
                   name="center_phone"
                   icon={<Phone className="w-5 h-5 mr-2 text-onboard_primary" />}
                   value={formik.values.center_phone}
-                  onChange={formik.handleChange}
+                  onChange={handleInputChange}
                   error={
                     formik.touched.center_phone && formik.errors.center_phone
                   }
