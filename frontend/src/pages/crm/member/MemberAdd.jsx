@@ -41,7 +41,7 @@ const genderOption = [
 ];
 
 const MemberAdd = ({ memberId, isEdit, goBack }) => {
-  const centerId = useAuthStore.getState()?.auth?.center_id;
+  const centerId = useAuthStore((state) => state?.auth?.center_id);
   const [planOpen, setPlanOpen] = useState(false);
   const [timeslotOpen, setTimeslotOpen] = useState(false);
   const { selectedVisitorId, selectedGuestId, clearSelectedIds } =
@@ -410,46 +410,47 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
             </div>
           </div>
         </div>
-        {formik?.values?.payment_status === "paid" &&
-          memberData?.payment_status == "unpaid" && (
-            <div className="flex gap-4 ">
-              <div className="flex-1">
-                <CustomeSelect
-                  label="Payment Method"
-                  name="payment_method"
-                  options={paymentMethod}
-                  value={formik.values.payment_method}
-                  onChange={(value) =>
-                    formik.setFieldValue("payment_method", value)
-                  }
-                />
-              </div>
-              <div className="flex-1 relative ">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  label="Password"
-                  name="password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  // onBlur={formik.handleBlur}
-                  error={formik.touched.password && formik.errors.password}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-9 cursor-pointer text-gray-500"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-          )}
+   {formik.values.payment_status === "paid" &&
+  (!isEdit || memberData?.payment_status === "unpaid") && (
+    <div className="flex gap-4">
+      <div className="flex-1">
+        <CustomeSelect
+          label="Payment Method"
+          name="payment_method"
+          options={paymentMethod}
+          value={formik.values.payment_method}
+          onChange={(value) =>
+            formik.setFieldValue("payment_method", value)
+          }
+        />
+      </div>
 
-        {memberData?.payment_status == "unpaid" && (
+      <div className="flex-1 relative">
+        <Input
+          type={showPassword ? "text" : "password"}
+          label="Password"
+          name="password"
+          value={formik.values.password}
+          onChange={formik.handleChange}
+          error={formik.touched.password && formik.errors.password}
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          className="absolute right-3 top-9 cursor-pointer text-gray-500"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+    </div>
+)}
+
+        {(!isEdit || memberData?.payment_status === "unpaid") && (
           <div className="flex justify-end">
             <CustomeTab
               tabList={paidStatus}
-              defaultVal="unpaid"
+              defaultVal={formik.values.payment_status || "unpaid"}
               tabsListClass="w-40 p-[1px] rounded-full"
               tabsTriggerClass="rounded-full"
               onChange={(value) =>
