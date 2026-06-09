@@ -3,7 +3,7 @@ import HeaderProgress from "./components/HaederProgress";
 import { Card } from "@pages/components/ui/card";
 import { CircleCheck } from "lucide-react";
 import { Button } from "@pages/components/ui/button";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   usePaymentFeeQuery,
 } from "@api-queries/partner/on-boarding/Query";
@@ -13,11 +13,13 @@ import {
   useVerifyPayment,
 } from "@api-queries/common/razorPay/query";
 import { showError, showSuccess } from "@utils/toast";
-import { usePartnerRazorpayFailure, useRetryPaymentMutation } from "@api-queries/center-admin/on-boarding/Query";
+import { usePartnerRazorpayFailure, usePartnerRetryPaymentMutation } from "@api-queries/center-admin/on-boarding/Query";
 
 const PaymentRetry = () => {
   const navigate = useNavigate();
-  const { onboardId, paymentId } = useParams();
+  const [searchParams] = useSearchParams();
+  const payment_order_id = searchParams.get("payment_order_id");
+  console.log('payment_order_id: ', payment_order_id);
   const partnerEmail = useOnboardingStore(
     (state) => state.partnerOnboardingDraft?.email,
   );
@@ -25,21 +27,19 @@ const PaymentRetry = () => {
     (state) => state.resetPartnerOnboardingDraft,
   );
   const { data } = usePaymentFeeQuery(partnerEmail);
-  console.log('data: ', data);
   const { mutateAsync: razorpayFailure } = usePartnerRazorpayFailure();
   const { mutate: create_Order, isPendings } = useCreatePaymentOrder();
   const { mutateAsync: verifyPayment } = useVerifyPayment();
-  const { mutateAsync: retryPayment, isLoading } = useRetryPaymentMutation(
-  );
+  const { mutateAsync: retryPayment, isLoading } = usePartnerRetryPaymentMutation();
 
   const handlePayment = async () => {
     try {
-      await retryPayment({ onboardId, paymentId });
-      create_Order(paymentId, {
+      await retryPayment(payment_order_id);
+      create_Order(payment_order_id, {
         onSuccess: (res) => {
           console.log("Order ID:", res);
           const orderData = res?.data;
-          openRazorpay(orderData,paymentId);
+          openRazorpay(orderData, payment_order_id);
         },
         onError: (err) => {
           console.error(err?.response?.data?.detail);
@@ -80,7 +80,7 @@ const PaymentRetry = () => {
             showSuccess("Partner Payment received successfully");
           } catch (err) {
             console.log("Verification Error:", err);
-            await razorpayFailure(paymentId);
+            await razorpayFailure(payment_order_id);
 
           }
         },
@@ -93,7 +93,7 @@ const PaymentRetry = () => {
           ondismiss: async () => {
             console.log("User closed Razorpay popup");
             try {
-              await razorpayFailure(paymentId);
+              await razorpayFailure(payment_order_id);
             } catch (error) {
               console.error("Failure API Error:", error);
             }
@@ -106,7 +106,7 @@ const PaymentRetry = () => {
       razor.on("payment.failed", async (response) => {
         console.error("Payment Failed:", response.error);
         try {
-          await razorpayFailure(paymentId);
+          await razorpayFailure(payment_order_id);
         } catch (error) {
           console.error("Failure API Error 1:", error);
         }
@@ -116,7 +116,7 @@ const PaymentRetry = () => {
     } catch (err) {
       console.error("Error opening Razorpay:", err);
       try {
-        await razorpayFailure(paymentId);
+        await razorpayFailure(payment_order_id);
       } catch (error) {
         console.error("Failure API Error: 2", error);
       }

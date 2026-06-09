@@ -63,8 +63,8 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
   })
 
   return (
-    <CustomeModal open={open} onOpenChange={onOpenChange}>
-      <div className='flex flex-col  max-w-[80vw]'>
+    <CustomeModal open={open} onOpenChange={onOpenChange} className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className='flex flex-col w-full'>
         <h2 className='text-xl font-semibold pb-4'>Create Branch</h2>
         <form onSubmit={formik.handleSubmit}>
           <div className='grid grid-col-1 sm:grid-cols-3 gap-4 p-3  space-y-1'>

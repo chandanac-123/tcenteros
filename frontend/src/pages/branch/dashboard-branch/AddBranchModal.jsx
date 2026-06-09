@@ -122,7 +122,7 @@ const AddBranchModal = ({ open, onOpenChange }) => {
 
   return (
     <CustomeModal open={open} onOpenChange={onOpenChange}>
-      <div className="flex flex-col space-y-4 min-w-[380px]">
+      <div className="flex flex-col space-y-4 w-full">
         <h2 className="text-sm font-semibold">Purchase Branches</h2>
         {data?.tax_percentage === 0 && (
           <p className="flex justify-center items-center text-red_text">

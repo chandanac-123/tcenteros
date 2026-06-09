@@ -159,7 +159,7 @@ const RenewSubscription = ({ open, setOpen }) => {
       open={open}
       onOpenChange={setOpen}
       header="Renew Subscription"
-      className="max-w-xl w-full"
+      className="w-[95vw] max-w-xl"
     >
       <form className="space-y-5" onSubmit={formik.handleSubmit}>
         {/* CURRENT PLAN */}
