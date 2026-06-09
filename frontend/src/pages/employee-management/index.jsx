@@ -13,6 +13,7 @@ import { useAppPermissions } from "@hooks/index";
 
 const EmployeeManagement = () => {
   const { hydrated, canAddEmployee, canAddSalary } = useAppPermissions();
+
   if (!hydrated) return null;
 
   const tabConfig = [
@@ -32,11 +33,13 @@ const EmployeeManagement = () => {
 
   const employeeOrCenter = tabConfig.filter((tab) => tab.id);
   const defaultTab = employeeOrCenter[0]?.id || null;
-  const [activeTab, setActiveTab] = useState(() => defaultTab);
+
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [open, setOpen] = useState(false);
   const [structureOpen, setStructureOpen] = useState(false);
-  const { data: centersData, isFetching: isCentersFetching } =
-    useAllCentersQuery();
+
+  const { data: centersData } = useAllCentersQuery();
+
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: "",
@@ -48,45 +51,56 @@ const EmployeeManagement = () => {
 
   return (
     <ContentLayout>
-      <div className="flex justify-between items-center">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div className="flex flex-col">
-          <span>Employees</span>
+          <span className="text-lg font-semibold">Employees</span>
           <span className="text-textgrey text-sm">
             All Employees and Trainee Details
           </span>
         </div>
-        <div className="flex-1 flex justify-end items-center gap-2">
+
+        <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2 w-full lg:w-auto">
           <CustomFilter
             options={centersData?.centers}
             onApply={(value) =>
-              setTableParams((prev) => ({ ...prev, payment_status: value }))
+              setTableParams((prev) => ({
+                ...prev,
+                payment_status: value,
+              }))
             }
           />
+
           {activeTab === "employee" && (
             <Button
               onClick={handleOpen}
               disabled={!canAddEmployee}
               size="addbutton"
+              className="w-full sm:w-auto"
             >
               + Add Employee
             </Button>
           )}
+
           {activeTab === "salary_structure" && (
             <Button
               onClick={() => setStructureOpen(true)}
               disabled={!canAddSalary}
               size="addbutton"
+              className="w-full sm:w-auto"
             >
               + Add Salary Structure
             </Button>
           )}
         </div>
       </div>
-      <div className=" gap-4 mt-4 flex flex-col">
+
+      {/* Tabs + Content */}
+      <div className="flex flex-col gap-4 mt-4 w-full overflow-hidden">
         <CustomeTab
           tabList={employeeOrCenter}
           defaultVal={employeeOrCenter[0]?.id}
-          tabsListClass=" w-[400px] p-[1px]"
+          tabsListClass="w-full sm:w-[400px] max-w-full p-[1px]"
           onChange={(value) => setActiveTab(value)}
         />
 
@@ -98,13 +112,17 @@ const EmployeeManagement = () => {
             setTableParams={setTableParams}
           />
         )}
+
         {activeTab === "salary_structure" && <SalaryStructure />}
+
         {activeTab === "payroll" && <Payroll />}
+
         <AddEditForm
           open={open}
           setOpen={setOpen}
           closeModal={() => setOpen(false)}
         />
+
         <StructureAddEdit
           open={structureOpen}
           setOpen={setStructureOpen}
@@ -114,4 +132,5 @@ const EmployeeManagement = () => {
     </ContentLayout>
   );
 };
+
 export default EmployeeManagement;

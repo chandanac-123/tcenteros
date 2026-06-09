@@ -151,13 +151,14 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
         open={open}
         onOpenChange={setOpen}
         header={id ? 'Edit Employee' : 'Create Employee'}
+        className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto"
       >
         <form className='space-y-2' onSubmit={formik.handleSubmit}>
           {!id && (
             <>
               <span>Select Category</span>
               <div className='w-full'>
-                <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2'>
+                <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2'>
                   {data?.map(item => (
                     <SelectCategory
                       key={item.id}
@@ -295,23 +296,23 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
           {!id && (
             <>
               <div className='flex gap-4 '>
-                  <div className='flex-1 relative '>
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      label='Password'
-                      name='password'
-                      value={formik.values.password}
-                      onChange={formik.handleChange}
-                      // onBlur={formik.handleBlur}
-                      error={formik.touched.password && formik.errors.password}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(prev => !prev)}
-                      className="absolute right-3 top-9 cursor-pointer text-gray-500"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                <div className='flex-1 relative '>
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    label='Password'
+                    name='password'
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    // onBlur={formik.handleBlur}
+                    error={formik.touched.password && formik.errors.password}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="absolute right-3 top-9 cursor-pointer text-gray-500"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
 
                 <div className='flex-1'>

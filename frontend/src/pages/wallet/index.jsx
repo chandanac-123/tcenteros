@@ -67,13 +67,14 @@ const Wallet = () => {
     <ContentLayout>
       <div className='flex flex-col space-y-6 p-2'>
         {/* Wallet content goes here */}
-        <div className='flex items-center justify-between'>
+       <div className='flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between'>
           <h1 className='text-2xl font-bold '>Wallet</h1>
           <Button
             disabled={!canAddTopup}
             onClick={() => setOpen(true)}
             size='addbutton'
             type='submit'
+             className='w-full sm:w-auto'
           >
             {' '}
             + {buttonLabel}
@@ -87,7 +88,7 @@ const Wallet = () => {
           topUp={true}
         />
 
-        <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 '>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
           <div className='flex flex-col rounded-xl bg-white shadow-[3px_3px_22px_1px_rgba(126,2,246,0.12)] py-5 px-10'>
             <span className='text-[#3A3A3A] font-poppins text-[14px] font-medium leading-[20px] tracking-[-0.28px]'>
               Available Balance
@@ -127,7 +128,7 @@ const Wallet = () => {
 
         {/* Wallet Table Section */}
         <div className=''>
-          <div className='flex items-center justify-between'>
+        <div className='flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between'>
             <h2 className='text-black font-roboto text-[24px] font-medium leading-[140%] tracking-[-0.24px]'>
               Wallet Transaction List
             </h2>

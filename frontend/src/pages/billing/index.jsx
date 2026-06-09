@@ -14,14 +14,16 @@ const Billing = () => {
         <div className='text-xl font-semibold text-textblack mb-4'>
           Billing / {activeTab}
         </div>
-        <CustomeTab
-          tabList={billing_modules}
-          value={activeTab}
-          defaultVal='overview'
-          tabsListClass='p-[1px]'
-          onChange={setActiveTab}
-        />
-
+        <div className='overflow-x-auto scrollbar-hide'>
+          <div className='min-w-max'>
+            <CustomeTab
+              tabList={billing_modules}
+              value={activeTab}
+              defaultVal='overview'
+              tabsListClass='p-[1px]'
+              onChange={setActiveTab}
+            />
+          </div></div>
         <div className='mt-4'>{activeModule?.component}</div>
       </div>
     </ContentLayout>

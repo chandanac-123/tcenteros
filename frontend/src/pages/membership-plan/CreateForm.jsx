@@ -95,10 +95,11 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
         open={open}
         onOpenChange={setOpen}
         header={planData ? 'Update Membership Plan' : 'Create Membership Plan'}
+        className='w-full max-w-xl'
       >
         <form className='space-y-4 w-full' onSubmit={formik.handleSubmit}>
           {/* Row 1: Membership Name & Duration */}
-          <div className='flex gap-4'>
+          <div className='flex flex-col md:flex-row gap-4'>
             <div className='flex-1'>
               <Input
                 label='Membership Name'
@@ -117,11 +118,11 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
               <span className='text-sm font-normal text-textblack'>
                 Set Membership Duration
               </span>
-              <div className='flex gap-2'>
+
+              <div className='flex flex-col sm:flex-row gap-2'>
                 <div className='flex-1'>
                   <Input
                     type='number'
-                    label=''
                     name='duration_count'
                     placeholder='Enter value'
                     value={formik.values.duration_count}
@@ -132,6 +133,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                     }
                   />
                 </div>
+
                 <div className='flex-1'>
                   <CustomeSelect
                     options={membershipDurationOptions}
@@ -146,7 +148,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
           </div>
 
           {/* Row 2: Price & Image */}
-          <div className='flex gap-4'>
+          <div className='flex flex-col md:flex-row gap-4'>
             <div className='flex-1'>
               <Input
                 label='Default Price'
@@ -162,15 +164,17 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
               />
             </div>
 
-            <div className='flex-1 justify-end flex items-end'>
-              <div className='border border-gray-300 rounded-md p-2 flex items-center gap-2 h-9'>
+            <div className='flex-1 flex items-end justify-end'>
+              <div className='border border-gray-300 rounded-md p-3 flex items-center gap-2 w-full md:w-auto'>
                 <Checkbox
                   checked={!!formik.values.network_enabled}
                   onCheckedChange={val =>
                     formik.setFieldValue('network_enabled', !!val)
                   }
                 />
-                <span className='text-sm text-textblack'>Networking</span>
+                <span className='text-sm text-textblack'>
+                  Networking
+                </span>
               </div>
             </div>
           </div>
@@ -202,7 +206,10 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
 
             <div className='flex flex-col gap-3'>
               {formik.values.membership_features.map((feature, index) => (
-                <div key={index} className='flex items-center gap-2 w-full'>
+                <div
+                  key={index}
+                  className='flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full'
+                >
                   <Input
                     className='flex-1'
                     placeholder='Enter feature'
@@ -213,7 +220,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                   <button
                     type='button'
                     onClick={() => handleRemoveFeature(index)}
-                    className='text-red_text hover:text-red-700 shrink-0 font-bold text-lg'
+                    className='text-red_text hover:text-red-700 font-bold text-lg shrink-0'
                   >
                     ✕
                   </button>
@@ -225,6 +232,7 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                 onClick={handleAddFeature}
                 size='filterbutton'
                 variant='button_outlined_textleft'
+                className='w-full sm:w-auto'
               >
                 + Add Feature
               </Button>
@@ -232,11 +240,12 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
           </div>
 
           {/* Submit Button */}
-          <div className='flex gap-2 justify-end pt-4'>
+          <div className='flex flex-col sm:flex-row justify-end gap-2 pt-4'>
             <Button
               size='addbutton'
               variant='default'
               type='submit'
+              className='w-full sm:w-auto'
               disabled={isLoading || isUpdating}
             >
               {isLoading || isUpdating
@@ -244,8 +253,8 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
                   ? 'Updating...'
                   : 'Creating...'
                 : planData
-                ? 'Update Plan'
-                : 'Create Plan'}
+                  ? 'Update Plan'
+                  : 'Create Plan'}
             </Button>
           </div>
         </form>

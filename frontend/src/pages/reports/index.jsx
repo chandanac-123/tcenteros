@@ -4,7 +4,6 @@ import { useState } from 'react'
 import IncomeTable from './IncomeTable'
 import ExpenseTable from './ExpenseTable'
 import SettlementTable from './SettlementTable'
-import { Download } from 'lucide-react'
 import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { downloadFile, formatDate } from '@utils/helper'
 import {
@@ -15,19 +14,27 @@ import {
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('income')
+
   const { mutateAsync: generateIncomeReport } =
     useGenerateConsolidatedIncomeReport()
+
   const { mutateAsync: generateExpensesReport } =
     useGenerateConsolidatedExpensesReport()
+
   const { mutateAsync: generateSettlementsReport } =
     useGenerateConsolidatedSettlementsReport()
 
   const employeeOrMember = [
     { id: 'income', name: 'Income' },
-    { id: 'expenses', name: 'Expenses ' },
+    { id: 'expenses', name: 'Expenses' },
     { id: 'settlement', name: 'Settlement' }
   ]
-  const [dateRange, setDateRange] = useState({ from: null, to: null })
+
+  const [dateRange, setDateRange] = useState({
+    from: null,
+    to: null
+  })
+
   const [tableParams, setTableParams] = useState({
     page: 1,
     date_from: null,
@@ -40,11 +47,15 @@ const Reports = () => {
         date_from: tableParams?.date_from
           ? formatDate(tableParams.date_from)
           : null,
-        date_to: tableParams?.date_to ? formatDate(tableParams.date_to) : null,
+        date_to: tableParams?.date_to
+          ? formatDate(tableParams.date_to)
+          : null,
         format
       }
+
       let response
       let filename
+
       switch (activeTab) {
         case 'income':
           response = await generateIncomeReport(payload)
@@ -60,9 +71,11 @@ const Reports = () => {
           response = await generateSettlementsReport(payload)
           filename = `settlement-report.${format}`
           break
+
         default:
           return
       }
+
       downloadFile(response, filename)
     } catch (error) {
       console.error(error)
@@ -78,25 +91,34 @@ const Reports = () => {
       date_to: null
     })
   }
+
   return (
     <ContentLayout>
-      <h1 className='text-xl font-semibold text-textblack mb-4'>
-        Reports -<>{activeTab?.charAt(0)?.toUpperCase() + activeTab?.slice(1)}</>
+      {/* Header */}
+      <h1 className="text-lg sm:text-xl font-semibold text-textblack mb-4">
+        Reports -
+        <span className="ml-1">
+          {activeTab?.charAt(0)?.toUpperCase() + activeTab?.slice(1)}
+        </span>
       </h1>
-      <div className='flex justify-between items-center mb-4 gap-3'>
-        {/* Tabs */}
-        <CustomeTab
-          tabList={employeeOrMember}
-          defaultVal='income'
-          tabsListClass='p-[1px] w-[400px] '
-          onChange={value => changeReportType(value)}
-        />
 
-        {/* Filters + Buttons */}
-        <div className='flex w-full items-center gap-2 justify-end'>
-          <div className='w-80'>
+      {/* Tabs + Filters */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4">
+        {/* Tabs */}
+        <div className="w-full lg:w-auto overflow-x-auto">
+          <CustomeTab
+            tabList={employeeOrMember}
+            defaultVal="income"
+            tabsListClass="p-[1px] w-full sm:w-[400px]"
+            onChange={value => changeReportType(value)}
+          />
+        </div>
+
+        {/* Date Filter */}
+        <div className="w-full lg:w-auto flex justify-start lg:justify-end">
+          <div className="w-full sm:w-[320px]">
             <CustomDatePicker
-              pickerType='range'
+              pickerType="range"
               value={dateRange}
               onChange={range => {
                 setDateRange(range)
@@ -109,40 +131,32 @@ const Reports = () => {
               }}
             />
           </div>
-          {/* <button
-            onClick={() => handleDownload('csv')}
-            className='bg-[#E2EBFF] text-[#1452D4] border border-[#1452D4] px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap'
-          >
-            Generate CSV
-          </button>
-
-          <button
-            onClick={() => handleDownload('pdf')}
-            className='bg-[#F0DEFF] flex items-center gap-2 text-[#8B24E2] border border-[#8A00FF] px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap'
-          >
-            Download <Download size={16} />
-          </button> */}
         </div>
       </div>
-      {/* Render table based on activeTab */}
-      {activeTab === 'income' && (
-        <IncomeTable
-          tableParams={tableParams}
-          setTableParams={setTableParams}
-        />
-      )}
-      {activeTab === 'expenses' && (
-        <ExpenseTable
-          tableParams={tableParams}
-          setTableParams={setTableParams}
-        />
-      )}
-      {activeTab === 'settlement' && (
-        <SettlementTable
-          tableParams={tableParams}
-          setTableParams={setTableParams}
-        />
-      )}
+
+      {/* Tables */}
+      <div className="w-full overflow-hidden">
+        {activeTab === 'income' && (
+          <IncomeTable
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
+        )}
+
+        {activeTab === 'expenses' && (
+          <ExpenseTable
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
+        )}
+
+        {activeTab === 'settlement' && (
+          <SettlementTable
+            tableParams={tableParams}
+            setTableParams={setTableParams}
+          />
+        )}
+      </div>
     </ContentLayout>
   )
 }

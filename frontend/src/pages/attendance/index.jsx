@@ -13,8 +13,9 @@ import { formatRange } from '@utils/helper'
 const Attendance = () => {
   const [activeTab, setActiveTab] = useState('members')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const { data, isLoading } = useCategoriesQuery()
+  const { data } = useCategoriesQuery()
   const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+
   const [dateRanges, setDateRanges] = useState({
     members: { from: null, to: null },
     employees: { from: null, to: null }
@@ -27,56 +28,84 @@ const Attendance = () => {
 
   return (
     <ContentLayout>
-      <h1 className='text-xl font-semibold text-textblack mb-4'>Attendance</h1>
-      <div className='flex justify-between items-center mb-4'>
-        <CustomeTab
-          tabList={employeeOrMember}
-          defaultVal='members'
-          tabsListClass='p-[1px]'
-          onChange={value => setActiveTab(value)}
-        />
-        <div className='flex gap-2'>
-          <CustomDatePicker
-            pickerType='range'
-            value={dateRanges[activeTab]}
-            onChange={range =>
-              setDateRanges(prev => ({
-                ...prev,
-                [activeTab]: range
-              }))
-            }
+      {/* Title */}
+      <h1 className='text-lg sm:text-xl font-semibold text-textblack mb-4'>
+        Attendance
+      </h1>
+
+      {/* Header Section */}
+      <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-4'>
+        {/* Tabs */}
+        <div className='w-full lg:w-auto overflow-x-auto'>
+          <CustomeTab
+            tabList={employeeOrMember}
+            defaultVal='members'
+            tabsListClass='p-[1px] w-full sm:w-fit min-w-[250px]'
+            onChange={value => setActiveTab(value)}
           />
+        </div>
+
+        {/* Filters */}
+        <div className='flex flex-col sm:flex-row gap-2 w-full lg:w-auto'>
+          <div className='w-full sm:w-auto'>
+            <CustomDatePicker
+              pickerType='range'
+              value={dateRanges[activeTab]}
+              onChange={range =>
+                setDateRanges(prev => ({
+                  ...prev,
+                  [activeTab]: range
+                }))
+              }
+            />
+          </div>
+
           {activeTab === 'employees' && (
-            <div className='flex gap-2'>
-              <CustomFilter
-                onApply={id => setSelectedCategoryId(id)}
-                options={data?.map(category => ({
-                  label: category.name,
-                  value: category.id
-                }))}
-              />
-               <Button size='addbutton' onClick={() => setIsAddModalOpen(true)}>
+            <>
+              <div className='w-full sm:w-auto'>
+                <CustomFilter
+                  onApply={id => setSelectedCategoryId(id)}
+                  options={data?.map(category => ({
+                    label: category.name,
+                    value: category.id
+                  }))}
+                />
+              </div>
+
+              <Button
+                size='addbutton'
+                className='w-full sm:w-auto'
+                onClick={() => setIsAddModalOpen(true)}
+              >
                 + Add Attendance
               </Button>
-            </div>
+            </>
           )}
         </div>
       </div>
-      <div className='text-tabelsubtitle font-semibold text-md mb-3'>
+
+      {/* Table Heading */}
+      <div className='text-tabelsubtitle font-semibold text-sm sm:text-md mb-3'>
         {activeTab === 'members'
           ? 'Member Attendance History'
           : 'Employee Attendance History'}
       </div>
-      {activeTab === 'members' && (
-        <MemberAttendance dateRange={formatRange(dateRanges.members)} />
-      )}
 
-      {activeTab === 'employees' && (
-        <EmployeeAttendance
-          categoryId={selectedCategoryId}
-          dateRange={formatRange(dateRanges.employees)}
-        />
-      )}
+      {/* Content */}
+      <div className='overflow-x-auto'>
+        {activeTab === 'members' && (
+          <MemberAttendance dateRange={formatRange(dateRanges.members)} />
+        )}
+
+        {activeTab === 'employees' && (
+          <EmployeeAttendance
+            categoryId={selectedCategoryId}
+            dateRange={formatRange(dateRanges.employees)}
+          />
+        )}
+      </div>
+
+      {/* Modal */}
       <AddEmployeeAttendance
         open={isAddModalOpen}
         setOpen={setIsAddModalOpen}
@@ -84,4 +113,5 @@ const Attendance = () => {
     </ContentLayout>
   )
 }
+
 export default Attendance
