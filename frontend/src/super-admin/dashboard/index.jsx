@@ -166,9 +166,9 @@ const SuperAdminDashboard = () => {
                 <span className="font-semibold text-base">
                   Saas Revenue Trend
                 </span>
-                <span>
+                {/* <span>
                   <CustomDatePicker pickerType="year" />
-                </span>
+                </span> */}
               </div>
               <LineChart
                 labels={chartLabels} // if your component supports labels

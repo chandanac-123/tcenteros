@@ -25,66 +25,6 @@ const Networking = () => {
     }));
   };
 
-  //         center_name: "Anil Kumar S",
-  //         platform_commission: 18000,
-  //         commission_date: "13-07-2025",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Priya Sharma",
-  //         platform_commission: 22500,
-  //         commission_date: "05-10-2024",
-  //         status: "Pending"
-  //     },
-  //     {
-  //         center_name: "Rajesh Gupta",
-  //         platform_commission: 15000,
-  //         commission_date: "19-11-2024",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Sneha Patil",
-  //         platform_commission: 20000,
-  //         commission_date: "27-12-2024",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Vikram Singh",
-  //         platform_commission: 17500,
-  //         commission_date: "02-09-2025",
-  //         status: "Pending"
-  //     },
-  //     {
-  //         center_name: "Meena Joshi",
-  //         platform_commission: 16200,
-  //         commission_date: "15-08-2025",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Karan Verma",
-  //         platform_commission: 19800,
-  //         commission_date: "30-11-2024",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Anita Desai",
-  //         platform_commission: 21000,
-  //         commission_date: "10-07-2025",
-  //         status: "Pending"
-  //     },
-  //     {
-  //         center_name: "Suresh Reddy",
-  //         platform_commission: 18750,
-  //         commission_date: "22-10-2024",
-  //         status: "Paid"
-  //     },
-  //     {
-  //         center_name: "Lata Nair",
-  //         platform_commission: 23000,
-  //         commission_date: "06-12-2024",
-  //         status: "Pending"
-  //     }
-  // ];
   return (
     <ContentLayout>
       <div className="flex flex-col gap-5">
@@ -95,7 +35,7 @@ const Networking = () => {
             </div>
             <div className="flex flex-col justify-center gap-3">
               <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
-                Networking
+                Networking Commission
               </p>
               <p className="text-[#393636] font-inter text-[14px] font-medium">
                 Monitor the entire platform ecosystem

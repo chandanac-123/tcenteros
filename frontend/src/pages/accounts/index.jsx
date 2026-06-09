@@ -145,9 +145,9 @@ const Accounts = () => {
                 <span className="text-lg font-semibold text-textblack">
                   Monthly Income Vs Expenses
                 </span>
-                <span>
+                {/* <span>
                   <CustomDatePicker pickerType="year" />
-                </span>
+                </span> */}
               </div>
               <BarChart
                 labels={revenueLabels}
@@ -173,10 +173,10 @@ const Accounts = () => {
                 <span className="text-lg font-semibold text-textblack">
                   Income Breakdown
                 </span>
-                <span>
+                {/* <span>
                   {" "}
                   <CustomDatePicker pickerType="year" />
-                </span>
+                </span> */}
               </div>
               <PieChart dataConfig={incomeDataConfig} />{" "}
             </div>
@@ -207,10 +207,10 @@ const Accounts = () => {
                 <span className="text-lg font-semibold text-textblack">
                   Expense Breakdown
                 </span>
-                <span>
+                {/* <span>
                   {" "}
                   <CustomDatePicker pickerType="year" />
-                </span>
+                </span> */}
               </div>
               <PieChart dataConfig={expenseDataConfig} />{" "}
             </div>

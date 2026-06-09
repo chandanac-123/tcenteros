@@ -100,6 +100,7 @@ const PartnerDashboard = () => {
               </div>
               <span className="text-md font-semibold">Upcoming Renewals</span>
             </div>
+            {partnerData?.upcoming_renewals?.renewals?.length === 0 && <span className="flex justify-center text-sm pt-6">No results</span>}
             <div className="mt-4 text-sm text-textgrey">
               <RenewalCard data={partnerData?.upcoming_renewals} />
             </div>

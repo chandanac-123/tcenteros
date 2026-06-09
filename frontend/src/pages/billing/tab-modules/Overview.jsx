@@ -55,9 +55,9 @@ const Overview = () => {
               <span className='font-semibold text-base'>
                 Total Revenue Summary
               </span>
-              <span>
+              {/* <span>
                 <CustomDatePicker pickerType='year' />
-              </span>
+              </span> */}
             </div>
             <LineChart
               labels={labels}

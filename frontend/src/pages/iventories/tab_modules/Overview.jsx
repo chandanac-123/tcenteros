@@ -42,9 +42,9 @@ const Overview = () => {
               <span className='font-semibold text-base'>
                 Total Revenue Summary
               </span>
-              <span>
+              {/* <span>
                 <CustomDatePicker pickerType='year' />
-              </span>
+              </span> */}
             </div>
             <LineChart
               title='Stock Distribution'
@@ -75,9 +75,9 @@ const Overview = () => {
           <Card className='p-4 h-full'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4'>
               <span className='font-semibold text-base'>Revenue Trend</span>
-              <span>
+              {/* <span>
                 <CustomDatePicker pickerType='year' />
-              </span>
+              </span> */}
             </div>
             <BarChart
               labels={salesLabels}

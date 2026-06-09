@@ -178,7 +178,7 @@ export const routes = [
   { key: 46, path: '/centers', privetRoute: true, isSubRoute: false, pageTitle: 'Centers', component: Centers, icon: <Building2 />, menubar: true, permissionKey: 'center', isSuperAdmin: true },
   { key: 47, path: '/partners', privetRoute: true, isSubRoute: false, pageTitle: 'Partners', component: Partners, icon: <Handshake />, menubar: true, permissionKey: 'partner', isSuperAdmin: true },
   { key: 48, path: '/branching', privetRoute: true, isSubRoute: false, pageTitle: 'Branching', component: Branching, icon: <Split />, menubar: true, permissionKey: 'branching', isSuperAdmin: true },
-  { key: 49, path: '/networking', privetRoute: true, isSubRoute: false, pageTitle: 'Networking', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: 'networking', isSuperAdmin: true },
+  { key: 49, path: '/networking', privetRoute: true, isSubRoute: false, pageTitle: 'Commission', component: Networking, icon: <LucideNetwork />, menubar: true, permissionKey: 'networking', isSuperAdmin: true },
 
   {
     key: 50, path: '/revenue-billing', privetRoute: true, isSubRoute: true, pageTitle: 'Revenue Billing', component: RevenueBillingLayout, icon: <CircleDollarSign />, menubar: true, permissionKey: 'revenue_billing', isSuperAdmin: true,
