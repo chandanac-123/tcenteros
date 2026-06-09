@@ -11,7 +11,8 @@ import {
   getAllResellers,
   getAllOnboardingCenters,
   razorpayFailure,
-  retryRazorpayPayment
+  retryRazorpayPayment,
+  partnerRazorpayFailure
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -152,5 +153,11 @@ export const useRetryPaymentMutation = () => {
   return useMutation({
     mutationFn: ({ onboardId, paymentId }) =>
       retryRazorpayPayment({ onboardId, paymentId }),
+  });
+};
+
+export const usePartnerRazorpayFailure = () => {
+  return useMutation({
+    mutationFn: (paymentOrderId) => partnerRazorpayFailure(paymentOrderId),
   });
 };

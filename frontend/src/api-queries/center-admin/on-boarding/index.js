@@ -27,3 +27,6 @@ export const retryRazorpayPaymentApiCall = ({ onboardId, paymentId }) =>
   axiosInstance.post(
     `/auth/payment/retry/${onboardId}/${paymentId}`
   );
+
+export const partnerRazorpayFailureApiCall = (data) =>
+  axiosInstance.post(`/auth/partner/payment-failed?payment_order_id=${data}`)

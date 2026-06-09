@@ -10,7 +10,8 @@ import {
   getResellerApiCall,
   getAllCentersOnBoarding,
   razorpayFailureApiCall,
-  retryRazorpayPaymentApiCall
+  retryRazorpayPaymentApiCall,
+  partnerRazorpayFailureApiCall
 } from './index'
 
 export const getAllClassTypes = async () => {
@@ -96,10 +97,10 @@ export const getAllResellers = async () => {
 export const getAllOnboardingCenters = async () => {
   try {
     const response = await getAllCentersOnBoarding()
-    console.log("Response Centers",response);
+    console.log("Response Centers", response);
     return response.data
   } catch (err) {
-    console.error("Error at All center fetching on onboard",err);
+    console.error("Error at All center fetching on onboard", err);
     throw err
   }
 }
@@ -120,4 +121,13 @@ export const retryRazorpayPayment = async ({ onboardId, paymentId }) => {
   });
 
   return response.data;
+};
+
+export const partnerRazorpayFailure = async (paymentOrderId) => {
+  try {
+    const response = await partnerRazorpayFailureApiCall(paymentOrderId);
+    return response.data;
+  } catch (err) {
+    throw err;
+  }
 };

@@ -106,6 +106,7 @@ import AccountDetails from '@partner/account-details'
 import RetryPayment from '@pages/onboarding-pages/RetryPayment'
 import EmailResetPassword from '@pages/authentication/EmailResetPassword'
 import ActiveNetworkCenters from '@super-admin/subscriptions/active-network-centers'
+import PaymentRetry from '@partner/onboarding/PaymentRetry'
 
 export const routes = [
   //public routes
@@ -199,6 +200,7 @@ export const routes = [
   { key: 57, path: '/partner-onboard', privetRoute: false, isSubRoute: false, pageTitle: '', component: PartnerOnboarding, menubar: false, permissionKey: true },
   { key: 58, path: '/agreement', privetRoute: false, isSubRoute: false, pageTitle: '', component: Agreement, menubar: false, permissionKey: true },
   { key: 59, path: '/payment', privetRoute: false, isSubRoute: false, pageTitle: '', component: Payment, menubar: false, permissionKey: true },
+  { key: 72, path: '/payment-retry', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentRetry, menubar: false, permissionKey: true },
   { key: 60, path: '/payment-successful', privetRoute: false, isSubRoute: false, pageTitle: '', component: PaymentSuccessfull, menubar: false, permissionKey: true },
 
   //Partner Routes
