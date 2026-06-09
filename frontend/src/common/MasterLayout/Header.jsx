@@ -60,19 +60,19 @@ const Header = ({ toggleSidebar, collapsed }) => {
     setOpenAddbranch(true);
   };
   return (
-    <header className="w-full bg-secondary shadow flex items-center h-16 p-3">
+    <header className="w-full bg-secondary shadow flex items-center justify-between min-h-16 px-3 py-2">
       <div className="flex items-center bg-secondary">
         <button onClick={toggleSidebar} className="text-white text-xl">
           {collapsed ? <ListIndentIncrease /> : <ListIndentDecrease />}
         </button>
       </div>
-      <div className="flex w-full justify-end gap-2 items-center font-bold text-xl text-gray-200">
+      <div className="flex flex-1 justify-end items-center gap-2 text-gray-200 min-w-0">
         {!isSuperAdmin && !isPartner && (
           <div className="flex w-full justify-end gap-2 items-center">
             <button onClick={() => setLocationOpen(true)}>
-              <span className="flex justify-center items-center text-xs font-normal gap-1 capitalize bg-search_bg p-2 rounded-md">
+              <span className="flex items-center text-xs font-normal gap-1 capitalize bg-search_bg px-2 py-2 rounded-md whitespace-nowrap">
                 <img src={map} alt="" className="w-5 h-5" loading="lazy" />
-                Location
+                <span className="hidden sm:inline">Location</span>
               </span>
             </button>
             <GoogleMapComponent
@@ -84,7 +84,8 @@ const Header = ({ toggleSidebar, collapsed }) => {
               size="addbutton"
               onClick={handleOpenBranch}
             >
-              + Add Branch
+              <span className="hidden sm:inline">+ Add Branch</span>
+              <span className="sm:hidden">+</span>
             </Button>}
             <AddBranchModal
               open={openAddBranch}
@@ -99,7 +100,8 @@ const Header = ({ toggleSidebar, collapsed }) => {
                 navigate("/crm");
               }}
             >
-              + Add Member
+              <span className="hidden sm:inline">+ Add Member</span>
+              <span className="sm:hidden">+</span>
             </Button>
           </div>
         )}
@@ -111,8 +113,8 @@ const Header = ({ toggleSidebar, collapsed }) => {
 
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger asChild onClick={() => setPopoverOpen(true)}>
-            <div className="flex border border-textwhite rounded-full w-auto px-3 py-1 items-center cursor-pointer">
-              <div className="flex items-center">
+            <div className="flex border border-textwhite rounded-full px-2 py-1 items-center cursor-pointer max-w-[180px] sm:max-w-none">
+              <div className="flex items-center gap-6">
                 <div className="flex items-center gap-0">
                   <img
                     loading="lazy"
@@ -122,9 +124,9 @@ const Header = ({ toggleSidebar, collapsed }) => {
                       defalutUser
                     }
                     alt="logo"
-                    className="w-8 h-8 mr-2 rounded-full"
+                    className="w-8 h-8 rounded-full"
                   />
-                  <div className="flex flex-col">
+                  <div className="hidden sm:flex flex-col">
                     <span className="text-textwhite text-xs font-normal whitespace-nowrap capitalize">
                       {data?.full_name || superadminData?.fullname || "-"}
                     </span>
@@ -133,7 +135,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
                     </span>
                   </div>
                 </div>
-                <ChevronDown className="w-5 h-5 text-textwhite  ml-10" />
+                <ChevronDown className="w-4 h-4 text-textwhite" />
               </div>
             </div>
           </PopoverTrigger>

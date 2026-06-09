@@ -20,7 +20,7 @@ const MasterLayout = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 flex bg-color-light-gray overflow-hidden">
+    <div className="fixed inset-0 flex bg-color-light-gray overflow-hidden  w-full">
       {/* Overlay (mobile) */}
       {isMobile && open && (
         <div
@@ -46,7 +46,7 @@ const MasterLayout = () => {
             isMobile ? setOpen(true) : setCollapsed((prev) => !prev)
           }
         />
-        <main className="flex-1 min-w-0 overflow-hidden bg-secondary">
+        <main className="flex-1 min-w-0 overflow-y-auto bg-secondary">
           <Outlet />
         </main>
       </div>

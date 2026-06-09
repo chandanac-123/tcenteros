@@ -74,12 +74,11 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
   return (
     <div
-      className={`fixed lg:static top-0 left-0 z-50 h-full bg-secondary flex flex-col gap-5 items-center transition-all duration-300
-      ${
-        isMobile
-          ? `w-72 ${open ? "translate-x-0" : "-translate-x-full"}`
+      className={`fixed lg:static overflow-y-auto top-0 left-0 z-50 h-full bg-secondary flex flex-col gap-5 items-center transition-all duration-300
+      ${isMobile
+          ? `w-[280px] max-w-[85vw] ${open ? "translate-x-0" : "-translate-x-full"}`
           : `${collapsed ? "w-20" : "w-72"}`
-      }`}
+        }`}
     >
       {/* LOGO */}
       <div className="flex justify-center items-center">
