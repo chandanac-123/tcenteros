@@ -39,7 +39,7 @@ const PaymentRetry = () => {
         onSuccess: (res) => {
           console.log("Order ID:", res);
           const orderData = res?.data;
-          openRazorpay(orderData);
+          openRazorpay(orderData,paymentId);
         },
         onError: (err) => {
           console.error(err?.response?.data?.detail);

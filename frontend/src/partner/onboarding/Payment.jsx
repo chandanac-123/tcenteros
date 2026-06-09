@@ -43,7 +43,7 @@ const Payment = () => {
         onSuccess: (res) => {
           console.log("Order ID:", res);
           const orderData = res?.data;
-          openRazorpay(orderData);
+          openRazorpay(orderData,payment_id);
         },
         onError: (err) => {
           console.error(err?.response?.data?.detail);
@@ -56,7 +56,7 @@ const Payment = () => {
     }
   };
 
-  const openRazorpay = async (orderData) => {
+  const openRazorpay = async (orderData,payment_id) => {
     try {
       const options = {
         key: orderData.key_id,
