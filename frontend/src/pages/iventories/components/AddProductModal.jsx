@@ -37,10 +37,10 @@ const AddProductModal = ({ open, setOpen }) => {
     base_price: "",
     selling_price: "",
     unit_of_measure: "",
-    initial_stock: "",
+    initial_stock: null,
     supplier_name: "",
-    invoice_number: "",
-    invoice_date: "",
+    invoice_number: null,
+    invoice_date: null,
   };
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const AddProductModal = ({ open, setOpen }) => {
   const handleDateChange = (field, val) => {
     formik.setFieldValue(field, val ? format(val, "yyyy-MM-dd") : "");
   };
-  
+
   return (
     <CustomeModal open={open} onOpenChange={setOpen} header="Add Product">
       <form
@@ -184,6 +184,9 @@ const AddProductModal = ({ open, setOpen }) => {
             name="initial_stock"
             value={formik.values.initial_stock}
             onChange={formik.handleChange}
+            error={
+              formik.touched.initial_stock && formik.errors.initial_stock
+            }
           />
         </div>
 

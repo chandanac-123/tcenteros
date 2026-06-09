@@ -278,6 +278,7 @@ export const productValidationSchema = Yup.object().shape({
     .required("Base price is required")
     .min(0, "Base price cannot be negative"),
   selling_price: Yup.number().required("Selling price is required"),
+  initial_stock:Yup.number().required('Quantity is required')
 });
 
 export const addStockValidationSchema = Yup.object().shape({
