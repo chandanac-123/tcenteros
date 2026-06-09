@@ -287,7 +287,6 @@ export const addStockValidationSchema = Yup.object().shape({
     .required("Unit cost is required")
     .min(0, "Unit cost cannot be negative"),
   selling_price: Yup.number().required("Selling price is required"),
-  product_id: Yup.string().required("Select a product"),
   quantity: Yup.string().required("Enter quantity")
 });
 

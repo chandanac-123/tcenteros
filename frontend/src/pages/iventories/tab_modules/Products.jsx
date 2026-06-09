@@ -15,6 +15,7 @@ const Products = () => {
   const { data, isFetching } = useAllProductsQuery(tableParams);
   const [restockOpen, setRestockOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const columns = [
     { accessorKey: "name", header: "Product Name" },
@@ -23,6 +24,18 @@ const Products = () => {
     { accessorKey: "base_price", header: "Base Price" },
     { accessorKey: "selling_price", header: "Selling Price" },
     { accessorKey: "reorder_level", header: "Reorder Level" },
+    {
+      accessorKey: "reorder_level", header: "Action",
+      cell: ({ row }) => {
+        return <Button size='notificationbutton'
+          variant='button_filled' type='button' onClick={() => {
+            setSelectedProduct(row.original);
+            setRestockOpen(true);
+          }}>
+          <Plus strokeWidth={2.75} /> Add Stock
+        </Button>
+      }
+    },
   ];
 
 
@@ -31,15 +44,11 @@ const Products = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold">Products List</h1>
         <div className="flex gap-1">
-          <Button size="addbutton" type="submit" onClick={() => setRestockOpen(true)}>
-            <Plus strokeWidth={2.75} /> Add Stock
-          </Button>
           <Button size="addbutton" type="submit" onClick={() => setOpen(true)}>
             <Plus strokeWidth={2.75} /> Add Product
           </Button>
           <AddProductModal open={open} setOpen={setOpen} />
-          <RestockProductModal open={restockOpen} setOpen={setRestockOpen}  />
-
+          <RestockProductModal open={restockOpen} setOpen={setRestockOpen} product={selectedProduct} />
         </div>
       </div>
       <div className="">
