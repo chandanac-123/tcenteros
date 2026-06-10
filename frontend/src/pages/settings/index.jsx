@@ -23,9 +23,13 @@ const Settings = () => {
   )
   // console.log('selectedTab: ', selectedTab)
 
-  return (
-    <ContentLayout>
-      <span className='text-lg font-semibold text-textblack '>Settings</span>
+ return (
+  <ContentLayout>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold text-textblack">
+        Settings
+      </h1>
+
       <CustomeVerticalSelect
         options={setting_tabs}
         selected={selectedTab}
@@ -34,8 +38,9 @@ const Settings = () => {
       >
         {selectedSettingsCategory?.component_view}
       </CustomeVerticalSelect>
-    </ContentLayout>
-  )
+    </div>
+  </ContentLayout>
+);
 }
 
 export default Settings

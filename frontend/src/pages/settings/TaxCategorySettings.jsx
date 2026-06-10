@@ -137,7 +137,7 @@ const TaxCategorySettings = () => {
               setDeleteOpen(true)
             }}
           >
-            <img src={deleteicon} alt='delete' loading="lazy"/>
+            <img src={deleteicon} alt='delete' loading="lazy" />
           </button>
           <Switch />
         </span>
@@ -148,51 +148,45 @@ const TaxCategorySettings = () => {
   return (
     <div className='py-4 gap-4 flex flex-col'>
       <form className='space-y-2' onSubmit={formik.handleSubmit}>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Tax Category Name'
-              name='name'
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              placeholder='Enter Tax Name'
-              error={formik.touched.name && formik.errors.name}
-            />
-          </div>
-          <div className='flex-1'>
-            <Input
-              label='Tax Rate (Percentage)'
-              name='tax_percentage'
-              value={formik.values.tax_percentage}
-              onChange={formik.handleChange}
-              placeholder='Enter Tax Rate (Percentage)'
-              error={formik.touched.tax_percentage && formik.errors.tax_percentage}
-            />
-          </div>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+
+          <Input
+            label='Tax Category Name'
+            name='name'
+            value={formik.values.name}
+            onChange={formik.handleChange}
+            placeholder='Enter Tax Name'
+            error={formik.touched.name && formik.errors.name}
+          />
+
+          <Input
+            label='Tax Rate (Percentage)'
+            name='tax_percentage'
+            value={formik.values.tax_percentage}
+            onChange={formik.handleChange}
+            placeholder='Enter Tax Rate (Percentage)'
+            error={formik.touched.tax_percentage && formik.errors.tax_percentage}
+          />
+
+          <CustomeSelect
+            label='Tax Type'
+            name='tax_type'
+            options={tax_type}
+            value={formik.values.tax_type}
+            onChange={value => formik.setFieldValue('tax_type', value)}
+            error={formik.touched.tax_type && formik.errors.tax_type}
+          />
+
+          <CustomeSelect
+            label='Tax Scope'
+            name='tax_scope'
+            options={tax_scope}
+            value={formik.values.tax_scope}
+            onChange={value => formik.setFieldValue('tax_scope', value)}
+            error={formik.touched.tax_scope && formik.errors.tax_scope}
+          />
         </div>
-        <div className='flex gap-4'>
-          <div className='flex-1'>
-            <CustomeSelect
-              label='Tax Type'
-              name='tax_type'
-              options={tax_type}
-              value={formik.values.tax_type}
-              onChange={value => formik.setFieldValue('tax_type', value)}
-              error={formik.touched.tax_type && formik.errors.tax_type}
-            />
-          </div>
-          <div className='flex-1'>
-            <CustomeSelect
-              label='Tax Scope'
-              name='tax_scope'
-              options={tax_scope}
-              value={formik.values.tax_scope}
-              onChange={value => formik.setFieldValue('tax_scope', value)}
-               error={formik.touched.tax_scope && formik.errors.tax_scope}
-            />
-          </div>
-        </div>
-        <div className='flex justify-end mt-4 '>
+        <div className='flex justify-end mt-4'>
           <Button size='addbutton' variant='default' type='submit'>
             {editId ? 'Update Tax Category' : ' Create Tax Category'}
           </Button>

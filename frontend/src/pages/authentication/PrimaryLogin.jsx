@@ -5,7 +5,6 @@ import logo from '@assets/header-icons/logo_in_auth.svg'
 import dummy from '@assets/images/dummy.png'
 import { useState } from 'react'
 import { useCreateCenterAccountMutation } from '@api-queries/center-admin/authentication/Query'
-import NetworkWalletModal from './components/NetworkWalletModal'
 import { showError, showSuccess } from '@utils/toast'
 import { useNavigate } from 'react-router-dom'
 
@@ -72,8 +71,6 @@ const PrimaryLogin = () => {
         password: formData.password,
         confirm_password: formData.confirmPassword
       })
-      // setOptionWalletModal(true)
-      // setWalletStep('networkWalletModal')
       navigate("/dashboard")
       showSuccess('Password set successfully')
       setErrors({})
@@ -157,19 +154,6 @@ const PrimaryLogin = () => {
           </div>
         </div>
       )}
-      {/* {walletStep === 'networkWalletModal' && (
-        <NetworkWalletModal
-          open={showOptionWallet}
-          setOpen={value => {
-            setOptionWalletModal(value)
-
-            // 👇 when modal closes → return to login
-            if (!value) {
-              setWalletStep(null)
-            }
-          }}
-        />
-      )} */}
     </>
   )
 }

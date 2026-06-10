@@ -101,7 +101,7 @@ const CenterOperations = () => {
   }
 
   return (
-    <div className='flex flex-col gap-6 py-2'>
+    <div className='flex flex-col gap-6 py-2 px-2 md:px-0'>
       <span className='text-lg font-semibold'>Create Center Timing</span>
 
       <form
@@ -110,7 +110,7 @@ const CenterOperations = () => {
         onSubmit={centerTimeFormik.handleSubmit}
       >
         {/* Time Pickers */}
-        <div className='flex gap-4'>
+        <div className='flex flex-col md:flex-row gap-4'>
           <div className='flex-1'>
             <TimePicker
               label='Opening Time'
@@ -168,7 +168,7 @@ const CenterOperations = () => {
         id='create-center-slot'
         onSubmit={formik.handleSubmit}
       >
-        <div className='flex gap-4'>
+        <div className='flex flex-col md:flex-row gap-4'>
           <div className='flex-1'>
             <TimePicker
               label='Start Time'
