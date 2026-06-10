@@ -85,7 +85,7 @@ const Network = () => {
 
   return (
     <ContentLayout>
-      <div className='flex justify-between items-center mb-6'>
+      <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6'>
         <div className='flex flex-col'>
           <span className='text-xl font-semibold text-textblack'>Network</span>
         </div>
@@ -117,7 +117,7 @@ const Network = () => {
 
         {/* :::::: Switch :::::: */}
 
-        <div className=''>
+        <div className='flex-1'>
           <Switch
             checked={networkActive}
             onCheckedChange={handleToggle}
@@ -128,15 +128,15 @@ const Network = () => {
 
       {/* :::::: Status And Filter Component :::::: */}
 
-      <div className='flex  flex-col gap-5 sm:gap-0 sm:flex-row justify-between items-center mb-4 p-3'>
+      <div className='flex flex-col lg:flex-row gap-4 justify-between lg:items-center mb-4 p-3'>
         <CustomeTab
           tabList={networkTabs}
-          tabsListClass='p-[1px] w-[500px]'
+          tabsListClass='p-[1px] w-full flex-nowrap overflow-x-auto'
           defaultVal={activeTab}
           onChange={setActiveTab}
         />
 
-        <div className='flex gap-2'>
+        <div className='w-full lg:w-auto flex gap-2'>
           <CustomDatePicker
             pickerType='range'
             value={dateRange}
