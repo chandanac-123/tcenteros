@@ -1,5 +1,4 @@
 import { useState } from "react";
-import CustomFilter from "@common/components/CustomeFilter";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Button } from "@pages/components/ui/button";
 import CustomeTab from "@common/components/CustomeTab";
@@ -7,39 +6,24 @@ import SalaryStructure from "./salary-structure";
 import Employee from "./employee";
 import AddEditForm from "./employee/AddEditForm";
 import StructureAddEdit from "./salary-structure/AddEdit";
-import { useAllCentersQuery } from "@api-queries/center-admin/center-profile/Query";
 import Payroll from "./payroll";
 import { useAppPermissions } from "@hooks/index";
 
 const EmployeeManagement = () => {
   const { hydrated, canAddEmployee, canAddSalary } = useAppPermissions();
-
   if (!hydrated) return null;
 
   const tabConfig = [
-    {
-      id: "employee",
-      name: "Employee",
-    },
-    {
-      id: "salary_structure",
-      name: "Salary Structure",
-    },
-    {
-      id: "payroll",
-      name: "Payroll",
-    },
+    { id: "employee", name: "Employee" },
+    { id: "salary_structure", name: "Salary Structure" },
+    { id: "payroll", name: "Payroll" },
   ];
 
   const employeeOrCenter = tabConfig.filter((tab) => tab.id);
   const defaultTab = employeeOrCenter[0]?.id || null;
-
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [open, setOpen] = useState(false);
   const [structureOpen, setStructureOpen] = useState(false);
-
-  const { data: centersData } = useAllCentersQuery();
-
   const [tableParams, setTableParams] = useState({
     page: 1,
     search: "",
@@ -61,22 +45,12 @@ const EmployeeManagement = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2 w-full lg:w-auto">
-          <CustomFilter
-            options={centersData?.centers}
-            onApply={(value) =>
-              setTableParams((prev) => ({
-                ...prev,
-                payment_status: value,
-              }))
-            }
-          />
-
           {activeTab === "employee" && (
             <Button
               onClick={handleOpen}
               disabled={!canAddEmployee}
               size="addbutton"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto justify-center"
             >
               + Add Employee
             </Button>
@@ -87,7 +61,7 @@ const EmployeeManagement = () => {
               onClick={() => setStructureOpen(true)}
               disabled={!canAddSalary}
               size="addbutton"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto justify-center"
             >
               + Add Salary Structure
             </Button>

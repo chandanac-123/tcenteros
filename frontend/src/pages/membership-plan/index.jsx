@@ -104,7 +104,7 @@ const MembershipPlan = () => {
           <Button
             size="addbutton"
             onClick={() => setOpen(true)}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto justify-center"
           >
             + Create New Plan
           </Button>

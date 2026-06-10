@@ -74,7 +74,7 @@ const Wallet = () => {
             onClick={() => setOpen(true)}
             size='addbutton'
             type='submit'
-             className='w-full sm:w-auto'
+             className='w-full sm:w-auto justify-center'
           >
             {' '}
             + {buttonLabel}

@@ -74,7 +74,7 @@ const Attendance = () => {
 
               <Button
                 size='addbutton'
-                className='w-full sm:w-auto'
+                className='w-full sm:w-auto justify-center'
                 onClick={() => setIsAddModalOpen(true)}
               >
                 + Add Attendance
