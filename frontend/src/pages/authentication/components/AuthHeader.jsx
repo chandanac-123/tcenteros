@@ -1,5 +1,5 @@
 import logo from '@assets/header-icons/logo_in_auth.svg'
-import dummy from '@assets/images/dummy.png'
+import dummy from '@assets/images/new.webp'
 import { useBrandingStore } from '@store/brandingStore'
 
 const AuthHeader = ({ title, description, children, logoTrue = true }) => {
@@ -8,7 +8,13 @@ const AuthHeader = ({ title, description, children, logoTrue = true }) => {
     <div
       className='fixed inset-0 min-h-screen flex justify-center items-center px-2 overflow-hidden'
       style={{
-        backgroundImage: `url(${dummy})`,
+        backgroundImage: `
+    linear-gradient(
+      rgba(0,0,0,0.6),
+      rgba(0,0,0,0.6)
+    ),
+    url(${dummy})
+  `,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -19,7 +25,7 @@ const AuthHeader = ({ title, description, children, logoTrue = true }) => {
         {logoTrue && (
           <div className='flex justify-center'>
             <img
-            loading="lazy"
+              loading="lazy"
               src={branding.logo_url || logo}
               alt='Logo'
               className='w-28 h-28'
