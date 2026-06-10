@@ -19,7 +19,6 @@ const Header = () => {
   const isActive = (href) => location.pathname === href;
 
   const handleNavigate = (href) => {
-    console.log("href: ", href);
     navigate(href);
     setOpen(false); // close mobile menu
   };

@@ -9,7 +9,6 @@ const ActiveSubscriptions = () => {
   const [tableParams, setTableParams] = useState({ page: 1 });
   const [partnerFilter, setPartnerFilter] = useState("all");
   const { data, isLoading, isError } = useSubscriptionsQuery(tableParams);
-  // console.log("data: ", data);
 
   const filteredData = (data?.subscriptions || []).filter(item => {
     if (partnerFilter === "with") {

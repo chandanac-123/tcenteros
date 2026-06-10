@@ -15,7 +15,6 @@ const ApproveModal = ({ open, setOpen, data }) => {
       await approveRequest(data.network_membership_id)
       setOpen(false)
     } catch (error) {
-      console.error('Approve failed', error)
     }
   }
 

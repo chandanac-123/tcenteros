@@ -37,7 +37,6 @@ const LegalDocuments = () => {
         content,
       });
     } catch (error) {
-      console.error(error);
     }
   };
 

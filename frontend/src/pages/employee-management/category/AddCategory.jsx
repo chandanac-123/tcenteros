@@ -39,7 +39,6 @@ const AddCategory = ({ id, categoryOpen, setCategoryOpen }) => {
         setCategoryOpen(false)
         resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

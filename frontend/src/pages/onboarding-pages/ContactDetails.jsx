@@ -84,7 +84,6 @@ const ContactDetails = () => {
 
         formik.resetForm();
       } catch (error) {
-        console.log("error: ", error?.response?.data?.detail);
         setErrorMessage(error?.response?.data?.detail)
       }
     },

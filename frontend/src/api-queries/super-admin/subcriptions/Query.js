@@ -91,12 +91,10 @@ export const useSendReminder = () => {
     mutationFn: (id) => sendReminder(id),
 
     onSuccess: () => {
-      console.log("Reminder sent successfully");
       showSuccess("Send the reminder to the center")
     },
 
     onError: (error) => {
-      console.error("Failed to send reminder", error);
       showError(error?.response?.data?.detail || "Failed to send reminder to center");
     },
   });
@@ -113,20 +111,13 @@ export const useFailedSubscriptionsQuery = (params) => {
 
 export const useSuspendSubscriptionMutation = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (id) => makeSuspendSubscribe(id),
-
     onSuccess: (data, id) => {
-      console.log("Suspended successfully:", data);
       showSuccess(data?.message)
       queryClient.invalidateQueries({
         queryKey: ["failed-subscriptions"],
       });
-    },
-
-    onError: (error) => {
-      console.error("Suspend failed:", error);
     },
   });
 };

@@ -31,8 +31,6 @@ const FailedDataList = () => {
     if (error) return <p>Error loading data</p>;
 
     const totalPages = Math.ceil((data?.total || 0) / page_size);
-    // console.log("Failed Data", data);
-    // console.log("selec Data", selectedCenter);
 
     return (
         <div>

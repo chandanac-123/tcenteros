@@ -6,7 +6,6 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const PieChart = ({ dataConfig }) => {
-  console.log("dataConfig: ", dataConfig);
   const [visible, setVisible] = useState(
     Object.fromEntries(dataConfig.map((item) => [item.key, true])),
   );

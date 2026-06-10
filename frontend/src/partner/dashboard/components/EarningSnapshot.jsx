@@ -18,7 +18,6 @@ const earningColorClasses = {
 };
 
 const EarningSnapshot = ({ data }) => {
-  console.log('data: ', data);
   const earningsData = [
     {
       id: 1,

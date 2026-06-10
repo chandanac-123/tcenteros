@@ -11,7 +11,6 @@ import DisplayActionCard from '../component/displayActionCard'
 
 const Overview = () => {
   const { data: dashboardData } = useBillingDashboardQuery()
-  console.log('dashboardData: ', dashboardData)
   const [openNewSale, setOpenNewSale] = useState(false)
   const [openAddCharge, setOpenAddCharge] = useState(false)
   const { mutate: openCart } = useCartOpenMutation()

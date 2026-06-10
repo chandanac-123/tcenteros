@@ -67,13 +67,10 @@ const EditCenterInformation = ({ open, setOpen, editId }) => {
           currently_using_digital_tool: digitalTools,
           marketing_platform: marketingPlatforms
         }
-        console.log("All Payloads in Profile", payload);
-
         await update(payload)
         formik.resetForm()
         setOpen(false)
       } catch (error) {
-        console.error(error)
       }
     }
   })

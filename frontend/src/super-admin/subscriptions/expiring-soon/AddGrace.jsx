@@ -24,7 +24,6 @@ const AddGrace = ({ graceOpen, setGraceOpen }) => {
         formik.resetForm();
         setGraceOpen(false);
       } catch (error) {
-        console.error(error);
       }
     },
   });

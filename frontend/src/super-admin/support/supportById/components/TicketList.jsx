@@ -28,7 +28,6 @@ const TicketList = () => {
                     });
                 },
                 onError: (err) => {
-                    console.error(err);
                 }
             });
         } else {

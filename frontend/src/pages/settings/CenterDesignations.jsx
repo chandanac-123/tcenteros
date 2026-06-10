@@ -50,7 +50,6 @@ const CenterDesignations = () => {
 
         resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

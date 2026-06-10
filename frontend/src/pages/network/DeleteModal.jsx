@@ -12,7 +12,6 @@ const DeleteModal = ({ open, setOpen, data }) => {
             await deleteBooking(data.network_membership_id);
             setOpen(false);
         } catch (error) {
-            console.error("Delete failed", error);
         }
     };
 

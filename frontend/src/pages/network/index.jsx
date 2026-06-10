@@ -79,7 +79,6 @@ const Network = () => {
     try {
       await enabled(checked)
     } catch (error) {
-      console.error(error)
     }
   }
 

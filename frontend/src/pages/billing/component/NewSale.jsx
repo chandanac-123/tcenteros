@@ -47,7 +47,6 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
         await addToCart({ details: values, id: openedCartResponse?.cart_id })
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -69,7 +68,6 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
         checkoutFormik.resetForm()
         setSaleOpen(false)
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -145,7 +143,6 @@ const NewSale = ({ saleOpen, setSaleOpen }) => {
   </div>
 </form>
       {cartAmount?.products?.map(product => {
-        console.log('product: ', product)
         return (
           <div
             key={getCartItemId(product) || product?.product_id}

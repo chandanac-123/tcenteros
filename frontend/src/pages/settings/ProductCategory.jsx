@@ -20,7 +20,6 @@ const ProductCategory = () => {
       setDeleteOpen(false)
       setSelectedItemId(null)
     } catch (error) {
-      console.error(error)
     }
   }
 

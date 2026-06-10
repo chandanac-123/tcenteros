@@ -13,7 +13,6 @@ const CenterSize = () => {
   const navigate = useNavigate()
   const { memberCount, setMemberCount, trainerCount, setTrainerCount } =
     useOnboardingStore()
-  console.log('memberCount: ', memberCount);
 
   return (
     <SecondaryLayout>

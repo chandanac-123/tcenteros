@@ -23,7 +23,6 @@ const CenterNotifications = () => {
   const { data: timeSlotData, isLoading } = useTimeSlotQuery();
   const { data: centerRemindersData, isLoading: isRemindersLoading } =
     useCenterRemindersQuery();
-  console.log("centerRemindersData: ", centerRemindersData);
   const { mutateAsync: approveTimeSlot } = useApproveTimeSlotMutation();
 
   const requests = timeSlotData?.requests || [];
@@ -33,7 +32,6 @@ const CenterNotifications = () => {
       await approveTimeSlot({ id: selectedId });
       setIsTimeslotModalOpen(false);
     } catch (error) {
-      console.error("Approve failed", error);
     }
   };
 

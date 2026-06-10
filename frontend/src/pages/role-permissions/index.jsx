@@ -17,7 +17,6 @@ const RoleAndPermission = () => {
   const [selectedRole, setSelectedRole] = useState(null)
   const [openModules, setOpenModules] = useState({})
   const { data, isFetching } = usePermissionQuery()
-  console.log('data: ', data)
   const { mutateAsync: create_permission } = useCreatePermissionMutation()
 
   const toggleCollapse = moduleId => {
@@ -100,23 +99,16 @@ const RoleAndPermission = () => {
 
       //  Prevent empty submission (except dashboard)
       if (!Object.keys(cleanedPermissions).length) {
-        console.warn('No permissions selected')
         return
       }
-
       const finalPayload = {
         designation_id: selectedRole,
         permissions: cleanedPermissions
       }
 
-      console.log('FINAL API PAYLOAD 👉', finalPayload)
-
       //  API CALL
       await create_permission(finalPayload)
-
-      console.log('Permissions saved successfully')
     } catch (error) {
-      console.error('Error saving permissions ❌', error)
     }
   }
 })

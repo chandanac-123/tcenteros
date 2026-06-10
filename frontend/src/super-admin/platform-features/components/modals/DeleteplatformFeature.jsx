@@ -6,9 +6,6 @@ import React from 'react'
 const DeleteplatformFeature = ({ open, setOpen, data }) => {
     const { mutate, isPending } = useDeletePlatformFeature();
 
-    console.log("Data", data);
-
-
     const handleDelete = () => {
         mutate(data.feature_id, {
             onSuccess: () => {

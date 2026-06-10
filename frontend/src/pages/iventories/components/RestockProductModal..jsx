@@ -11,7 +11,6 @@ import { format } from "date-fns";
 import { addStockValidationSchema } from "@utils/validations";
 
 const RestockProductModal = ({ open, setOpen, product }) => {
-  console.log('product: ', product);
   const { data: productDropdownData } = useProductDropdownQuery()
   const { mutateAsync: addStock, isLoading } = useAddStockMutation();
   const initialValues = {
@@ -36,7 +35,6 @@ const RestockProductModal = ({ open, setOpen, product }) => {
         setOpen(false);
         formik.resetForm();
       } catch (error) {
-        console.error(error);
       }
     },
   });

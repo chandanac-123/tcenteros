@@ -7,6 +7,5 @@ export const createGalleryApiCall = details =>
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 export const deleteGalleryApiCall = id => {
-  console.log('idaaaaaaa', id)
   return axiosInstance.delete(`/center/center/gallery/${id}`)
 }

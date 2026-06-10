@@ -37,7 +37,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log("error: ", error.response);
     const originalRequest = error.config;
     const state = useAuthStore.getState();
 
@@ -93,10 +92,8 @@ axiosInstance.interceptors.response.use(
         `${import.meta.env.VITE_API_BASE_URL}/auth/auth/refresh`,
         { refresh_token: refreshToken },
       );
-
       const newAccess = response.data.access_token;
       const newRefresh = response.data.refresh_token;
-console.log("AUTH AFTER REFRESH:", useAuthStore.getState().auth);
       state.setAuth({
         access_token: newAccess,
         refresh_token: newRefresh,

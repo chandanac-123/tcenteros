@@ -64,7 +64,6 @@ const TaxCategorySettings = () => {
         formik.resetForm()
         setEditId(null)
       } catch (error) {
-        console.error(error)
       }
     }
   })

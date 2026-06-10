@@ -4,7 +4,6 @@ import { Calendar, MapIcon } from "lucide-react";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CalenderCard from "../components/CalenderCard";
-import { Button } from "@pages/components/ui/button";
 import { Badge } from "@pages/components/ui/badge";
 import { useRenewalByIdQuery } from "@api-queries/super-admin/subcriptions/Query";
 
@@ -12,7 +11,6 @@ const RenewalDetailView = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useRenewalByIdQuery(params?.id);
-  // console.log('data: ', data);
 
   return (
     <ContentLayout>

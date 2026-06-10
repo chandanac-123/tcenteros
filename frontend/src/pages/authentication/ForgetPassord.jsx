@@ -17,23 +17,15 @@ const ForgetPassord = () => {
     e.preventDefault()
     try {
       mutate(
-        { email },   
+        { email },
         {
           onSuccess: (data) => {
-            // console.log("OTP sent:", data)
             navigate('/otp-verification',
-              // {
-              //   state: { email }  
-              // }
             )
           },
-          onError: (error) => {
-            console.error("Error sending OTP", error)
-          }
         }
       )
     } catch (err) {
-      console.log("Error at the ForgotPassword send Email..!", err);
 
     }
   }

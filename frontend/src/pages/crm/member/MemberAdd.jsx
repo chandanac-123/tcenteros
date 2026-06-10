@@ -70,7 +70,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
   const generateStrongPassword = (length = 12) => {
     const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    console.log("password generated");
 
     const lower = "abcdefghijklmnopqrstuvwxyz";
     const number = "0123456789";
@@ -181,7 +180,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
 
           // ❗ If nothing changed → stop API call
           if (Object.keys(payload).length === 0) {
-            console.log("No changes detected");
             return;
           }
         }
@@ -221,7 +219,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
           goBack();
         }
       } catch (error) {
-        console.error(error);
       }
     },
   });
@@ -248,7 +245,6 @@ const MemberAdd = ({ memberId, isEdit, goBack }) => {
     formik.setFieldValue("date_of_birth", value);
   };
 
-  // console.log('formi: ', formik.values)
   const isBlocked = memberPlan?.length === 0 || memberTimeSlot?.length === 0;
   return (
     <div className="flex flex-col gap-8">

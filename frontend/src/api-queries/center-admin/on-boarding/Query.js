@@ -34,17 +34,6 @@ export const usePlatformByIdQuery = (id) => {
     refetchOnMount: true
   })
 }
-
-// export const useAllClassTypesQuery = (data) => {
-//     console.log('aaaaaaaaaa: ', data);
-//   return useQuery({
-//     queryKey: ['classtypes', data],
-//     queryFn: () => getAllClassTypes(data),
-//     refetchOnWindowFocus: true,
-//     refetchOnMount: true,
-//   });
-// };
-
 export const useAllPlatformsQuery = () => {
   return useQuery({
     queryKey: ['platforms'],
@@ -53,12 +42,6 @@ export const useAllPlatformsQuery = () => {
     refetchOnMount: true
   })
 }
-
-// export const useCreateOnboardCenterMutation = () => {
-//   return useMutation({
-//     mutationFn: createOnboardCenter,
-//   });
-// };
 
 export const useCreateOnboardCenterMutation = () => {
   const query = useQueryClient()
@@ -69,8 +52,6 @@ export const useCreateOnboardCenterMutation = () => {
       showSuccess('Onboard center created successfully')
     },
     onError: err => {
-      console.log('err: ', err?.response);
-      // showError(err?.response?.data?.detail || 'Failed to create onboard center')
       return err
     }
   })
@@ -139,14 +120,6 @@ export const useOnboardingCenters = () => {
 export const useRazorpayFailure = () => {
   return useMutation({
     mutationFn: (paymentOrderId) => razorpayFailure(paymentOrderId),
-    // onSuccess: async data => {
-    //   console.log('data: ', data);
-    //   showError(data.message || 'Payment failed')
-    // },
-    // onError: err => {
-    //   showError(err?.response?.data?.detail || 'Failed to report payment failure')
-    //   return err
-    // }
   });
 };
 

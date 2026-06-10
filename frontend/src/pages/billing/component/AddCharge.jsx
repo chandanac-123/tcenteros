@@ -50,7 +50,6 @@ const AddCharge = ({ openAddCharge, setOpenAddCharge }) => {
         setOpenAddCharge(false)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

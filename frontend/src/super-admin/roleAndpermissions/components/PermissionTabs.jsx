@@ -90,12 +90,8 @@ const PermissionTabs = () => {
           designation_id: selectedRole,
           permissions: cleanedPermissions,
         };
-
-        console.log("FINAL PAYLOAD:", finalPayload);
-
         await create_permission(finalPayload);
       } catch (error) {
-        console.error("Error saving permissions:", error);
       }
     },
   });
@@ -114,7 +110,6 @@ const PermissionTabs = () => {
       setSelectedRole(null);
       setDeleteOpen(false);
     } catch (error) {
-      console.error(error);
     }
   };
 

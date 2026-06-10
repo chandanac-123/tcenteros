@@ -12,35 +12,28 @@ export const useAllLeads = (params) => {
 
 export const useCreateLead = () => {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: createNewLeads_Urls,
-
         onSuccess: () => {
             // 🔄 Refetch leads list after creating
             queryClient.invalidateQueries({ queryKey: ["all-leads"] });
             showSuccess("New Lead is created")
         },
         onError: (error) => {
-            console.log("Create Lead Error:", error);
         },
     });
 };
 
 export const useChangeLeadStatus = () => {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: changeLeadStatus_Url,
-
         onSuccess: () => {
-            // 🔥 Refetch leads list after status update
+            //  Refetch leads list after status update
             queryClient.invalidateQueries(["all-leads"]);
             showSuccess("Status changed successfully")
         },
-
         onError: (err) => {
-            console.error("Error updating lead status:", err);
             showError("Oops...something went wrong !")
         }
     });

@@ -2,7 +2,6 @@ import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { ClockAlert } from "lucide-react";
 import ExpiringTable from "./ExpiringTable";
 import { useRenewalExpiringQuery } from "@api-queries/super-admin/subcriptions/Query";
-import CustomFilter from "@common/components/CustomeFilter";
 import { useState } from "react";
 const filterVlaue = [
   { value: 3, label: "Expiring in 3 days" },
@@ -16,11 +15,6 @@ const ExpiringSoon = () => {
     expiry: 30,
   });
   const { data, isLoading, isError } = useRenewalExpiringQuery(tableParams);
-
-// console.log("Expire Data",data);
-
-
-
 
   return (
     <ContentLayout>

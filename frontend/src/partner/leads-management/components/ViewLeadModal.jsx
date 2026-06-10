@@ -12,7 +12,6 @@ import {
 import React from "react";
 
 const ViewLeadModal = ({ open, setOpen, data }) => {
-  console.log("Data", data);
   const styles = [
     {
       label: "new",

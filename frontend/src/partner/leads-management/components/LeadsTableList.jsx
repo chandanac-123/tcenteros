@@ -24,8 +24,6 @@ const LeadsTableList = ({ dashboarView = false }) => {
   });
   const { data, isLoading } = useAllLeads(filters);
 
-  console.log("Data in Leads", data);
-
   const leadsFilter = [
     { value: "new", label: "New" },
     { value: "contacted", label: "Contacted" },

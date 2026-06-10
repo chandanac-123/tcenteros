@@ -58,7 +58,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
         setOpen(false)
         formik.resetForm()
       } catch (error) {
-        console.error('Error submitting form:', error)
       }
     }
   })
@@ -75,7 +74,6 @@ const CreateMembershipForm = ({ open, setOpen, editId }) => {
     updated[index] = value
     formik.setFieldValue('membership_features', updated)
   }
-  console.log(formik.values, 'network_enabled')
 
   const handleRemoveFeature = index => {
     formik.setFieldValue(

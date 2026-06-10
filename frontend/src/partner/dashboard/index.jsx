@@ -22,7 +22,6 @@ import { usePartnerDashboardQuery } from "@api-queries/partner/dashboard/Query";
 const PartnerDashboard = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const { data: partnerData } = usePartnerDashboardQuery();
-  console.log('partnerData: ', partnerData);
   const navigate = useNavigate();
 
   useEffect(() => {

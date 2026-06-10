@@ -18,7 +18,6 @@ const MessageBox = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const { data, isLoading, error } = useSupportTicketById(id);
-  console.log("data: ", data);
   const { mutate: sendMessage, isPending } = useSendSupportMessage();
   const { mutate: closeTicket, isClosePending } = useCloseSupportTicket();
   const { mutate, isPendings } = useAssignTicketMutation();
@@ -49,7 +48,6 @@ const MessageBox = () => {
     }
 
     for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
     }
 
     //  API call
@@ -71,11 +69,9 @@ const MessageBox = () => {
 
   const handleAssign = (ticketId, centerAdmin_id) => {
     if (!ticketId || !centerAdmin_id) {
-      console.error("Select a center admin first");
       return;
     }
 
-    console.log("TicketId", ticketId);
 
     mutate({
       ticket_id: ticketId, // make sure this exists
@@ -85,7 +81,6 @@ const MessageBox = () => {
 
   const messages = data?.messages || [];
 
-  console.log("Message", data);
 
   useEffect(() => {
     const el = chatRef.current;

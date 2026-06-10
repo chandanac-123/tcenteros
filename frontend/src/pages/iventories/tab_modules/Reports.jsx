@@ -66,7 +66,6 @@ const Reports = () => {
       }
       downloadFile(response, filename)
     } catch (error) {
-      console.error(error)
     }
   }
 

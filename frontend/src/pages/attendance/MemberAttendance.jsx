@@ -68,7 +68,6 @@ const MemberAttendance = ({ dateRange }) => {
       setDeleteOpen(false)
       setDeleteId(null)
     } catch (error) {
-      console.error('Delete failed:', error)
     }
   }
 

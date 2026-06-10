@@ -99,19 +99,14 @@ export const useDeleteCenterTypeMutation = () => {
 
 export const useCreateFAQ = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data) => createNewFAQs(data),
-
     onSuccess: (data) => {
-      console.log('FAQ created successfully:', data);
       showSuccess(data?.message || "Successfully added FAQs...!")
-      // ✅ Refetch FAQ list (important)
+      //  Refetch FAQ list (important)
       queryClient.invalidateQueries({ queryKey: ['faqs'] });
     },
-
     onError: (error) => {
-      console.error('Error creating FAQ:', error);
       showError("Error at adding FAQs")
     },
   });

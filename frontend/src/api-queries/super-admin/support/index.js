@@ -10,7 +10,6 @@ export const openSupportTicket = (id) =>
     axiosInstance.post(`/support/ticket/${id}/open`);
 
 export const sendSupportMessage = (id, data) => {
-    console.log("Data", data);
     return axiosInstance.post(`/support/ticket/${id}/message`, data);
 };
 

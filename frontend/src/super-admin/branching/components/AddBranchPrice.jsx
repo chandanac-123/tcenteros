@@ -12,7 +12,6 @@ const AddBranchPrice = () => {
     try {
       await createBranchPrice({ price: branchPrice });
     } catch (error) {
-      console.error("Error creating branch price:", error);
     }
   };
 

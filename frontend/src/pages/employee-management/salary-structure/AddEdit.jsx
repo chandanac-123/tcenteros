@@ -54,7 +54,6 @@ const StructureAddEdit = ({ open, setOpen, id }) => {
         formik.resetForm()
         setOpen(false)
       } catch (error) {
-        console.error(error)
       }
     }
   })

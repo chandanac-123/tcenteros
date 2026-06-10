@@ -20,7 +20,6 @@ const PlatformFeatureCards = () => {
     );
   if (error) return <p>Error loading platform features</p>;
   const features = featureData?.features || [];
-  console.log("Platform_features", features);
 
   return (
     <>

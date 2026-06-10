@@ -61,8 +61,6 @@ export const useEditApproveNetworkMutation = () => {
       );
     },
     onError: (error) => {
-      console.log("error: ", error);
-      console.log("error: ", error.response);
       showError(
         error?.response?.data?.detail || "Failed to update approval status",
       );

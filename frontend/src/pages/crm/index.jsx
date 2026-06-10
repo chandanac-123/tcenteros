@@ -29,10 +29,8 @@ const CRM = () => {
     formData.append("file", file);
     try {
       const response = await exportExcel(formData);
-      console.log(response);
       // Assuming API returns array
     } catch (error) {
-      console.log(error);
     }
   };
 

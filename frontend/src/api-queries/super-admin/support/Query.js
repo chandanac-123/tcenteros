@@ -44,7 +44,6 @@ export const useSendSupportMessage = () => {
         },
 
         onError: (error) => {
-            console.error("Message send failed:", error);
         },
     });
 };
@@ -69,7 +68,6 @@ export const useCloseSupportTicket = () => {
         },
 
         onError: (error) => {
-            console.error("Error closing ticket:", error);
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data?.detail ||
@@ -98,7 +96,6 @@ export const useAssignTicketMutation = () => {
         },
 
         onError: (error) => {
-            console.error("Assign ticket failed", error);
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data?.detail ||

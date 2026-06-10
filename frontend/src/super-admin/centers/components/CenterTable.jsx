@@ -11,7 +11,6 @@ const statusVariant = {
   suspended: "suspended",
 };
 const CenterTable = ({ data, tableParams, setTableParams, isLoading }) => {
-  console.log("data: ", data);
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     {

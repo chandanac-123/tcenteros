@@ -23,7 +23,6 @@ const AddProductCategory = ({ open, onOpenChange }) => {
         onOpenChange(false)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

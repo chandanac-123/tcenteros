@@ -36,7 +36,6 @@ const RenewMembership = ({ open, setOpen, membershipId }) => {
         setOpen(false)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

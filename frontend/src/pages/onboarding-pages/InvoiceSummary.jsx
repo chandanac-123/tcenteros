@@ -47,23 +47,19 @@ const InvoiceSummary = () => {
       try {
         const response = await finalize(values);
         const payment_id = response?.payment?.payment_order_id;
-        console.log('payment_id: ', payment_id);
      
         if (!payment_id) {
           throw new Error("Payment ID not found from finalize response");
         }
         create_Order(payment_id, {
           onSuccess: (res) => {
-            console.log("Order ID:", res);
             const orderData = res?.data;
             openRazorpay(orderData, payment_id);
           },
           onError: (err) => {
-            console.log(err.response);
           },
         });
       } catch (error) {
-        console.log("error: ", error.response);
       }
     },
   });
@@ -120,9 +116,7 @@ const InvoiceSummary = () => {
             navigate("/dashboard");
             resetStore();
 
-            console.log("Verified Result:", result);
           } catch (error) {
-            console.error("Payment Verification Failed:", error);
             await razorpayFailure(payment_id);
           }
         },
@@ -133,12 +127,10 @@ const InvoiceSummary = () => {
 
         modal: {
           ondismiss: async () => {
-            console.log("User closed Razorpay popup");
 
             try {
               await razorpayFailure(payment_id);
             } catch (error) {
-              console.error("Failure API Error:", error);
             }
 
           },
@@ -148,22 +140,18 @@ const InvoiceSummary = () => {
       const razor = new window.Razorpay(options);
 
       razor.on("payment.failed", async (response) => {
-        console.error("Payment Failed:", response.error);
         try {
           await razorpayFailure(payment_id);
         } catch (error) {
-          console.error("Failure API Error 1:", error);
         }
 
       });
 
       razor.open();
     } catch (err) {
-      console.error("Error opening Razorpay:", err);
       try {
         await razorpayFailure(payment_id);
       } catch (error) {
-        console.error("Failure API Error: 2", error);
       }
     }
   };

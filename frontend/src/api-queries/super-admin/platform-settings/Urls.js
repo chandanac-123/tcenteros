@@ -70,7 +70,6 @@ export const createNewFAQs = async (data) => {
     const response = await createFAQs(data);
     return response.data;
   } catch (err) {
-    console.log("Error at the creating FAQs", err);
     throw err
   }
 }
@@ -80,7 +79,6 @@ export const listAllFAQs = async () => {
     const response = await getAllFAQs();
     return response.data;
   } catch (err) {
-    console.log("Error at the getting FAQs", err);
     throw err
   }
 }

@@ -92,7 +92,6 @@ const Branding = () => {
         }
         setBranding(updatedBranding) // THIS updates instantly
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -106,7 +105,6 @@ const Branding = () => {
       }
       await createTermsandPrivacy(payload)
     } catch (error) {
-      console.error(error)
     }
   }
 

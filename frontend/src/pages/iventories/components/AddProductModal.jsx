@@ -59,7 +59,6 @@ const AddProductModal = ({ open, setOpen }) => {
         setOpen(false);
         formik.resetForm();
       } catch (error) {
-        console.error(error);
       }
     },
   });

@@ -41,12 +41,10 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, t
           }
           create_Order(payment_id, {
             onSuccess: (res) => {
-              console.log("Order ID:", res);
               const orderData = res?.data;
               openRazorpay(orderData);
             },
             onError: (err) => {
-              console.error(err?.response?.data?.detail);
               const message = err?.response?.data?.detail
               showError(message)
             },
@@ -77,7 +75,6 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, t
 
         handler: async function (response) {
           try {
-            console.log("Payment Success:", response);
             const result = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -89,13 +86,11 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, t
               setOpen(true);
               setOpenFailed(true);
             }
-            console.log("Verified Result:", result);
             await refetchWalletAmount();
             await refetchWalletSummary();
             setOpenSuccess(true)
             showSuccess("Wallet added successfully")
           } catch (err) {
-            console.log("Verification Error:", err);
             setOpen(true);
             setOpenFailed(true);
           }
@@ -113,14 +108,12 @@ const AddWallet = ({ open, setOpen, refetchWalletAmount, refetchWalletSummary, t
 
       const razor = new window.Razorpay(options);
       razor.on("payment.failed", function (response) {
-        console.log("Payment Failed:", response);
         // onOpenChange(true);
         // setOpenFailed(true);
         showError(response.error.description || "Payment Failed");
       });
       razor.open();
     } catch (err) {
-      console.log("Error at opening razor Pay checkOut", err);
     }
   };
 

@@ -52,7 +52,6 @@ const Members = ({ onView, onEdit }) => {
     try {
       await updateStatus({ id, status })
     } catch (error) {
-      console.error('Failed to update status', error)
     }
   }
 

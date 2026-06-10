@@ -10,7 +10,6 @@ const Branching = () => {
     page: 1,
   });
   const { data, isLoading, isError } = useBranchQuery(tableParams);
-  console.log("data: ", data);
 
   return (
     <ContentLayout>

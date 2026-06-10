@@ -75,7 +75,6 @@ const PrimaryLogin = () => {
       showSuccess('Password set successfully')
       setErrors({})
     } catch (error) {
-      console.log(error)
       const status = error?.response?.status
       const message =
         error?.response?.data?.detail ||

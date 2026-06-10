@@ -37,16 +37,13 @@ const RetryPayment = () => {
         await retryPayment({ onboardId, paymentId });
         create_Order(paymentId, {
           onSuccess: (res) => {
-            console.log("Order ID:", res);
             const orderData = res?.data;
             openRazorpay(orderData);
           },
           onError: (err) => {
-            console.log(err);
           },
         });
       } catch (error) {
-        console.log("error: ", error.response);
       }
     },
   });
@@ -72,9 +69,7 @@ const RetryPayment = () => {
             navigate("/dashboard");
             resetStore();
 
-            console.log("Verified Result:", result);
           } catch (error) {
-            console.error("Payment Verification Failed:", error);
             await razorpayFailure(paymentId);
           }
         },
@@ -85,12 +80,10 @@ const RetryPayment = () => {
 
         modal: {
           ondismiss: async () => {
-            console.log("User closed Razorpay popup");
 
             try {
               await razorpayFailure(paymentId);
             } catch (error) {
-              console.error("Failure API Error:", error);
             }
 
           },
@@ -100,22 +93,18 @@ const RetryPayment = () => {
       const razor = new window.Razorpay(options);
 
       razor.on("payment.failed", async (response) => {
-        console.error("Payment Failed:", response.error);
         try {
           await razorpayFailure(paymentId);
         } catch (error) {
-          console.error("Failure API Error 1:", error);
         }
 
       });
 
       razor.open();
     } catch (err) {
-      console.error("Error opening Razorpay:", err);
       try {
         await razorpayFailure(paymentId);
       } catch (error) {
-        console.error("Failure API Error: 2", error);
       }
     }
   };

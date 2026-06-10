@@ -6,7 +6,6 @@ import { Textarea } from '@pages/components/ui/textarea'
 import React, { useEffect, useState } from 'react'
 
 const UpdateplatformFeature = ({ open, setOpen, data }) => {
-    console.log("Data", data);
     const { mutate, isPending } = useUpdatePlatformFeature();
     const [form, setForm] = useState({
         feature_name: "",

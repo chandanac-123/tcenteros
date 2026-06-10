@@ -33,7 +33,6 @@ const OTPVerification = () => {
           })
         },
         onError: (error) => {
-          console.log(error.response?.data);
           const message =
             error?.response?.data?.detail ||
             "OTP Verification Failed";

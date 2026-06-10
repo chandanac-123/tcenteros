@@ -123,7 +123,6 @@ const AddEditForm = ({ id, closeModal, open, setOpen }) => {
         formik.resetForm()
         closeModal()
       } catch (error) {
-        console.error(error)
       }
     }
   })

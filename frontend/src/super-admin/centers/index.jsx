@@ -8,7 +8,6 @@ import { useSubscriptionsQuery } from "@api-queries/super-admin/subcriptions/Que
 const Centers = () => {
   const [tableParams, setTableParams] = useState({ page: 1 });
   const { data, isLoading, isError } = useSubscriptionsQuery(tableParams);
-  // console.log("Center Data",data);
   
   return (
     <ContentLayout>

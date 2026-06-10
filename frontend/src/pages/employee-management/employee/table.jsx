@@ -71,7 +71,6 @@ const EmployeeTable = ({
       setDeleteOpen(false)
       setDeleteId(null)
     } catch (error) {
-      console.error('Delete failed:', error)
     }
   }
 
@@ -83,7 +82,6 @@ const EmployeeTable = ({
         data: { status: newStatus }
       })
     } catch (error) {
-      console.error('Status update failed:', error)
     }
   }
 

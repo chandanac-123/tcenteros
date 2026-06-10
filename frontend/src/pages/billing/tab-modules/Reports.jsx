@@ -62,14 +62,11 @@ const BillingReports = () => {
           response = await generateSettlementReport(payload)
           filename = `settlements-summary-report.${format}`
           break
-
         default:
           return
       }
-
       downloadFile(response, filename)
     } catch (error) {
-      console.error('Download failed:', error)
     }
   }
 

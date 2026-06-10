@@ -57,7 +57,6 @@ const AddBranchDetails = ({ open, onOpenChange }) => {
         formik.resetForm()
         onOpenChange(false)
       } catch (error) {
-        console.error(error)
       }
     }
   })

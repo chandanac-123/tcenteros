@@ -29,9 +29,6 @@ const SuspendedCenterTable = () => {
         },
     ];
 
-
-    // console.log("Fetched Data for Subscription List", data);
-
     return (
         <div>
             <DataTable

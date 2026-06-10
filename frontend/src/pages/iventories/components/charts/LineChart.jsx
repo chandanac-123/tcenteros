@@ -25,7 +25,6 @@ ChartJS.register(
 const LineChart = ({ title, labels = [], datasets, onYearChange }) => {
   const chartRef = useRef(null)
   const [selectedYear, setSelectedYear] = useState(new Date())
-  console.log('SelectedYear', selectedYear)
 
   // 🔥 When year changes → inform parent
   useEffect(() => {

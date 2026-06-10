@@ -81,7 +81,6 @@ export const sendReminder = async (id) => {
     const response = sendReminderApiCall(id);
     return response;
   } catch (err) {
-    console.error("Erroe at sending Reminder", err);
     throw err
   } 1
 }
@@ -89,9 +88,8 @@ export const sendReminder = async (id) => {
 export const getFailedSubList = async (details) => {
   try {
     const response = await failedSubscriptionApiCall(details);
-    return response.data; // ✅ important
+    return response.data; 
   } catch (err) {
-    console.error("Error at Failed Subscription List", err);
     throw err;
   }
 };
@@ -101,7 +99,6 @@ export const makeSuspendSubscribe = async (id) => {
     const response = await suspendTheSubscription(id);
     return response.data;
   } catch (err) {
-    console.error("Error at suspending Subscription", err);
     throw err;
   }
 }
@@ -111,7 +108,6 @@ export const suspendedSubscribeList = async () => {
     const response = await listSuspendedSubscription();
     return response.data;
   } catch (err) {
-    console.error("Error at fetching Suspended List", err);
     throw err;
   }
 }

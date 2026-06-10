@@ -44,7 +44,6 @@ import { usePartnerLandingDataQuery } from "@api-queries/partner/on-boarding/Que
 const PartnerLanding = () => {
   const navigate = useNavigate();
   const { data: landingData } = usePartnerLandingDataQuery();
-  console.log("landingData: ", landingData);
 
   const features = [
     {

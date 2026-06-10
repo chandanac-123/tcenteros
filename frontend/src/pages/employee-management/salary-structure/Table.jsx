@@ -27,7 +27,6 @@ const SalaryStructureTable = ({
       }
       setDeleteId(null);
     } catch (error) {
-      console.error("Delete failed:", error);
     }
   };
 

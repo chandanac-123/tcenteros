@@ -53,7 +53,6 @@ const UpdateProfile = ({
         formik.resetForm()
         setOpen(false)
       } catch (error) {
-        console.error(error)
       }
     }
   })

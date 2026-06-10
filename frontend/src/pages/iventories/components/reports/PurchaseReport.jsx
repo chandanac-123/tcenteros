@@ -4,7 +4,6 @@ import { formatDate } from '@utils/helper'
 
 const PurchaseReport = ({ tableParams, setTableParams }) => {
   const { data, isLoading } = usePurchaseReportQuery(tableParams)
-  console.log('data: ', data)
 
   const columns = [
     {

@@ -25,13 +25,11 @@ const FAQpages = () => {
             setDeleteFAQ(false);
             setSelectedFAQId(null);
         } catch (error) {
-            console.error('Error deleting FAQ:', error);
         }
     };
 
     const handleAddFAQ = () => {
         if (!question || !answer) {
-            console.log('Fill all fields');
             return;
         }
         mutate(

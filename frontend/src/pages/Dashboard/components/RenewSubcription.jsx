@@ -63,24 +63,20 @@ const RenewSubscription = ({ open, setOpen }) => {
           ? upgradedSubscriptionDuration
           : currentSubscriptionDuration;
 
-        console.log("FORM subscription_duration 👉", subscriptionDuration);
         const response = await changeSubscription({
           subscription_duration: subscriptionDuration,
         });
 
-        console.log('Response', response);
         const payment_id = response?.payment_order?.payment_order_id;
         if (!payment_id) {
           throw new Error("Payment ID not found .");
         }
         create_Order(payment_id, {
           onSuccess: (res) => {
-            console.log("Order ID:", res);
             const orderData = res?.data;
             openRazorpay(orderData);
           },
           onError: (err) => {
-            console.error(err?.response?.data?.detail);
             const message = err?.response?.data?.detail
             showError(message)
           },
@@ -89,7 +85,6 @@ const RenewSubscription = ({ open, setOpen }) => {
         setShowUpgradeFields(false);
         formik.resetForm();
       } catch (error) {
-        console.error(error);
       }
     },
   });
@@ -108,7 +103,6 @@ const RenewSubscription = ({ open, setOpen }) => {
 
         handler: async function (response) {
           try {
-            console.log("Payment Success:", response);
             const result = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -120,11 +114,9 @@ const RenewSubscription = ({ open, setOpen }) => {
               // setOpen(true);
               // setOpenFailed(true);
             }
-            console.log("Verified Result:", result);
             // setOpenSuccess(true)
             showSuccess("Subscription Renewed successfully")
           } catch (err) {
-            console.log("Verification Error:", err);
             // setOpen(true);
             // setOpenFailed(true);
           }
@@ -142,14 +134,12 @@ const RenewSubscription = ({ open, setOpen }) => {
 
       const razor = new window.Razorpay(options);
       razor.on("payment.failed", function (response) {
-        console.log("Payment Failed:", response);
         // onOpenChange(true);
         // setOpenFailed(true);
         showError(response.error.description || "Payment Failed");
       });
       razor.open();
     } catch (err) {
-      console.log("Error at opening razor Pay checkOut", err);
     }
   };
 

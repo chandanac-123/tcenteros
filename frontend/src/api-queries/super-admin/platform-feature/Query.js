@@ -16,7 +16,6 @@ export const useCreatePlatformFeature = () => {
         },
 
         onError: (error) => {
-            console.error("Create platform feature failed:", error);
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data?.detail ||
@@ -46,9 +45,6 @@ export const useUpdatePlatformFeature = () => {
             showSuccess('Platform feature updated successfully')
         },
         onError: (error) => {
-            console.error("Update platform feature failed:", error);
-
-
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data?.detail ||
@@ -70,7 +66,6 @@ export const useDeletePlatformFeature = () => {
             showSuccess('Platform feature deleted successfully')
         },
         onError: (error) => {
-            console.error("Delete platform feature failed:", error);
             const message =
                 error?.response?.data?.message ||
                 error?.response?.data?.detail ||

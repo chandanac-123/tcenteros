@@ -29,7 +29,6 @@ const POS = () => {
       accessorKey: 'product_name',
       header: 'Sale Products',
       cell: ({ row }) => {
-        console.log('row: ', row)
         return (
           <span className='flex flex-col'>
             {row?.original?.items.map(item => item.product_name).join(', ')}

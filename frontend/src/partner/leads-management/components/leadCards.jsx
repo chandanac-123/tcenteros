@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 const LeadCards = ({data}) => {
-    console.log("DataCounts",data);
     
     return (
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-3">

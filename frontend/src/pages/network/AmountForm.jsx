@@ -25,7 +25,6 @@ const AmountForm = ({ open, setOpen }) => {
         formik.resetForm();
         setOpen(false);
       } catch (error) {
-        console.error("Failed to save network amount:", error);
       }
     },
   });

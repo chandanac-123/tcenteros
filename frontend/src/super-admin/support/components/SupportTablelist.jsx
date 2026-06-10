@@ -10,14 +10,11 @@ const SupportTablelist = () => {
     const { data, isLoading, error } = useSupportTickets();
     const { mutate: openTicket } = useOpenSupportTicket();
     const { mutate, isPending } = useAssignTicketMutation();
-
     const navigate = useNavigate();
-
     const tickets = data?.tickets || data || [];
     const ticketsSorted = [...tickets].sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
     );
-    // console.log("Ticket", tickets);
 
     const formatCustomDateTime = (dateString) => {
         if (!dateString) return "-";
@@ -38,20 +35,14 @@ const SupportTablelist = () => {
     };
 
     const handleOpen = (id, status, allData) => {
-        console.log("Status", status);
-
         if (status === "pending") {
-
             openTicket(id, {
                 onSuccess: () => {
-                    console.log("Ticket opened");
-
                     navigate(`/supportById/${id}`, {
                         state: allData,
                     });
                 },
                 onError: (err) => {
-                    console.error(err);
                 }
             });
         } else {
@@ -62,16 +53,11 @@ const SupportTablelist = () => {
         }
     };
 
-    console.log("Dattatatat:::", data);
 
     const handleAssign = (ticketId, centerAdmin_id) => {
         if (!ticketId || !centerAdmin_id) {
-            console.error("Select a center admin first");
             return;
         }
-
-        console.log("TicketId", ticketId);
-
         mutate({
             ticket_id: ticketId,   // make sure this exists
             centeradmin_id: centerAdmin_id,

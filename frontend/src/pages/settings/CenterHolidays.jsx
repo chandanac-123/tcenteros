@@ -34,7 +34,6 @@ const CenterHolidays = () => {
       header: 'Day',
       accessorKey: 'day',
       cell: ({ row }) => {
-        console.log('Day row data: ', row?.original?.day)
         return (
           <span className='flex gap-3'>
             {row?.original?.day?.map(d => d.toUpperCase())?.join(', ')}
@@ -75,7 +74,6 @@ const CenterHolidays = () => {
         await createHoliday(values)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -87,7 +85,6 @@ const CenterHolidays = () => {
       setDeleteOpen(false)
       setDeleteId(null)
     } catch (error) {
-      console.error('Delete failed:', error)
     }
   }
 

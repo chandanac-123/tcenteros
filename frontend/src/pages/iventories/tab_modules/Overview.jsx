@@ -2,14 +2,12 @@ import React, { useState } from 'react'
 import StatusDisplaycard from '../components/StatusDisplaycard'
 import { useInventoryDashboardQuery } from '@api-queries/center-admin/inventory/Query'
 import LineChart from '@common/charts/LineChart'
-import CustomDatePicker from '@common/components/CustomeDatepicker'
 import { Card } from '@pages/components/ui/card'
 import BarChart from '@common/charts/BarChart'
 
 const Overview = () => {
   const [year, setYear] = useState(new Date().getFullYear())
   const { data: dashboardData } = useInventoryDashboardQuery()
-  console.log('dashboardData: ', dashboardData)
   const stockLabels =
     dashboardData?.stock_distribution_chart?.map(i => i.month) || []
 

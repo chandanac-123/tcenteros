@@ -14,7 +14,6 @@ const PublicWebUrl = () => {
       // Reset after 2 seconds
       setTimeout(() => setCopied(false), 3000)
     } catch (err) {
-      console.error('Failed to copy:', err)
     }
   }
 

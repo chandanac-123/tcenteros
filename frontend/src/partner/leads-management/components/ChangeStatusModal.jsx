@@ -54,7 +54,6 @@ const ChangeStatusModal = ({ open, setOpen, onSubmit, data }) => {
                     setOpen(false);
                 },
                 onError: (err) => {
-                    console.error("Error updating status", err);
                 }
             }
         );

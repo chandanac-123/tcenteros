@@ -53,7 +53,6 @@ const VisitorAdd = ({ goBack }) => {
         formik.resetForm();
         goBack();
       } catch (error) {
-        console.error(error);
       }
     },
   });

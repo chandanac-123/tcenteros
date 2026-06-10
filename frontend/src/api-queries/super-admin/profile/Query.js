@@ -31,7 +31,6 @@ export const useChangePasswordMutation = () => {
   return useMutation({
     mutationFn: (data) => changePassword(data),
     onSuccess: (data) => {
-      console.log('data: ', data);
       showSuccess("Password changed successfully");
     },
     onError: (error) => {

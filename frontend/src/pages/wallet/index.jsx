@@ -47,7 +47,6 @@ const Wallet = () => {
   } = useGetWalletTransactionsQuery(tableParams)
   const { data: walletAmout, refetch: refetchWalletAmount } =
     useGetWalletAmountQuery()
-  console.log('walletAmout', walletAmout)
   const walletBalance =
     walletAmout?.available_balance ?? walletAmout?.balance ?? 0
   const buttonLabel = walletBalance === 0 ? 'Add Wallet' : 'Add Top Up'

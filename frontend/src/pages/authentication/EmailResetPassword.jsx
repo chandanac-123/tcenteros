@@ -10,7 +10,6 @@ const EmailResetPassword = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams();
   const tokenKey = searchParams.get("token");
-  console.log('tokenKey: ', tokenKey);
   const { mutateAsync: reset_password, isPending } =
     useEmailResetPasswordMutation();
 
@@ -23,12 +22,10 @@ const EmailResetPassword = () => {
     validationSchema: emailResetPasswordValidationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
-      console.log('values: ', values);
       try {
         await reset_password(values);
         navigate("/dashboard");
       } catch (error) {
-        console.error("Error resetting password:", error.response);
       }
     },
   });

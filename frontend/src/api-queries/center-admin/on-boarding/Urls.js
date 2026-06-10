@@ -98,10 +98,8 @@ export const getAllResellers = async () => {
 export const getAllOnboardingCenters = async () => {
   try {
     const response = await getAllCentersOnBoarding()
-    console.log("Response Centers", response);
     return response.data
   } catch (err) {
-    console.error("Error at All center fetching on onboard", err);
     throw err
   }
 }

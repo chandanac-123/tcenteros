@@ -2,7 +2,6 @@ import { DataTable } from "@common/components/DataTable";
 import React from "react";
 
 const AssignedCenterTable = ({ data }) => {
-  console.log("zzzzzzzz: ", data);
   const columns = [
     { accessorKey: "center_name", header: "Center Name" },
     { accessorKey: "commission_earned", header: "Commission Amount" },

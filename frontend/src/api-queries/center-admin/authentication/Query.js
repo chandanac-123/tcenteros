@@ -69,7 +69,6 @@ export const useCreateCenterAccountMutation = () => {
   return useMutation({
     mutationFn: createCenterAccount,
     onSuccess: (data) => {
-      console.log("Data Token", data);
       setAuth(data, true)
       query.invalidateQueries({ queryKey: ['auth'] })
     }
@@ -86,7 +85,6 @@ export const useEmailResetPasswordMutation = () => {
       query.invalidateQueries({ queryKey: ['auth'] })
     },
     onError: (error) => {
-      console.log('aaaaaaaaaaaa: ', error.response);
       showError(error?.response?.data?.detail)
     }
   })

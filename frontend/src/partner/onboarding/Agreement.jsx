@@ -43,7 +43,6 @@ const Agreement = () => {
 
         navigate("/payment");
       } catch (error) {
-        console.log("error: ", error);
       }
     },
   });

@@ -85,7 +85,6 @@ export const useDeleteProductMutation = () => {
       showSuccess('Product deleted successfully')
     },
     onError: err => {
-      console.error(err)
       showError(err?.response?.data?.detail || 'Failed to delete product')
     }
   })

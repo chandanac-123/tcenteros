@@ -1,18 +1,14 @@
 import ContentLayout from '@common/MasterLayout/ContentLayout'
 import { inventory_modules } from '@constants/inventory_modules'
 import CustomeTab from '@common/components/CustomeTab'
-import { useInventoryStore } from '@store/networkTabstore'
 import { useState } from 'react'
 
 const Inventories = () => {
   const [activeTab, setActiveTab] = useState('overview')
-  //  const { activeTab, setActiveTab } = useInventoryStore();
-  // console.log("Active Store", activeTab);
 
   const activeModule = inventory_modules.find(
     module => module?.id === activeTab
   )
-  // console.log("ActiveModule", activeModule);
 
   return (
     <ContentLayout>

@@ -16,7 +16,6 @@ const AddLeadsFields = () => {
   const navigate = useNavigate();
   const { mutate: createLead, isPending } = useCreateLead();
   const { data: categoryList, isLoading } = useGetBranchCategoriesListQuery();
-  console.log("AllData", categoryList);
 
   const formik = useFormik({
     initialValues: {
@@ -41,7 +40,6 @@ const AddLeadsFields = () => {
           navigate("/lead-management");
         },
         onError: (err) => {
-          console.error(err);
         },
       });
     },

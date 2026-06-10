@@ -43,7 +43,6 @@ const CenterType = () => {
           },
         });
       } catch (err) {
-        console.log(err);
       }
     },
   });

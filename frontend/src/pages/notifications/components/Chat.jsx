@@ -36,7 +36,6 @@ const Chat = ({ ticketId }) => {
         setSelectedImage(null);
         formik.resetForm();
       } catch (error) {
-        console.error(error);
       }
     },
   });

@@ -19,7 +19,6 @@ const PaymentRetry = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const payment_order_id = searchParams.get("payment_order_id");
-  console.log('payment_order_id: ', payment_order_id);
   const partnerEmail = useOnboardingStore(
     (state) => state.partnerOnboardingDraft?.email,
   );
@@ -37,18 +36,15 @@ const PaymentRetry = () => {
       await retryPayment(payment_order_id);
       create_Order(payment_order_id, {
         onSuccess: (res) => {
-          console.log("Order ID:", res);
           const orderData = res?.data;
           openRazorpay(orderData, payment_order_id);
         },
         onError: (err) => {
-          console.error(err?.response?.data?.detail);
           const message = err?.response?.data?.detail;
           showError(message);
         },
       });
     } catch (error) {
-      console.log("Payment initiation failed: ", error);
     }
   };
 
@@ -64,7 +60,6 @@ const PaymentRetry = () => {
 
         handler: async function (response) {
           try {
-            console.log("Payment Success:", response);
             const result = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -74,12 +69,10 @@ const PaymentRetry = () => {
               showError("Payment Verification is Failed");
 
             }
-            console.log("Verified Result:", result)
             resetPartnerOnboardingDraft();
             navigate("/dashboard", { state: { paymentResponse: response } });
             showSuccess("Partner Payment received successfully");
           } catch (err) {
-            console.log("Verification Error:", err);
             await razorpayFailure(payment_order_id);
 
           }
@@ -91,11 +84,9 @@ const PaymentRetry = () => {
 
         modal: {
           ondismiss: async () => {
-            console.log("User closed Razorpay popup");
             try {
               await razorpayFailure(payment_order_id);
             } catch (error) {
-              console.error("Failure API Error:", error);
             }
 
           },
@@ -104,21 +95,17 @@ const PaymentRetry = () => {
 
       const razor = new window.Razorpay(options);
       razor.on("payment.failed", async (response) => {
-        console.error("Payment Failed:", response.error);
         try {
           await razorpayFailure(payment_order_id);
         } catch (error) {
-          console.error("Failure API Error 1:", error);
         }
       });
 
       razor.open();
     } catch (err) {
-      console.error("Error opening Razorpay:", err);
       try {
         await razorpayFailure(payment_order_id);
       } catch (error) {
-        console.error("Failure API Error: 2", error);
       }
     }
   };

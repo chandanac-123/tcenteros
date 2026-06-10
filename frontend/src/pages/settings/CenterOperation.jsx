@@ -60,7 +60,6 @@ const CenterOperations = () => {
         await createSlot(values)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -84,7 +83,6 @@ const CenterOperations = () => {
           await createCenterTime(formattedValues)
         }
       } catch (error) {
-        console.error(error)
       }
     }
   })
@@ -96,7 +94,6 @@ const CenterOperations = () => {
       setDeleteOpen(false)
       setSelectedSlotId(null)
     } catch (error) {
-      console.error(error)
     }
   }
 

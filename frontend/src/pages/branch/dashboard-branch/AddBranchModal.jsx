@@ -56,27 +56,22 @@ const AddBranchModal = ({ open, onOpenChange }) => {
         branch_count: count,
       };
       const response = await addCount(payload);
-      console.log("count success:", response);
       const payment_id = response?.payment_order_id;
-      console.log("Pay", payment_id);
 
       if (!payment_id) {
         throw new Error("Payment ID not found .");
       }
       create_Order(payment_id, {
         onSuccess: (res) => {
-          console.log("Order ID:", res);
           const orderData = res?.data;
           openRazorpay(orderData);
         },
         onError: (err) => {
-          console.error(err?.response?.data?.detail);
           const message = err?.response?.data?.detail;
           showError(message);
         },
       });
     } catch (error) {
-      console.error("Purchase failed:", error);
     }
   };
 
@@ -110,13 +105,10 @@ const AddBranchModal = ({ open, onOpenChange }) => {
 
       const razor = new window.Razorpay(options);
       razor.on("payment.failed", function (response) {
-        console.log("Payment Failed:", response);
-
         showError(response.error.description || "Payment Failed");
       });
       razor.open();
     } catch (err) {
-      console.log("Error at opening razor Pay checkOut", err);
     }
   };
 

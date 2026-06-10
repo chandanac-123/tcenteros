@@ -34,7 +34,6 @@ const CenterAdminDashboard = () => {
   const isLimitReached =
     branchCountData &&
     branchCountData.created_subcenters === branchCountData.branches_purchased;
-  console.log("isLimitReached: ", isLimitReached);
 
   useEffect(() => {
     if (firstLogin) {

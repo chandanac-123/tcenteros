@@ -9,7 +9,6 @@ const flowVariantMap = {
 }
 const SettlementReport = ({ tableParams, setTableParams }) => {
   const { data, isLoading } = useSettlementReportQuery(tableParams)
-  console.log('data: ', data)
 
   const columns = [
     {

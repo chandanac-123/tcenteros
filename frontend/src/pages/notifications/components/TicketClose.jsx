@@ -17,7 +17,6 @@ const CloseTicket = ({ open, setOpen, id }) => {
       
       setOpen(false)
     } catch (error) {
-      console.error('Approve failed', error)
     }
   }
 

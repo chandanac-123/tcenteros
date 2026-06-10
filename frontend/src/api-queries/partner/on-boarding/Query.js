@@ -43,7 +43,6 @@ export const useCreateOnboardCenterMutation = () => {
       showSuccess("Onboard details saved");
     },
     onError: (err) => {
-      console.log("err: ", err?.response);
       showError(
         err?.response?.data?.detail || "Failed to create onboard center",
       );

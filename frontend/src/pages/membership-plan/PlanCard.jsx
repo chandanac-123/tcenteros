@@ -21,8 +21,6 @@ const PlanCard = ({ data, colors }) => {
     data?.membership_id
   )
 
-  console.log("Data", data);
-
   const {
     hydrated,
     canEditMembership,

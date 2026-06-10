@@ -25,7 +25,6 @@ const UploadImage = ({ open, setOpen, refetch }) => {
         setOpen(false)
         formik.resetForm()
       } catch (error) {
-        console.error(error)
       }
     }
   })

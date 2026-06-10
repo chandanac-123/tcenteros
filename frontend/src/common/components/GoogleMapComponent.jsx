@@ -59,7 +59,6 @@ function GoogleMapComponent({ open, setLocationOpen }) {
         await fetchCenterLocation(values);
         setLocationOpen(false);
       } catch (error) {
-        console.error(error);
       }
     },
   });
@@ -98,7 +97,6 @@ function GoogleMapComponent({ open, setLocationOpen }) {
         formik.setFieldValue("longitude", lng);
       },
       (error) => {
-        console.error("Error getting location:", error);
       },
     );
   }, [open, centerLocationData]);

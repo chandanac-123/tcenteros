@@ -23,7 +23,6 @@ const ChangePassword = ({ open, setOpen }) => {
                 await change_password(values)
                 setOpen(false)
             } catch (error) {
-                console.error('Error changing password:', error)
             }
         },
     })
