@@ -15,7 +15,9 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
   const hydrated = useAuthStore((state) => state._hasHydrated);
   const location = useLocation();
   const [openMenuKey, setOpenMenuKey] = useState(null);
-
+  const isParentCenter = useAuthStore(
+    (state) => state.auth?.is_parent_center
+  );
   const role = useAuthStore((state) => state.auth?.role);
   const centerId = useAuthStore((state) => state.auth?.center_id);
   const isEmployee = role === "employee";
@@ -28,7 +30,15 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
   const filteredRoutes = useMemo(() => {
     return routes.filter((item) => {
-      // Always visible routes (e.g. Dashboard)
+      // Hide Reports for sub branches
+      if (
+        item.path === "/reports" &&
+        isParentCenter === false
+      ) {
+        return false;
+      }
+
+      // Always visible routes
       if (item.alwaysVisible) return true;
 
       // Partner routes
@@ -48,7 +58,7 @@ const Sidebar = ({ collapsed, isMobile, open, setOpen }) => {
 
       return false;
     });
-  }, [isSuperAdmin, isCenterAdmin, isPartner]);
+  }, [isSuperAdmin, isCenterAdmin, isPartner, isParentCenter]);
 
   const isSubmenuActive = (item) => {
     if (!item.submodules) return false;

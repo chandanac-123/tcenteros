@@ -1,7 +1,8 @@
+import { useState } from "react";
 import CustomeTab from "@common/components/CustomeTab";
 import ContentLayout from "@common/MasterLayout/ContentLayout";
 import { Settings } from "lucide-react";
-import { useState } from "react";
+
 import GeneralSettings from "./general-settings";
 import LegalDocuments from "./legal-documents";
 import CenterType from "./center-type";
@@ -19,35 +20,46 @@ const settingType = [
 const PlatformSettings = () => {
   const [activeTab, setActiveTab] = useState("general");
 
-  const activeTabData = settingType.find((tab) => tab.id === activeTab);
+  const activeTabData = settingType.find(
+    (tab) => tab.id === activeTab
+  );
+
   const ActiveComponent = activeTabData?.component;
 
   return (
     <ContentLayout>
-      <div>
-        <div className="flex items-center gap-4 p-4">
-          <div className="p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-            <Settings size={30} className="text-onboard_primary" />
-          </div>
-          <div className="flex flex-col justify-center gap-3">
-            <h1 className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
-              Platform Settings
-            </h1>
-            <p className="text-[#393636] font-inter text-[14px] font-medium">
-              Configure platform-wide revenue and subscription settings
-            </p>
-          </div>
+      {/* Header */}
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-2 sm:p-4">
+        <div className="p-2 sm:p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
+          <Settings
+            size={24}
+            className="text-onboard_primary sm:w-[30px] sm:h-[30px]"
+          />
+        </div>
+
+        <div className="flex flex-col justify-center gap-1 sm:gap-2">
+          <h1 className="text-base sm:text-[18px] font-semibold text-[#3A3A3A]">
+            Platform Settings
+          </h1>
+
+          <p className="text-xs sm:text-[14px] font-medium text-[#393636]">
+            Configure platform-wide revenue and subscription settings
+          </p>
         </div>
       </div>
 
-      <CustomeTab
-        tabList={settingType}
-        defaultVal={activeTab}
-        tabsListClass="p-[1px] w-max"
-        onChange={setActiveTab}
-      />
+      {/* Tabs */}
+      <div className="overflow-x-auto px-2 sm:px-4">
+        <CustomeTab
+          tabList={settingType}
+          defaultVal={activeTab}
+          tabsListClass="p-[1px] min-w-max"
+          onChange={setActiveTab}
+        />
+      </div>
 
-      <div >
+      {/* Content */}
+      <div className="mt-4 px-2 sm:px-0">
         {ActiveComponent && <ActiveComponent />}
       </div>
     </ContentLayout>

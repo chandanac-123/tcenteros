@@ -23,27 +23,29 @@ const ActiveSubscriptions = () => {
 
   return (
     <ContentLayout>
-      <div className="flex items-center justify-between px-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div className=" p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
-            <StickyNote size={30} />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2 sm:px-4 mb-4">
+        {/* Title Section */}
+        <div className="flex items-center gap-2">
+          <div className="p-2 text-onboard_primary rounded-full border shadow-[0px_5px_15px_rgba(0,0,0,0.15)]">
+            <StickyNote size={24} className="sm:w-[30px] sm:h-[30px]" />
           </div>
-          <span className="text-lg font-bold text-gray-800 mb-0">
+
+          <span className="text-base sm:text-lg font-bold text-gray-800">
             Active Subscriptions
           </span>
         </div>
 
-        <div className="">
+        {/* Filter */}
+        <div className="w-full sm:w-auto">
           <CustomFilter
             value={partnerFilter}
             onApply={(value) => {
-              console.log("Selected:", value);
               setPartnerFilter(value);
             }}
             options={[
               { label: "All", value: "all" },
               { label: "With Partner", value: "with" },
-              { label: "Without Partner", value: "without" }
+              { label: "Without Partner", value: "without" },
             ]}
           />
         </div>

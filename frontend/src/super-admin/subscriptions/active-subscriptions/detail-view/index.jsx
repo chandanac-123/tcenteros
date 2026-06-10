@@ -62,21 +62,21 @@ const DetailView = () => {
   };
 
   const status = data?.status?.toLowerCase()?.trim();
-  const duration=data?.subscription_duration?.toLowerCase()?.trim();
+  const duration = data?.subscription_duration?.toLowerCase()?.trim();
 
   const statusStyles = {
     active: "bg-badge_bg_green text-green_text ",
     grace: "bg-plan_bg_purple  text-plan_purple",
     yearly: "bg-plan_bg_purple  text-plan_purple",
     due: "bg-red_bg text-red_text border-red",
-    monthly:"bg-badge_blue_bg text-badge_blue border border-badge_blue"
+    monthly: "bg-badge_blue_bg text-badge_blue border border-badge_blue"
   };
 
   const statusLabels = {
     active: "Active",
     grace: "In Grace",
     yearly: "Yearly",
-    monthly:"Monthly",
+    monthly: "Monthly",
     due: "Due",
   };
 
@@ -134,7 +134,7 @@ const DetailView = () => {
               {isLoading ? (
                 <span className="inline-block h-3 w-20 animate-pulse bg-gray-100 rounded" />
               ) : (
-                data?.city 
+                data?.city
               )}
             </span>
           </div>
@@ -151,7 +151,7 @@ const DetailView = () => {
                   className={`px-3 rounded-full text-[13px] ${statusStyles[duration] || "bg-gray-100 text-gray-500"
                     }`}
                 >
-                  {statusLabels[duration] }
+                  {statusLabels[duration]}
                 </div>
               )}
             </div>
@@ -167,7 +167,7 @@ const DetailView = () => {
                     className={`px-3 rounded-full text-[13px] ${statusStyles[status] || "bg-gray-100 text-gray-500"
                       }`}
                   >
-                    {statusLabels[status] }
+                    {statusLabels[status]}
                   </div>
                 )}
               </div>
@@ -186,7 +186,7 @@ const DetailView = () => {
           onClick={() => sendReminder(id)}
           disabled={reminderLoad || isLoading}
           size="addbutton"
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto justify-center"
         >
           <BellRing />
           {isLoading ? "Loading..." : reminderLoad ? "Sending..." : "Send Reminder"}

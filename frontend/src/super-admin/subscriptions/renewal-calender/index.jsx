@@ -19,41 +19,52 @@ const RenewalCalender = () => {
 
   return (
     <ContentLayout>
-      <div className="flex items-center justify-between ">
-        <div className="flex items-center gap-4 p-4">
-          <div className=" p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
-            <Calendar size={30} className="text-onboard_primary" />
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex items-center gap-4 p-2 sm:p-4">
+          <div className="p-2 sm:p-3 rounded-full shadow-[0px_5px_15px_rgba(0,0,0,0.35)]">
+            <Calendar size={24} className="text-onboard_primary sm:w-[30px] sm:h-[30px]" />
           </div>
-          <div className="flex flex-col justify-center gap-2">
-            <p className="text-[#3A3A3A] font-poppins text-[18px] font-semibold leading-[12px]">
+
+          <div className="flex flex-col justify-center gap-1">
+            <p className="text-[#3A3A3A] font-semibold text-base sm:text-lg">
               Renewal Calendar
             </p>
-            <p className="text-[#393636] font-inter text-[14px] font-medium">
+            <p className="text-[#393636] text-xs sm:text-sm">
               Visual calendar showing renewal dates
             </p>
           </div>
         </div>
-        <div className="flex gap-4">
-          <div className="flex flex-col border rounded-xl py-2 px-6 justify-center items-center gap-2">
-            <span className="flex text-xs ">This Month Renewals</span>
-            <span className="flex text-onboard_primary">
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:w-auto">
+          <div className="flex flex-col border rounded-xl py-3 px-4 justify-center items-center gap-2">
+            <span className="text-xs text-center">
+              This Month Renewals
+            </span>
+            <span className="text-onboard_primary font-semibold">
               {data?.summary?.month_renewal_count}
             </span>
           </div>
-          <div className="flex flex-col border rounded-xl py-2 px-6 justify-center items-center gap-2">
-            <span className="flex text-xs ">Renewable revenue expected</span>
-            <span className="flex text-onboard_primary">
+
+          <div className="flex flex-col border rounded-xl py-3 px-4 justify-center items-center gap-2">
+            <span className="text-xs text-center">
+              Renewable Revenue Expected
+            </span>
+            <span className="text-onboard_primary font-semibold">
               {data?.summary?.month_expected_revenue}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex p-4 justify-between items-center">
-        <span className="flex text-onboard_primary border rounded-lg p-2 px-6">
+      {/* Month Filter */}
+      <div className="flex flex-col sm:flex-row gap-4 p-2 sm:p-4 justify-between sm:items-center">
+        <span className="text-onboard_primary border rounded-lg p-2 px-4 sm:px-6 text-center sm:text-left">
           {getTodayFormattedMonthYear()}
         </span>
-        <div className="w-32">
+
+        <div className="w-full sm:w-40">
           <CustomDatePicker
             value={new Date(tableParams.year, tableParams.month - 1)}
             pickerType="month"
@@ -68,14 +79,18 @@ const RenewalCalender = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-4 p-4 w-full">
-        {data?.daily_breakdown.map((item) => {
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 p-2 sm:p-4 w-full">
+        {data?.daily_breakdown?.map((item) => {
           const isToday = item.date === currentDay;
+
           return (
             <CalenderCard
               key={item.date}
               onClick={() =>
-                navigate(`/subscriptions/renewal-calender/detail/${item?.date}`)
+                navigate(
+                  `/subscriptions/renewal-calender/detail/${item?.date}`
+                )
               }
               day={item.date.split("-")[2]}
               renewals={item.renewal_count}

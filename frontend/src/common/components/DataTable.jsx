@@ -186,36 +186,42 @@ export function DataTable ({
             </TableBody>
           </Table>
         </div>
-        <div className='bg-white px-3 py-3 flex justify-between items-center sticky -bottom-4 z-10'>
-          {paginationVisibile && totalRecords > 10 && (
-            <div className='flex justify-between items-center w-full mt-4'>
-              <div className='text-grey text-sm '>
-                Showing {(page - 1) * rowsPerPage + 1} -
-                {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
-              </div>
-              <div className='flex items-center space-x-2'>
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => handlePageChange(Math.max(page - 1, 1))}
-                      />
-                    </PaginationItem>
-                    <div className='flex border cursor-pointer border-secondary rounded-md overflow-hidden'>
-                      {paginationItems}
-                    </div>
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          handlePageChange(Math.min(page + 1, totalPageCount))
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            </div>
-          )}
+        <div className='bg-white px-3 py-3 sticky -bottom-4 z-10 border-t'>
+         {paginationVisibile && totalRecords > 10 && (
+  <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 w-full'>
+    
+    {/* Records Info */}
+    <div className='text-grey text-xs sm:text-sm text-center sm:text-left'>
+      Showing {(page - 1) * rowsPerPage + 1} -
+      {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
+    </div>
+
+    {/* Pagination */}
+    <div className='flex justify-center sm:justify-end overflow-x-auto'>
+      <Pagination>
+        <PaginationContent className='flex-nowrap'>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => handlePageChange(Math.max(page - 1, 1))}
+            />
+          </PaginationItem>
+
+          <div className='flex border border-secondary rounded-md overflow-hidden shrink-0'>
+            {paginationItems}
+          </div>
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                handlePageChange(Math.min(page + 1, totalPageCount))
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  </div>
+)}
         </div>
       </div>
     </>
