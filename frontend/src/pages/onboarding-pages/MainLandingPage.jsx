@@ -163,6 +163,13 @@ const MainLandingPage = () => {
             >
               Join Now <ArrowRight size={16} />
             </Button>
+            <Button
+              onClick={() => navigate("/login")}
+              size="addbutton"
+              className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
+            >
+              Login <ArrowRight size={16} />
+            </Button>
           </div>
         </div>
 
@@ -389,7 +396,7 @@ const MainLandingPage = () => {
         <div className="text-center flex flex-col items-center gap-6">
           {
             <h2 className="text-2xl md:text-4xl font-semibold mt-3">
-              Everything You Need to  
+              Everything You Need to
               <span className="text-onboard_primary"> Run & Scale</span>
             </h2>
           }
