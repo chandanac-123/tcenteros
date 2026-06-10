@@ -116,7 +116,7 @@ const CenterAdminDashboard = () => {
   return (
     <ContentLayout>
       <div className="gap-4 flex flex-col w-full">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <div className="flex flex-col">
             <span>{greeting}</span>
             <span className="text-xs">{data?.centeradmin_name}</span>
