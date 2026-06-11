@@ -9,9 +9,10 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: data => {
-
       setAuth(data)
       query.invalidateQueries({ queryKey: ['auth'] })
+      query.invalidateQueries({ queryKey: ['profileInfo'] })
+      query.invalidateQueries({ queryKey: ['superadminProfile'] })
       showSuccess('Login successful')
     },
     onError: error => {
