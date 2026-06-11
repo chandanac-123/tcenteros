@@ -21,12 +21,12 @@ const GalleryUpload = () => {
   };
 
   return (
-    <div>
+    <>
       <div className="flex justify-between">
-        <div className="text-lg font-semibold mb-6">Gallery image upload</div>
+        <div className="text-lg font-semibold">Gallery image upload</div>
         <Button
-          size="addbutton"
-          variant="button_outlined"
+          size='addbutton'
+          variant='default'
           onClick={() => setOpen(true)}
         >
           + Upload image
@@ -71,7 +71,7 @@ const GalleryUpload = () => {
         centerId={centerId}
         refetch={refetch}
       />
-    </div>
+    </>
   );
 };
 

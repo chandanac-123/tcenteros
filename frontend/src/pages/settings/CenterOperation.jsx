@@ -147,7 +147,7 @@ const CenterOperations = () => {
             }
           />
         </div>
-        <div className='flex-1 justify-end items-center flex'>
+        <div className='flex-1 justify-end items-center flex pr-1'>
           <Button
             id='center-timing'
             size='addbutton'

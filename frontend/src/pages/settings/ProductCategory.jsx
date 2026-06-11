@@ -24,8 +24,9 @@ const ProductCategory = () => {
   }
 
   return (
-    <>
-      <div className='flex justify-end mb-4'>
+    <div className='flex flex-col gap-6'>
+      <div className="flex justify-between">
+        <div className="text-lg font-semibold">Product Category</div>
         <Button
           onClick={() => setOpen(true)}
           size='addbutton'
@@ -54,7 +55,7 @@ const ProductCategory = () => {
         description='Are you sure you want to delete this Product Category?'
         onConfirm={handleConfirmDelete}
       />
-    </>
+    </div>
   )
 }
 
