@@ -166,7 +166,8 @@ const MainLandingPage = () => {
             <Button
               onClick={() => navigate("/login")}
               size="addbutton"
-              className="w-full sm:w-auto bg-onboard_primary hover:bg-onboard_primary/80 text-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
+              variant="outline_secondary"
+              className="w-full sm:w-auto bg-transparent text-textwhite hover:bg-textwhite/10 border-textwhite font-medium flex items-center justify-center gap-2 px-4 py-2 rounded-lg"
             >
               Login <ArrowRight size={16} />
             </Button>
