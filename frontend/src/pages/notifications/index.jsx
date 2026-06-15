@@ -5,6 +5,7 @@ import NetworkNotifications from './components/NetworkNotifications'
 import CenterNotifications from './components/CenterNotifications'
 import Tickets from './components/Tickets'
 import { useAuthStore } from '@store/authStore'
+import { useNotificationCountQuery } from '@api-queries/center-admin/notifictaions/Query'
 
 const tabs = [
   { id: 'network', name: 'Network' },
@@ -15,7 +16,7 @@ const tabs = [
 const Notifications = () => {
   const role = useAuthStore((state) => state.auth?.role)
   const isSuperAdmin = role === "superadmin"
-
+ const { data: notification_count, isFetching: isNotification } = useNotificationCountQuery()
   const [activeTab, setActiveTab] = useState('network')
 
   return (
@@ -24,7 +25,7 @@ const Notifications = () => {
         <div className='flex flex-col'>
           <span className='flex text-lg font-semibold'>Notification</span>
           <span className='flex text-sm text-textgrey'>
-            You have 12 new notification
+            You have {notification_count?.total_notifications} new notification
           </span>
         </div>
 

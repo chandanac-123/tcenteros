@@ -8,6 +8,7 @@ import {
   getTimeSlot,
   approveTimeSlot,
   getCenterReminders,
+  getNotificationCount
 } from "./Urls";
 import { showError, showSuccess } from "@utils/toast";
 
@@ -49,6 +50,7 @@ export const useCloseMessageMutation = () => {
     mutationFn: ({ data, id }) => closeMessage(data, id),
     onSuccess: () => {
       query.invalidateQueries(["tickets"]);
+      query.invalidateQueries(["notificationCount"]);
       showSuccess("Chat closed successfully");
     },
     onError: (err) => {
@@ -82,6 +84,7 @@ export const useApproveTimeSlotMutation = () => {
     mutationFn: ({ data, id }) => approveTimeSlot(data, id),
     onSuccess: () => {
       query.invalidateQueries(["timeSlot"]);
+      query.invalidateQueries(["notificationCount"]);
       showSuccess("Time slot approved successfully");
     },
     onError: (err) => {
@@ -95,6 +98,15 @@ export const useCenterRemindersQuery = () => {
   return useQuery({
     queryKey: ["centerReminders"],
     queryFn: getCenterReminders,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+  });
+};
+
+export const useNotificationCountQuery = () => {
+  return useQuery({
+    queryKey: ["notificationCount"],
+    queryFn: getNotificationCount,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });

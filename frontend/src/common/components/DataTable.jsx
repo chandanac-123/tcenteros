@@ -26,7 +26,7 @@ import {
 import { Spinner } from '@pages/components/ui/spinner'
 import CustomeSearch from './CustomeSearch'
 
-export function DataTable ({
+export function DataTable({
   columns,
   data,
   setTableParams,
@@ -136,9 +136,9 @@ export function DataTable ({
                       {header?.isPlaceholder
                         ? null
                         : flexRender(
-                            header?.column?.columnDef?.header,
-                            header?.getContext()
-                          )}
+                          header?.column?.columnDef?.header,
+                          header?.getContext()
+                        )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -164,7 +164,7 @@ export function DataTable ({
                     data-state={row?.getIsSelected() && 'selected'}
                   >
                     {row?.getVisibleCells()?.map(cell => (
-                      <TableCell key={cell?.id}>
+                      <TableCell key={cell?.id} className='capitalize'>
                         {flexRender(
                           cell?.column?.columnDef?.cell,
                           cell?.getContext()
@@ -187,41 +187,41 @@ export function DataTable ({
           </Table>
         </div>
         <div className='bg-white px-3 py-3 sticky -bottom-4 z-10 border-t'>
-         {paginationVisibile && totalRecords > 10 && (
-  <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 w-full'>
-    
-    {/* Records Info */}
-    <div className='text-grey text-xs sm:text-sm text-center sm:text-left'>
-      Showing {(page - 1) * rowsPerPage + 1} -
-      {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
-    </div>
+          {paginationVisibile && totalRecords > 10 && (
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 w-full'>
 
-    {/* Pagination */}
-    <div className='flex justify-center sm:justify-end overflow-x-auto'>
-      <Pagination>
-        <PaginationContent className='flex-nowrap'>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => handlePageChange(Math.max(page - 1, 1))}
-            />
-          </PaginationItem>
+              {/* Records Info */}
+              <div className='text-grey text-xs sm:text-sm text-center sm:text-left'>
+                Showing {(page - 1) * rowsPerPage + 1} -
+                {Math.min(page * rowsPerPage, totalRecords)} of {totalRecords}
+              </div>
 
-          <div className='flex border border-secondary rounded-md overflow-hidden shrink-0'>
-            {paginationItems}
-          </div>
+              {/* Pagination */}
+              <div className='flex justify-center sm:justify-end overflow-x-auto'>
+                <Pagination>
+                  <PaginationContent className='flex-nowrap'>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(Math.max(page - 1, 1))}
+                      />
+                    </PaginationItem>
 
-          <PaginationItem>
-            <PaginationNext
-              onClick={() =>
-                handlePageChange(Math.min(page + 1, totalPageCount))
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    </div>
-  </div>
-)}
+                    <div className='flex border border-secondary rounded-md overflow-hidden shrink-0'>
+                      {paginationItems}
+                    </div>
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          handlePageChange(Math.min(page + 1, totalPageCount))
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CalenderCard from "../components/CalenderCard";
 import { Badge } from "@pages/components/ui/badge";
 import { useRenewalByIdQuery } from "@api-queries/super-admin/subcriptions/Query";
+import CustomAvatar from "@common/components/getAvatarColor";
 
 const RenewalDetailView = () => {
   const params = useParams();
@@ -50,8 +51,11 @@ const RenewalDetailView = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-4 rounded-lg w-full gap-4" key={renewal.id}>
             {/* Left Section */}
             <div className="flex items-start gap-3">
-              <img src={renewal?.center_image_url} alt="" className="w-12 h-12 rounded-full "/>
-
+              <CustomAvatar
+                src={renewal?.center_image_url}
+                name={renewal?.center_name}
+                size="w-12 h-12"
+              />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{renewal?.center_name}</span>

@@ -56,6 +56,7 @@ export const useEditApproveNetworkMutation = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["network"] });
       queryClient.invalidateQueries({ queryKey: ["pendingNetwork"] });
+      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccess(
         data?.response?.data?.detail || "Network request approved successfully",
       );

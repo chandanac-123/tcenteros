@@ -29,6 +29,7 @@ import AdminProfileModal from "@super-admin/admin-profile";
 import { useSuperadminProfileQuery } from "@api-queries/super-admin/profile/Query";
 import AddBranchModal from "@pages/branch/dashboard-branch/AddBranchModal";
 import ChangePassword from "./ChangePassword";
+import { useNotificationCountQuery } from "@api-queries/center-admin/notifictaions/Query";
 
 const Header = ({ toggleSidebar, collapsed }) => {
   const [openAddBranch, setOpenAddbranch] = useState(false);
@@ -49,6 +50,8 @@ const Header = ({ toggleSidebar, collapsed }) => {
   const navigate = useNavigate();
   const [locationOpen, setLocationOpen] = useState(false);
   const [openAdminProfile, setOpemAdminProfile] = useState(false);
+  const { data: notification_count, isFetching: isNotification } = useNotificationCountQuery()
+  console.log('notification_count: ', notification_count);
 
   const handleLogout = () => {
     const state = useAuthStore.getState();
@@ -107,7 +110,7 @@ const Header = ({ toggleSidebar, collapsed }) => {
         )}
         {!isPartner && canViewNotifications && (
           <button onClick={() => navigate("/notifications")}>
-            <img src={bell_active} alt="logo" className="mr-2" loading="lazy" />
+            <img src={notification_count?.total_notifications > 0 ? bell_active : bell} alt="logo" className="mr-2" loading="lazy" />
           </button>
         )}
 

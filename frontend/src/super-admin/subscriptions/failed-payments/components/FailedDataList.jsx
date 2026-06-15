@@ -1,5 +1,6 @@
 import { useFailedSubscriptionsQuery, useSuspendSubscriptionMutation } from '@api-queries/super-admin/subcriptions/Query';
 import DeleteModal from '@common/components/CustomeDelete';
+import CustomAvatar from '@common/components/getAvatarColor';
 import { Button } from '@pages/components/ui/button';
 import { Spinner } from '@pages/components/ui/spinner';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -45,7 +46,11 @@ const FailedDataList = () => {
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center">
                                 <span className="text-white text-xl font-bold capitalize">
-                                    {item.center_name?.[0]}
+                                    <CustomAvatar
+                                        src={item?.center_image}
+                                        name={item?.center_name}
+                                        size="w-16 h-16"
+                                    />
                                 </span>
                             </div>
 

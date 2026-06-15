@@ -6,7 +6,8 @@ import {
   sendMessageApiCall,
   getTimeSlotApiCall,
   approveTimeSlotApiCall,
-  getCenterRemindersApiCall
+  getCenterRemindersApiCall,
+  getNotificationCountApiCall
 } from './index'
 
 export const getAllTickets = async () => {
@@ -75,6 +76,15 @@ export const approveTimeSlot = async (data, id) => {
 export const getCenterReminders = async () => {
   try {
     const response = await getCenterRemindersApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getNotificationCount = async () => {
+  try {
+    const response = await getNotificationCountApiCall()
     return response.data
   } catch (error) {
     throw error

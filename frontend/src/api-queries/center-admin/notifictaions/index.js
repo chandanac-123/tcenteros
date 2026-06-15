@@ -23,3 +23,5 @@ export const getTimeSlotApiCall = () => axiosInstance.get('/membership/admin/tim
 export const approveTimeSlotApiCall = (data, id) =>
   axiosInstance.post(`/membership/admin/approve-time-slot-change/${id}`, data)
 export const getCenterRemindersApiCall = () => axiosInstance.get('/center/centeradmin/reminders')
+
+export const getNotificationCountApiCall = () => axiosInstance.get('/support/admin/notification-count')
