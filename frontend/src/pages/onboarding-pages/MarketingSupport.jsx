@@ -13,25 +13,25 @@ const MarketingSupport = () => {
 
   const { marketingSupportType, setMarketingSupportType } = useOnboardingStore()
 
- const handleSelect = id => {
-  if (id === 'none') {
-    setMarketingSupportType(['none'])
-    return
+  const handleSelect = id => {
+    if (id === 'none') {
+      setMarketingSupportType(['none'])
+      return
+    }
+
+    let updated = [...marketingSupportType]
+
+    // remove 'none' if selecting other options
+    updated = updated.filter(item => item !== 'none')
+
+    if (updated.includes(id)) {
+      updated = updated.filter(item => item !== id)
+    } else {
+      updated.push(id)
+    }
+
+    setMarketingSupportType(updated)
   }
-
-  let updated = [...marketingSupportType]
-
-  // remove 'none' if selecting other options
-  updated = updated.filter(item => item !== 'none')
-
-  if (updated.includes(id)) {
-    updated = updated.filter(item => item !== id)
-  } else {
-    updated.push(id)
-  }
-
-  setMarketingSupportType(updated)
-}
 
   return (
     <SecondaryLayout>
@@ -69,10 +69,9 @@ const MarketingSupport = () => {
           <label
             className={`
               flex items-center gap-4 border-2 rounded-lg px-4 py-3 cursor-pointer transition
-              ${
-                marketingSupportType === 'none'
-                  ? 'border-onboard_primary bg-onboard_primary/5'
-                  : 'border-bordergreylight'
+              ${marketingSupportType === 'none'
+                ? 'border-onboard_primary bg-onboard_primary/5'
+                : 'border-bordergreylight'
               }
             `}
           >
@@ -80,7 +79,7 @@ const MarketingSupport = () => {
               type='radio'
               name='marketing-support'
               checked={marketingSupportType.includes('none')}
-             onChange={() => setMarketingSupportType(['none'])}
+              onChange={() => setMarketingSupportType(['none'])}
               className='w-5 h-5 accent-onboard_primary'
             />
             <span className='flex-1'>None of the above</span>

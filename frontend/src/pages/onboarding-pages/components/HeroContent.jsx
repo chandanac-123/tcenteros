@@ -1,9 +1,15 @@
 import { Button } from '@pages/components/ui/button'
 import nextarrow from '@assets/navigate-icons/nextarrow.svg'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import PrivacyPolicy from './PrivacyPolicy'
+import TermsAndConditions from './TermsAndConditions'
 
 const HeroContent = () => {
   const navigate = useNavigate()
+  const [termsOpen, setTermsOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+
   return (
     <div className='w-full md:w-1/2 flex flex-col gap-12 pt-6 pb-16 relative'>
       {/* Text */}
@@ -38,13 +44,15 @@ const HeroContent = () => {
 
       {/* Footer links */}
       <div className='absolute bottom-4 left-0 text-xs sm:text-sm text-grey flex gap-4'>
-        <a href='/terms' className='hover:text-onboard_primary'>
+        <button onClick={()=>setTermsOpen(true)} className='hover:text-onboard_primary'>
           Terms & Conditions
-        </a>
-        <a href='/privacy' className='hover:text-onboard_primary'>
+        </button>
+        <button onClick={()=>setPrivacyOpen(true)} className='hover:text-onboard_primary'>
           Privacy Policy
-        </a>
+        </button>
       </div>
+      <TermsAndConditions setTermsOpen={setTermsOpen} termsOpen={termsOpen} />
+      <PrivacyPolicy setPrivacyOpen={setPrivacyOpen} privacyOpen={privacyOpen} />
     </div>
   )
 }
