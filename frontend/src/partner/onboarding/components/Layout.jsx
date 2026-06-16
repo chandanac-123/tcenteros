@@ -1,14 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "@assets/header-icons/logo.svg";
+import TermsDoc from "./TermsDoc";
 const PartnerLayout = ({ children }) => {
+  const [termsOpen, setTermsOpen] = useState(false)
   return (
-    <div className="relative flex h-screen w-full bg-textblack pt-24 pb-16 px-16">
+    <div className="relative flex flex-col h-screen w-full bg-textblack pt-24 pb-6 px-16">
       <div className="absolute left-3 top-3">
-        <img src={logo} alt="Logo" loading="lazy"/>
+        <img src={logo} alt="Logo" loading="lazy" />
       </div>
       <div className="flex h-full w-full overflow-hidden rounded-lg bg-white">
         {children}
       </div>
+      <footer className="mt-4 border-t border-white/10 pt-4">
+        <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between">
+          <button
+            onClick={() => setTermsOpen(true)}
+            className="text-xs sm:text-sm text-white/50 transition-colors hover:text-white"
+          >
+            Terms & Conditions
+          </button>
+          <a
+            href="https://tcenteros.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs sm:text-sm text-white/50 transition-colors hover:text-white"
+          >
+            © 2026 TCenterOS · A product of Chayaza Private Limited
+          </a>
+        </div>
+      </footer>
+      <TermsDoc setTermsOpen={setTermsOpen} termsOpen={termsOpen} />
     </div>
   );
 };

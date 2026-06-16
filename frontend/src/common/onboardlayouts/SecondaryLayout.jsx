@@ -31,7 +31,7 @@ const SecondaryLayout = ({ children }) => {
           rel="noopener noreferrer"
           className="text-center text-xs sm:text-sm text-grey hover:text-onboard_primary"
         >
-          TCenterOS.com is a product of Chayaza Private Limited.
+          © 2026 TCenterOS · A product of Chayaza Private Limited
         </a>
       </footer>
       <TermsAndConditions setTermsOpen={setTermsOpen} termsOpen={termsOpen} />
