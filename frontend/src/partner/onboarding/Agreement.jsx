@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import HeaderProgress from "./components/HaederProgress";
 import PartnerLayout from "./components/Layout";
 import { Checkbox } from "@pages/components/ui/checkbox";
@@ -9,9 +9,11 @@ import { useCreateOnboardCenterMutation } from "@api-queries/partner/on-boarding
 import { useFormik } from "formik";
 import { useOnboardingStore } from "@store/onboardingStore";
 import { partnerAgreementValidationSchema } from "@utils/validations";
+import TermsDoc from "./components/TermsDoc";
 
 const Agreement = () => {
   const navigate = useNavigate();
+  const [termsOpen, setTermsOpen] = useState(false)
   const { mutateAsync: createOnboardCenter, isPending } =
     useCreateOnboardCenterMutation();
   const partnerOnboardingDraft = useOnboardingStore(
@@ -114,28 +116,32 @@ const Agreement = () => {
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={formik.values.terms_accepted}
-                onCheckedChange={(value) =>
-                  formik.setFieldValue("terms_accepted", Boolean(value))
-                }
-                error={
-                  formik.touched.terms_accepted && formik.errors.terms_accepted
-                }
-              />
-              <label className="text-xs font-semibold">
-                I agree to the Reseller Terms & Policies and understand the
-                commission structure, lead policy, and code of conduct.
-              </label>
+          <div className='flex justify-between'>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={formik.values.terms_accepted}
+                  onCheckedChange={(value) =>
+                    formik.setFieldValue("terms_accepted", Boolean(value))
+                  }
+                  error={
+                    formik.touched.terms_accepted && formik.errors.terms_accepted
+                  }
+                />
+                <label className="text-xs font-semibold">
+                  I agree to the Reseller Terms & Policies and understand the
+                  commission structure, lead policy, and code of conduct.
+                </label>
+              </div>
+              {formik.touched.terms_accepted && formik.errors.terms_accepted && (
+                <span className="text-xs text-red_text mt-1 ml-6">
+                  {formik.errors.terms_accepted}
+                </span>
+              )}
             </div>
-            {formik.touched.terms_accepted && formik.errors.terms_accepted && (
-              <span className="text-xs text-red_text mt-1 ml-6">
-                {formik.errors.terms_accepted}
-              </span>
-            )}
+            <div onClick={() => setTermsOpen(true)} className="text-xs font-semibold underline cursor-pointer">Terms and Privacy</div>
           </div>
+
 
           <Button
             size="addbutton"
@@ -147,6 +153,7 @@ const Agreement = () => {
           </Button>
         </form>
       </div>
+      <TermsDoc setTermsOpen={setTermsOpen} termsOpen={termsOpen}/>
     </PartnerLayout>
   );
 };
