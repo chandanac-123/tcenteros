@@ -107,6 +107,8 @@ import RetryPayment from '@pages/onboarding-pages/RetryPayment'
 import EmailResetPassword from '@pages/authentication/EmailResetPassword'
 import ActiveNetworkCenters from '@super-admin/subscriptions/active-network-centers'
 import PaymentRetry from '@partner/onboarding/PaymentRetry'
+import TermsAndConditions from '@pages/onboarding-pages/components/TermsAndConditions'
+import PrivacyPolicy from '@pages/onboarding-pages/components/PrivacyPolicy'
 
 export const routes = [
   //public routes
@@ -128,6 +130,8 @@ export const routes = [
   { key: 13, path: '/attendance-tracking', privetRoute: false, isSubRoute: false, pageTitle: '', component: AttendanceTracking, menubar: false, permissionKey: true },
   { key: 16, path: '/sellable-item', privetRoute: false, isSubRoute: false, pageTitle: '', component: SellableItem, menubar: false, permissionKey: true },
   { key: 19, path: '/primary-login', privetRoute: false, isSubRoute: false, pageTitle: '', component: PrimaryLogin, menubar: false, permissionKey: true },
+  { key: 73, path: '/terms', privetRoute: false, isSubRoute: false, pageTitle: '', component: TermsAndConditions, menubar: false, permissionKey: true },
+  { key: 74, path: '/privacy', privetRoute: false, isSubRoute: false, pageTitle: '', component: PrivacyPolicy, menubar: false, permissionKey: true },
   // { key: 20, path: '/add-branches', privetRoute: true, isSubRoute: false, pageTitle: '', component: AddBranches, menubar: false, permissionKey: true },
   { key: 21, path: '/login', privetRoute: false, isSubRoute: false, pageTitle: '', component: Login, menubar: false, permissionKey: true },
   { key: 22, path: '/forgot-password', privetRoute: false, isSubRoute: false, pageTitle: '', component: ForgetPassord, menubar: false, permissionKey: true },

@@ -38,10 +38,10 @@ const HeroContent = () => {
 
       {/* Footer links */}
       <div className='absolute bottom-4 left-0 text-xs sm:text-sm text-grey flex gap-4'>
-        <a href='#terms' className='hover:text-onboard_primary'>
+        <a href='/terms' className='hover:text-onboard_primary'>
           Terms & Conditions
         </a>
-        <a href='#privacy' className='hover:text-onboard_primary'>
+        <a href='/privacy' className='hover:text-onboard_primary'>
           Privacy Policy
         </a>
       </div>

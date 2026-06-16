@@ -139,7 +139,7 @@ const Agreement = () => {
                 </span>
               )}
             </div>
-            <div onClick={() => setTermsOpen(true)} className="text-xs font-semibold underline cursor-pointer">Terms and Privacy</div>
+            <div onClick={() => setTermsOpen(true)} className="text-xs font-semibold underline cursor-pointer">Terms and Conditions</div>
           </div>
 
 
