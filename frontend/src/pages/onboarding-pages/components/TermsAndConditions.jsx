@@ -185,12 +185,26 @@ const TermsAndConditions = ({ setTermsOpen, termsOpen }) => {
                         <p>SRM Road, Ernakulam</p>
                         <p>Kerala, India</p>
 
-                        <p className="mt-3">
-                            <strong>Website:</strong> tcenteros.com
+                        <p>
+                            <strong>Website:</strong>{" "}
+                            <a
+                                href="https://tcenteros.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                            >
+                                https://tcenteros.com
+                            </a>
                         </p>
 
                         <p>
-                            <strong>Email:</strong> support@tcenteros.com
+                            <strong>Email:</strong>{" "}
+                            <a
+                                href="mailto:support@tcenteros.com"
+                                className="text-blue-600 hover:underline"
+                            >
+                                support@tcenteros.com
+                            </a>
                         </p>
                     </div>
                 </div>
