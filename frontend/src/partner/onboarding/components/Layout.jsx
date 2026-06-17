@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import logo from "@assets/header-icons/logo.svg";
 import TermsDoc from "./TermsDoc";
 import ChatBot from "@common/chatbot";
+
 const PartnerLayout = ({ children }) => {
   const [termsOpen, setTermsOpen] = useState(false)
   return (
-    <div className="relative flex flex-col h-screen w-full bg-textblack pt-24 pb-6 px-16">
+    <div className="relative flex min-h-screen w-full flex-col bg-textblack px-4 sm:px-6 md:px-10 lg:px-16 pt-20 md:pt-24 pb-6">
       <div className="absolute left-3 top-3">
         <img src={logo} alt="Logo" loading="lazy" />
       </div>
