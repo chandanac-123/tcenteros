@@ -1,5 +1,6 @@
 import logo from '@assets/header-icons/logo_in_auth.svg'
 import dummy from '@assets/images/new.webp'
+import ChatBot from '@common/chatbot'
 import { useBrandingStore } from '@store/brandingStore'
 
 const AuthHeader = ({ title, description, children, logoTrue = true }) => {
@@ -42,6 +43,10 @@ const AuthHeader = ({ title, description, children, logoTrue = true }) => {
         </div>
         {children}
       </div>
+      <div className="fixed bottom-6 right-6 z-[99999]">
+        <ChatBot />
+      </div>
+
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import logo from "@assets/header-icons/logo.svg";
 import TermsDoc from "./TermsDoc";
+import ChatBot from "@common/chatbot";
 const PartnerLayout = ({ children }) => {
   const [termsOpen, setTermsOpen] = useState(false)
   return (
@@ -10,6 +11,9 @@ const PartnerLayout = ({ children }) => {
       </div>
       <div className="flex h-full w-full overflow-hidden rounded-lg bg-white">
         {children}
+      </div>
+      <div className="fixed bottom-14 right-6 z-[99999]">
+        <ChatBot />
       </div>
       <footer className="mt-4 border-t border-white/10 pt-4">
         <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-between">
