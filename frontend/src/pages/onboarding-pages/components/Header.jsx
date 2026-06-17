@@ -5,9 +5,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 const navLinks = [
   { label: "Home", href: "/landing" },
-  { label: "Centers", href: "#" },
+  { label: "Centers", href: "/centers-list" },
   { label: "Blogs", href: "#" },
-  { label: "Resellers", href: "#" },
+  { label: "Resellers", href: "/partners-list" },
 ];
 
 ///centers-list  /blog /partners-list
@@ -24,7 +24,7 @@ const Header = () => {
   };
 
   return (
-    <header className="relative flex items-center justify-between px-4 sm:px-10 py-4">
+   <header className="relative flex items-center justify-between px-4 sm:px-6 lg:px-10 py-4">
       {/* Logo */}
       <img
         src={logo}

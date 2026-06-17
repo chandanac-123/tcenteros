@@ -2,8 +2,9 @@ import { useOnboardingCenters } from "@api-queries/center-admin/on-boarding/Quer
 import SecondaryLayout from "@common/onboardlayouts/SecondaryLayout";
 import Header from "@pages/onboarding-pages/components/Header";
 import React from "react";
-import {  MapPin, Users } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 import { Spinner } from "@pages/components/ui/spinner";
+import CustomAvatar from "@common/components/getAvatarColor";
 
 const CentersList = () => {
   const { data, isLoading, isError, error } = useOnboardingCenters();
@@ -18,7 +19,7 @@ const CentersList = () => {
   return (
     <SecondaryLayout>
       <Header />
-      <div className="px-4 sm:px-6 md:px-10 py-6">
+      <div className="px-4 sm:px-6 md:px-10 py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {data?.data?.map((center) => (
             <div
@@ -26,15 +27,16 @@ const CentersList = () => {
               className="relative rounded-2xl p-[1px] bg-gradient-to-br from-[#1AA0FF]/40 via-transparent to-[#ff02d5]/40 hover:from-[#1AA0FF] hover:to-[#ff02d5] transition-all duration-300"
             >
               {/* INNER CARD */}
-              <div className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
-                {/* TOP GRADIENT LINE */}
-                {/* <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#1AA0FF] to-[#ff02d5]" /> */}
-
+              <div className="bg-white rounded-2xl p-3 flex flex-col  shadow-lg hover:shadow-2xl transition-all duration-300 h-full">
                 {/* CONTACT */}
-                <div className="flex flex-col gap-2 text-sm text-gray-600">
-                  <div className="flex justify-between gap-2">
+                <div className="flex flex-col text-sm text-gray-600">
+                  <div className="flex gap-3">
                     <div>
-                      <img src={center.logo_url} alt={center.center_name} className="w-12 h-12 rounded-full object-cover" />
+                      <CustomAvatar
+                        src={center.logo_url}
+                        name={center.center_name}
+                        size="w-16 h-16"
+                      />
                     </div>
                     <div>
                       <h3 className="text-md font-medium text-gray-800 capitalize">
