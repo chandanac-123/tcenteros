@@ -1,3 +1,4 @@
+import ChatBot from "@common/chatbot"
 import PrivacyPolicy from "@pages/onboarding-pages/components/PrivacyPolicy"
 import TermsAndConditions from "@pages/onboarding-pages/components/TermsAndConditions"
 import { useState } from "react"
@@ -10,6 +11,7 @@ const SecondaryLayout = ({ children }) => {
       <div className="flex-1 overflow-auto">
         {children}
       </div>
+      <ChatBot/>
       <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3">
         <div className="flex flex-wrap justify-center gap-3 text-xs sm:text-sm text-grey">
           <button
