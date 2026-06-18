@@ -7,7 +7,7 @@ const SecondaryLayout = ({ children }) => {
   const [termsOpen, setTermsOpen] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   return (
-    <div className='fixed inset-0 min-h-screen flex flex-col bg-secondary-bg bg-cover bg-no-repeat bg-center overflow-x-auto'>
+    <div className='fixed inset-0  flex flex-col bg-secondary-bg bg-cover bg-no-repeat bg-center'>
       <div className="flex-1 overflow-auto">
         {children}
       </div>

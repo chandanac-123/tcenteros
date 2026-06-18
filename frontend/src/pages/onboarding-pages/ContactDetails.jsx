@@ -98,10 +98,10 @@ const ContactDetails = () => {
 
   return (
     <SecondaryLayout>
-      <div className="flex flex-col h-screen">
+      <div className="flex flex-col h-full">
         <OnboardHeader />
 
-        {/* 🔥 Scrollable Content */}
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-10">
           <div className="flex flex-col gap-1 mb-6 text-xl font-medium">
             Let’s Set This Up for You
@@ -115,7 +115,7 @@ const ContactDetails = () => {
 
           <div className="flex flex-col md:flex-row gap-10 md:gap-16">
             {/* Left */}
-            <div className="w-full md:w-1/2">
+            <div className="w-full md:w-1/2 ">
               <form
                 id="contact-details-form"
                 className="space-y-3"
@@ -235,8 +235,8 @@ const ContactDetails = () => {
           </div>
         </div>
 
-        {/* 🔥 Sticky Footer */}
-        <div className="sticky bottom-0 bg-white border-t px-4 sm:px-10 py-4 flex justify-between">
+        {/*  Sticky Footer */}
+        <div className="flex flex-col-reverse sm:flex-row gap-3 my-6 sm:gap-0 justify-between px-4 sm:px-10 py-4 sm:py-0">
           <Button
             variant="outline_secondary"
             size="sm"

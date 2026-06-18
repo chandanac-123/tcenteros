@@ -46,24 +46,24 @@ const CenterManagement = () => {
             </p>
 
             {/* ✅ ONLY NON-MANDATORY TOOLS */}
-       {platforms
-  ?.filter((tool) => tool.mandatory === false)
-  .map((tool) => {
-    return (
-      <ManagementToolRow
-        key={tool.id}
-        tool={tool}
-        isMandatory={false}
-        checked={true}     // 👈 always checked
-        onToggle={null}    // 👈 disable toggle completely
-      />
-    );
-  })}
+            {platforms
+              ?.filter((tool) => tool.mandatory === false)
+              .map((tool) => {
+                return (
+                  <ManagementToolRow
+                    key={tool.id}
+                    tool={tool}
+                    isMandatory={false}
+                    checked={true}     // 👈 always checked
+                    onToggle={null}    // 👈 disable toggle completely
+                  />
+                );
+              })}
           </div>
         </div>
       </div>
 
-      <div className="mt-auto flex justify-between px-4 sm:px-10 pb-6">
+      <div className='mt-auto flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between px-4 sm:px-10 py-4 sm:py-0'>
         <Button
           variant="outline_secondary"
           size="sm"

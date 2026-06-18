@@ -18,15 +18,15 @@ const SmartRecommandation = () => {
     { label: 'Class Size', value: store.memberCount },
     { label: 'Trainers', value: store.trainerCount },
     {
-  label: 'Management',
-  value: store.centerTools
-    ? Object.values(store.centerTools)
-        .filter(tool => tool.enabled)
-        .map(tool => tool.feature_name)
-        .filter(Boolean)
-        .join(', ')
-    : ''
-}
+      label: 'Management',
+      value: store.centerTools
+        ? Object.values(store.centerTools)
+          .filter(tool => tool.enabled)
+          .map(tool => tool.feature_name)
+          .filter(Boolean)
+          .join(', ')
+        : ''
+    }
 
   ]
 
@@ -111,7 +111,7 @@ const SmartRecommandation = () => {
       </div>
 
       {/* Footer Buttons */}
-      <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
+      <div className='mt-auto flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between px-4 sm:px-10 py-4 sm:py-0'>
         <Button
           variant='outline_secondary'
           size='sm'

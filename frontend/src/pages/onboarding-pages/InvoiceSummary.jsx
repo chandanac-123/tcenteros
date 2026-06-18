@@ -311,7 +311,7 @@ const InvoiceSummary = () => {
                   form="invoice-details-form"
                   type="submit"
                   variant="onboard_button_filled"
-                  className="w-1/2"
+                  className='w-full sm:w-1/2'
                   size="sm"
                 >
                   Proceed to Checkout
@@ -324,6 +324,7 @@ const InvoiceSummary = () => {
         {!success && !isFetching && (
           <div className="mt-6">
             <Button
+             className='w-full sm:w-auto'
               variant="outline_secondary"
               size="sm"
               leftIcon={backarrow}

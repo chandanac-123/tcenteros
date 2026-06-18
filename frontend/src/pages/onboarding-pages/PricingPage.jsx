@@ -63,7 +63,7 @@ const PricingPage = () => {
                     key={item}
                     className='flex items-center gap-3 text-sm text-gray-600'
                   >
-                    <img  loading="lazy" src={check} alt='check' className='w-4 h-4' />
+                    <img loading="lazy" src={check} alt='check' className='w-4 h-4' />
                     {item.feature_name}
                   </li>
                 ))}
@@ -82,7 +82,7 @@ const PricingPage = () => {
               <Button
                 variant='onboard_button_filled'
                 size='sm'
-                className='w-1/2'
+                className='sm:w-1/2 w-full'
                 onClick={() => navigate('/invoice-summary')}
               >
                 Buy now

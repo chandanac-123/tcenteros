@@ -51,11 +51,12 @@ const TypeSelection = () => {
         )}
       </div>
 
-      <div className='mt-auto flex justify-end px-4 sm:px-10 pb-6 sm:pb-8'>
+      <div className='mt-auto flex justify-center md:justify-end px-4 sm:px-10 pb-6 sm:pb-8'>
         <Button
           variant='onboard_outline_primary'
           rightIcon={rightcolorarrow}
           onClick={() => navigate('/class-mode')}
+          className="w-full sm:w-auto sm:min-w-[160px] ml-auto"
         >
           Next
         </Button>

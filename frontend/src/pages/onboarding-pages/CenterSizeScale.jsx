@@ -43,7 +43,7 @@ const CenterSize = () => {
         </div>
       </div>
 
-      <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
+      <div className='mt-auto flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between px-4 sm:px-10 py-4 sm:py-0'>
         <Button
           variant='outline_secondary'
           size='sm'

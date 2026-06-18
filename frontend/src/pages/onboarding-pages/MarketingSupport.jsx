@@ -53,7 +53,7 @@ const MarketingSupport = () => {
       </div>
 
       {/* Options */}
-      <div className='flex justify-center px-4 sm:px-10 mt-10'>
+      <div className='flex justify-center px-4 sm:px-10'>
         <div className='flex flex-col gap-4 px-6 py-6 shadow-[0_4px_24px_0_rgba(0,0,0,0.15)] rounded-3xl w-full  lg:w-1/3'>
           {/* Card Options */}
           {marketingSupport.map(item => (
@@ -88,22 +88,22 @@ const MarketingSupport = () => {
       </div>
 
       {/* Footer */}
-      <div className='mt-auto flex justify-between px-4 sm:px-10 pb-6 sm:pb-8'>
+     <div className='mt-auto flex flex-col-reverse sm:flex-row gap-3 sm:gap-0 justify-between px-4 sm:px-10 py-4'>
         <Button
           variant='outline_secondary'
           size='sm'
           leftIcon={backarrow}
           onClick={() => navigate('/smart-recommandation')}
+          className='w-full sm:w-auto'
         >
           Back
         </Button>
 
         <Button
           variant='onboard_outline_primary'
-          // size='sm'
           rightIcon={rightcolorarrow}
-          disabled={!marketingSupportType}
           onClick={() => navigate('/contact-details')}
+          className='w-full sm:w-auto'
         >
           Boost Membership
         </Button>
