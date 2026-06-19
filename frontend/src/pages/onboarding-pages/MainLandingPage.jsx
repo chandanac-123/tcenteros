@@ -34,6 +34,7 @@ import { useOnboardDataQuery } from "@api-queries/center-admin/on-boarding/Query
 const MainLandingPage = () => {
   const navigate = useNavigate();
   const { data } = useOnboardDataQuery()
+  // Temporary values until we get real data from the API
   const growthValue = [
     {
       value: data?.active_centers,
