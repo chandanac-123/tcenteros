@@ -128,7 +128,7 @@ const MainLandingPage = () => {
     { icon: zumba, title: "Zumba Center" },
     { icon: dance, title: "Dance Studio" },
   ];
-
+console.log('console log', data);
   return (
     <div className=" font-urbanist">
       <section className="flex flex-col gap-10 bg-gradient-to-b from-[#2c0149] via-[#210168] to-[#43007D] md:gap-12 text-white py-6 md:py-4 px-4 sm:px-6 md:px-16 relative overflow-hidden bg-cover bg-center">
