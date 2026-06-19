@@ -12,7 +12,8 @@ import {
   razorpayFailureApiCall,
   retryRazorpayPaymentApiCall,
   partnerRazorpayFailureApiCall,
-  partnerRetryPaymentApiCall
+  partnerRetryPaymentApiCall,
+  onboardDataApiCall
 } from './index'
 
 export const getAllClassTypes = async () => {
@@ -135,3 +136,12 @@ export const partnerRetryRazorpayPayment = async (paymentId) => {
   const response = await partnerRetryPaymentApiCall(paymentId);
   return response.data;
 };
+
+export const getOnboardData = async () => {
+  try {
+    const response = await onboardDataApiCall()
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}

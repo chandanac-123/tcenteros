@@ -29,21 +29,23 @@ import crossfit from "./assets/crossfit.svg";
 import dance from "./assets/dance.svg";
 import yoga from "./assets/yoga.svg";
 import zumba from "./assets/zumba.svg";
+import { useOnboardDataQuery } from "@api-queries/center-admin/on-boarding/Query";
 
 const MainLandingPage = () => {
   const navigate = useNavigate();
+  const { data } = useOnboardDataQuery()
   const growthValue = [
     {
-      value: "500+",
+      value: data?.active_centers,
       title: "Training Centers",
     },
     {
-      value: "156+",
+      value: data?.total_leads_generated,
       title: "Leads Generated",
     },
     {
-      value: "0%",
-      title: "Client Retention",
+      value: data?.active_partners,
+      title: "Partners",
     },
   ];
 
@@ -254,7 +256,7 @@ const MainLandingPage = () => {
           {growthValue?.map((item, i) => (
             <div key={i} className="flex flex-col items-center text-center">
               <span className="text-xl sm:text-2xl md:text-3xl font-bold text-white">
-                {item.value}
+                {item.value} 
               </span>
               <span className="text-xs sm:text-sm text-gray-300">
                 {item.title}

@@ -35,3 +35,6 @@ export const partnerRetryPaymentApiCall = (paymentId) =>
   axiosInstance.post(
     `/auth/partner/payment/retry/${paymentId}`
   );
+
+  export const onboardDataApiCall = () =>
+  axiosInstance.get("/center/landing-page-counts");

@@ -13,7 +13,8 @@ import {
   razorpayFailure,
   retryRazorpayPayment,
   partnerRazorpayFailure,
-  partnerRetryRazorpayPayment
+  partnerRetryRazorpayPayment,
+  getOnboardData
 } from './Urls'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -142,3 +143,12 @@ export const usePartnerRetryPaymentMutation = () => {
       partnerRetryRazorpayPayment(paymentId),
   });
 };
+
+export const useOnboardDataQuery = () => {
+  return useQuery({
+    queryKey: ['onboardDataCount'],
+    queryFn: getOnboardData,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
+  })
+}
